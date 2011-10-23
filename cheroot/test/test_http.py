@@ -19,8 +19,14 @@ class HTTPTests(helper.CherootWebCase):
 
             def hello(self, req, resp):
                 return "Hello world!"
-            
+
             def no_body(self, req, resp):
+                return "Hello world!"
+
+            def body_required(self, req, resp):
+                if req.environ.get('Content-Length', None) is None:
+                    resp.status = '411 Length Required'
+                    return
                 return "Hello world!"
 
         cls.httpserver.wsgi_app = Root()
@@ -48,7 +54,8 @@ class HTTPTests(helper.CherootWebCase):
         self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody(ntob('Hello world!'))
-        
+
+    def test_content_length_required(self):
         # Now send a message that has no Content-Length, but does send a body.
         # Verify that CP times out the socket and responds
         # with 411 Length Required.
@@ -56,7 +63,7 @@ class HTTPTests(helper.CherootWebCase):
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        c.request("POST", "/")
+        c.request("POST", "/body_required")
         response = c.getresponse()
         self.body = response.fp.read()
         self.status = str(response.status)
