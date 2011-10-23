@@ -540,6 +540,7 @@ class HTTPRequest(object):
         self.close_connection = self.__class__.close_connection
         self.chunked_read = False
         self.chunked_write = self.__class__.chunked_write
+        self.allow_message_body = True
     
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
@@ -866,21 +867,23 @@ class HTTPRequest(object):
         if status == 413:
             # Request Entity Too Large. Close conn to avoid garbage.
             self.close_connection = True
+
+        # "All 1xx (informational), 204 (no content),
+        # and 304 (not modified) responses MUST NOT
+        # include a message-body." So no point chunking.
+        if status < 200 or status in (204, 205, 304):
+            self.outheaders = [(k, v) for k, v in self.outheaders
+                               if k.lower() != ntob('content-length')]
+            self.allow_message_body = False
         elif ntob("content-length") not in hkeys:
-            # "All 1xx (informational), 204 (no content),
-            # and 304 (not modified) responses MUST NOT
-            # include a message-body." So no point chunking.
-            if status < 200 or status in (204, 205, 304):
-                pass
+            if (self.response_protocol == 'HTTP/1.1'
+                and self.method != ntob('HEAD')):
+                # Use the chunked transfer-coding
+                self.chunked_write = True
+                self.outheaders.append((ntob("Transfer-Encoding"), ntob("chunked")))
             else:
-                if (self.response_protocol == 'HTTP/1.1'
-                    and self.method != ntob('HEAD')):
-                    # Use the chunked transfer-coding
-                    self.chunked_write = True
-                    self.outheaders.append((ntob("Transfer-Encoding"), ntob("chunked")))
-                else:
-                    # Closing the conn is the only way to determine len.
-                    self.close_connection = True
+                # Closing the conn is the only way to determine len.
+                self.close_connection = True
         
         if ntob("connection") not in hkeys:
             if self.response_protocol == 'HTTP/1.1':
@@ -1529,7 +1532,11 @@ class HTTPServer(object):
     def tick(self):
         """Accept a new connection and put it on the Queue."""
         try:
-            s, addr = self.socket.accept()
+            try:
+                s, addr = self.socket.accept()
+            except AttributeError:
+                # Our socket got shut down (set to None) in self.stop()
+                return
             if self.stats['Enabled']:
                 self.stats['Accepts'] += 1
             if not self.ready:

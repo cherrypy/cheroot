@@ -13,14 +13,12 @@ from cheroot.test import webtest
 
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
-from cherrypy.test import helper
+from cheroot.test import helper
+
 
 class ConnectionCloseTests(helper.CherootWebCase):
 
     def setup_server(cls):
-
-        def raise500():
-            raise cherrypy.HTTPError(500)
 
         class Root(helper.Controller):
 
@@ -38,7 +36,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
             def stream(self, req, resp):
                 if "set_cl" in req.environ["QUERY_STRING"]:
-                    cherrypy.response.headers['Content-Length'] = 10
+                    resp.headers['Content-Length'] = str(10)
 
                 def content():
                     for x in range(10):
@@ -46,61 +44,48 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
                 return content()
 
-            def error(self, req, resp):
-                raise cherrypy.HTTPError(code)
-            error.exposed = True
-
-            def upload(self):
-                if not cherrypy.request.method == 'POST':
+            def upload(self, req, resp):
+                if not req.environ['REQUEST_METHOD'] == 'POST':
                     raise AssertionError("'POST' != request.method %r" %
-                                         cherrypy.request.method)
-                return "thanks for '%s'" % cherrypy.request.body.read()
-            upload.exposed = True
+                                         req.environ['REQUEST_METHOD'])
+                return "thanks for '%s'" % req.environ['wsgi.input'].read()
 
-            def custom(self, response_code):
-                cherrypy.response.status = response_code
-                return "Code = %s" % response_code
-            custom.exposed = True
+            def custom_204(self, req, resp):
+                resp.status = '204'
+                return "Code = 204"
 
-            def err_before_read(self):
+            def custom_304(self, req, resp):
+                resp.status = '304'
+                return "Code = 304"
+
+            def err_before_read(self, req, resp):
+                foobar
                 return "ok"
-            err_before_read.exposed = True
-            err_before_read._cp_config = {'hooks.on_start_resource': raise500}
 
-            def one_megabyte_of_a(self):
+            def one_megabyte_of_a(self, req, resp):
                 return ["a" * 1024] * 1024
-            one_megabyte_of_a.exposed = True
 
-            def custom_cl(self, body, cl):
-                cherrypy.response.headers['Content-Length'] = cl
-                if not isinstance(body, list):
-                    body = [body]
-                newbody = []
-                for chunk in body:
-                    if isinstance(chunk, unicodestr):
-                        chunk = chunk.encode('ISO-8859-1')
-                    newbody.append(chunk)
-                return newbody
-            custom_cl.exposed = True
-            # Turn off the encoding tool so it doens't collapse
-            # our response body and reclaculate the Content-Length.
-            custom_cl._cp_config = {'tools.encode.on': False}
+            def wrong_cl_buffered(self, req, resp):
+                resp.headers['Content-Length'] = '5'
+                return 'I have too many bytes'
+
+            def wrong_cl_unbuffered(self, req, resp):
+                resp.headers['Content-Length'] = '5'
+                return ['I too', ' have too many bytes']
 
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.max_request_body_size = 1001
         cls.httpserver.timeout = timeout
     setup_server = classmethod(setup_server)
 
-    def test_HTTP11(self):
-        if self.httpserver.protocol != "HTTP/1.1":
-            return self.skip()
-
+    def test_HTTP11_persistent_connections(self):
+        self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
 
         self.persistent = True
 
         # Make the first request and assert there's no "Connection: close".
-        self.getPage("/")
+        self.getPage("/pov")
         self.assertStatus('200 OK')
         self.assertBody(pov)
         self.assertNoHeader("Connection")
@@ -118,102 +103,118 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertHeader("Connection", "close")
 
         # Make another request on the same connection, which should error.
-        self.assertRaises(NotConnected, self.getPage, "/")
+        self.assertRaises(NotConnected, self.getPage, "/pov")
 
-    def test_Streaming_no_len(self):
-        self._streaming(set_cl=False)
+    def test_Streaming_no_len_11(self):
+        self._streaming_11(set_cl=False)
 
-    def test_Streaming_with_len(self):
-        self._streaming(set_cl=True)
+    def test_Streaming_with_len_11(self):
+        self._streaming_11(set_cl=True)
 
-    def _streaming(self, set_cl):
-        if self.httpserver.protocol == "HTTP/1.1":
-            self.PROTOCOL = "HTTP/1.1"
+    def test_Streaming_no_len_10(self):
+        self._streaming_10(set_cl=False)
 
-            self.persistent = True
+    def test_Streaming_with_len_10(self):
+        self._streaming_10(set_cl=True)
 
-            # Make the first request and assert there's no "Connection: close".
-            self.getPage("/")
+    def _streaming_11(self, set_cl):
+        self.httpserver.protocol = "HTTP/1.1"
+        self.PROTOCOL = "HTTP/1.1"
+
+        self.persistent = True
+
+        # Make the first request and assert there's no "Connection: close".
+        self.getPage("/pov")
+        self.assertStatus('200 OK')
+        self.assertBody(pov)
+        self.assertNoHeader("Connection")
+
+        # Make another, streamed request on the same connection.
+        if set_cl:
+            # When a Content-Length is provided, the content should stream
+            # without closing the connection.
+            self.getPage("/stream?set_cl=Yes")
+            self.assertHeader("Content-Length")
+            self.assertNoHeader("Connection", "close")
+            self.assertNoHeader("Transfer-Encoding")
+
             self.assertStatus('200 OK')
-            self.assertBody(pov)
-            self.assertNoHeader("Connection")
-
-            # Make another, streamed request on the same connection.
-            if set_cl:
-                # When a Content-Length is provided, the content should stream
-                # without closing the connection.
-                self.getPage("/stream?set_cl=Yes")
-                self.assertHeader("Content-Length")
-                self.assertNoHeader("Connection", "close")
-                self.assertNoHeader("Transfer-Encoding")
-
-                self.assertStatus('200 OK')
-                self.assertBody('0123456789')
-            else:
-                # When no Content-Length response header is provided,
-                # streamed output will either close the connection, or use
-                # chunked encoding, to determine transfer-length.
-                self.getPage("/stream")
-                self.assertNoHeader("Content-Length")
-                self.assertStatus('200 OK')
-                self.assertBody('0123456789')
-
-                chunked_response = False
-                for k, v in self.headers:
-                    if k.lower() == "transfer-encoding":
-                        if str(v) == "chunked":
-                            chunked_response = True
-
-                if chunked_response:
-                    self.assertNoHeader("Connection", "close")
-                else:
-                    self.assertHeader("Connection", "close")
-
-                    # Make another request on the same connection, which should error.
-                    self.assertRaises(NotConnected, self.getPage, "/")
-
-                # Try HEAD. See http://www.cherrypy.org/ticket/864.
-                self.getPage("/stream", method='HEAD')
-                self.assertStatus('200 OK')
-                self.assertBody('')
-                self.assertNoHeader("Transfer-Encoding")
+            self.assertBody('0123456789')
         else:
-            self.PROTOCOL = "HTTP/1.0"
-
-            self.persistent = True
-
-            # Make the first request and assert Keep-Alive.
-            self.getPage("/", headers=[("Connection", "Keep-Alive")])
+            # When no Content-Length response header is provided,
+            # streamed output will either close the connection, or use
+            # chunked encoding, to determine transfer-length.
+            self.getPage("/stream")
+            self.assertNoHeader("Content-Length")
             self.assertStatus('200 OK')
-            self.assertBody(pov)
-            self.assertHeader("Connection", "Keep-Alive")
+            self.assertBody('0123456789')
 
-            # Make another, streamed request on the same connection.
-            if set_cl:
-                # When a Content-Length is provided, the content should
-                # stream without closing the connection.
-                self.getPage("/stream?set_cl=Yes",
-                             headers=[("Connection", "Keep-Alive")])
-                self.assertHeader("Content-Length")
-                self.assertHeader("Connection", "Keep-Alive")
-                self.assertNoHeader("Transfer-Encoding")
-                self.assertStatus('200 OK')
-                self.assertBody('0123456789')
+            chunked_response = False
+            for k, v in self.headers:
+                if k.lower() == "transfer-encoding":
+                    if str(v) == "chunked":
+                        chunked_response = True
+
+            if chunked_response:
+                self.assertNoHeader("Connection", "close")
             else:
-                # When a Content-Length is not provided,
-                # the server should close the connection.
-                self.getPage("/stream", headers=[("Connection", "Keep-Alive")])
-                self.assertStatus('200 OK')
-                self.assertBody('0123456789')
-
-                self.assertNoHeader("Content-Length")
-                self.assertNoHeader("Connection", "Keep-Alive")
-                self.assertNoHeader("Transfer-Encoding")
+                self.assertHeader("Connection", "close")
 
                 # Make another request on the same connection, which should error.
-                self.assertRaises(NotConnected, self.getPage, "/")
+                self.assertRaises(NotConnected, self.getPage, "/pov")
 
-    def test_HTTP10_KeepAlive(self):
+            # Try HEAD. See http://www.cherrypy.org/ticket/864.
+            self.getPage("/stream", method='HEAD')
+            self.assertStatus('200 OK')
+            self.assertBody('')
+            self.assertNoHeader("Transfer-Encoding")
+
+    def _streaming_10(self, set_cl):
+        self.httpserver.protocol = "HTTP/1.0"
+        self.PROTOCOL = "HTTP/1.0"
+
+        self.persistent = True
+
+        # Make the first request and assert Keep-Alive.
+        self.getPage("/pov", headers=[("Connection", "Keep-Alive")])
+        self.assertStatus('200 OK')
+        self.assertBody(pov)
+        self.assertHeader("Connection", "Keep-Alive")
+
+        # Make another, streamed request on the same connection.
+        if set_cl:
+            # When a Content-Length is provided, the content should
+            # stream without closing the connection.
+            self.getPage("/stream?set_cl=Yes",
+                         headers=[("Connection", "Keep-Alive")])
+            self.assertHeader("Content-Length")
+            self.assertHeader("Connection", "Keep-Alive")
+            self.assertNoHeader("Transfer-Encoding")
+            self.assertStatus('200 OK')
+            self.assertBody('0123456789')
+        else:
+            # When a Content-Length is not provided,
+            # the server should close the connection.
+            self.getPage("/stream", headers=[("Connection", "Keep-Alive")])
+            self.assertStatus('200 OK')
+            self.assertBody('0123456789')
+
+            self.assertNoHeader("Content-Length")
+            self.assertNoHeader("Connection", "Keep-Alive")
+            self.assertNoHeader("Transfer-Encoding")
+
+            # Make another request on the same connection, which should error.
+            self.assertRaises(NotConnected, self.getPage, "/pov")
+
+    def test_HTTP10_to_10_KeepAlive(self):
+        self.httpserver.protocol = "HTTP/1.0"
+        self._keepalive()
+
+    def test_HTTP10_to_11_KeepAlive(self):
+        self.httpserver.protocol = "HTTP/1.1"
+        self._keepalive()
+
+    def _keepalive(self):
         self.PROTOCOL = "HTTP/1.0"
         if self.scheme == "https":
             self.HTTP_CONN = HTTPSConnection
@@ -243,9 +244,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
     def test_HTTP11_Timeout(self):
         # If we timeout without sending any data,
         # the server will close the conn with a 408.
-        if self.httpserver.protocol != "HTTP/1.1":
-            return self.skip()
-
+        self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
 
         # Connect but send nothing.
@@ -283,9 +282,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
     def test_HTTP11_Timeout_after_request(self):
         # If we timeout after at least one request has succeeded,
         # the server will close the conn without 408.
-        if self.httpserver.protocol != "HTTP/1.1":
-            return self.skip()
-
+        self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
 
         # Make an initial request
@@ -336,7 +333,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         # Make another request on a new socket, which should work
         self.persistent = True
         conn = self.HTTP_CONN
-        conn.putrequest("GET", "/", skip_host=True)
+        conn.putrequest("GET", "/pov", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         response = conn.response_class(conn.sock, method="GET")
@@ -369,7 +366,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         # Retry the request on a new connection, which should work
         self.persistent = True
         conn = self.HTTP_CONN
-        conn.putrequest("GET", "/", skip_host=True)
+        conn.putrequest("GET", "/pov", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         response = conn.response_class(conn.sock, method="GET")
@@ -380,9 +377,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn.close()
 
     def test_HTTP11_pipelining(self):
-        if self.httpserver.protocol != "HTTP/1.1":
-            return self.skip()
-
+        self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
 
         # Test pipelining. httplib doesn't support this directly.
@@ -417,9 +412,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn.close()
 
     def test_100_Continue(self):
-        if self.httpserver.protocol != "HTTP/1.1":
-            return self.skip()
-
+        self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
 
         self.persistent = True
@@ -471,9 +464,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn.close()
 
     def test_readall_or_close(self):
-        if self.httpserver.protocol != "HTTP/1.1":
-            return self.skip()
-
+        self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
 
         if self.scheme == "https":
@@ -482,9 +473,9 @@ class ConnectionCloseTests(helper.CherootWebCase):
             self.HTTP_CONN = HTTPConnection
 
         # Test a max of 0 (the default) and then reset to what it was above.
-        old_max = cherrypy.server.max_request_body_size
+        old_max = self.httpserver.max_request_body_size
         for new_max in (0, old_max):
-            cherrypy.server.max_request_body_size = new_max
+            self.httpserver.max_request_body_size = new_max
 
             self.persistent = True
             conn = self.HTTP_CONN
@@ -543,16 +534,14 @@ class ConnectionCloseTests(helper.CherootWebCase):
             conn.close()
 
     def test_No_Message_Body(self):
-        if self.httpserver.protocol != "HTTP/1.1":
-            return self.skip()
-
+        self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
 
         # Set our HTTP_CONN to an instance so it persists between requests.
         self.persistent = True
 
         # Make the first request and assert there's no "Connection: close".
-        self.getPage("/")
+        self.getPage("/pov")
         self.assertStatus('200 OK')
         self.assertBody(pov)
         self.assertNoHeader("Connection")
@@ -571,10 +560,8 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertBody("")
         self.assertNoHeader("Connection")
 
-    def test_Chunked_Encoding(self):
-        if self.httpserver.protocol != "HTTP/1.1":
-            return self.skip()
-
+    def _test_Chunked_Encoding(self):
+        self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
 
         # Set our HTTP_CONN to an instance so it persists between requests.
@@ -619,6 +606,8 @@ class ConnectionCloseTests(helper.CherootWebCase):
     def test_Content_Length_in(self):
         # Try a non-chunked request where Content-Length exceeds
         # server.max_request_body_size. Assert error before body send.
+        self.httpserver.protocol = "HTTP/1.1"
+        self.PROTOCOL = "HTTP/1.1"
         self.persistent = True
         conn = self.HTTP_CONN
         conn.putrequest("POST", "/upload", skip_host=True)
@@ -636,10 +625,11 @@ class ConnectionCloseTests(helper.CherootWebCase):
     def test_Content_Length_out_preheaders(self):
         # Try a non-chunked response where Content-Length is less than
         # the actual bytes in the response body.
+        self.httpserver.protocol = "HTTP/1.1"
+        self.PROTOCOL = "HTTP/1.1"
         self.persistent = True
         conn = self.HTTP_CONN
-        conn.putrequest("GET", "/custom_cl?body=I+have+too+many+bytes&cl=5",
-                        skip_host=True)
+        conn.putrequest("GET", "/wrong_cl_buffered", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         response = conn.getresponse()
@@ -653,10 +643,11 @@ class ConnectionCloseTests(helper.CherootWebCase):
     def test_Content_Length_out_postheaders(self):
         # Try a non-chunked response where Content-Length is less than
         # the actual bytes in the response body.
+        self.httpserver.protocol = "HTTP/1.1"
+        self.PROTOCOL = "HTTP/1.1"
         self.persistent = True
         conn = self.HTTP_CONN
-        conn.putrequest("GET", "/custom_cl?body=I+too&body=+have+too+many&cl=5",
-                        skip_host=True)
+        conn.putrequest("GET", "/wrong_cl_unbuffered", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.endheaders()
         response = conn.getresponse()
@@ -666,8 +657,10 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn.close()
 
     def test_598(self):
-        remote_data_conn = urlopen('%s://%s:%s/one_megabyte_of_a/' %
-                                          (self.scheme, self.HOST, self.PORT,))
+        self.httpserver.protocol = "HTTP/1.1"
+        self.PROTOCOL = "HTTP/1.1"
+        remote_data_conn = urlopen('%s://%s:%s/one_megabyte_of_a' %
+                                   (self.scheme, self.HOST, self.PORT))
         buf = remote_data_conn.read(512)
         time.sleep(timeout * 0.6)
         remaining = (1024 * 1024) - 512
@@ -685,6 +678,8 @@ class ConnectionCloseTests(helper.CherootWebCase):
         remote_data_conn.close()
 
     def test_No_CRLF(self):
+        self.httpserver.protocol = "HTTP/1.1"
+        self.PROTOCOL = "HTTP/1.1"
         self.persistent = True
 
         conn = self.HTTP_CONN
