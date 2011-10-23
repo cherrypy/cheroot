@@ -115,7 +115,8 @@ class WSGIGateway(Gateway):
             self.req.sent_headers = True
             self.req.send_headers()
         
-        self.req.write(chunk)
+        if self.req.allow_message_body:
+            self.req.write(chunk)
         
         if rbo is not None:
             rbo -= chunklen

@@ -151,8 +151,10 @@ class Response(object):
             return []
         elif isinstance(self.body, (tuple, list)):
             return [ntob(x) for x in self.body]
-        else:
+        elif isinstance(self.body, basestring):
             return [ntob(self.body)]
+        else:
+            return self.body
 
 
 class Controller(object):
@@ -167,7 +169,14 @@ class Controller(object):
             output = handler(req, resp)
             if output is not None:
                 resp.body = output
-                resp.headers.setdefault('Content-Length', str(len(output)))
+                if isinstance(output, basestring):
+                    cl = len(output)
+                elif isinstance(output, (tuple, list)):
+                    cl = sum([len(a) for a in output])
+                else:
+                    cl = None
+                if cl is not None:
+                    resp.headers.setdefault('Content-Length', str(cl))
         start_response(resp.status, resp.headers.items())
         return resp.output()
 
