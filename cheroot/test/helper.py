@@ -10,9 +10,10 @@ serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 import sys
 import time
 import threading
+import traceback
 
 import cheroot
-from cheroot._compat import basestring, copyitems, HTTPSConnection, ntob
+from cheroot._compat import basestring, format_exc, HTTPSConnection, ntob
 from cheroot import server, wsgi
 from cheroot.test import webtest
 
@@ -160,26 +161,38 @@ class Response(object):
 class Controller(object):
 
     def __call__(self, environ, start_response):
-        req, resp = Request(environ), Response()
         try:
-            handler = getattr(self, environ["PATH_INFO"].lstrip("/").replace("/", "_"))
-        except AttributeError:
-            resp.status = '404 Not Found'
-        else:
-            output = handler(req, resp)
-            if output is not None:
-                resp.body = output
-                if isinstance(output, basestring):
-                    cl = len(output)
-                elif isinstance(output, (tuple, list)):
-                    cl = sum([len(a) for a in output])
+            req, resp = Request(environ), Response()
+            try:
+                handler = getattr(self, environ["PATH_INFO"].lstrip("/").replace("/", "_"))
+            except AttributeError:
+                resp.status = '404 Not Found'
+            else:
+                output = handler(req, resp)
+                if output is not None:
+                    resp.body = output
+                    if isinstance(output, basestring):
+                        cl = len(output)
+                    elif isinstance(output, (tuple, list)):
+                        cl = sum([len(a) for a in output])
+                    else:
+                        cl = None
+                    if cl is not None:
+                        resp.headers.setdefault('Content-Length', str(cl))
+            h = []
+            for k, v in resp.headers.items():
+                if isinstance(v, (tuple, list)):
+                    for atom in v:
+                        h.append((k, atom))
                 else:
-                    cl = None
-                if cl is not None:
-                    resp.headers.setdefault('Content-Length', str(cl))
-        start_response(resp.status, resp.headers.items())
-        return resp.output()
-
+                    h.append((k, v))
+            start_response(resp.status, h)
+            return resp.output()
+        except:
+            status = "500 Server Error"
+            response_headers = [("Content-Type", "text/plain")]
+            start_response(status, response_headers, sys.exc_info())
+            return format_exc()
 
 # --------------------------- Spawning helpers --------------------------- #
 
