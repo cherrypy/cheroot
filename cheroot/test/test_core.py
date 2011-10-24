@@ -37,8 +37,11 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
                 return "bad news"
 
             def header_list(self, req, resp):
-                resp.headers['WWW-Authenticate'] = 'Negotiate'
-                resp.headers['www-authenticate'] = 'Basic realm="foo"'
+                # helper.Controller.__call__ will transform this into
+                # multiple headers with the same name, which is what
+                # we're trying to test
+                resp.headers['WWW-Authenticate'] = [
+                    'Negotiate','Basic realm="foo"']
             
             def commas(self, req, resp):
                 resp.headers['WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
@@ -79,7 +82,6 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
 
     def test_multiple_headers(self):
         self.getPage('/header_list')
-        print(repr(self.headers))
         self.assertEqual([(k, v) for k, v in self.headers if k == 'WWW-Authenticate'],
                          [('WWW-Authenticate', 'Negotiate'),
                           ('WWW-Authenticate', 'Basic realm="foo"'),
@@ -90,5 +92,5 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
     def test_start_response_error(self):
         self.getPage("/start_response_error")
         self.assertStatus(500)
-        self.assertInBody("TypeError: response.header_list key 2 is not a byte string.")
+        self.assertInBody("TypeError: WSGI response header key 2 is not of type str.")
 

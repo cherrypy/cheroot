@@ -65,9 +65,10 @@ number of requests and their responses, so we run a nested loop::
 
 __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
-           'WorkerThread', 'ThreadPool', 'Gateway',]
+           'WorkerThread', 'ThreadPool', 'Gateway']
 
 from cheroot._compat import bytestr, unicodestr, basestring, ntob, py3k
+from cheroot._compat import formatdate, format_exc, unquote
 
 LF = ntob('\n')
 CRLF = ntob('\r\n')
@@ -76,7 +77,6 @@ SPACE = ntob(' ')
 COLON = ntob(':')
 SEMICOLON = ntob(';')
 COMMA = ntob(',')
-PERCENT = ntob('%')
 EMPTY = ntob('')
 NUMBER_SIGN = ntob('#')
 QUESTION_MARK = ntob('?')
@@ -89,12 +89,6 @@ try:
 except:
     import Queue as queue
 import re
-if py3k:
-    import email.utils
-    def formatdate():
-        return email.utils.formatdate(usegmt=True).encode('ISO-8859-1')
-else:
-    from rfc822 import formatdate
 import socket
 import sys
 if 'win' in sys.platform and not hasattr(socket, 'IPPROTO_IPV6'):
@@ -111,29 +105,6 @@ else:
 
 import threading
 import time
-try:
-    from traceback import format_exc
-except ImportError:
-    def format_exc(limit=None):
-        """Like print_exc() but return a string. Backport for Python 2.3."""
-        try:
-            etype, value, tb = sys.exc_info()
-            return ''.join(traceback.format_exception(etype, value, tb, limit))
-        finally:
-            etype = value = tb = None
-
-if py3k:
-    from urllib.parse import urlparse
-    def unquote(path):
-        """takes quoted string and unquotes % encoded values""" 
-        res = path.split(PERCENT)
-        for i in range(1, len(res)):
-            item = res[i]
-            res[i] = bytes([int(item[:2], 16)]) + item[2:]
-        return EMPTY.join(res)
-else:
-    from urllib import unquote
-    from urlparse import urlparse
 import warnings
 
 from cheroot import errors
