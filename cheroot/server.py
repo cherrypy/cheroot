@@ -111,7 +111,7 @@ from cheroot import errors
 if py3k:
     from cheroot.py3makefile import makefile
 else:
-    from cheroot.py2fileobject import makefile
+    from cheroot.py2makefile import makefile
 def write(wfile, output):
     if hasattr(wfile, 'sendall'):
         wfile.sendall(output)
