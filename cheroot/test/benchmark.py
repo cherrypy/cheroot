@@ -33,7 +33,7 @@ import traceback
 import cherrypy
 from cherrypy._cpcompat import ntob
 from cherrypy import _cperror, _cpmodpy
-from cherrypy.lib import httputil
+from cheroot._cpcompat import HTTPDate
 
 
 AB_PATH = ""
@@ -116,7 +116,7 @@ class NullRequest:
         cherrypy.response.status = "200 OK"
         cherrypy.response.header_list = [("Content-Type", 'text/html'),
                                          ("Server", "Null CherryPy"),
-                                         ("Date", httputil.HTTPDate()),
+                                         ("Date", HTTPDate()),
                                          ("Content-Length", "0"),
                                          ]
         cherrypy.response.body = [""]

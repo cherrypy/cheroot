@@ -124,7 +124,7 @@ except ImportError:
 try:
     from email.utils import formatdate
     def HTTPDate(timeval=None):
-        return formatdate(timeval, usegmt=True)
+        return formatdate(timeval, usegmt=True).encode('ISO-8859-1')
 except ImportError:
     from rfc822 import formatdate as HTTPDate
 
@@ -140,12 +140,4 @@ except ImportError:
         finally:
             etype = value = tb = None
 
-try:
-    # Python 3
-    import email.utils
-    def formatdate():
-        return email.utils.formatdate(usegmt=True).encode('ISO-8859-1')
-except ImportError:
-    # Python 2
-    from rfc822 import formatdate
 
