@@ -68,7 +68,7 @@ __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'WorkerThread', 'ThreadPool', 'Gateway']
 
 from cheroot._compat import bytestr, unicodestr, basestring, ntob, py3k
-from cheroot._compat import formatdate, format_exc, unquote
+from cheroot._compat import HTTPDate, format_exc, unquote
 
 LF = ntob('\n')
 CRLF = ntob('\r\n')
@@ -884,7 +884,7 @@ class HTTPRequest(object):
                 self.rfile.read(remaining)
         
         if ntob("date") not in hkeys:
-            self.outheaders.append((ntob("Date"), formatdate()))
+            self.outheaders.append((ntob("Date"), HTTPDate()))
         
         if ntob("server") not in hkeys:
             self.outheaders.append(
