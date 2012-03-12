@@ -69,6 +69,17 @@ __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
 
 from cheroot._compat import bytestr, unicodestr, basestring, ntob, py3k
 from cheroot._compat import HTTPDate, format_exc, unquote
+from cheroot._compat import BaseHTTPRequestHandler
+response_codes = BaseHTTPRequestHandler.responses.copy()
+
+# From http://www.cherrypy.org/ticket/361
+response_codes[500] = ('Internal Server Error',
+                      'The server encountered an unexpected condition '
+                      'which prevented it from fulfilling the request.')
+response_codes[503] = ('Service Unavailable',
+                      'The server is currently unable to handle the '
+                      'request due to a temporary overloading or '
+                      'maintenance of the server.')
 
 LF = ntob('\n')
 CRLF = ntob('\r\n')
@@ -512,7 +523,48 @@ class HTTPRequest(object):
         self.chunked_read = False
         self.chunked_write = self.__class__.chunked_write
         self.allow_message_body = True
-    
+
+    def _get_status(self):
+        return self._status
+    def _set_status(self, value):
+        if not value:
+            value = ntob("200")
+
+        if not isinstance(value, bytestr):
+            value = ntob(str(value))
+
+        parts = value.split(SPACE, 1)
+        if len(parts) == 1:
+            # No reason supplied.
+            code, = parts
+            reason = None
+        else:
+            code, reason = parts
+            reason = reason.strip()
+
+        try:
+            code = int(code)
+        except ValueError:
+            raise ValueError("Illegal response status from server "
+                             "(%s is non-numeric)." % repr(code))
+
+        if code < 100 or code > 599:
+            raise ValueError("Illegal response status from server "
+                             "(%s is out of range)." % repr(code))
+
+        if reason is None:
+            if code not in response_codes:
+                # code is unknown but not illegal
+                reason = EMPTY
+            else:
+                reason, _ = response_codes[code]
+                reason = ntob(reason)
+
+        self._status = SPACE.join((ntob(str(code)), reason))
+
+    status = property(_get_status, _set_status,
+                      "The response code and reason in a single string.")
+
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
         self.rfile = SizeCheckWrapper(self.conn.rfile,
@@ -781,7 +833,9 @@ class HTTPRequest(object):
         
         if (self.ready and not self.sent_headers):
             self.sent_headers = True
-            self.send_headers()
+            if not self.send_headers():
+                self.close_connection = True
+                return
         if self.chunked_write:
             write(self.conn.wfile, ntob("0\r\n\r\n"))
     
@@ -833,7 +887,13 @@ class HTTPRequest(object):
         You must set self.status, and self.outheaders before calling this.
         """
         hkeys = [key.lower() for key, value in self.outheaders]
-        status = int(self.status[:3])
+        try:
+            status = int(self.status[:3])
+        except ValueError:
+            self.simple_response("500 Illegal Status",
+                "Illegal response status from server ('%s' is non-numeric)." %
+                self.status)
+            return
         
         if status == 413:
             # Request Entity Too Large. Close conn to avoid garbage.

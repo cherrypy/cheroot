@@ -88,7 +88,7 @@ class WSGIGateway(Gateway):
             self.req.outheaders.append((ntob(k), ntob(v)))
         
         return self.write
-    
+
     def write(self, chunk):
         """WSGI callable to write unbuffered data to the client.
         
