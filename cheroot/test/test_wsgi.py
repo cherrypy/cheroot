@@ -32,7 +32,14 @@ class WSGITests(helper.CherootWebCase):
         def baz(environ, start_response):
             status = 200
             response_headers = [('Content-type', 'text/plain')]
-            # This should fail because status is not bytes
+            # This should fail because status is not a str
+            start_response(status, response_headers)
+            return [ntob('Hello world')]
+
+        def qoph(environ, start_response):
+            status = '200 OK'
+            response_headers = [('Content-type', 5)]
+            # This should fail because the response header value is not a str
             start_response(status, response_headers)
             return [ntob('Hello world')]
 
@@ -40,6 +47,7 @@ class WSGITests(helper.CherootWebCase):
             '/foo': foo,
             '/bar': bar,
             '/baz': baz,
+            '/qoph': qoph,
             })
     setup_server = classmethod(setup_server)
 
@@ -63,4 +71,10 @@ class WSGITests(helper.CherootWebCase):
         self.assertStatus(500)
         self.assertInLog(
             "WSGI response status is not of type str.")
+
+    def test_nonstring_header_value(self):
+        self.getPage("/qoph")
+        self.assertStatus(500)
+        self.assertInLog(
+            "WSGI response header value %s is not of type str." % repr(5))
 
