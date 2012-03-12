@@ -29,9 +29,17 @@ class WSGITests(helper.CherootWebCase):
                 start_response(status, response_headers, sys.exc_info())
             return [ntob('Hello world')]
 
+        def baz(environ, start_response):
+            status = 200
+            response_headers = [('Content-type', 'text/plain')]
+            # This should fail because status is not bytes
+            start_response(status, response_headers)
+            return [ntob('Hello world')]
+
         cls.httpserver.wsgi_app = wsgi.WSGIPathInfoDispatcher({
             '/foo': foo,
             '/bar': bar,
+            '/baz': baz,
             })
     setup_server = classmethod(setup_server)
 
@@ -49,4 +57,10 @@ class WSGITests(helper.CherootWebCase):
         # But we still get a logged error :)
         self.assertInLog(
             "WSGI start_response called a second time with no exc_info.")
+
+    def test_nonstring_status(self):
+        self.getPage("/baz")
+        self.assertStatus(500)
+        self.assertInLog(
+            "WSGI response status is not of type str.")
 
