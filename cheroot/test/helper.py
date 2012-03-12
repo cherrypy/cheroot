@@ -74,6 +74,8 @@ class CherootWebCase(webtest.WebCase):
 
         # Override the server error_log method so we can test writes to it.
         def logsink(msg="", level=20, traceback=False):
+            if traceback:
+                traceback = format_exc()
             cls.log.append((msg, level, traceback))
         cls.log = []
         cls.httpserver.error_log = logsink
