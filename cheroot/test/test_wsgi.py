@@ -8,6 +8,14 @@ from cheroot import wsgi
 class WSGITests(helper.CherootWebCase):
 
     def setup_server(cls):
+
+        def hello(environ, start_response):
+            status = '200 OK'
+            response_headers = [('Content-type', 'text/plain'),
+                                ('Content-Length', '11')]
+            start_response(status, response_headers)
+            return [ntob('Hello world')]
+
         def foo(environ, start_response):
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain')]
@@ -48,6 +56,7 @@ class WSGITests(helper.CherootWebCase):
             '/bar': bar,
             '/baz': baz,
             '/qoph': qoph,
+            '/hello': hello,
             })
     setup_server = classmethod(setup_server)
 
@@ -77,4 +86,17 @@ class WSGITests(helper.CherootWebCase):
         self.assertStatus(500)
         self.assertInLog(
             "WSGI response header value %s is not of type str." % repr(5))
+
+    def test_notfound(self):
+        self.getPage("/tev")
+        self.assertStatus(404)
+
+    def test_gateway_u0(self):
+        old_gw = self.httpserver.gateway
+        self.httpserver.gateway = wsgi.WSGIGateway_u0
+        try:
+            self.getPage("/hello")
+            self.assertStatus(200)
+        finally:
+            self.httpserver.gateway = old_gw
 

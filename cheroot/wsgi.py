@@ -208,7 +208,11 @@ class WSGIGateway_u0(WSGIGateway_10):
         try:
             if py3k:
                 for key in ["PATH_INFO", "SCRIPT_NAME", "QUERY_STRING"]:
-                    env[key] = env_10[key].decode(env['wsgi.url_encoding'])
+                    # Re-encode since our "decoded" string is just
+                    # bytes masquerading as unicode via Latin-1
+                    val = env_10[key].encode('ISO-8859-1')
+                    # ...now decode according to the configured encoding
+                    env[key] = val.decode(env['wsgi.url_encoding'])
             else:
                 # SCRIPT_NAME is the empty string, who cares what encoding it is?
                 env["PATH_INFO"] = req.path.decode(env['wsgi.url_encoding'])
