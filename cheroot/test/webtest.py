@@ -461,7 +461,9 @@ def shb(response):
         if key and value:
             h.append((key, value))
 
-    return "%s %s" % (response.status, response.reason), h, response.read()
+    b = response.read()
+
+    return "%s %s" % (response.status, response.reason), h, b
 
 
 def openURL(url, headers=None, method="GET", body=None,

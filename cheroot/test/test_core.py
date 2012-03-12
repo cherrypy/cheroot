@@ -17,6 +17,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
             
             def blank(self, req, resp):
                 resp.status = ""
+                return ""
             
             # According to RFC 2616, new status codes are OK as long as they
             # are between 100 and 599.
@@ -42,9 +43,11 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
                 # we're trying to test
                 resp.headers['WWW-Authenticate'] = [
                     'Negotiate','Basic realm="foo"']
+                return ""
             
             def commas(self, req, resp):
                 resp.headers['WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
+                return ""
 
             def start_response_error(self, req, resp):
                 resp.headers[2] = 3
@@ -60,14 +63,13 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
 
     def test_status_blank(self):
         self.getPage("/blank")
-        self.assertStatus(500)
-        self.assertBody('')
+        self.assertStatus(200)
 
     def test_status_illegal(self):
         self.getPage("/illegal")
         self.assertStatus(500)
-        msg = "Illegal response status from server (781 is out of range)."
-        self.assertErrorPage(500, msg)
+        self.assertInBody(
+            "Illegal response status from server (781 is out of range).")
 
     def test_status_unknown(self):
         self.getPage("/unknown")
@@ -77,8 +79,10 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
     def test_status_syntax_error(self):
         self.getPage("/bad")
         self.assertStatus(500)
-        msg = "Illegal response status from server ('error' is non-numeric)."
-        self.assertErrorPage(500, msg)
+        self.assertStatus(500)
+        self.assertInBody(
+            "Illegal response status from server (%s is non-numeric)." %
+            (repr(ntob('error'))))
 
     def test_multiple_headers(self):
         self.getPage('/header_list')
