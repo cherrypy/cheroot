@@ -61,7 +61,7 @@ class WSGIGateway(Gateway):
         # "if exc_info is provided, and the HTTP headers have already been
         # sent, start_response must raise an error, and should raise the
         # exc_info tuple."
-        if self.req.sent_headers:
+        if (exc_info is not None) and self.req.sent_headers:
             try:
                 if py3k:
                     raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
