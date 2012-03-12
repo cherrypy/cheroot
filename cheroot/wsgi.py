@@ -80,9 +80,13 @@ class WSGIGateway(Gateway):
 
         for k, v in headers:
             if not isinstance(k, str):
-                raise TypeError("WSGI response header key %r is not of type str." % k)
+                raise TypeError(
+                    "WSGI response header key %s is not of type str." %
+                    repr(k))
             if not isinstance(v, str):
-                raise TypeError("WSGI response header value %r is not of type str." % v)
+                raise TypeError(
+                    "WSGI response header value %s is not of type str." %
+                    repr(v))
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
             self.req.outheaders.append((ntob(k), ntob(v)))
