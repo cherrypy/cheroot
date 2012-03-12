@@ -48,10 +48,10 @@ class CherootWebCase(webtest.WebCase):
                          'native': server.HTTPServer,
                          }
     default_server = "wsgi"
+    httpserver_startup_timeout = 5
 
     def setup_class(cls):
-        ''
-        #Creates a server
+        """Create and run one HTTP server per class."""
         conf = get_tst_config().copy()
         sclass = conf.pop('server', 'wsgi')
         server_factory = cls.available_servers.get(sclass)
@@ -82,7 +82,7 @@ class CherootWebCase(webtest.WebCase):
     setup_class = classmethod(setup_class)
 
     def teardown_class(cls):
-        ''
+        """Stop the per-class HTTP server."""
         if hasattr(cls, 'setup_server'):
             cls.stop()
     teardown_class = classmethod(teardown_class)
@@ -90,9 +90,16 @@ class CherootWebCase(webtest.WebCase):
     def start(cls):
         """Load and start the HTTP server."""
         threading.Thread(target=cls.httpserver.safe_start).start()
+        for trial in range(cls.httpserver_startup_timeout):
+            if cls.httpserver.ready:
+                return
+            time.sleep(1)
+        raise AssertionError(
+            "The HTTP server did not start in the allotted time.")
     start = classmethod(start)
 
     def stop(cls):
+        """Stop the per-class HTTP server."""
         cls.httpserver.stop()
         td = getattr(cls, 'teardown', None)
         if td:

@@ -8,7 +8,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
 
     def setup_server(cls):
         class Root(helper.Controller):
-            
+
             def hello(self):
                 return "hello"
 
