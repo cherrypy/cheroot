@@ -1,8 +1,6 @@
 """A library of helper functions for the Cheroot test suite."""
 
 import datetime
-import logging
-log = logging.getLogger(__name__)
 import os
 thisdir = os.path.abspath(os.path.dirname(__file__))
 serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
@@ -36,6 +34,12 @@ def get_tst_config(overconf = {}):
         except ImportError:
             pass
         _testconfig = conf
+
+        v = sys.version.split()[0]
+        print("Python version used to run this test script: %s" % v)
+        print("Cheroot version: %s" % cheroot.__version__)
+        print("PID: %s" % os.getpid())
+
     conf = _testconfig.copy()
     conf.update(overconf)
 
@@ -68,11 +72,11 @@ class CherootWebCase(webtest.WebCase):
             cls.HTTP_CONN = HTTPSConnection
             cls.scheme = 'https'
 
-        v = sys.version.split()[0]
-        log.info("Python version used to run this test script: %s" % v)
-        log.info("Cheroot version: %s" % cheroot.__version__)
-        log.info("HTTP server version: %s%s" % (cls.httpserver.protocol, ssl))
-        log.info("PID: %s" % os.getpid())
+        # Override the server error_log method so we can test writes to it.
+        def logsink(msg="", level=20, traceback=False):
+            cls.log.append((msg, level, traceback))
+        cls.log = []
+        cls.httpserver.error_log = logsink
 
         if hasattr(cls, 'setup_server'):
             # Clear the wsgi server so that
@@ -115,19 +119,19 @@ class CherootWebCase(webtest.WebCase):
         
         return "%s://%s%s%s" % (self.scheme, self.HOST, port,
                                 self.script_name.rstrip("/"))
-    
+
     def exit(self):
         sys.exit()
-    
+
     def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
         """Open the url. Return status, headers, body."""
         return webtest.WebCase.getPage(self, url, headers, method, body, protocol)
-    
+
     def skip(self, msg='skipped '):
         raise nose.SkipTest(msg)
-    
+
     date_tolerance = 2
-    
+
     def assertEqualDates(self, dt1, dt2, seconds=None):
         """Assert abs(dt1 - dt2) is within Y seconds."""
         if seconds is None:
@@ -140,6 +144,13 @@ class CherootWebCase(webtest.WebCase):
         if not diff < datetime.timedelta(seconds=seconds):
             raise AssertionError('%r and %r are not within %r seconds.' %
                                  (dt1, dt2, seconds))
+
+    def assertInLog(self, msg):
+        for m, level, include_traceback in self.log:
+            if msg in m:
+                return
+        raise AssertionError(
+            "Log does not contain expected message %s." % repr(msg))
 
 
 class Request(object):
