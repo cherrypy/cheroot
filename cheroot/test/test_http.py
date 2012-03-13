@@ -104,28 +104,6 @@ class HTTPTests(helper.CherootWebCase):
         self.assertStatus(400)
         self.body = response.fp.read(20)
         self.assertBody("Illegal header line.")
-    
-    def test_http_over_https(self):
-        if self.scheme != 'https':
-            return self.skip("skipped (not running HTTPS)... ")
-        
-        # Try connecting without SSL.
-        conn = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        conn.putrequest("GET", "/", skip_host=True)
-        conn.putheader("Host", self.HOST)
-        conn.endheaders()
-        response = conn.response_class(conn.sock, method="GET")
-        try:
-            response.begin()
-            self.assertEqual(response.status, 400)
-            self.body = response.read()
-            self.assertBody("The client sent a plain HTTP request, but this "
-                            "server only speaks HTTPS on this port.")
-        except socket.error:
-            e = sys.exc_info()[1]
-            # "Connection reset by peer" is also acceptable.
-            if e.errno != errno.ECONNRESET:
-                raise
 
     def test_garbage_in(self):
         # Connect without SSL regardless of server.scheme

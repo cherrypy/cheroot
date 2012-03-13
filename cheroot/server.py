@@ -1567,11 +1567,13 @@ class HTTPServer(object):
                 except errors.NoSSLError:
                     msg = ("The client sent a plain HTTP request, but "
                            "this server only speaks HTTPS on this port.")
+                    self.error_log(msg)
+
                     buf = ["%s 400 Bad Request\r\n" % self.protocol,
                            "Content-Length: %s\r\n" % len(msg),
                            "Content-Type: text/plain\r\n\r\n",
                            msg]
-                    
+
                     wfile = mf(s, "wb", DEFAULT_BUFFER_SIZE)
                     try:
                         write(wfile, ntob("".join(buf)))
