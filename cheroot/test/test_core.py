@@ -130,6 +130,23 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         self.assertStatus(200)
         self.assertBody(body)
 
+    def test_request_payload_readline(self):
+        if self.scheme == "https":
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest("POST", "/echo_lines")
+        body = ntob("I am a\nrequest body")
+        c.putheader("Content-Length", len(body))
+        c.endheaders()
+        c.send(body)
+        response = c.getresponse()
+        self.body = response.read()
+        c.close()
+        self.status = str(response.status)
+        self.assertStatus(200)
+        self.assertBody(body)
+
     def test_chunked_request_payload(self):
         if self.scheme == "https":
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
