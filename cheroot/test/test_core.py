@@ -231,8 +231,6 @@ class UnixDomainSocketTest(helper.CherootWebCase):
 
 class SSLTest(helper.CherootWebCase):
 
-    config = {"ssl_adapter": helper.get_default_ssl_adapter()}
-
     def setup_server(cls):
         class Root(helper.Controller):
 
@@ -240,6 +238,8 @@ class SSLTest(helper.CherootWebCase):
                 return "hello"
 
         cls.httpserver.wsgi_app = Root()
+        cls.httpserver.ssl_adapter = helper.get_default_ssl_adapter()
+
     setup_server = classmethod(setup_server)
 
     def test_normal(self):
