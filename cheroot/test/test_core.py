@@ -1,5 +1,7 @@
 """Basic tests for the Cheroot server: request handling."""
 
+import time
+
 from cheroot._compat import ntob, HTTPConnection, HTTPSConnection
 from cheroot.test import helper
 
@@ -9,7 +11,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
     def setup_server(cls):
         class Root(helper.Controller):
 
-            def hello(self):
+            def hello(self, req, resp):
                 return "hello"
 
             def echo(self, req, resp):
@@ -159,4 +161,31 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody("I am a\nrequest body")
+
+
+class ServerInterruptTest(helper.CherootWebCase):
+
+    def setup_server(cls):
+        class Root(helper.Controller):
+
+            def hello(self, req, resp):
+                return "hello"
+
+            def kbint(self, req, resp):
+                cls.httpserver.interrupt = KeyboardInterrupt()
+                return "hello"
+
+        cls.httpserver.wsgi_app = Root()
+    setup_server = classmethod(setup_server)
+
+    def test_kbint(self):
+        self.getPage("/kbint")
+        # Note that our request thread will complete normally even though
+        # the server is shutting down, which is *usually* a nice thing
+        # but not always.
+        self.assertStatus(200)
+        self.assertBody("hello")
+        # Give the server accept() thread time to shut down
+        time.sleep(1)
+        self.assertInLog("Keyboard Interrupt: shutting down")
 
