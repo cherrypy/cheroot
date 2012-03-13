@@ -80,6 +80,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
                 return "salud!"
 
         cls.httpserver.wsgi_app = Root()
+        cls.httpserver.max_request_body_size = 1000
     setup_server = classmethod(setup_server)
 
     def test_status_normal(self):
@@ -124,6 +125,24 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         self.assertStatus(500)
         self.assertInBody("TypeError: WSGI response header key 2 is not of type str.")
 
+    def test_max_body(self):
+        if self.scheme == "https":
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest("POST", "/echo")
+        body = ntob("x" * 1001)
+        c.putheader("Content-Length", len(body))
+        c.endheaders()
+        c.send(body)
+        response = c.getresponse()
+        self.status, self.headers, self.body = webtest.shb(response)
+        c.close()
+        self.assertStatus(413)
+        self.assertBody(
+            "The entity sent with the request exceeds "
+            "the maximum allowed bytes.")
+
     def test_request_payload(self):
         if self.scheme == "https":
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
@@ -135,9 +154,8 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         c.endheaders()
         c.send(body)
         response = c.getresponse()
-        self.body = response.read()
+        self.status, self.headers, self.body = webtest.shb(response)
         c.close()
-        self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody(body)
 
@@ -152,9 +170,8 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         c.endheaders()
         c.send(body)
         response = c.getresponse()
-        self.body = response.read()
+        self.status, self.headers, self.body = webtest.shb(response)
         c.close()
-        self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody(body)
 
@@ -168,9 +185,8 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         c.endheaders()
         c.send(ntob("13\r\nI am a request body\r\n0\r\n\r\n"))
         response = c.getresponse()
-        self.body = response.read()
+        self.status, self.headers, self.body = webtest.shb(response)
         c.close()
-        self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody("I am a request body")
 
@@ -184,9 +200,8 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         c.endheaders()
         c.send(ntob("13\r\nI am a\nrequest body\r\n0\r\n\r\n"))
         response = c.getresponse()
-        self.body = response.read()
+        self.status, self.headers, self.body = webtest.shb(response)
         c.close()
-        self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody("I am a\nrequest body")
 
