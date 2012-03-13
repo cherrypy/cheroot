@@ -225,3 +225,22 @@ class UnixDomainSocketTest(helper.CherootWebCase):
         self.assertBody('hello')
         self.assertStatus(200)
 
+
+class SSLTest(helper.CherootWebCase):
+
+    config = {"ssl_adapter": helper.get_default_ssl_adapter()}
+
+    def setup_server(cls):
+        class Root(helper.Controller):
+
+            def hello(self, req, resp):
+                return "hello"
+
+        cls.httpserver.wsgi_app = Root()
+    setup_server = classmethod(setup_server)
+
+    def test_normal(self):
+        self.getPage("/hello")
+        self.assertBody('hello')
+        self.assertStatus(200)
+

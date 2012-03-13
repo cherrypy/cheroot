@@ -1330,7 +1330,7 @@ class HTTPServer(object):
     You must have the corresponding SSL driver library installed."""
     
     def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1,
-                 server_name=None, protocol='HTTP/1.1'):
+                 server_name=None, protocol='HTTP/1.1', ssl_adapter=None):
         self.bind_addr = bind_addr
         self.gateway = gateway
         
@@ -1340,6 +1340,8 @@ class HTTPServer(object):
             server_name = socket.gethostname()
         self.server_name = server_name
         self.protocol = protocol
+        self.ssl_adapter = ssl_adapter
+
         self.clear_stats()
     
     def clear_stats(self):

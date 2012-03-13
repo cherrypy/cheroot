@@ -1,5 +1,7 @@
 import sys
 
+from cheroot._compat import basestring, py3k
+
 DEFAULT_BUFFER_SIZE = -1
 
 
@@ -32,8 +34,14 @@ ssl_adapters = {
     'pyopenssl': 'cheroot.ssllib.ssl_pyopenssl.pyOpenSSLAdapter',
     }
 
-def get_ssl_adapter_class(name='pyopenssl'):
+def get_ssl_adapter_class(name=None):
     """Return an SSL adapter class for the given name."""
+    if name is None:
+        if py3k:
+            name = 'builtin'
+        else:
+            name = 'pyopenssl'
+
     adapter = ssl_adapters[name.lower()]
     if isinstance(adapter, basestring):
         last_dot = adapter.rfind(".")
