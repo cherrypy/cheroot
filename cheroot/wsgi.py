@@ -1,9 +1,8 @@
 """WSGI gateways for the Cheroot HTTP server."""
 
-import socket
 import sys
 
-from cheroot.server import HTTPServer, ThreadPool, Gateway
+from cheroot.server import HTTPServer, Gateway
 from cheroot._compat import basestring, ntob, ntou, tonative, py3k, unicodestr
 
 
