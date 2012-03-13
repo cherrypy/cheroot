@@ -4,7 +4,7 @@ import socket
 import time
 
 from cheroot._compat import ntob, HTTPConnection, HTTPSConnection
-from cheroot.test import helper
+from cheroot.test import helper, webtest
 
 
 class CoreRequestHandlingTest(helper.CherootWebCase):
@@ -20,12 +20,22 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
                 return output.decode("ISO-8859-1")
 
             def echo_lines(self, req, resp):
+                f = req.environ['wsgi.input']
+
                 output = []
                 while True:
-                    line = req.environ['wsgi.input'].readline().decode("ISO-8859-1")
+                    line = f.readline().decode("ISO-8859-1")
                     if not line:
                         break
                     output.append(line)
+
+                if hasattr(f, 'read_trailer_lines'):
+                    for line in f.read_trailer_lines():
+                        k, v = line.split(ntob(":"), 1)
+                        k = k.strip().decode('ISO-8859-1')
+                        v = v.strip().decode('ISO-8859-1')
+                        resp.headers[k] = v
+
                 return output
 
             def normal(self, req, resp):
@@ -180,6 +190,23 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         self.assertStatus(200)
         self.assertBody("I am a\nrequest body")
 
+    def test_chunked_request_payload_trailer(self):
+        if self.scheme == "https":
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest("POST", "/echo_lines")
+        c.putheader("Transfer-Encoding", "chunked")
+        c.endheaders()
+        c.send(ntob("13\r\nI am a\nrequest body\r\n0\r\n"
+                    "Content-Type: application/json\r\n\r\n"))
+        response = c.getresponse()
+        self.status, self.headers, self.body = webtest.shb(response)
+        c.close()
+        self.assertStatus(200)
+        self.assertBody("I am a\nrequest body")
+        self.assertHeader("Content-Type", "application/json")
+
 
 class ServerInterruptTest(helper.CherootWebCase):
 
@@ -257,9 +284,8 @@ class SSLTest(helper.CherootWebCase):
         except socket.error:
             pass
         else:
-            self.body = response.read()
+            self.status, self.headers, self.body = webtest.shb(response)
             c.close()
-            self.status = str(response.status)
             self.assertStatus(200)
             self.assertBody("hello")
         self.assertInLog("The client sent a plain HTTP request, but this "
