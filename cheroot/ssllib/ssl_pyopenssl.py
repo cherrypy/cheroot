@@ -34,7 +34,8 @@ import socket
 import threading
 import time
 
-from cheroot import py2makefile
+from cheroot import errors, py2makefile
+from cheroot.ssllib import SSLAdapter
 
 try:
     from OpenSSL import SSL
@@ -72,7 +73,7 @@ class SSL_makefile(py2makefile.makefile):
                     return ""
                 
                 errnum = e.args[0]
-                if is_reader and errnum in wsgiserver.socket_errors_to_ignore:
+                if is_reader and errnum in errors.socket_errors_to_ignore:
                     return ""
                 raise socket.error(errnum)
             except SSL.Error, e:
@@ -87,9 +88,9 @@ class SSL_makefile(py2makefile.makefile):
                 
                 if thirdarg == 'http request':
                     # The client is talking HTTP to an HTTPS server.
-                    raise wsgiserver.NoSSLError()
+                    raise errors.NoSSLError()
                 
-                raise wsgiserver.FatalSSLAlert(*e.args)
+                raise errors.FatalSSLAlert(*e.args)
             except:
                 raise
             
@@ -150,7 +151,7 @@ class SSLConnection:
             self._lock.release()
 
 
-class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
+class pyOpenSSLAdapter(SSLAdapter):
     """A wrapper for integrating pyOpenSSL with Cheroot."""
     
     context = None
