@@ -183,6 +183,8 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
 
 class ServerInterruptTest(helper.CherootWebCase):
 
+    trap_kbint = True
+
     def setup_server(cls):
         class Root(helper.Controller):
 
