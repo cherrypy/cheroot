@@ -80,6 +80,9 @@ class CherootWebCase(webtest.WebCase):
         cls.log = []
         cls.httpserver.error_log = logsink
 
+        # Turn on stats, mostly for code coverage
+        cls.httpserver.stats['Enabled'] = True
+
         if hasattr(cls, 'setup_server'):
             # Clear the wsgi server so that
             # it can be updated with the new root
