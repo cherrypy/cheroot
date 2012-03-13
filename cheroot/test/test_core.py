@@ -16,6 +16,15 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
                 output = req.environ['wsgi.input'].read()
                 return output.decode("ISO-8859-1")
 
+            def echo_lines(self, req, resp):
+                output = []
+                while True:
+                    line = req.environ['wsgi.input'].readline().decode("ISO-8859-1")
+                    if not line:
+                        break
+                    output.append(line)
+                return output
+
             def normal(self, req, resp):
                 return "normal"
             
@@ -134,4 +143,20 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         self.status = str(response.status)
         self.assertStatus(200)
         self.assertBody("I am a request body")
+
+    def test_chunked_request_payload_readline(self):
+        if self.scheme == "https":
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest("POST", "/echo_lines")
+        c.putheader("Transfer-Encoding", "chunked")
+        c.endheaders()
+        c.send(ntob("13\r\nI am a\nrequest body\r\n0\r\n\r\n"))
+        response = c.getresponse()
+        self.body = response.read()
+        c.close()
+        self.status = str(response.status)
+        self.assertStatus(200)
+        self.assertBody("I am a\nrequest body")
 

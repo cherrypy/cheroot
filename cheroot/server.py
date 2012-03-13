@@ -366,19 +366,19 @@ class ChunkedRFile(object):
             else:
                 data += self.buffer
                 self.buffer = EMPTY
-    
+
     def readline(self, size=None):
         data = EMPTY
         while True:
             if size and len(data) >= size:
                 return data
-            
+
             if not self.buffer:
                 self._fetch()
                 if not self.buffer:
                     # EOF
                     return data
-            
+
             newline_pos = self.buffer.find(LF)
             if size:
                 if newline_pos == -1:
@@ -386,15 +386,17 @@ class ChunkedRFile(object):
                     data += self.buffer[:remaining]
                     self.buffer = self.buffer[remaining:]
                 else:
-                    remaining = min(size - len(data), newline_pos)
+                    remaining = min(size - len(data), newline_pos + 1)
                     data += self.buffer[:remaining]
                     self.buffer = self.buffer[remaining:]
             else:
                 if newline_pos == -1:
                     data += self.buffer
+                    self.buffer = EMPTY
                 else:
-                    data += self.buffer[:newline_pos]
-                    self.buffer = self.buffer[newline_pos:]
+                    remaining = newline_pos + 1
+                    data += self.buffer[:remaining]
+                    self.buffer = self.buffer[remaining:]
     
     def readlines(self, sizehint=0):
         # Shamelessly stolen from StringIO
