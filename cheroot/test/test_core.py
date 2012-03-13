@@ -1,5 +1,6 @@
 """Basic tests for the Cheroot server: request handling."""
 
+import socket
 import time
 
 from cheroot._compat import ntob, HTTPConnection, HTTPSConnection
@@ -243,4 +244,22 @@ class SSLTest(helper.CherootWebCase):
         self.getPage("/hello")
         self.assertBody('hello')
         self.assertStatus(200)
+
+    def test_http_to_https(self):
+        # Test what happens when a client tries to speak HTTP to an HTTPS server
+        c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest("GET", "/hello")
+        c.endheaders()
+        try:
+            response = c.getresponse()
+        except socket.error:
+            pass
+        else:
+            self.body = response.read()
+            c.close()
+            self.status = str(response.status)
+            self.assertStatus(200)
+            self.assertBody("hello")
+        self.assertInLog("The client sent a plain HTTP request, but this "
+                         "server only speaks HTTPS on this port.")
 

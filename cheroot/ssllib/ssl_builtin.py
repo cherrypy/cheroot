@@ -21,7 +21,7 @@ except ImportError:
 
 import sys
 
-from cheroot import server, ssllib
+from cheroot import errors, server, ssllib
 
 
 class BuiltinSSLAdapter(ssllib.SSLAdapter):
@@ -53,14 +53,14 @@ class BuiltinSSLAdapter(ssllib.SSLAdapter):
         except ssl.SSLError:
             e = sys.exc_info()[1]
             if e.errno == ssl.SSL_ERROR_EOF:
-                # This is almost certainly due to the cheroot engine
+                # This is almost certainly due to someone
                 # 'pinging' the socket to assert it's connectable;
                 # the 'ping' isn't SSL.
                 return None, {}
             elif e.errno == ssl.SSL_ERROR_SSL:
                 if e.args[1].endswith('http request'):
                     # The client is speaking HTTP to an HTTPS server.
-                    raise cheroot.errors.NoSSLError
+                    raise errors.NoSSLError
                 elif e.args[1].endswith('unknown protocol'):
                     # The client is speaking some non-HTTP protocol.
                     # Drop the conn.
