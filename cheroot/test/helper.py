@@ -87,9 +87,17 @@ class CherootWebCase(webtest.WebCase):
             cls.stop()
     teardown_class = classmethod(teardown_class)
 
+    trap_kbint = False
+
     def start(cls):
         """Load and start the HTTP server."""
-        threading.Thread(target=cls.httpserver.safe_start).start()
+        def trap():
+            try:
+                cls.httpserver.safe_start()
+            except KeyboardInterrupt:
+                if not cls.trap_kbint:
+                    raise
+        threading.Thread(target=trap).start()
         for trial in range(cls.httpserver_startup_timeout):
             if cls.httpserver.ready:
                 return
