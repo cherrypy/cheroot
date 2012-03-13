@@ -5,45 +5,30 @@ import os
 thisdir = os.path.abspath(os.path.dirname(__file__))
 serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 
+import socket
 import sys
 import time
 import threading
 import traceback
 
 import cheroot
-from cheroot._compat import basestring, format_exc, HTTPSConnection, ntob
+from cheroot._compat import basestring, format_exc, HTTPConnection, HTTPSConnection, ntob
 from cheroot import server, wsgi
 from cheroot.test import webtest
 
 import nose
 
-_testconfig = None
-
-def get_tst_config(overconf = {}):
-    global _testconfig
-    if _testconfig is None:
-        conf = {
-            'protocol': "HTTP/1.1",
-            'bind_addr': ('127.0.0.1', 54583),
-            'server': 'wsgi',
-        }
-        try:
-            import testconfig
-            if testconfig.config is not None:
-                conf.update(testconfig.config)
-        except ImportError:
-            pass
-        _testconfig = conf
-
-        v = sys.version.split()[0]
-        print("Python version used to run this test script: %s" % v)
-        print("Cheroot version: %s" % cheroot.__version__)
-        print("PID: %s" % os.getpid())
-
-    conf = _testconfig.copy()
-    conf.update(overconf)
-
-    return conf
+config = {
+    'protocol': "HTTP/1.1",
+    'bind_addr': ('127.0.0.1', 54583),
+    'server': 'wsgi',
+    }
+try:
+    import testconfig
+    if testconfig.config is not None:
+        config.update(testconfig.config)
+except ImportError:
+    pass
 
 
 class CherootWebCase(webtest.WebCase):
@@ -56,21 +41,27 @@ class CherootWebCase(webtest.WebCase):
 
     def setup_class(cls):
         """Create and run one HTTP server per class."""
-        conf = get_tst_config().copy()
+        conf = config.copy()
+        if hasattr(cls, "config"):
+            conf.update(cls.config)
+
         sclass = conf.pop('server', 'wsgi')
         server_factory = cls.available_servers.get(sclass)
         if server_factory is None:
             raise RuntimeError('Unknown server in config: %s' % sclass)
         cls.httpserver = server_factory(**conf)
 
-        cls.HOST, cls.PORT = cls.httpserver.bind_addr
-        if cls.httpserver.ssl_adapter is None:
-            ssl = ""
-            cls.scheme = 'http'
+        if isinstance(cls.httpserver.bind_addr, basestring):
+            cls.HTTP_CONN = UnixSocketHTTPConnection(cls.httpserver.bind_addr)
         else:
-            ssl = " (ssl)"
-            cls.HTTP_CONN = HTTPSConnection
-            cls.scheme = 'https'
+            cls.HOST, cls.PORT = cls.httpserver.bind_addr
+            if cls.httpserver.ssl_adapter is None:
+                ssl = ""
+                cls.scheme = 'http'
+            else:
+                ssl = " (ssl)"
+                cls.HTTP_CONN = HTTPSConnection
+                cls.scheme = 'https'
 
         # Override the server error_log method so we can test writes to it.
         def logsink(msg="", level=20, traceback=False):
@@ -217,4 +208,16 @@ class Controller(object):
             start_response(status, response_headers, sys.exc_info())
             return format_exc()
 
+
+class UnixSocketHTTPConnection(HTTPConnection):
+
+    def __init__(self, path=None):
+        self.path = path
+        HTTPConnection.__init__(self, host="localhost", port=80)
+
+    def connect(self):
+        """Connect to the host and port specified in __init__."""
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.settimeout(10)
+        self.sock.connect(self.path)
 
