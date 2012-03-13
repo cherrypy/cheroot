@@ -1,6 +1,6 @@
 """Basic tests for the Cheroot server: request handling."""
 
-from cheroot._compat import ntob
+from cheroot._compat import ntob, HTTPConnection, HTTPSConnection
 from cheroot.test import helper
 
 
@@ -11,6 +11,10 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
 
             def hello(self):
                 return "hello"
+
+            def echo(self, req, resp):
+                output = req.environ['wsgi.input'].read()
+                return output.decode("ISO-8859-1")
 
             def normal(self, req, resp):
                 return "normal"
@@ -97,4 +101,37 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         self.getPage("/start_response_error")
         self.assertStatus(500)
         self.assertInBody("TypeError: WSGI response header key 2 is not of type str.")
+
+    def test_request_payload(self):
+        if self.scheme == "https":
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest("POST", "/echo")
+        body = ntob("I am a request body")
+        c.putheader("Content-Length", len(body))
+        c.endheaders()
+        c.send(body)
+        response = c.getresponse()
+        self.body = response.read()
+        c.close()
+        self.status = str(response.status)
+        self.assertStatus(200)
+        self.assertBody(body)
+
+    def test_chunked_request_payload(self):
+        if self.scheme == "https":
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest("POST", "/echo")
+        c.putheader("Transfer-Encoding", "chunked")
+        c.endheaders()
+        c.send(ntob("13\r\nI am a request body\r\n0\r\n\r\n"))
+        response = c.getresponse()
+        self.body = response.read()
+        c.close()
+        self.status = str(response.status)
+        self.assertStatus(200)
+        self.assertBody("I am a request body")
 
