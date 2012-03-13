@@ -13,7 +13,7 @@ import traceback
 
 import cheroot
 from cheroot._compat import basestring, format_exc, HTTPConnection, HTTPSConnection, ntob
-from cheroot import server, wsgi
+from cheroot import server, ssllib, wsgi
 from cheroot.test import webtest
 
 import nose
@@ -56,10 +56,9 @@ class CherootWebCase(webtest.WebCase):
         else:
             cls.HOST, cls.PORT = cls.httpserver.bind_addr
             if cls.httpserver.ssl_adapter is None:
-                ssl = ""
+                cls.HTTP_CONN = HTTPConnection
                 cls.scheme = 'http'
             else:
-                ssl = " (ssl)"
                 cls.HTTP_CONN = HTTPSConnection
                 cls.scheme = 'https'
 
@@ -68,6 +67,7 @@ class CherootWebCase(webtest.WebCase):
             if traceback:
                 traceback = format_exc()
             cls.log.append((msg, level, traceback))
+            #print(msg, level, traceback)
         cls.log = []
         cls.httpserver.error_log = logsink
 
@@ -220,4 +220,12 @@ class UnixSocketHTTPConnection(HTTPConnection):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.settimeout(10)
         self.sock.connect(self.path)
+
+def get_default_ssl_adapter():
+    """Return an instance of a cheroot.ssllib.SSLAdapter."""
+    # Use the default ('pyopenssl' for Python 2 and 'builtin' for 3):
+    ssl_adapter_class = ssllib.get_ssl_adapter_class()
+    serverpem = os.path.join(thisdir, 'test.pem')
+    return ssl_adapter_class(certificate=serverpem, private_key=serverpem)
+
 

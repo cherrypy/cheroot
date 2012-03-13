@@ -21,7 +21,7 @@ except ImportError:
 
 import sys
 
-from cheroot import ssllib
+from cheroot import server, ssllib
 
 
 class BuiltinSSLAdapter(ssllib.SSLAdapter):
