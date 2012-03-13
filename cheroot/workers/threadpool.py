@@ -11,8 +11,6 @@ import sys
 import threading
 import time
 
-from cheroot import errors
-
 
 class TrueyZero(object):
     """An object which equals and does math like the integer '0' but evals True."""
@@ -109,15 +107,12 @@ class ThreadPool(object):
     
     def start(self):
         """Start the pool of threads."""
-        for i in range(self.min):
-            self._threads.append(WorkerThread(self.server))
-        for worker in self._threads:
-            worker.setName("CP Server " + worker.getName())
-            worker.start()
+        self.grow(self.min)
+
         for worker in self._threads:
             while not worker.ready:
                 time.sleep(.1)
-    
+
     def _get_idle(self):
         """Number of worker threads which are idle. Read-only."""
         return len([t for t in self._threads if t.conn is None])
@@ -125,8 +120,6 @@ class ThreadPool(object):
     
     def put(self, obj):
         self._queue.put(obj)
-        if obj is _SHUTDOWNREQUEST:
-            return
     
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
