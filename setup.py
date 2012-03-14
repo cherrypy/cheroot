@@ -45,7 +45,7 @@ cp_license="BSD"
 packages=[
     "cheroot", "cheroot.ssllib", "cheroot.workers", "cheroot.test",
 ]
-download_url="http://download.cherrypy.org/cheroot/4.0.0alpha/"
+download_url="http://download.cherrypy.org/cheroot/4.0.0beta/"
 data_files=[
     ('cheroot', ['cheroot/LICENSE.txt',
                  ]),
