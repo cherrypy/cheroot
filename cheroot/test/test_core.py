@@ -3,7 +3,7 @@
 import socket
 import time
 
-from cheroot._compat import ntob, HTTPConnection, HTTPSConnection
+from cheroot._compat import HTTPConnection, HTTPSConnection, ntob, tonative
 from cheroot.test import helper, webtest
 
 
@@ -32,8 +32,8 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
                 if hasattr(f, 'read_trailer_lines'):
                     for line in f.read_trailer_lines():
                         k, v = line.split(ntob(":"), 1)
-                        k = k.strip().decode('ISO-8859-1')
-                        v = v.strip().decode('ISO-8859-1')
+                        k = tonative(k.strip())
+                        v = tonative(v.strip())
                         resp.headers[k] = v
 
                 return output

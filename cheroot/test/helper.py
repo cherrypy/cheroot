@@ -166,6 +166,7 @@ class Response(object):
 
     def __init__(self):
         self.status = '200 OK'
+        # Note these are the native string type, just like WSGI
         self.headers = {'Content-Type': 'text/html'}
         self.body = None
 
