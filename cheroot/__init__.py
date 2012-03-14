@@ -25,5 +25,5 @@ as you want in one instance by using a WSGIPathInfoDispatcher::
 Want SSL support? Just set server.ssl_adapter to an SSLAdapter instance.
 """
 
-__version__ = "3.3.0alpha"
+__version__ = "4.0.0beta"
 

@@ -1114,7 +1114,7 @@ class HTTPServer(object):
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
     
-    version = "Cheroot/3.3.0alpha"
+    version = "Cheroot/4.0.0beta"
     """A version string for the HTTPServer."""
     
     software = None

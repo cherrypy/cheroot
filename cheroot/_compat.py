@@ -1,6 +1,6 @@
 """Compatibility code for using Cheroot with various versions of Python.
 
-Cheroot 3.3 is compatible with Python versions 2.3+. This module provides a
+Cheroot 4 is compatible with Python versions 2.3+. This module provides a
 useful abstraction over the differences between Python versions, sometimes by
 preferring a newer idiom, sometimes an older one, and sometimes a custom one.
 
