@@ -391,7 +391,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
         for trial in range(5):
             # Put next request
-            conn._output(ntob('GET /hello HTTP/1.1'))
+            conn._output(ntob('GET /hello?%s HTTP/1.1' % trial))
             conn._output(ntob("Host: %s" % self.HOST, 'ascii'))
             conn._send_output()
 
