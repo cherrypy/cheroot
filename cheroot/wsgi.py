@@ -249,7 +249,7 @@ class WSGIPathInfoDispatcher(object):
         if py3k:
             apps.sort()
         else:
-            apps.sort(cmp=lambda x,y: cmp(len(x[0]), len(y[0])))
+            apps.sort(lambda x,y: cmp(len(x[0]), len(y[0])))
         apps.reverse()
         
         # The path_prefix strings must start, but not end, with a slash.
