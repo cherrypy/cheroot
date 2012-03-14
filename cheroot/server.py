@@ -406,30 +406,30 @@ class ChunkedRFile(object):
                 break
             line = self.readline(sizehint)
         return lines
-    
+
     def read_trailer_lines(self):
         if not self.closed:
             raise ValueError(
                 "Cannot read trailers until the request body has been read.")
-        
+
         while True:
             line = self.rfile.readline()
             if not line:
                 # No more data--illegal end of headers
                 raise ValueError("Illegal end of headers.")
-            
+
             self.bytes_read += len(line)
             if self.maxlen and self.bytes_read > self.maxlen:
                 raise IOError("Request Entity Too Large")
-            
+
             if line == CRLF:
                 # Normal end of headers
                 break
             if not line.endswith(CRLF):
                 raise ValueError("HTTP requires CRLF terminators")
-            
+
             yield line
-    
+
     def close(self):
         self.rfile.close()
     
