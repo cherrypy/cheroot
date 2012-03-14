@@ -252,23 +252,24 @@ class ServerInterruptTest(helper.CherootWebCase):
         self.assertInLog("Keyboard Interrupt: shutting down")
 
 
-class UnixDomainSocketTest(helper.CherootWebCase):
+if hasattr(socket, "AF_UNIX"):
+    class UnixDomainSocketTest(helper.CherootWebCase):
 
-    config = {"bind_addr": "/tmp/cheroot_test"}
+        config = {"bind_addr": "/tmp/cheroot_test"}
 
-    def setup_server(cls):
-        class Root(helper.Controller):
+        def setup_server(cls):
+            class Root(helper.Controller):
 
-            def hello(self, req, resp):
-                return "hello"
+                def hello(self, req, resp):
+                    return "hello"
 
-        cls.httpserver.wsgi_app = Root()
-    setup_server = classmethod(setup_server)
+            cls.httpserver.wsgi_app = Root()
+        setup_server = classmethod(setup_server)
 
-    def test_normal(self):
-        self.getPage("/hello")
-        self.assertBody('hello')
-        self.assertStatus(200)
+        def test_normal(self):
+            self.getPage("/hello")
+            self.assertBody('hello')
+            self.assertStatus(200)
 
 
 class SSLTest(helper.CherootWebCase):

@@ -134,6 +134,7 @@ try:
     # Python 2.4+
     from traceback import format_exc
 except ImportError:
+    import traceback
     def format_exc(limit=None):
         """Like print_exc() but return a string. Backport for Python 2.3."""
         try:
