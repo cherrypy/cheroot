@@ -281,6 +281,8 @@ class SSLTest(helper.CherootWebCase):
 
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.ssl_adapter = helper.get_default_ssl_adapter()
+        cls.HTTP_CONN = HTTPSConnection
+        cls.scheme = 'https'
 
     setup_server = classmethod(setup_server)
 
@@ -291,6 +293,9 @@ class SSLTest(helper.CherootWebCase):
 
     def test_http_to_https(self):
         # Test what happens when a client tries to speak HTTP to an HTTPS server
+        msg = ("The client sent a plain HTTP request, but this "
+               "server only speaks HTTPS on this port.")
+
         c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest("GET", "/hello")
         c.endheaders()
@@ -301,8 +306,7 @@ class SSLTest(helper.CherootWebCase):
         else:
             self.status, self.headers, self.body = webtest.shb(response)
             c.close()
-            self.assertStatus(200)
-            self.assertBody("hello")
-        self.assertInLog("The client sent a plain HTTP request, but this "
-                         "server only speaks HTTPS on this port.")
+            self.assertStatus(400)
+            self.assertBody(msg)
+        self.assertInLog(msg)
 

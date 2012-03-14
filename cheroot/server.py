@@ -1013,12 +1013,14 @@ class HTTPConnection(object):
             # Close the connection.
             return
         except errors.NoSSLError:
+            msg = ("The client sent a plain HTTP request, but "
+                   "this server only speaks HTTPS on this port.")
+            self.server.error_log(msg)
+
             if req and not req.sent_headers:
                 # Unwrap our wfile
                 self.wfile = makefile(self.socket._sock, "wb", self.wbufsize)
-                req.simple_response("400 Bad Request",
-                    "The client sent a plain HTTP request, but "
-                    "this server only speaks HTTPS on this port.")
+                req.simple_response("400 Bad Request", msg)
                 self.linger = True
         except Exception:
             e = sys.exc_info()[1]
