@@ -226,7 +226,7 @@ class WSGIGateway_u0(WSGIGateway_10):
                     env[key] = env_10[str(key)].decode(env['wsgi.url_encoding'])
 
         if not py3k:
-            for k, v in sorted(env.items()):
+            for k, v in env.items():
                 if isinstance(v, str) and k not in ('REQUEST_URI', 'wsgi.input'):
                     env[k] = ntou(v)
         

@@ -150,8 +150,8 @@ class CherootWebCase(webtest.WebCase):
                                  (dt1, dt2, seconds))
 
     def assertInLog(self, msg):
-        for m, level, include_traceback in self.log:
-            if msg in m:
+        for m, level, tb in self.log:
+            if msg in m or msg in tb:
                 return
         raise AssertionError(
             "Log does not contain expected message %s." % repr(msg))
