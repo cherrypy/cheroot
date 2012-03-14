@@ -20,11 +20,11 @@ import re
 # arguments for the setup command
 ###############################################################################
 name = "Cheroot"
-version = "3.3.0alpha"
-desc = "Object-Oriented HTTP framework"
+version = "4.0.0beta"
+desc = "Object-Oriented HTTP server"
 long_desc = "Cheroot is a highly-optimized, pure-python HTTP server"
 classifiers=[
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
     "License :: Freely Distributable",
@@ -36,18 +36,16 @@ classifiers=[
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
     "Topic :: Internet :: WWW/HTTP :: WSGI",
-    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
     "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
-    "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 author="CherryPy Team"
 author_email="team@cherrypy.org"
 url="http://www.cherrypy.org"
 cp_license="BSD"
 packages=[
-    "cheroot", "cheroot.test",
+    "cheroot", "cheroot.ssllib", "cheroot.workers", "cheroot.test",
 ]
-download_url="http://download.cherrypy.org/cheroot/3.3.0alpha/"
+download_url="http://download.cherrypy.org/cheroot/4.0.0alpha/"
 data_files=[
     ('cheroot', ['cheroot/LICENSE.txt',
                  ]),
