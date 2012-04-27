@@ -4,7 +4,7 @@ __all__ = ['WorkerThread', 'ThreadPool']
 
 try:
     import queue
-except:
+except ImportError:
     import Queue as queue
 import socket
 import sys
