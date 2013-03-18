@@ -8,9 +8,9 @@ In particular, Python 2 uses str and '' for byte strings, while Python 3
 uses str and '' for unicode strings. We will call each of these the 'native
 string' type for each version. Because of this major difference, this module
 provides new 'bytestr', 'unicodestr', and 'nativestr' attributes, as well as
-two functions: 'ntob', which translates native strings (of type 'str') into
-byte strings regardless of Python version, and 'ntou', which translates native
-strings to unicode strings.
+two functions: 'ntob', which translates native strings (of type 'str'
+regardless of Python version) into byte strings, and 'ntou', which translates
+native strings to unicode strings.
 """
 import os
 import re
