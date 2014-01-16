@@ -54,9 +54,9 @@ data_files = [
 ]
 
 if sys.version_info >= (3, 0):
-    required_python_version = '3.0'
+    required_python_version = '3.3'
 else:
-    required_python_version = '2.3'
+    required_python_version = '2.7'
 
 ###############################################################################
 # end arguments for setup

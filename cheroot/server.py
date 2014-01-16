@@ -43,8 +43,9 @@ __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
            'Gateway']
 
+from traceback import format_exc
 from cheroot._compat import bytestr, unicodestr, basestring, ntob, py3k
-from cheroot._compat import HTTPDate, format_exc, unquote
+from cheroot._compat import HTTPDate, unquote
 from cheroot._compat import BaseHTTPRequestHandler
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
@@ -81,10 +82,7 @@ if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
         socket.IPV6_V6ONLY = 27
 
 if py3k:
-    if sys.version_info < (3, 1):
-        import io
-    else:
-        import _pyio as io
+    import _pyio as io
     DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 else:
     DEFAULT_BUFFER_SIZE = -1

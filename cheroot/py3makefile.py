@@ -1,10 +1,7 @@
 import socket
 import sys
 
-if sys.version_info < (3, 1):
-    import io
-else:
-    import _pyio as io
+import _pyio as io
 DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 
 
