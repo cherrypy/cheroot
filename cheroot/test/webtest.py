@@ -28,8 +28,8 @@ import types
 from unittest import *
 from unittest import _TextTestResult
 
-from cheroot._compat import basestring, ntob, py3k, HTTPConnection
-from cheroot._compat import HTTPSConnection, unicodestr
+from cheroot.compat import basestring, ntob, py3k, HTTPConnection
+from cheroot.compat import HTTPSConnection, unicodestr
 
 
 def interface(host):

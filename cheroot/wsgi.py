@@ -3,7 +3,7 @@
 import sys
 
 from cheroot.server import HTTPServer, Gateway
-from cheroot._compat import basestring, ntob, ntou, tonative, py3k, unicodestr
+from cheroot.compat import basestring, ntob, ntou, tonative, py3k, unicodestr
 
 
 class WSGIServer(HTTPServer):

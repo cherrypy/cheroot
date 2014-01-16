@@ -1,6 +1,6 @@
 import sys
 
-from cheroot._compat import ntob
+from cheroot.compat import ntob
 from cheroot.test import helper
 from cheroot import wsgi
 

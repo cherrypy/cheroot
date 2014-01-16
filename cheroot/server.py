@@ -44,9 +44,9 @@ __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'Gateway']
 
 from traceback import format_exc
-from cheroot._compat import bytestr, unicodestr, basestring, ntob, py3k
-from cheroot._compat import HTTPDate, unquote
-from cheroot._compat import BaseHTTPRequestHandler
+from cheroot.compat import bytestr, unicodestr, basestring, ntob, py3k
+from cheroot.compat import HTTPDate, unquote
+from cheroot.compat import BaseHTTPRequestHandler
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From http://www.bitbucket.org/cherrypy/cherrypy/issue/361

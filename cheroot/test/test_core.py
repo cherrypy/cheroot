@@ -3,7 +3,7 @@
 import socket
 import time
 
-from cheroot._compat import HTTPConnection, HTTPSConnection, ntob, tonative
+from cheroot.compat import HTTPConnection, HTTPSConnection, ntob, tonative
 from cheroot.test import helper, webtest
 
 

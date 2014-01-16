@@ -12,7 +12,7 @@ _fileobject_uses_str_type = isinstance(
     socket._fileobject(FauxSocket())._rbuf, basestring)
 del FauxSocket  # this class is not longer required for anything.
 
-from cheroot._compat import StringIO
+from cheroot.compat import StringIO
 from cheroot import errors
 
 

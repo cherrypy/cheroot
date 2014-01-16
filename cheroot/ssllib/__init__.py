@@ -1,6 +1,6 @@
 import sys
 
-from cheroot._compat import basestring, py3k
+from cheroot.compat import basestring, py3k
 
 DEFAULT_BUFFER_SIZE = -1
 
