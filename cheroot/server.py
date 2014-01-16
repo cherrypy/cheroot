@@ -830,7 +830,7 @@ class HTTPRequest(object):
 
         self.server.gateway(self).respond()
 
-        if (self.ready and not self.sent_headers):
+        if self.ready and not self.sent_headers:
             self.sent_headers = True
             if not self.send_headers():
                 self.close_connection = True

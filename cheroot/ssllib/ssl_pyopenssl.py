@@ -69,7 +69,7 @@ class SSL_makefile(py2makefile.makefile):
                 time.sleep(self.ssl_retry)
             except SSL.WantWriteError:
                 time.sleep(self.ssl_retry)
-            except SSL.SysCallError, e:
+            except SSL.SysCallError as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
                     return ""
 
@@ -77,7 +77,7 @@ class SSL_makefile(py2makefile.makefile):
                 if is_reader and errnum in errors.socket_errors_to_ignore:
                     return ""
                 raise socket.error(errnum)
-            except SSL.Error, e:
+            except SSL.Error as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
                     return ""
 
