@@ -201,11 +201,7 @@ class WSGIGateway_u0(WSGIGateway_10):
         """Return a new environ dict targeting the given wsgi.version"""
         req = self.req
         env_10 = WSGIGateway_10.get_environ(self)
-        if py3k:
-            env = env_10.copy()
-        else:
-            env = dict([(k.decode('ISO-8859-1'), v)
-                       for k, v in env_10.iteritems()])
+        env = env_10.copy()
         env[ntou('wsgi.version')] = ('u', 0)
 
         # Request-URI
