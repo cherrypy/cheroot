@@ -48,7 +48,7 @@ from cheroot._compat import HTTPDate, format_exc, unquote
 from cheroot._compat import BaseHTTPRequestHandler
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
-# From http://www.cherrypy.org/ticket/361
+# From http://www.bitbucket.org/cherrypy/cherrypy/issue/361
 response_codes[500] = ('Internal Server Error',
                        'The server encountered an unexpected condition '
                        'which prevented it from fulfilling the request.')
@@ -74,8 +74,11 @@ import os
 import re
 import socket
 import sys
-if 'win' in sys.platform and not hasattr(socket, 'IPPROTO_IPV6'):
-    socket.IPPROTO_IPV6 = 41
+if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
+    if not hasattr(socket, 'IPPROTO_IPV6'):
+        socket.IPPROTO_IPV6 = 41
+    if not hasattr(socket, 'IPV6_V6ONLY'):
+        socket.IPV6_V6ONLY = 27
 
 if py3k:
     if sys.version_info < (3, 1):
@@ -202,7 +205,7 @@ class SizeCheckWrapper(object):
             self.bytes_read += len(data)
             self._check_length()
             res.append(data)
-            # See http://www.cherrypy.org/ticket/421
+            # See http://www.bitbucket.org/cherrypy/cherrypy/issue/421
             if len(data) < 256 or data[-1:] == LF:
                 return EMPTY.join(res)
 
@@ -751,7 +754,7 @@ class HTTPRequest(object):
         # but it seems like it would be a big slowdown for such a rare case.
         if self.inheaders.get(ntob("Expect"), EMPTY) == ntob("100-continue"):
             # Don't use simple_response here, because it emits headers
-            # we don't want. See http://www.cherrypy.org/ticket/951
+            # we don't want. See http://www.bitbucket.org/cherrypy/cherrypy/issue/951
             msg = ntob(self.server.protocol, 'ascii') + \
                 ntob(" 100 Continue\r\n\r\n")
             try:
@@ -1005,7 +1008,7 @@ class HTTPConnection(object):
                 # Don't error if we're between requests; only error
                 # if 1) no request has been started at all, or 2) we're
                 # in the middle of a request.
-                # See http://www.cherrypy.org/ticket/853
+                # See http://www.bitbucket.org/cherrypy/cherrypy/issue/853
                 if (not request_seen) or (req and req.started_request):
                     # Don't bother writing the 408 if the response
                     # has already started being written.
@@ -1083,6 +1086,14 @@ try:
 except ImportError:
     try:
         from ctypes import windll, WinError
+        import ctypes.wintypes
+        _SetHandleInformation = windll.kernel32.SetHandleInformation
+        _SetHandleInformation.argtypes = [
+            ctypes.wintypes.HANDLE,
+            ctypes.wintypes.DWORD,
+            ctypes.wintypes.DWORD,
+        ]
+        _SetHandleInformation.restype = ctypes.wintypes.BOOL
     except ImportError:
         def prevent_socket_inheritance(sock):
             """Dummy function, since neither fcntl nor ctypes are available."""
@@ -1090,7 +1101,7 @@ except ImportError:
     else:
         def prevent_socket_inheritance(sock):
             """Mark the given socket fd as non-inheritable (Windows)."""
-            if not windll.kernel32.SetHandleInformation(sock.fileno(), 1, 0):
+            if not _SetHandleInformation(sock.fileno(), 1, 0):
                 raise WinError()
 else:
     def prevent_socket_inheritance(sock):
@@ -1319,7 +1330,8 @@ class HTTPServer(object):
             af, socktype, proto, canonname, sa = res
             try:
                 self.bind(af, socktype, proto)
-            except socket.error:
+            except socket.error as serr:
+                msg = "%s -- (%s: %s)" % (msg, sa, serr)
                 if self.socket:
                     self.socket.close()
                 self.socket = None
@@ -1374,7 +1386,7 @@ class HTTPServer(object):
             self.socket = self.ssl_adapter.bind(self.socket)
 
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
-        # activate dual-stack. See http://www.cherrypy.org/ticket/871.
+        # activate dual-stack. See http://www.bitbucket.org/cherrypy/cherrypy/issue/871.
         if (hasattr(socket, 'AF_INET6') and family == socket.AF_INET6
                 and self.bind_addr[0] in ('::', '::0', '::0.0.0.0')):
             try:
@@ -1468,14 +1480,14 @@ class HTTPServer(object):
                 # is received during the accept() call; all docs say retry
                 # the call, and I *think* I'm reading it right that Python
                 # will then go ahead and poll for and handle the signal
-                # elsewhere. See http://www.cherrypy.org/ticket/707.
+                # elsewhere. See http://www.bitbucket.org/cherrypy/cherrypy/issue/707.
                 return
             if x.args[0] in errors.socket_errors_nonblocking:
-                # Just try again. See http://www.cherrypy.org/ticket/479.
+                # Just try again. See http://www.bitbucket.org/cherrypy/cherrypy/issue/479.
                 return
             if x.args[0] in errors.socket_errors_to_ignore:
                 # Our socket was closed.
-                # See http://www.cherrypy.org/ticket/686.
+                # See http://www.bitbucket.org/cherrypy/cherrypy/issue/686.
                 return
             raise
 
@@ -1507,7 +1519,7 @@ class HTTPServer(object):
                     x = sys.exc_info()[1]
                     if x.args[0] not in errors.socket_errors_to_ignore:
                         # Changed to use error code and not message
-                        # See http://www.cherrypy.org/ticket/860.
+                        # See http://www.bitbucket.org/cherrypy/cherrypy/issue/860.
                         raise
                 else:
                     # Note that we're explicitly NOT using AI_PASSIVE,
