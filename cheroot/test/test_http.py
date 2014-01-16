@@ -6,7 +6,7 @@ import socket
 import sys
 
 import cheroot
-from cheroot._compat import HTTPConnection, HTTPSConnection, ntob, py3k
+from cheroot.compat import HTTPConnection, HTTPSConnection, ntob, py3k
 from cheroot import wsgi
 
 from cheroot.test import helper
