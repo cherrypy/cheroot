@@ -23,7 +23,7 @@ name = "Cheroot"
 version = "4.0.0beta"
 desc = "Object-Oriented HTTP server"
 long_desc = "Cheroot is a highly-optimized, pure-python HTTP server"
-classifiers=[
+classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
@@ -38,15 +38,15 @@ classifiers=[
     "Topic :: Internet :: WWW/HTTP :: WSGI",
     "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
 ]
-author="CherryPy Team"
-author_email="team@cherrypy.org"
-url="http://www.cherrypy.org"
-cp_license="BSD"
-packages=[
+author = "CherryPy Team"
+author_email = "team@cherrypy.org"
+url = "http://www.cherrypy.org"
+cp_license = "BSD"
+packages = [
     "cheroot", "cheroot.ssllib", "cheroot.workers", "cheroot.test",
 ]
-download_url="http://download.cherrypy.org/cheroot/4.0.0beta/"
-data_files=[
+download_url = "http://download.cherrypy.org/cheroot/4.0.0beta/"
+data_files = [
     ('cheroot', ['cheroot/LICENSE.txt',
                  ]),
     ('cheroot/test', ['cheroot/test/test.pem',
@@ -64,9 +64,11 @@ else:
 
 # wininst may install data_files in Python/x.y instead of the cheroot package.
 # Django's solution is at http://code.djangoproject.com/changeset/8313
-# See also http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
+# See also
+# http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
 if 'bdist_wininst' in sys.argv or '--format=wininst' in sys.argv:
     data_files = [(r'\PURELIB\%s' % path, files) for path, files in data_files]
+
 
 def main():
     if sys.version < required_python_version:

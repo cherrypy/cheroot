@@ -1,7 +1,7 @@
 import socket
 import sys
 
-if sys.version_info < (3,1):
+if sys.version_info < (3, 1):
     import io
 else:
     import _pyio as io
@@ -9,6 +9,7 @@ DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
 
 
 class BufferedReader(io.BufferedReader):
+
     """Faux file object attached to a socket object."""
 
     def __init__(self, *args, **kwargs):
@@ -22,6 +23,7 @@ class BufferedReader(io.BufferedReader):
 
 
 class BufferedWriter(io.BufferedWriter):
+
     """Faux file object attached to a socket object."""
 
     def __init__(self, *args, **kwargs):
@@ -57,4 +59,3 @@ def makefile(sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
         return BufferedReader(socket.SocketIO(sock, mode), bufsize)
     else:
         return BufferedWriter(socket.SocketIO(sock, mode), bufsize)
-

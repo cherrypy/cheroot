@@ -160,7 +160,8 @@ class ConnectionCloseTests(helper.CherootWebCase):
             else:
                 self.assertHeader("Connection", "close")
 
-                # Make another request on the same connection, which should error.
+                # Make another request on the same connection, which should
+                # error.
                 self.assertRaises(NotConnected, self.getPage, "/pov")
 
             # Try HEAD. See http://www.cherrypy.org/ticket/864.
@@ -342,7 +343,6 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.body = response.read()
         self.assertBody(pov)
 
-
         # Make another request on the same socket,
         # but timeout on the headers
         conn.send(ntob('GET /hello HTTP/1.1'))
@@ -448,7 +448,9 @@ class ConnectionCloseTests(helper.CherootWebCase):
         while True:
             line = response.fp.readline().strip()
             if line:
-                self.fail("100 Continue should not output any headers. Got %r" % line)
+                self.fail(
+                    "100 Continue should not output any headers. Got %r" %
+                    line)
             else:
                 break
 
@@ -570,8 +572,8 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
         # Try a normal chunked request (with extensions)
         body = ntob("8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
-                "Content-Type: application/json\r\n"
-                "\r\n")
+                    "Content-Type: application/json\r\n"
+                    "\r\n")
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.putheader("Transfer-Encoding", "chunked")
@@ -697,4 +699,3 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.body = response.read()
         self.assertBody("HTTP requires CRLF terminators")
         conn.close()
-

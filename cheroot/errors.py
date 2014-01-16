@@ -2,11 +2,13 @@ import errno
 
 
 class NoSSLError(Exception):
+
     """Exception raised when a client speaks HTTP to an HTTPS socket."""
     pass
 
 
 class FatalSSLAlert(Exception):
+
     """Exception raised when the SSL implementation signals a fatal alert."""
     pass
 
@@ -39,10 +41,9 @@ socket_errors_to_ignore = plat_specific_errors(
     "ECONNABORTED", "WSAECONNABORTED",
     "ENETRESET", "WSAENETRESET",
     "EHOSTDOWN", "EHOSTUNREACH",
-    )
+)
 socket_errors_to_ignore.append("timed out")
 socket_errors_to_ignore.append("The read operation timed out")
 
 socket_errors_nonblocking = plat_specific_errors(
     'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
-
