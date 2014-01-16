@@ -1,6 +1,16 @@
 import socket
+
+
+class FauxSocket(object):
+
+    """Faux socket with the minimal interface required by pypy"""
+
+    def _reuse(self):
+        pass
+
 _fileobject_uses_str_type = isinstance(
-    socket._fileobject(None)._rbuf, basestring)
+    socket._fileobject(FauxSocket())._rbuf, basestring)
+del FauxSocket  # this class is not longer required for anything.
 
 from cheroot._compat import StringIO
 from cheroot import errors
