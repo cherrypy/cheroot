@@ -82,8 +82,9 @@ if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
         socket.IPV6_V6ONLY = 27
 
 if py3k:
-    import _pyio as io
-    DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE
+    import _pyio
+    DEFAULT_BUFFER_SIZE = _pyio.DEFAULT_BUFFER_SIZE
+    del _pyio
 else:
     DEFAULT_BUFFER_SIZE = -1
 
