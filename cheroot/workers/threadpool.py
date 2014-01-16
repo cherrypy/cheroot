@@ -16,7 +16,8 @@ import time
 
 class TrueyZero(object):
 
-    """An object which equals and does math like the integer '0' but evals True."""
+    """An object which equals and does math like the integer '0' but evals True
+    """
 
     def __add__(self, other):
         return other
@@ -32,7 +33,7 @@ _SHUTDOWNREQUEST = None
 class WorkerThread(threading.Thread):
 
     """Thread which continuously polls a Queue for Connection objects.
-    
+
     Due to the timing issues of polling a Queue, a WorkerThread does not
     check its own 'ready' flag after it has started. To stop the thread,
     it is necessary to stick a _SHUTDOWNREQUEST object onto the Queue
@@ -60,12 +61,38 @@ class WorkerThread(threading.Thread):
         self.start_time = None
         self.work_time = 0
         self.stats = {
-            'Requests': lambda s: self.requests_seen + ((self.start_time is None) and trueyzero or self.conn.requests_seen),
-            'Bytes Read': lambda s: self.bytes_read + ((self.start_time is None) and trueyzero or self.conn.rfile.bytes_read),
-            'Bytes Written': lambda s: self.bytes_written + ((self.start_time is None) and trueyzero or self.conn.wfile.bytes_written),
-            'Work Time': lambda s: self.work_time + ((self.start_time is None) and trueyzero or time.time() - self.start_time),
-            'Read Throughput': lambda s: s['Bytes Read'](s) / (s['Work Time'](s) or 1e-6),
-            'Write Throughput': lambda s: s['Bytes Written'](s) / (s['Work Time'](s) or 1e-6),
+            'Requests': lambda s: (
+                self.requests_seen + (
+                    (self.start_time is None) and
+                    trueyzero or
+                    self.conn.requests_seen
+                )
+            ),
+            'Bytes Read': lambda s: (
+                self.bytes_read + (
+                    (self.start_time is None) and
+                    trueyzero or
+                    self.conn.rfile.bytes_read
+                )
+            ),
+            'Bytes Written': lambda s: (
+                self.bytes_written + (
+                    (self.start_time is None) and
+                    trueyzero or
+                    self.conn.wfile.bytes_written
+                )
+            ),
+            'Work Time': lambda s: (
+                self.work_time + (
+                    (self.start_time is None) and
+                    trueyzero or
+                    time.time() - self.start_time
+                )
+            ),
+            'Read Throughput': lambda s: (
+                s['Bytes Read'](s) / (s['Work Time'](s) or 1e-6)),
+            'Write Throughput': lambda s: (
+                s['Bytes Written'](s) / (s['Work Time'](s) or 1e-6)),
         }
         threading.Thread.__init__(self)
 
@@ -100,7 +127,7 @@ class WorkerThread(threading.Thread):
 class ThreadPool(object):
 
     """A Request Queue for an HTTPServer which pools threads.
-    
+
     ThreadPool objects must provide min, get(), put(obj), start()
     and stop(timeout) attributes.
     """
@@ -209,7 +236,8 @@ class ThreadPool(object):
                             worker.join()
                 except (AssertionError,
                         # Ignore repeated Ctrl-C.
-                        # See http://www.bitbucket.org/cherrypy/cherrypy/issue/691.
+                        # See
+                        # http://www.bitbucket.org/cherrypy/cherrypy/issue/691.
                         KeyboardInterrupt):
                     pass
 

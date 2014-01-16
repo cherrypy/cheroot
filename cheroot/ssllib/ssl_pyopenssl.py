@@ -53,7 +53,7 @@ class SSL_makefile(py2makefile.makefile):
 
     def _safe_call(self, is_reader, call, *args, **kwargs):
         """Wrap the given call with SSL error-trapping.
-        
+
         is_reader: if False EOF errors will be raised. If True, EOF errors
         will return "" (to emulate normal sockets).
         """
@@ -120,7 +120,7 @@ class SSL_makefile(py2makefile.makefile):
 class SSLConnection:
 
     """A thread-safe wrapper for an SSL.Connection.
-    
+
     ``*args``: the arguments to create the wrapped ``SSL.Connection(*args)``.
     """
 
@@ -168,7 +168,7 @@ class pyOpenSSLAdapter(SSLAdapter):
 
     certificate_chain = None
     """Optional. The filename of CA's intermediate certificate bundle.
-    
+
     This is needed for cheaper "chained root" SSL certificates, and should be
     left as None if not required."""
 
@@ -222,8 +222,10 @@ class pyOpenSSLAdapter(SSLAdapter):
             ssl_environ.update({
                 'SSL_SERVER_M_VERSION': cert.get_version(),
                 'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
-                # 'SSL_SERVER_V_START': Validity of server's certificate (start time),
-                # 'SSL_SERVER_V_END': Validity of server's certificate (end time),
+                # 'SSL_SERVER_V_START':
+                #     Validity of server's certificate (start time),
+                # 'SSL_SERVER_V_END':
+                #     Validity of server's certificate (end time),
             })
 
             for prefix, dn in [("I", cert.get_issuer()),

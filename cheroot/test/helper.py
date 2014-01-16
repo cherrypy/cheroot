@@ -12,7 +12,8 @@ import threading
 import traceback
 
 import cheroot
-from cheroot._compat import basestring, format_exc, HTTPConnection, HTTPSConnection, ntob
+from cheroot._compat import basestring, format_exc, HTTPConnection
+from cheroot._compat import HTTPSConnection, ntob
 from cheroot import server, ssllib, wsgi
 from cheroot.test import webtest
 
@@ -115,8 +116,10 @@ class CherootWebCase(webtest.WebCase):
     stop = classmethod(stop)
 
     def base(self):
-        if ((self.httpserver.ssl_adapter is None and self.PORT == 80) or
-                (self.httpserver.ssl_adapter is not None and self.PORT == 443)):
+        if (
+                (self.httpserver.ssl_adapter is None and self.PORT == 80) or
+                (self.httpserver.ssl_adapter is not None and self.PORT == 443)
+        ):
             port = ""
         else:
             port = ":%s" % self.PORT
@@ -127,9 +130,11 @@ class CherootWebCase(webtest.WebCase):
     def exit(self):
         sys.exit()
 
-    def getPage(self, url, headers=None, method="GET", body=None, protocol=None):
+    def getPage(self, url, headers=None, method="GET", body=None,
+                protocol=None):
         """Open the url. Return status, headers, body."""
-        return webtest.WebCase.getPage(self, url, headers, method, body, protocol)
+        return webtest.WebCase.getPage(
+            self, url, headers, method, body, protocol)
 
     def skip(self, msg='skipped '):
         raise nose.SkipTest(msg)

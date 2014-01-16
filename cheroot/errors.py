@@ -19,7 +19,7 @@ class MaxSizeExceeded(Exception):
 
 def plat_specific_errors(*errnames):
     """Return error numbers for all errors in errnames on this platform.
-    
+
     The 'errno' module contains different global constants depending on
     the specific platform (OS). This function will return the list of
     numeric values for a given list of potential names.

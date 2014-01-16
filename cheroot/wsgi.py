@@ -96,7 +96,7 @@ class WSGIGateway(Gateway):
 
     def write(self, chunk):
         """WSGI callable to write unbuffered data to the client.
-        
+
         This method is also used internally by start_response (to write
         data from the iterable returned by the WSGI application).
         """
@@ -108,9 +108,10 @@ class WSGIGateway(Gateway):
         if rbo is not None and chunklen > rbo:
             if not self.req.sent_headers:
                 # Whew. We can send a 500 to the client.
-                self.req.simple_response("500 Internal Server Error",
-                                         "The requested resource returned more bytes than the "
-                                         "declared Content-Length.")
+                self.req.simple_response(
+                    "500 Internal Server Error",
+                    "The requested resource returned more bytes than the "
+                    "declared Content-Length.")
             else:
                 # Dang. We have probably already sent data. Truncate the chunk
                 # to fit (so the client doesn't hang) and raise an error later.
@@ -191,9 +192,9 @@ class WSGIGateway_10(WSGIGateway):
 class WSGIGateway_u0(WSGIGateway_10):
 
     """A Gateway class to interface HTTPServer with WSGI u.0.
-    
-    WSGI u.0 is an experimental protocol, which uses unicode for keys and values
-    in both Python 2 and Python 3.
+
+    WSGI u.0 is an experimental protocol, which uses unicode for keys and
+    values in both Python 2 and Python 3.
     """
 
     def get_environ(self):
@@ -225,7 +226,9 @@ class WSGIGateway_u0(WSGIGateway_10):
         except UnicodeDecodeError:
             # Fall back to latin 1 so apps can transcode if needed.
             env[ntou('wsgi.url_encoding')] = ntou('ISO-8859-1')
-            for key in [ntou("PATH_INFO"), ntou("SCRIPT_NAME"), ntou("QUERY_STRING")]:
+            for key in [
+                ntou("PATH_INFO"), ntou("SCRIPT_NAME"), ntou("QUERY_STRING")
+            ]:
                 if py3k:
                     env[key] = env_10[key]
                 else:
@@ -234,7 +237,10 @@ class WSGIGateway_u0(WSGIGateway_10):
 
         if not py3k:
             for k, v in env.items():
-                if isinstance(v, str) and k not in ('REQUEST_URI', 'wsgi.input'):
+                if (
+                    isinstance(v, str) and
+                    k not in ('REQUEST_URI', 'wsgi.input')
+                ):
                     env[k] = ntou(v)
 
         return env
@@ -243,7 +249,7 @@ class WSGIGateway_u0(WSGIGateway_10):
 class WSGIPathInfoDispatcher(object):
 
     """A WSGI dispatcher for dispatch based on the PATH_INFO.
-    
+
     apps: a dict or list of (path_prefix, app) pairs.
     """
 

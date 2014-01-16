@@ -7,8 +7,8 @@ timeout = 1
 
 
 import cheroot
-from cheroot._compat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
-from cheroot._compat import ntob, urlopen, unicodestr
+from cheroot._compat import HTTPConnection, HTTPSConnection, NotConnected
+from cheroot._compat import ntob, urlopen, unicodestr, BadStatusLine
 from cheroot.test import webtest
 
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
@@ -164,7 +164,8 @@ class ConnectionCloseTests(helper.CherootWebCase):
                 # error.
                 self.assertRaises(NotConnected, self.getPage, "/pov")
 
-            # Try HEAD. See http://www.bitbucket.org/cherrypy/cherrypy/issue/864.
+            # Try HEAD.
+            # See http://www.bitbucket.org/cherrypy/cherrypy/issue/864.
             self.getPage("/stream", method='HEAD')
             self.assertStatus('200 OK')
             self.assertBody('')
