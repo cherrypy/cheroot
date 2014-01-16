@@ -26,4 +26,3 @@ Want SSL support? Just set server.ssl_adapter to an SSLAdapter instance.
 """
 
 __version__ = "4.0.0beta"
-

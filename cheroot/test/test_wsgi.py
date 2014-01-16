@@ -57,7 +57,7 @@ class WSGITests(helper.CherootWebCase):
             '/baz': baz,
             '/qoph': qoph,
             '/hello': hello,
-            })
+        })
     setup_server = classmethod(setup_server)
 
     def test_start_response_twice_no_exc_info(self):
@@ -99,4 +99,3 @@ class WSGITests(helper.CherootWebCase):
             self.assertStatus(200)
         finally:
             self.httpserver.gateway = old_gw
-

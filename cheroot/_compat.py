@@ -22,14 +22,17 @@ if sys.version_info >= (3, 0):
     unicodestr = str
     nativestr = unicodestr
     basestring = (bytes, str)
+
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given encoding."""
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
+
     def ntou(n, encoding='ISO-8859-1'):
         """Return the given native string as a unicode string with the given encoding."""
         # In Python 3, the native string type is unicode
         return n
+
     def tonative(n, encoding='ISO-8859-1'):
         """Return the given string as a native string in the given encoding."""
         # In Python 3, the native string type is unicode
@@ -47,12 +50,14 @@ else:
     unicodestr = unicode
     nativestr = bytestr
     basestring = basestring
+
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given encoding."""
         # In Python 2, the native string type is bytes. Assume it's already
         # in the given encoding, which for ISO-8859-1 is almost always what
         # was intended.
         return n
+
     def ntou(n, encoding='ISO-8859-1'):
         """Return the given native string as a unicode string with the given encoding."""
         # In Python 2, the native string type is bytes.
@@ -68,6 +73,7 @@ else:
         # Assume it's already in the given encoding, which for ISO-8859-1 is almost
         # always what was intended.
         return n.decode(encoding)
+
     def tonative(n, encoding='ISO-8859-1'):
         """Return the given string as a native string in the given encoding."""
         # In Python 2, the native string type is bytes.
@@ -92,8 +98,9 @@ if py3k:
     from urllib.request import urlopen
     PERCENT = ntob('%')
     EMPTY = ntob('')
+
     def unquote(path):
-        """takes quoted byte string and unquotes % encoded values""" 
+        """takes quoted byte string and unquotes % encoded values"""
         res = path.split(PERCENT)
         for i in range(1, len(res)):
             item = res[i]
@@ -125,6 +132,7 @@ except ImportError:
 
 try:
     from email.utils import formatdate
+
     def HTTPDate(timeval=None):
         return formatdate(timeval, usegmt=True).encode('ISO-8859-1')
 except ImportError:
@@ -135,6 +143,7 @@ try:
     from traceback import format_exc
 except ImportError:
     import traceback
+
     def format_exc(limit=None):
         """Like print_exc() but return a string. Backport for Python 2.3."""
         try:
@@ -142,5 +151,3 @@ except ImportError:
             return ''.join(traceback.format_exception(etype, value, tb, limit))
         finally:
             etype = value = tb = None
-
-

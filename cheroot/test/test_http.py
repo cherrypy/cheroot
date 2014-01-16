@@ -32,17 +32,17 @@ class HTTPTests(helper.CherootWebCase):
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.max_request_body_size = 30000000
     setup_server = classmethod(setup_server)
-    
+
     def test_normal_request(self):
         self.getPage("/hello")
         self.assertStatus(200)
         self.assertBody(ntob('Hello world!'))
-    
+
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the
         # inclusion of a Content-Length or Transfer-Encoding header field in
         # the request's message-headers."
-        # 
+        #
         # Send a message with neither header and no body.
         if self.scheme == "https":
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
@@ -95,10 +95,10 @@ class HTTPTests(helper.CherootWebCase):
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
-        # See http://www.cherrypy.org/ticket/941 
+        # See http://www.cherrypy.org/ticket/941
         c._output(ntob('Re, 1.2.3.4#015#012'))
         c.endheaders()
-        
+
         response = c.getresponse()
         self.status = str(response.status)
         self.assertStatus(400)
@@ -120,11 +120,11 @@ class HTTPTests(helper.CherootWebCase):
         try:
             response.begin()
             self.assertEqual(response.status, 400)
-            self.assertEqual(response.fp.read(22), ntob("Malformed Request-Line"))
+            self.assertEqual(response.fp.read(22),
+                             ntob("Malformed Request-Line"))
             c.close()
         except socket.error:
             e = sys.exc_info()[1]
             # "Connection reset by peer" is also acceptable.
             if e.errno != errno.ECONNRESET:
                 raise
-

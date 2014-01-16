@@ -7,8 +7,9 @@ from cheroot._compat import basestring, ntob, ntou, tonative, py3k, unicodestr
 
 
 class WSGIServer(HTTPServer):
+
     """A subclass of HTTPServer which calls a WSGI application."""
-    
+
     def __init__(self, bind_addr, gateway=None, **kwargs):
         self.wsgi_app = kwargs.pop("wsgi_app", None)
         if gateway is None:
@@ -17,14 +18,15 @@ class WSGIServer(HTTPServer):
 
 
 class WSGIGateway(Gateway):
+
     """A base class to interface HTTPServer with WSGI."""
-    
+
     def __init__(self, req):
         self.req = req
         self.started_response = False
         self.env = self.get_environ()
         self.remaining_bytes_out = None
-    
+
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version"""
         raise NotImplemented
@@ -56,7 +58,7 @@ class WSGIGateway(Gateway):
             raise AssertionError("WSGI start_response called a second "
                                  "time with no exc_info.")
         self.started_response = True
-        
+
         # "if exc_info is provided, and the HTTP headers have already been
         # sent, start_response must raise an error, and should raise the
         # exc_info tuple."
@@ -89,7 +91,7 @@ class WSGIGateway(Gateway):
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
             self.req.outheaders.append((ntob(k), ntob(v)))
-        
+
         return self.write
 
     def write(self, chunk):
@@ -100,27 +102,27 @@ class WSGIGateway(Gateway):
         """
         if not self.started_response:
             raise AssertionError("WSGI write called before start_response.")
-        
+
         chunklen = len(chunk)
         rbo = self.remaining_bytes_out
         if rbo is not None and chunklen > rbo:
             if not self.req.sent_headers:
                 # Whew. We can send a 500 to the client.
                 self.req.simple_response("500 Internal Server Error",
-                    "The requested resource returned more bytes than the "
-                    "declared Content-Length.")
+                                         "The requested resource returned more bytes than the "
+                                         "declared Content-Length.")
             else:
                 # Dang. We have probably already sent data. Truncate the chunk
                 # to fit (so the client doesn't hang) and raise an error later.
                 chunk = chunk[:rbo]
-        
+
         if not self.req.sent_headers:
             self.req.sent_headers = True
             self.req.send_headers()
-        
+
         if self.req.allow_message_body:
             self.req.write(chunk)
-        
+
         if rbo is not None:
             rbo -= chunklen
             if rbo < 0:
@@ -129,8 +131,9 @@ class WSGIGateway(Gateway):
 
 
 class WSGIGateway_10(WSGIGateway):
+
     """A Gateway class to interface HTTPServer with WSGI 1.0.x."""
-    
+
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version"""
         req = self.req
@@ -157,20 +160,20 @@ class WSGIGateway_10(WSGIGateway):
             'wsgi.run_once': False,
             'wsgi.url_scheme': tonative(req.scheme),
             'wsgi.version': (1, 0),
-            }
-        
+        }
+
         if isinstance(req.server.bind_addr, basestring):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
             env["SERVER_PORT"] = ""
         else:
             env["SERVER_PORT"] = str(req.server.bind_addr[1])
-        
+
         # Request headers
         for k, v in req.inheaders.items():
             k = tonative(k).upper().replace("-", "_")
             env["HTTP_" + k] = tonative(v)
-        
+
         # CONTENT_TYPE/CONTENT_LENGTH
         ct = env.pop("HTTP_CONTENT_TYPE", None)
         if ct is not None:
@@ -178,20 +181,21 @@ class WSGIGateway_10(WSGIGateway):
         cl = env.pop("HTTP_CONTENT_LENGTH", None)
         if cl is not None:
             env["CONTENT_LENGTH"] = cl
-        
+
         if req.conn.ssl_env:
             env.update(req.conn.ssl_env)
-        
+
         return env
 
 
 class WSGIGateway_u0(WSGIGateway_10):
+
     """A Gateway class to interface HTTPServer with WSGI u.0.
     
     WSGI u.0 is an experimental protocol, which uses unicode for keys and values
     in both Python 2 and Python 3.
     """
-    
+
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version"""
         req = self.req
@@ -199,9 +203,10 @@ class WSGIGateway_u0(WSGIGateway_10):
         if py3k:
             env = env_10.copy()
         else:
-            env = dict([(k.decode('ISO-8859-1'), v) for k, v in env_10.iteritems()])
+            env = dict([(k.decode('ISO-8859-1'), v)
+                       for k, v in env_10.iteritems()])
         env[ntou('wsgi.version')] = ('u', 0)
-        
+
         # Request-URI
         env.setdefault(ntou('wsgi.url_encoding'), ntou('utf-8'))
         try:
@@ -213,7 +218,8 @@ class WSGIGateway_u0(WSGIGateway_10):
                     # ...now decode according to the configured encoding
                     env[key] = val.decode(env['wsgi.url_encoding'])
             else:
-                # SCRIPT_NAME is the empty string, who cares what encoding it is?
+                # SCRIPT_NAME is the empty string, who cares what encoding it
+                # is?
                 env["PATH_INFO"] = req.path.decode(env['wsgi.url_encoding'])
                 env["QUERY_STRING"] = req.qs.decode(env['wsgi.url_encoding'])
         except UnicodeDecodeError:
@@ -223,39 +229,41 @@ class WSGIGateway_u0(WSGIGateway_10):
                 if py3k:
                     env[key] = env_10[key]
                 else:
-                    env[key] = env_10[str(key)].decode(env['wsgi.url_encoding'])
+                    env[key] = env_10[str(key)].decode(
+                        env['wsgi.url_encoding'])
 
         if not py3k:
             for k, v in env.items():
                 if isinstance(v, str) and k not in ('REQUEST_URI', 'wsgi.input'):
                     env[k] = ntou(v)
-        
+
         return env
 
 
 class WSGIPathInfoDispatcher(object):
+
     """A WSGI dispatcher for dispatch based on the PATH_INFO.
     
     apps: a dict or list of (path_prefix, app) pairs.
     """
-    
+
     def __init__(self, apps):
         try:
             apps = list(apps.items())
         except AttributeError:
             pass
-        
+
         # Sort the apps by len(path), descending
         if py3k:
             apps.sort()
         else:
-            apps.sort(lambda x,y: cmp(len(x[0]), len(y[0])))
+            apps.sort(lambda x, y: cmp(len(x[0]), len(y[0])))
         apps.reverse()
-        
+
         # The path_prefix strings must start, but not end, with a slash.
         # Use "" instead of "/".
         self.apps = [(p.rstrip("/"), a) for p, a in apps]
-    
+
     def __call__(self, environ, start_response):
         path = environ["PATH_INFO"] or "/"
         for p, app in self.apps:
@@ -265,8 +273,7 @@ class WSGIPathInfoDispatcher(object):
                 environ["SCRIPT_NAME"] = environ["SCRIPT_NAME"] + p
                 environ["PATH_INFO"] = path[len(p):]
                 return app(environ, start_response)
-        
+
         start_response('404 Not Found', [('Content-Type', 'text/plain'),
                                          ('Content-Length', '0')])
         return ['']
-

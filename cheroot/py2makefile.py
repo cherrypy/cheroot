@@ -1,18 +1,20 @@
 import socket
-_fileobject_uses_str_type = isinstance(socket._fileobject(None)._rbuf, basestring)
+_fileobject_uses_str_type = isinstance(
+    socket._fileobject(None)._rbuf, basestring)
 
 from cheroot._compat import StringIO
 from cheroot import errors
 
 
 class makefile(socket._fileobject):
+
     """Faux file object attached to a socket object."""
 
     def __init__(self, *args, **kwargs):
         self.bytes_read = 0
         self.bytes_written = 0
         socket._fileobject.__init__(self, *args, **kwargs)
-    
+
     def sendall(self, data):
         """Sendall for non-blocking sockets."""
         while data:
@@ -42,7 +44,7 @@ class makefile(socket._fileobject):
                 return data
             except socket.error, e:
                 if (e.args[0] not in errors.socket_errors_nonblocking
-                    and e.args[0] not in errors.socket_error_eintr):
+                        and e.args[0] not in errors.socket_error_eintr):
                     raise
 
     if not _fileobject_uses_str_type:
@@ -69,7 +71,8 @@ class makefile(socket._fileobject):
                 # Read until size bytes or EOF seen, whichever comes first
                 buf_len = buf.tell()
                 if buf_len >= size:
-                    # Already have size bytes in our buffer?  Extract and return.
+                    # Already have size bytes in our buffer?  Extract and
+                    # return.
                     buf.seek(0)
                     rv = buf.read(size)
                     self._rbuf = StringIO()
@@ -124,7 +127,8 @@ class makefile(socket._fileobject):
                     # Speed up unbuffered case
                     buf.seek(0)
                     buffers = [buf.read()]
-                    self._rbuf = StringIO()  # reset _rbuf.  we consume it via buf.
+                    # reset _rbuf.  we consume it via buf.
+                    self._rbuf = StringIO()
                     data = None
                     recv = self.recv
                     while data != "\n":
@@ -150,7 +154,8 @@ class makefile(socket._fileobject):
                     buf.write(data)
                 return buf.getvalue()
             else:
-                # Read until size bytes or \n or EOF seen, whichever comes first
+                # Read until size bytes or \n or EOF seen, whichever comes
+                # first
                 buf.seek(0, 2)  # seek end
                 buf_len = buf.tell()
                 if buf_len >= size:
@@ -270,7 +275,8 @@ class makefile(socket._fileobject):
                         break
                 return "".join(buffers)
             else:
-                # Read until size bytes or \n or EOF seen, whichever comes first
+                # Read until size bytes or \n or EOF seen, whichever comes
+                # first
                 nl = data.find('\n', 0, size)
                 if nl >= 0:
                     nl += 1
@@ -303,4 +309,3 @@ class makefile(socket._fileobject):
                         break
                     buf_len += n
                 return "".join(buffers)
-

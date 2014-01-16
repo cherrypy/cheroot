@@ -22,7 +22,7 @@ config = {
     'protocol': "HTTP/1.1",
     'bind_addr': ('127.0.0.1', 54583),
     'server': 'wsgi',
-    }
+}
 try:
     import testconfig
     if testconfig.config is not None:
@@ -116,11 +116,11 @@ class CherootWebCase(webtest.WebCase):
 
     def base(self):
         if ((self.httpserver.ssl_adapter is None and self.PORT == 80) or
-            (self.httpserver.ssl_adapter is not None and self.PORT == 443)):
+                (self.httpserver.ssl_adapter is not None and self.PORT == 443)):
             port = ""
         else:
             port = ":%s" % self.PORT
-        
+
         return "%s://%s%s%s" % (self.scheme, self.HOST, port,
                                 self.script_name.rstrip("/"))
 
@@ -140,7 +140,7 @@ class CherootWebCase(webtest.WebCase):
         """Assert abs(dt1 - dt2) is within Y seconds."""
         if seconds is None:
             seconds = self.date_tolerance
-        
+
         if dt1 > dt2:
             diff = dt1 - dt2
         else:
@@ -161,6 +161,7 @@ class Request(object):
 
     def __init__(self, environ):
         self.environ = environ
+
 
 class Response(object):
 
@@ -187,7 +188,8 @@ class Controller(object):
         try:
             req, resp = Request(environ), Response()
             try:
-                handler = getattr(self, environ["PATH_INFO"].lstrip("/").replace("/", "_"))
+                handler = getattr(
+                    self, environ["PATH_INFO"].lstrip("/").replace("/", "_"))
             except AttributeError:
                 resp.status = '404 Not Found'
             else:
@@ -230,11 +232,10 @@ class UnixSocketHTTPConnection(HTTPConnection):
         self.sock.settimeout(10)
         self.sock.connect(self.path)
 
+
 def get_default_ssl_adapter():
     """Return an instance of a cheroot.ssllib.SSLAdapter."""
     # Use the default ('pyopenssl' for Python 2 and 'builtin' for 3):
     ssl_adapter_class = ssllib.get_ssl_adapter_class()
     serverpem = os.path.join(thisdir, 'test.pem')
     return ssl_adapter_class(certificate=serverpem, private_key=serverpem)
-
-
