@@ -25,7 +25,8 @@ class WSGIGraftTests(helper.CherootWebCase):
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)
-            return [ntob('Hello'), ntob(''), ntob(' '), ntob(''), ntob('world')]
+            return [
+                ntob('Hello'), ntob(''), ntob(' '), ntob(''), ntob('world')]
 
         class WSGIResponse(object):
 

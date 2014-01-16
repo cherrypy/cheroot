@@ -43,7 +43,8 @@ def replace_external_link(matcher):
 
 def replace_wiki_link(matcher):
     r"\[wiki\:(?P<ref>.+?) (?P<name>.+?)\]"
-    return '`{name} <TODO-fix wiki target {ref}>`_'.format(**matcher.groupdict())
+    return '`{name} <TODO-fix wiki target {ref}>`_'.format(
+        **matcher.groupdict())
 
 # character array indexed by level for characters
 heading_characters = [None, '*', '=', '-', '^']
