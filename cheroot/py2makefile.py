@@ -59,18 +59,21 @@ class makefile(socket._fileobject):
 
     if not _fileobject_uses_str_type:
         def read(self, size=-1):
-            # Use max, disallow tiny reads in a loop as they are very inefficient.
-            # We never leave read() with any leftover data from a new recv() call
-            # in our internal buffer.
+            # Use max, disallow tiny reads in a loop as they are very
+            # inefficient.
+            # We never leave read() with any leftover data from a new recv()
+            # call in our internal buffer.
             rbufsize = max(self._rbufsize, self.default_bufsize)
-            # Our use of StringIO rather than lists of string objects returned by
-            # recv() minimizes memory usage and fragmentation that occurs when
-            # rbufsize is large compared to the typical return value of recv().
+            # Our use of StringIO rather than lists of string objects returned
+            # by recv() minimizes memory usage and fragmentation that occurs
+            # when rbufsize is large compared to the typical return value of
+            # recv().
             buf = self._rbuf
             buf.seek(0, 2)  # seek end
             if size < 0:
                 # Read until EOF
-                self._rbuf = StringIO()  # reset _rbuf.  we consume it via buf.
+                # reset _rbuf.  we consume it via buf.
+                self._rbuf = StringIO()
                 while True:
                     data = self.recv(rbufsize)
                     if not data:
@@ -89,7 +92,8 @@ class makefile(socket._fileobject):
                     self._rbuf.write(buf.read())
                     return rv
 
-                self._rbuf = StringIO()  # reset _rbuf.  we consume it via buf.
+                # reset _rbuf.  we consume it via buf.
+                self._rbuf = StringIO()
                 while True:
                     left = size - buf_len
                     # recv() will malloc the amount of memory given as its
@@ -149,7 +153,8 @@ class makefile(socket._fileobject):
                     return "".join(buffers)
 
                 buf.seek(0, 2)  # seek end
-                self._rbuf = StringIO()  # reset _rbuf.  we consume it via buf.
+                # reset _rbuf.  we consume it via buf.
+                self._rbuf = StringIO()
                 while True:
                     data = self.recv(self._rbufsize)
                     if not data:
@@ -174,7 +179,8 @@ class makefile(socket._fileobject):
                     self._rbuf = StringIO()
                     self._rbuf.write(buf.read())
                     return rv
-                self._rbuf = StringIO()  # reset _rbuf.  we consume it via buf.
+                # reset _rbuf.  we consume it via buf.
+                self._rbuf = StringIO()
                 while True:
                     data = self.recv(self._rbufsize)
                     if not data:
@@ -190,8 +196,8 @@ class makefile(socket._fileobject):
                             buf.write(data[:nl])
                             break
                         else:
-                            # Shortcut.  Avoid data copy through buf when returning
-                            # a substring of our first recv().
+                            # Shortcut.  Avoid data copy through buf when
+                            # returning a substring of our first recv().
                             return data[:nl]
                     n = len(data)
                     if n == size and not buf_len:
