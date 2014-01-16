@@ -164,7 +164,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
                 # error.
                 self.assertRaises(NotConnected, self.getPage, "/pov")
 
-            # Try HEAD. See http://www.cherrypy.org/ticket/864.
+            # Try HEAD. See http://www.bitbucket.org/cherrypy/cherrypy/issue/864.
             self.getPage("/stream", method='HEAD')
             self.assertStatus('200 OK')
             self.assertBody('')

@@ -95,7 +95,7 @@ class HTTPTests(helper.CherootWebCase):
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
-        # See http://www.cherrypy.org/ticket/941
+        # See http://www.bitbucket.org/cherrypy/cherrypy/issue/941
         c._output(ntob('Re, 1.2.3.4#015#012'))
         c.endheaders()
 
