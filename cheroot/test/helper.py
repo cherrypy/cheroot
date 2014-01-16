@@ -9,10 +9,10 @@ import socket
 import sys
 import time
 import threading
-import traceback
+from traceback import format_exc
 
 import cheroot
-from cheroot._compat import basestring, format_exc, HTTPConnection
+from cheroot._compat import basestring, HTTPConnection
 from cheroot._compat import HTTPSConnection, ntob
 from cheroot import server, ssllib, wsgi
 from cheroot.test import webtest

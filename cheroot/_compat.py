@@ -1,6 +1,6 @@
 """Compatibility code for using Cheroot with various versions of Python.
 
-Cheroot 4 is compatible with Python versions 2.3+. This module provides a
+Cheroot 4 is compatible with Python versions 2.7+. This module provides a
 useful abstraction over the differences between Python versions, sometimes by
 preferring a newer idiom, sometimes an older one, and sometimes a custom one.
 
@@ -93,11 +93,6 @@ else:
     # bytes:
     BytesIO = StringIO
 
-try:
-    set = set
-except NameError:
-    from sets import Set as set
-
 if py3k:
     from urllib.request import urlopen
     PERCENT = ntob('%')
@@ -111,8 +106,7 @@ if py3k:
             res[i] = bytes([int(item[:2], 16)]) + item[2:]
         return EMPTY.join(res)
 else:
-    from urllib import urlopen
-    from urllib import unquote
+    from urllib import urlopen, unquote
 
 try:
     # Python 2.
@@ -143,17 +137,3 @@ try:
         return formatdate(timeval, usegmt=True).encode('ISO-8859-1')
 except ImportError:
     from rfc822 import formatdate as HTTPDate
-
-try:
-    # Python 2.4+
-    from traceback import format_exc
-except ImportError:
-    import traceback
-
-    def format_exc(limit=None):
-        """Like print_exc() but return a string. Backport for Python 2.3."""
-        try:
-            etype, value, tb = sys.exc_info()
-            return ''.join(traceback.format_exception(etype, value, tb, limit))
-        finally:
-            etype = value = tb = None
