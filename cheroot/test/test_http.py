@@ -1,13 +1,10 @@
 """Tests for managing HTTP issues (malformed requests, etc)."""
 
 import errno
-import mimetypes
 import socket
 import sys
 
-import cheroot
-from cheroot.compat import HTTPConnection, HTTPSConnection, py3k
-from cheroot import wsgi
+from cheroot.compat import HTTPConnection, HTTPSConnection
 
 from cheroot.test import helper
 

@@ -1,5 +1,4 @@
 import socket
-import sys
 
 import _pyio as io
 DEFAULT_BUFFER_SIZE = io.DEFAULT_BUFFER_SIZE

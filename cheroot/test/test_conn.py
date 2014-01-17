@@ -6,9 +6,8 @@ import time
 timeout = 1
 
 
-import cheroot
 from cheroot.compat import HTTPConnection, HTTPSConnection, NotConnected
-from cheroot.compat import ntob, urlopen, unicodestr, BadStatusLine
+from cheroot.compat import ntob, urlopen, BadStatusLine
 from cheroot.test import webtest
 
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'

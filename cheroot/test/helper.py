@@ -11,7 +11,6 @@ import time
 import threading
 from traceback import format_exc
 
-import cheroot
 from cheroot.compat import basestring, HTTPConnection
 from cheroot.compat import HTTPSConnection, ntob
 from cheroot import server, ssllib, wsgi

@@ -12,7 +12,6 @@ two functions: 'ntob', which translates native strings (of type 'str'
 regardless of Python version) into byte strings, and 'ntou', which translates
 native strings to unicode strings.
 """
-import os
 import re
 import sys
 
