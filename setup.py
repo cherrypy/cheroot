@@ -13,8 +13,6 @@ except ImportError:
 
 from distutils.command.install import INSTALL_SCHEMES
 import sys
-import os
-import re
 
 ###############################################################################
 # arguments for the setup command
