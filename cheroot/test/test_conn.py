@@ -269,7 +269,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn = self.HTTP_CONN
         conn.auto_open = False
         conn.connect()
-        conn.send(ntob('GET /hello HTTP/1.1'))
+        conn.send(b'GET /hello HTTP/1.1')
         conn.send(("Host: %s" % self.HOST).encode('ascii'))
 
         # Wait for our socket timeout
@@ -300,7 +300,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertBody(str(timeout))
 
         # Make a second request on the same socket
-        conn._output(ntob('GET /hello HTTP/1.1'))
+        conn._output(b'GET /hello HTTP/1.1')
         conn._output(ntob("Host: %s" % self.HOST, 'ascii'))
         conn._send_output()
         response = conn.response_class(conn.sock, method="GET")
@@ -313,7 +313,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         time.sleep(timeout * 2)
 
         # Make another request on the same socket, which should error
-        conn._output(ntob('GET /hello HTTP/1.1'))
+        conn._output(b'GET /hello HTTP/1.1')
         conn._output(ntob("Host: %s" % self.HOST, 'ascii'))
         conn._send_output()
         response = conn.response_class(conn.sock, method="GET")
@@ -346,7 +346,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
         # Make another request on the same socket,
         # but timeout on the headers
-        conn.send(ntob('GET /hello HTTP/1.1'))
+        conn.send(b'GET /hello HTTP/1.1')
         # Wait for our socket timeout
         time.sleep(timeout * 2)
         response = conn.response_class(conn.sock, method="GET")
@@ -401,14 +401,14 @@ class ConnectionCloseTests(helper.CherootWebCase):
             response.begin()
             body = response.read(13)
             self.assertEqual(response.status, 200)
-            self.assertEqual(body, ntob("Hello, world!"))
+            self.assertEqual(body, b"Hello, world!")
 
         # Retrieve final response
         response = conn.response_class(conn.sock, method="GET")
         response.begin()
         body = response.read()
         self.assertEqual(response.status, 200)
-        self.assertEqual(body, ntob("Hello, world!"))
+        self.assertEqual(body, b"Hello, world!")
 
         conn.close()
 
@@ -427,7 +427,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn.putheader("Content-Type", "text/plain")
         conn.putheader("Content-Length", "4")
         conn.endheaders()
-        conn.send(ntob("d'oh"))
+        conn.send(b"d'oh")
         response = conn.response_class(conn.sock, method="POST")
         version, status, reason = response._read_status()
         self.assertNotEqual(status, 100)
@@ -456,7 +456,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
                 break
 
         # ...send the body
-        body = ntob("I am a small file")
+        body = b"I am a small file"
         conn.send(body)
 
         # ...get the final response
@@ -501,7 +501,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
                     break
 
             # ...send the body
-            conn.send(ntob("x" * 1000))
+            conn.send(b"x" * 1000)
 
             # ...get the final response
             response.begin()
@@ -509,11 +509,11 @@ class ConnectionCloseTests(helper.CherootWebCase):
             self.assertStatus(500)
 
             # Now try a working page with an Expect header...
-            conn._output(ntob('POST /upload HTTP/1.1'))
+            conn._output(b'POST /upload HTTP/1.1')
             conn._output(ntob("Host: %s" % self.HOST, 'ascii'))
-            conn._output(ntob("Content-Type: text/plain"))
-            conn._output(ntob("Content-Length: 17"))
-            conn._output(ntob("Expect: 100-continue"))
+            conn._output(b"Content-Type: text/plain")
+            conn._output(b"Content-Length: 17")
+            conn._output(b"Expect: 100-continue")
             conn._send_output()
             response = conn.response_class(conn.sock, method="POST")
 
@@ -526,7 +526,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
                     break
 
             # ...send the body
-            body = ntob("I am a small file")
+            body = b"I am a small file"
             conn.send(body)
 
             # ...get the final response
@@ -572,9 +572,9 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn = self.HTTP_CONN
 
         # Try a normal chunked request (with extensions)
-        body = ntob("8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
-                    "Content-Type: application/json\r\n"
-                    "\r\n")
+        body = (b"8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n"
+                b"Content-Type: application/json\r\n"
+                b"\r\n")
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.putheader("Transfer-Encoding", "chunked")
@@ -588,11 +588,11 @@ class ConnectionCloseTests(helper.CherootWebCase):
         response = conn.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus('200 OK')
-        self.assertBody("thanks for '%s'" % ntob('xx\r\nxxxxyyyyy'))
+        self.assertBody("thanks for '%s'" % b'xx\r\nxxxxyyyyy')
 
         # Try a chunked request that exceeds server.max_request_body_size.
         # Note that the delimiters and trailer are included.
-        body = ntob("3e3\r\n" + ("x" * 995) + "\r\n0\r\n\r\n")
+        body = b"3e3\r\n" + (b"x" * 995) + b"\r\n0\r\n\r\n"
         conn.putrequest("POST", "/upload", skip_host=True)
         conn.putheader("Host", self.HOST)
         conn.putheader("Transfer-Encoding", "chunked")
@@ -676,7 +676,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
             remaining -= len(data)
 
         self.assertEqual(len(buf), 1024 * 1024)
-        self.assertEqual(buf, ntob("a" * 1024 * 1024))
+        self.assertEqual(buf, b"a" * 1024 * 1024)
         self.assertEqual(remaining, 0)
         remote_data_conn.close()
 
@@ -686,7 +686,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.persistent = True
 
         conn = self.HTTP_CONN
-        conn.send(ntob('GET /hello HTTP/1.1\n\n'))
+        conn.send(b'GET /hello HTTP/1.1\n\n')
         response = conn.response_class(conn.sock, method="GET")
         response.begin()
         self.body = response.read()
@@ -694,7 +694,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn.close()
 
         conn.connect()
-        conn.send(ntob('GET /hello HTTP/1.1\r\n\n'))
+        conn.send(b'GET /hello HTTP/1.1\r\n\n')
         response = conn.response_class(conn.sock, method="GET")
         response.begin()
         self.body = response.read()

@@ -95,8 +95,8 @@ else:
 
 if py3k:
     from urllib.request import urlopen
-    PERCENT = ntob('%')
-    EMPTY = ntob('')
+    PERCENT = b'%'
+    EMPTY = b''
 
     def unquote(path):
         """takes quoted byte string and unquotes % encoded values"""

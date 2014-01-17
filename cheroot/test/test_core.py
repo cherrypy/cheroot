@@ -3,7 +3,7 @@
 import socket
 import time
 
-from cheroot.compat import HTTPConnection, HTTPSConnection, ntob, tonative
+from cheroot.compat import HTTPConnection, HTTPSConnection, tonative
 from cheroot.test import helper, webtest
 
 
@@ -31,7 +31,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
 
                 if hasattr(f, 'read_trailer_lines'):
                     for line in f.read_trailer_lines():
-                        k, v = line.split(ntob(":"), 1)
+                        k, v = line.split(b":", 1)
                         k = tonative(k.strip())
                         v = tonative(v.strip())
                         resp.headers[k] = v
@@ -110,7 +110,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         self.assertStatus(500)
         self.assertInBody(
             "Illegal response status from server (%s is non-numeric)." %
-            (repr(ntob('error'))))
+            (repr(b'error')))
 
     def test_multiple_headers(self):
         self.getPage('/header_list')
@@ -134,7 +134,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest("POST", "/echo")
-        body = ntob("x" * 1001)
+        body = b"x" * 1001
         c.putheader("Content-Length", len(body))
         c.endheaders()
         c.send(body)
@@ -152,7 +152,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest("POST", "/echo")
-        body = ntob("I am a request body")
+        body = b"I am a request body"
         c.putheader("Content-Length", len(body))
         c.endheaders()
         c.send(body)
@@ -168,7 +168,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c.putrequest("POST", "/echo_lines")
-        body = ntob("I am a\nrequest body")
+        body = b"I am a\nrequest body"
         c.putheader("Content-Length", len(body))
         c.endheaders()
         c.send(body)
@@ -186,7 +186,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         c.putrequest("POST", "/echo")
         c.putheader("Transfer-Encoding", "chunked")
         c.endheaders()
-        c.send(ntob("13\r\nI am a request body\r\n0\r\n\r\n"))
+        c.send(b"13\r\nI am a request body\r\n0\r\n\r\n")
         response = c.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         c.close()
@@ -201,7 +201,7 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         c.putrequest("POST", "/echo_lines")
         c.putheader("Transfer-Encoding", "chunked")
         c.endheaders()
-        c.send(ntob("13\r\nI am a\nrequest body\r\n0\r\n\r\n"))
+        c.send(b"13\r\nI am a\nrequest body\r\n0\r\n\r\n")
         response = c.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         c.close()
@@ -216,8 +216,8 @@ class CoreRequestHandlingTest(helper.CherootWebCase):
         c.putrequest("POST", "/echo_lines")
         c.putheader("Transfer-Encoding", "chunked")
         c.endheaders()
-        c.send(ntob("13\r\nI am a\nrequest body\r\n0\r\n"
-                    "Content-Type: application/json\r\n\r\n"))
+        c.send(b"13\r\nI am a\nrequest body\r\n0\r\n"
+               b"Content-Type: application/json\r\n\r\n")
         response = c.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         c.close()

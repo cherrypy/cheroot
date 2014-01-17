@@ -1,6 +1,5 @@
 import sys
 
-from cheroot.compat import ntob
 from cheroot.test import helper
 from cheroot import wsgi
 
@@ -14,7 +13,7 @@ class WSGITests(helper.CherootWebCase):
             response_headers = [('Content-type', 'text/plain'),
                                 ('Content-Length', '11')]
             start_response(status, response_headers)
-            return [ntob('Hello world')]
+            return [b'Hello world']
 
         def foo(environ, start_response):
             status = '200 OK'
@@ -22,34 +21,34 @@ class WSGITests(helper.CherootWebCase):
             start_response(status, response_headers)
             # This should fail according to the WSGI spec.
             start_response(status, response_headers)
-            return [ntob('Hello world')]
+            return [b'Hello world']
 
         def bar(environ, start_response):
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain'),
                                 ('Content-Length', '3')]
             write = start_response(status, response_headers)
-            write(ntob('boo'))
+            write(b'boo')
             # This should fail according to the WSGI spec.
             try:
                 noname
             except NameError:
                 start_response(status, response_headers, sys.exc_info())
-            return [ntob('Hello world')]
+            return [b'Hello world']
 
         def baz(environ, start_response):
             status = 200
             response_headers = [('Content-type', 'text/plain')]
             # This should fail because status is not a str
             start_response(status, response_headers)
-            return [ntob('Hello world')]
+            return [b'Hello world']
 
         def qoph(environ, start_response):
             status = '200 OK'
             response_headers = [('Content-type', 5)]
             # This should fail because the response header value is not a str
             start_response(status, response_headers)
-            return [ntob('Hello world')]
+            return [b'Hello world']
 
         cls.httpserver.wsgi_app = wsgi.WSGIPathInfoDispatcher({
             '/foo': foo,

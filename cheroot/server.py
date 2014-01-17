@@ -58,18 +58,18 @@ response_codes[503] = ('Service Unavailable',
                        'request due to a temporary overloading or '
                        'maintenance of the server.')
 
-LF = ntob('\n')
-CRLF = ntob('\r\n')
-TAB = ntob('\t')
-SPACE = ntob(' ')
-COLON = ntob(':')
-SEMICOLON = ntob(';')
-COMMA = ntob(',')
-EMPTY = ntob('')
-NUMBER_SIGN = ntob('#')
-QUESTION_MARK = ntob('?')
-ASTERISK = ntob('*')
-FORWARD_SLASH = ntob('/')
+LF = b'\n'
+CRLF = b'\r\n'
+TAB = b'\t'
+SPACE = b' '
+COLON = b':'
+SEMICOLON = b';'
+COMMA = b','
+EMPTY = b''
+NUMBER_SIGN = b'#'
+QUESTION_MARK = b'?'
+ASTERISK = b'*'
+FORWARD_SLASH = b'/'
 
 import os
 import re
@@ -105,7 +105,7 @@ def write(wfile, output):
     else:
         wfile.write(output)
 
-quoted_slash = re.compile(ntob("(?i)%2F"))
+quoted_slash = re.compile(b"(?i)%2F")
 
 comma_separated_headers = [
     ntob(h) for h in
@@ -165,7 +165,7 @@ def read_headers(rfile, hdict=None):
         if k in comma_separated_headers:
             existing = hdict.get(hname)
             if existing:
-                v = ntob(", ").join((existing, v))
+                v = b", ".join((existing, v))
         hdict[hname] = v
 
     return hdict
@@ -495,9 +495,9 @@ class HTTPRequest(object):
 
         self.ready = False
         self.started_request = False
-        self.scheme = ntob("http")
+        self.scheme = b"http"
         if self.server.ssl_adapter is not None:
-            self.scheme = ntob("https")
+            self.scheme = b"https"
         # Use the lowest-common protocol in case read_request_line errors.
         self.response_protocol = 'HTTP/1.0'
         self.inheaders = {}
@@ -515,7 +515,7 @@ class HTTPRequest(object):
 
     def _set_status(self, value):
         if not value:
-            value = ntob("200")
+            value = b"200"
 
         if not isinstance(value, bytestr):
             value = ntob(str(value))
@@ -654,7 +654,7 @@ class HTTPRequest(object):
             ex = sys.exc_info()[1]
             self.simple_response("400 Bad Request", ex.args[0])
             return False
-        path = ntob("%2F").join(atoms)
+        path = b"%2F".join(atoms)
         self.path = path
 
         # Note that, like wsgiref and most other HTTP servers,
@@ -701,7 +701,7 @@ class HTTPRequest(object):
             return False
 
         mrbs = self.server.max_request_body_size
-        if mrbs and int(self.inheaders.get(ntob("Content-Length"), 0)) > mrbs:
+        if mrbs and int(self.inheaders.get(b"Content-Length", 0)) > mrbs:
             self.simple_response(
                 "413 Request Entity Too Large",
                 "The entity sent with the request exceeds the maximum "
@@ -711,20 +711,17 @@ class HTTPRequest(object):
         # Persistent connection support
         if self.response_protocol == "HTTP/1.1":
             # Both server and client are HTTP/1.1
-            if self.inheaders.get(ntob("Connection"), EMPTY) == ntob("close"):
+            if self.inheaders.get(b"Connection", EMPTY) == b"close":
                 self.close_connection = True
         else:
             # Either the server or client (or both) are HTTP/1.0
-            if (
-                    self.inheaders.get(ntob("Connection"), EMPTY) !=
-                    ntob("Keep-Alive")
-            ):
+            if self.inheaders.get(b"Connection", EMPTY) != b"Keep-Alive":
                 self.close_connection = True
 
         # Transfer-Encoding support
         te = None
         if self.response_protocol == "HTTP/1.1":
-            te = self.inheaders.get(ntob("Transfer-Encoding"))
+            te = self.inheaders.get(b"Transfer-Encoding")
             if te:
                 te = [x.strip().lower() for x in te.split(COMMA) if x.strip()]
 
@@ -732,7 +729,7 @@ class HTTPRequest(object):
 
         if te:
             for enc in te:
-                if enc == ntob("chunked"):
+                if enc == b"chunked":
                     self.chunked_read = True
                 else:
                     # Note that, even if we see "chunked", we must reject
@@ -758,12 +755,11 @@ class HTTPRequest(object):
         #
         # We used to do 3, but are now doing 1. Maybe we'll do 2 someday,
         # but it seems like it would be a big slowdown for such a rare case.
-        if self.inheaders.get(ntob("Expect"), EMPTY) == ntob("100-continue"):
+        if self.inheaders.get(b"Expect", EMPTY) == b"100-continue":
             # Don't use simple_response here, because it emits headers
             # we don't want.
             # See http://www.bitbucket.org/cherrypy/cherrypy/issue/951
-            msg = ntob(self.server.protocol, 'ascii') + \
-                ntob(" 100 Continue\r\n\r\n")
+            msg = ntob(self.server.protocol, 'ascii') + b" 100 Continue\r\n\r\n"
             try:
                 write(self.conn.wfile, msg)
             except socket.error:
@@ -795,7 +791,7 @@ class HTTPRequest(object):
         if uri == ASTERISK:
             return None, None, uri
 
-        i = uri.find(ntob('://'))
+        i = uri.find(b'://')
         if i > 0 and QUESTION_MARK not in uri[:i]:
             # An absoluteURI.
             # If there's a scheme (and it must be http or https), then:
@@ -819,7 +815,7 @@ class HTTPRequest(object):
         if self.chunked_read:
             self.rfile = ChunkedRFile(self.conn.rfile, mrbs)
         else:
-            cl = int(self.inheaders.get(ntob("Content-Length"), 0))
+            cl = int(self.inheaders.get(b"Content-Length", 0))
             if mrbs and mrbs < cl:
                 if not self.sent_headers:
                     self.simple_response(
@@ -837,7 +833,7 @@ class HTTPRequest(object):
                 self.close_connection = True
                 return
         if self.chunked_write:
-            write(self.conn.wfile, ntob("0\r\n\r\n"))
+            write(self.conn.wfile, b"0\r\n\r\n")
 
     def simple_response(self, status, msg=""):
         """Write a simple response back to the client."""
@@ -845,7 +841,7 @@ class HTTPRequest(object):
         buf = [ntob(self.server.protocol, "ascii") + SPACE +
                ntob(status, "ISO-8859-1") + CRLF,
                ntob("Content-Length: %s\r\n" % len(msg), "ISO-8859-1"),
-               ntob("Content-Type: text/plain\r\n")]
+               b"Content-Type: text/plain\r\n"]
 
         if status[:3] in ("413", "414"):
             # Request Entity Too Large / Request-URI Too Long
@@ -854,7 +850,7 @@ class HTTPRequest(object):
                 # This will not be true for 414, since read_request_line
                 # usually raises 414 before reading the whole line, and we
                 # therefore cannot know the proper response_protocol.
-                buf.append(ntob("Connection: close\r\n"))
+                buf.append(b"Connection: close\r\n")
             else:
                 # HTTP/1.0 had no 413/414 status nor Connection header.
                 # Emit 400 instead and trust the message body is enough.
@@ -905,29 +901,28 @@ class HTTPRequest(object):
         # include a message-body." So no point chunking.
         if status < 200 or status in (204, 205, 304):
             self.outheaders = [(k, v) for k, v in self.outheaders
-                               if k.lower() != ntob('content-length')]
+                               if k.lower() != b'content-length']
             self.allow_message_body = False
-        elif ntob("content-length") not in hkeys:
+        elif b"content-length" not in hkeys:
             if (self.response_protocol == 'HTTP/1.1'
-                    and self.method != ntob('HEAD')):
+                    and self.method != b'HEAD'):
                 # Use the chunked transfer-coding
                 self.chunked_write = True
-                self.outheaders.append(
-                    (ntob("Transfer-Encoding"), ntob("chunked")))
+                self.outheaders.append((b"Transfer-Encoding", b"chunked"))
             else:
                 # Closing the conn is the only way to determine len.
                 self.close_connection = True
 
-        if ntob("connection") not in hkeys:
+        if b"connection" not in hkeys:
             if self.response_protocol == 'HTTP/1.1':
                 # Both server and client are HTTP/1.1 or better
                 if self.close_connection:
-                    self.outheaders.append((ntob("Connection"), ntob("close")))
+                    self.outheaders.append((b"Connection", b"close"))
             else:
                 # Server and/or client are HTTP/1.0
                 if not self.close_connection:
                     self.outheaders.append(
-                        (ntob("Connection"), ntob("Keep-Alive")))
+                        (b"Connection", b"Keep-Alive"))
 
         if (not self.close_connection) and (not self.chunked_read):
             # Read any remaining request body data on the socket.
@@ -946,12 +941,12 @@ class HTTPRequest(object):
             if remaining > 0:
                 self.rfile.read(remaining)
 
-        if ntob("date") not in hkeys:
-            self.outheaders.append((ntob("Date"), HTTPDate()))
+        if b"date" not in hkeys:
+            self.outheaders.append((b"Date", HTTPDate()))
 
-        if ntob("server") not in hkeys:
+        if b"server" not in hkeys:
             self.outheaders.append(
-                (ntob("Server"), ntob(self.server.server_name)))
+                (b"Server", ntob(self.server.server_name)))
 
         buf = [ntob(self.server.protocol, 'ascii')
                + SPACE + self.status + CRLF]
