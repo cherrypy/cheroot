@@ -31,7 +31,6 @@ import time
 import traceback
 
 import cherrypy
-from cherrypy._cpcompat import ntob
 from cherrypy import _cperror, _cpmodpy
 from cheroot._cpcompat import HTTPDate
 
@@ -192,16 +191,14 @@ Finished 1000 requests
 
     parse_patterns = [
         ('complete_requests', 'Completed',
-         ntob(r'^Complete requests:\s*(\d+)')),
+         br'^Complete requests:\s*(\d+)'),
         ('failed_requests', 'Failed',
-         ntob(r'^Failed requests:\s*(\d+)')),
+         br'^Failed requests:\s*(\d+)'),
         ('requests_per_second', 'req/sec',
-         ntob(r'^Requests per second:\s*([0-9.]+)')),
+         br'^Requests per second:\s*([0-9.]+)'),
         ('time_per_request_concurrent', 'msec/req',
-         ntob(
-             r'^Time per request:\s*([0-9.]+).*concurrent requests\)$')),
-        ('transfer_rate', 'KB/sec',
-         ntob(r'^Transfer rate:\s*([0-9.]+)')),
+         br'^Time per request:\s*([0-9.]+).*concurrent requests\)$'),
+        ('transfer_rate', 'KB/sec', br'^Transfer rate:\s*([0-9.]+)')
     ]
 
     def __init__(self, path=SCRIPT_NAME + "/hello", requests=1000,

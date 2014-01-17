@@ -202,10 +202,10 @@ class WSGIGateway_u0(WSGIGateway_10):
         req = self.req
         env_10 = WSGIGateway_10.get_environ(self)
         env = env_10.copy()
-        env[ntou('wsgi.version')] = ('u', 0)
+        env[u'wsgi.version'] = ('u', 0)
 
         # Request-URI
-        env.setdefault(ntou('wsgi.url_encoding'), ntou('utf-8'))
+        env.setdefault(u'wsgi.url_encoding', u'utf-8')
         try:
             if py3k:
                 for key in ["PATH_INFO", "SCRIPT_NAME", "QUERY_STRING"]:
@@ -221,10 +221,8 @@ class WSGIGateway_u0(WSGIGateway_10):
                 env["QUERY_STRING"] = req.qs.decode(env['wsgi.url_encoding'])
         except UnicodeDecodeError:
             # Fall back to latin 1 so apps can transcode if needed.
-            env[ntou('wsgi.url_encoding')] = ntou('ISO-8859-1')
-            for key in [
-                ntou("PATH_INFO"), ntou("SCRIPT_NAME"), ntou("QUERY_STRING")
-            ]:
+            env[u'wsgi.url_encoding'] = u'ISO-8859-1'
+            for key in [u"PATH_INFO", u"SCRIPT_NAME", u"QUERY_STRING"]:
                 if py3k:
                     env[key] = env_10[key]
                 else:

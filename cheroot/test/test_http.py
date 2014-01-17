@@ -6,7 +6,7 @@ import socket
 import sys
 
 import cheroot
-from cheroot.compat import HTTPConnection, HTTPSConnection, ntob, py3k
+from cheroot.compat import HTTPConnection, HTTPSConnection, py3k
 from cheroot import wsgi
 
 from cheroot.test import helper
@@ -36,7 +36,7 @@ class HTTPTests(helper.CherootWebCase):
     def test_normal_request(self):
         self.getPage("/hello")
         self.assertStatus(200)
-        self.assertBody(ntob('Hello world!'))
+        self.assertBody(b'Hello world!')
 
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the
@@ -53,7 +53,7 @@ class HTTPTests(helper.CherootWebCase):
         self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(200)
-        self.assertBody(ntob('Hello world!'))
+        self.assertBody(b'Hello world!')
 
     def test_content_length_required(self):
         # Now send a message that has no Content-Length, but does send a body.
@@ -75,7 +75,7 @@ class HTTPTests(helper.CherootWebCase):
             c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        c._output(ntob('GET /'))
+        c._output(b'GET /')
         c._send_output()
         if hasattr(c, 'strict'):
             response = c.response_class(c.sock, strict=c.strict, method='GET')
@@ -85,7 +85,7 @@ class HTTPTests(helper.CherootWebCase):
             response = c.response_class(c.sock, method='GET')
         response.begin()
         self.assertEqual(response.status, 400)
-        self.assertEqual(response.fp.read(22), ntob("Malformed Request-Line"))
+        self.assertEqual(response.fp.read(22), b"Malformed Request-Line")
         c.close()
 
     def test_malformed_header(self):
@@ -96,7 +96,7 @@ class HTTPTests(helper.CherootWebCase):
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
         # See http://www.bitbucket.org/cherrypy/cherrypy/issue/941
-        c._output(ntob('Re, 1.2.3.4#015#012'))
+        c._output(b'Re, 1.2.3.4#015#012')
         c.endheaders()
 
         response = c.getresponse()
@@ -114,14 +114,13 @@ class HTTPTests(helper.CherootWebCase):
     def test_garbage_in(self):
         # Connect without SSL regardless of server.scheme
         c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        c._output(ntob('gjkgjklsgjklsgjkljklsg'))
+        c._output(b'gjkgjklsgjklsgjkljklsg')
         c._send_output()
         response = c.response_class(c.sock, method="GET")
         try:
             response.begin()
             self.assertEqual(response.status, 400)
-            self.assertEqual(response.fp.read(22),
-                             ntob("Malformed Request-Line"))
+            self.assertEqual(response.fp.read(22), b"Malformed Request-Line")
             c.close()
         except socket.error:
             e = sys.exc_info()[1]
