@@ -148,10 +148,10 @@ class ThreadPool(object):
             while not worker.ready:
                 time.sleep(.1)
 
-    def _get_idle(self):
+    @property
+    def idle(self):
         """Number of worker threads which are idle. Read-only."""
         return len([t for t in self._threads if t.conn is None])
-    idle = property(_get_idle, doc=_get_idle.__doc__)
 
     def put(self, obj):
         self._queue.put(obj)
@@ -241,6 +241,6 @@ class ThreadPool(object):
                         KeyboardInterrupt):
                     pass
 
-    def _get_qsize(self):
+    @property
+    def qsize(self):
         return self._queue.qsize()
-    qsize = property(_get_qsize)
