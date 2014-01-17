@@ -110,13 +110,11 @@ else:
 
 try:
     # Python 2.
-    from httplib import BadStatusLine, HTTPConnection, IncompleteRead
-    from httplib import NotConnected
+    from httplib import BadStatusLine, HTTPConnection, NotConnected
     from BaseHTTPServer import BaseHTTPRequestHandler
 except ImportError:
     # Python 3
-    from http.client import BadStatusLine, HTTPConnection, IncompleteRead
-    from http.client import NotConnected
+    from http.client import BadStatusLine, HTTPConnection, NotConnected
     from http.server import BaseHTTPRequestHandler
 
 try:
