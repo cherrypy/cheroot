@@ -829,9 +829,7 @@ class HTTPRequest(object):
 
         if self.ready and not self.sent_headers:
             self.sent_headers = True
-            if not self.send_headers():
-                self.close_connection = True
-                return
+            self.send_headers()
         if self.chunked_write:
             write(self.conn.wfile, b"0\r\n\r\n")
 
