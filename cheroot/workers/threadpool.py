@@ -15,7 +15,6 @@ import time
 
 
 class TrueyZero(object):
-
     """An object which equals and does math like the integer '0' but evals True
     """
 
@@ -31,7 +30,6 @@ _SHUTDOWNREQUEST = None
 
 
 class WorkerThread(threading.Thread):
-
     """Thread which continuously polls a Queue for Connection objects.
 
     Due to the timing issues of polling a Queue, a WorkerThread does not
@@ -125,7 +123,6 @@ class WorkerThread(threading.Thread):
 
 
 class ThreadPool(object):
-
     """A Request Queue for an HTTPServer which pools threads.
 
     ThreadPool objects must provide min, get(), put(obj), start()

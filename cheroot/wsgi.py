@@ -7,7 +7,6 @@ from cheroot.compat import basestring, ntob, ntou, tonative, py3k, unicodestr
 
 
 class WSGIServer(HTTPServer):
-
     """A subclass of HTTPServer which calls a WSGI application."""
 
     def __init__(self, bind_addr, gateway=None, **kwargs):
@@ -18,7 +17,6 @@ class WSGIServer(HTTPServer):
 
 
 class WSGIGateway(Gateway):
-
     """A base class to interface HTTPServer with WSGI."""
 
     def __init__(self, req):
@@ -132,7 +130,6 @@ class WSGIGateway(Gateway):
 
 
 class WSGIGateway_10(WSGIGateway):
-
     """A Gateway class to interface HTTPServer with WSGI 1.0.x."""
 
     def get_environ(self):
@@ -190,7 +187,6 @@ class WSGIGateway_10(WSGIGateway):
 
 
 class WSGIGateway_u0(WSGIGateway_10):
-
     """A Gateway class to interface HTTPServer with WSGI u.0.
 
     WSGI u.0 is an experimental protocol, which uses unicode for keys and
@@ -241,7 +237,6 @@ class WSGIGateway_u0(WSGIGateway_10):
 
 
 class WSGIPathInfoDispatcher(object):
-
     """A WSGI dispatcher for dispatch based on the PATH_INFO.
 
     apps: a dict or list of (path_prefix, app) pairs.

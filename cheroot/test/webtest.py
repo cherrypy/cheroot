@@ -57,7 +57,6 @@ class TerseTestResult(_TextTestResult):
 
 
 class TerseTestRunner(TextTestRunner):
-
     """A test runner class that displays results in textual form."""
 
     def _makeResult(self):

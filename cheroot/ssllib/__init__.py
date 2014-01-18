@@ -6,7 +6,6 @@ DEFAULT_BUFFER_SIZE = -1
 
 
 class SSLAdapter(object):
-
     """Base class for SSL driver library adapters.
 
     Required methods:

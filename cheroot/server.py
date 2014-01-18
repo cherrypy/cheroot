@@ -172,7 +172,6 @@ def read_headers(rfile, hdict=None):
 
 
 class SizeCheckWrapper(object):
-
     """Wraps a file-like object, raising MaxSizeExceeded if too large."""
 
     def __init__(self, rfile, maxlen):
@@ -242,7 +241,6 @@ class SizeCheckWrapper(object):
 
 
 class KnownLengthRFile(object):
-
     """Wraps a file-like object, returning an empty string when exhausted."""
 
     def __init__(self, rfile, content_length):
@@ -299,7 +297,6 @@ class KnownLengthRFile(object):
 
 
 class ChunkedRFile(object):
-
     """Wraps a file-like object, returning an empty string when exhausted.
 
     This class is intended to provide a conforming wsgi.input value for
@@ -456,7 +453,6 @@ class ChunkedRFile(object):
 
 
 class HTTPRequest(object):
-
     """An HTTP Request (and response).
 
     A single HTTP connection may consist of multiple request/response pairs.
@@ -955,7 +951,6 @@ class HTTPRequest(object):
 
 
 class HTTPConnection(object):
-
     """An HTTP connection (active socket).
 
     server: the Server object which received this connection.
@@ -1117,7 +1112,6 @@ else:
 
 
 class HTTPServer(object):
-
     """An HTTP server."""
 
     _bind_addr = "127.0.0.1"
@@ -1562,7 +1556,6 @@ class HTTPServer(object):
 
 
 class Gateway(object):
-
     """A base class to interface HTTPServer with other systems, such as WSGI.
     """
 
