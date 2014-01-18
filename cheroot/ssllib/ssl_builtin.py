@@ -25,7 +25,6 @@ from cheroot import errors, server, ssllib
 
 
 class BuiltinSSLAdapter(ssllib.SSLAdapter):
-
     """A wrapper for integrating Python's builtin ssl module with Cheroot."""
 
     certificate = None

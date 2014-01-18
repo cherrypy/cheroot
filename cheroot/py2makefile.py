@@ -2,7 +2,6 @@ import socket
 
 
 class FauxSocket(object):
-
     """Faux socket with the minimal interface required by pypy"""
 
     def _reuse(self):
@@ -17,7 +16,6 @@ from cheroot import errors
 
 
 class makefile(socket._fileobject):
-
     """Faux file object attached to a socket object."""
 
     def __init__(self, *args, **kwargs):

@@ -45,7 +45,6 @@ except ImportError:
 
 
 class SSL_makefile(py2makefile.makefile):
-
     """SSL file object attached to a socket object."""
 
     ssl_timeout = 3
@@ -118,7 +117,6 @@ class SSL_makefile(py2makefile.makefile):
 
 
 class SSLConnection:
-
     """A thread-safe wrapper for an SSL.Connection.
 
     ``*args``: the arguments to create the wrapped ``SSL.Connection(*args)``.
@@ -154,7 +152,6 @@ class SSLConnection:
 
 
 class pyOpenSSLAdapter(SSLAdapter):
-
     """A wrapper for integrating pyOpenSSL with Cheroot."""
 
     context = None
