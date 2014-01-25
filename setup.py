@@ -91,6 +91,9 @@ def main():
         packages=packages,
         download_url=download_url,
         data_files=data_files,
+        install_requires=[
+            "dynpool>=1.0",
+        ],
     )
 
 
