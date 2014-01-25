@@ -13,6 +13,8 @@ import sys
 import threading
 import time
 
+from dynpool import DynamicPoolResizer
+
 
 class TrueyZero(object):
     """An object which equals and does math like the integer '0' but evals True
@@ -150,6 +152,10 @@ class ThreadPool(object):
         """Number of worker threads which are idle. Read-only."""
         return len([t for t in self._threads if t.conn is None])
 
+    @property
+    def size(self):
+        return len(self._threads)
+
     def put(self, obj):
         self._queue.put(obj)
 
@@ -174,10 +180,10 @@ class ThreadPool(object):
         worker.start()
         return worker
 
+    @staticmethod
     def _all(func, items):
         results = [func(item) for item in items]
         return functools.reduce(operator.and_, results, True)
-    _all = staticmethod(_all)
 
     def shrink(self, amount):
         """Kill off worker threads (not below self.min)."""
@@ -241,3 +247,7 @@ class ThreadPool(object):
     @property
     def qsize(self):
         return self._queue.qsize()
+
+    def get_pool_resizer(self, minspare=1, maxspare=5, shrinkfreq=10,
+                         logger=None):
+        return DynamicPoolResizer(self, minspare, maxspare, shrinkfreq, logger)
