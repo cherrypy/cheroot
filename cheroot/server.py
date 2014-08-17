@@ -44,6 +44,12 @@ __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'Gateway']
 
 from traceback import format_exc
+
+try:
+    import queue
+except ImportError:
+    import Queue as queue
+
 from cheroot.compat import bytestr, unicodestr, basestring, ntob, py3k
 from cheroot.compat import HTTPDate, unquote
 from cheroot.compat import BaseHTTPRequestHandler
@@ -1141,6 +1147,14 @@ class HTTPServer(object):
     (default 5).
     """
 
+    accepted_queue_size = -1
+    """The maximum number of requests which will be queued up before
+    the server refuses to accept it (default -1, meaning no limit)."""
+
+    accepted_queue_timeout = 10
+    """The timeout in seconds for attempting to add a request to the
+    queue when the queue is full (default 10)."""
+
     shutdown_timeout = 5
     """The total time, in seconds, to wait for worker threads to cleanly exit.
     """
@@ -1179,12 +1193,15 @@ class HTTPServer(object):
     You must have the corresponding SSL driver library installed."""
 
     def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1,
-                 server_name=None, protocol='HTTP/1.1', ssl_adapter=None):
+                 server_name=None, protocol='HTTP/1.1', ssl_adapter=None,
+                 accepted_queue_size=-1, accepted_queue_timeout=10):
         self.bind_addr = bind_addr
         self.gateway = gateway
 
         self.requests = threadpool.ThreadPool(
-            self, min=minthreads or 1, max=maxthreads)
+            self, min=minthreads or 1, max=maxthreads,
+            accepted_queue_size=accepted_queue_size,
+            accepted_queue_timeout=accepted_queue_timeout)
 
         if not server_name:
             server_name = socket.gethostname()
@@ -1470,7 +1487,12 @@ class HTTPServer(object):
 
             conn.ssl_env = ssl_env
 
-            self.requests.put(conn)
+            try:
+                self.requests.put(conn)
+            except queue.Full:
+                # Just drop the conn. TODO: write 503 back?
+                conn.close()
+                return
         except socket.timeout:
             # The only reason for the timeout in start() is so we can
             # notice keyboard interrupts on Win32, which don't interrupt

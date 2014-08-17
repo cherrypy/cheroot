@@ -131,12 +131,14 @@ class ThreadPool(object):
     and stop(timeout) attributes.
     """
 
-    def __init__(self, server, min=10, max=-1):
+    def __init__(self, server, min=10, max=-1,
+                 accepted_queue_size=-1, accepted_queue_timeout=10):
         self.server = server
         self.min = min
         self.max = max
         self._threads = []
-        self._queue = queue.Queue()
+        self._queue = queue.Queue(maxsize=accepted_queue_size)
+        self._queue_put_timeout = accepted_queue_timeout
         self.get = self._queue.get
 
     def start(self):
@@ -157,7 +159,7 @@ class ThreadPool(object):
         return len(self._threads)
 
     def put(self, obj):
-        self._queue.put(obj)
+        self._queue.put(obj, block=True, timeout=self._queue_put_timeout)
 
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
