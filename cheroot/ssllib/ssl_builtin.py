@@ -59,10 +59,18 @@ class BuiltinSSLAdapter(ssllib.SSLAdapter):
                 # the 'ping' isn't SSL.
                 return None, {}
             elif e.errno == ssl.SSL_ERROR_SSL:
-                if e.args[1].endswith('http request'):
+                try:
+                    http_err = e.reason == 'HTTP_REQUEST'
+                except AttributeError:
+                    http_err = e.args[1].endswith('http request')
+                if http_err:
                     # The client is speaking HTTP to an HTTPS server.
                     raise errors.NoSSLError
-                elif e.args[1].endswith('unknown protocol'):
+                try:
+                    unknown_err = e.reason == 'UNKNOWN_PROTOCOL'
+                except AttributeError:
+                    unknown_err = e.args[1].endswith('unknown protocol')
+                if unknown_err:
                     # The client is speaking some non-HTTP protocol.
                     # Drop the conn.
                     return None, {}
