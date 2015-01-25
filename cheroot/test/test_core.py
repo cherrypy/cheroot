@@ -275,8 +275,9 @@ if hasattr(socket, "AF_UNIX"):
             self.assertStatus(200)
 
 
-class SSLTest(helper.CherootWebCase):
+class _SSLTestBase(helper.CherootWebCase):
 
+    @classmethod
     def setup_server(cls):
         class Root(helper.Controller):
 
@@ -284,11 +285,9 @@ class SSLTest(helper.CherootWebCase):
                 return "hello"
 
         cls.httpserver.wsgi_app = Root()
-        cls.httpserver.ssl_adapter = helper.get_default_ssl_adapter()
+        cls.httpserver.ssl_adapter = helper.get_ssl_adapter(cls.adapter)
         cls.HTTP_CONN = HTTPSConnection
         cls.scheme = 'https'
-
-    setup_server = classmethod(setup_server)
 
     def test_normal(self):
         self.getPage("/hello")
@@ -314,3 +313,11 @@ class SSLTest(helper.CherootWebCase):
             self.assertStatus(400)
             self.assertBody(msg)
         self.assertInLog(msg)
+
+
+class BuiltinSSLTestTest(_SSLTestBase):
+    adapter = 'builtin'
+
+
+class PyOpenSSLTestTest(_SSLTestBase):
+    adapter = 'pyopenssl'
