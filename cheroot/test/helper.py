@@ -237,9 +237,9 @@ class UnixSocketHTTPConnection(HTTPConnection):
         self.sock.connect(self.path)
 
 
-def get_default_ssl_adapter():
+def get_ssl_adapter(name=None):
     """Return an instance of a cheroot.ssllib.SSLAdapter."""
     # Use the default ('pyopenssl' for Python 2 and 'builtin' for 3):
-    ssl_adapter_class = ssllib.get_ssl_adapter_class()
+    ssl_adapter_class = ssllib.get_ssl_adapter_class(name)
     serverpem = os.path.join(thisdir, 'test.pem')
     return ssl_adapter_class(certificate=serverpem, private_key=serverpem)
