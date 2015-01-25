@@ -1,6 +1,7 @@
 """Basic tests for the Cheroot server: request handling."""
 
 import socket
+import ssl
 import time
 
 from cheroot.compat import HTTPConnection, HTTPSConnection, tonative
@@ -286,7 +287,11 @@ class _SSLTestBase(helper.CherootWebCase):
 
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.ssl_adapter = helper.get_ssl_adapter(cls.adapter)
-        cls.HTTP_CONN = HTTPSConnection
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        cls.HTTP_CONN = HTTPSConnection(
+            webtest.interface(cls.HOST), cls.PORT, context=context)
         cls.scheme = 'https'
 
     def test_normal(self):
