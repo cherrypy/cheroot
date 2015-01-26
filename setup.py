@@ -18,7 +18,7 @@ import sys
 # arguments for the setup command
 ###############################################################################
 name = "Cheroot"
-version = "4.0.0beta"
+version = "4.0.0b2"
 desc = "Object-Oriented HTTP server"
 long_desc = "Cheroot is a highly-optimized, pure-python HTTP server"
 classifiers = [
@@ -43,7 +43,6 @@ cp_license = "BSD"
 packages = [
     "cheroot", "cheroot.ssllib", "cheroot.workers", "cheroot.test",
 ]
-download_url = "http://download.cherrypy.org/cheroot/4.0.0beta/"
 data_files = [
     ('cheroot', ['cheroot/LICENSE.txt',
                  ]),
@@ -89,10 +88,9 @@ def main():
         url=url,
         license=cp_license,
         packages=packages,
-        download_url=download_url,
         data_files=data_files,
         install_requires=[
-            "dynpool>=1.0",
+            "dynpool>=1.0.5",
         ],
     )
 
