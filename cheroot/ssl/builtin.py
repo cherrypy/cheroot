@@ -1,8 +1,9 @@
-"""A library for integrating Python's builtin ``ssl`` library with CherryPy.
+"""
+A library for integrating Python's builtin ``ssl`` library with Cheroot.
 
 The ssl module must be importable for SSL functionality.
 
-To use this module, set ``CherryPyWSGIServer.ssl_adapter`` to an instance of
+To use this module, set ``WSGIServer.ssl_adapter`` to an instance of
 ``BuiltinSSLAdapter``.
 """
 
@@ -21,10 +22,9 @@ except ImportError:
 
 import sys
 
-from cherrypy import wsgiserver
+import cheroot.server
 
-
-class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
+class BuiltinSSLAdapter(cheroot.server.SSLAdapter):
 
     """A wrapper for integrating Python's builtin ssl module with CherryPy."""
 
@@ -81,7 +81,7 @@ class BuiltinSSLAdapter(wsgiserver.SSLAdapter):
             elif e.errno == ssl.SSL_ERROR_SSL:
                 if 'http request' in e.args[1]:
                     # The client is speaking HTTP to an HTTPS server.
-                    raise wsgiserver.NoSSLError
+                    raise cheroot.server.NoSSLError
                 elif 'unknown protocol' in e.args[1]:
                     # The client is speaking some non-HTTP protocol.
                     # Drop the conn.

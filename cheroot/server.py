@@ -61,6 +61,12 @@ number of requests and their responses, so we run a nested loop::
                             response.close()
                 if req.close_connection:
                     return
+
+And now for a trivial doctest to exercise the test suite
+
+>>> 'HTTPServer' in globals()
+True
+
 """
 
 import os

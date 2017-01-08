@@ -1,9 +1,10 @@
-"""A library for integrating pyOpenSSL with CherryPy.
+"""
+A library for integrating pyOpenSSL with Cheroot.
 
 The OpenSSL module must be importable for SSL functionality.
 You can obtain it from `here <https://launchpad.net/pyopenssl>`_.
 
-To use this module, set CherryPyWSGIServer.ssl_adapter to an instance of
+To use this module, set WSGIServer.ssl_adapter to an instance of
 SSLAdapter. There are two ways to use SSL:
 
 Method One
@@ -34,7 +35,7 @@ import socket
 import threading
 import time
 
-from cherrypy import wsgiserver
+import cheroot.server
 
 try:
     from OpenSSL import SSL
@@ -43,7 +44,7 @@ except ImportError:
     SSL = None
 
 
-class SSL_fileobject(wsgiserver.CP_makefile):
+class SSL_fileobject(cheroot.server.CP_makefile):
 
     """SSL file object attached to a socket object."""
 
@@ -73,7 +74,7 @@ class SSL_fileobject(wsgiserver.CP_makefile):
                     return ''
 
                 errnum = e.args[0]
-                if is_reader and errnum in wsgiserver.socket_errors_to_ignore:
+                if is_reader and errnum in cheroot.server.socket_errors_to_ignore:
                     return ''
                 raise socket.error(errnum)
             except SSL.Error as e:
@@ -88,9 +89,9 @@ class SSL_fileobject(wsgiserver.CP_makefile):
 
                 if thirdarg == 'http request':
                     # The client is talking HTTP to an HTTPS server.
-                    raise wsgiserver.NoSSLError()
+                    raise cheroot.server.NoSSLError()
 
-                raise wsgiserver.FatalSSLAlert(*e.args)
+                raise cheroot.server.FatalSSLAlert(*e.args)
             except:
                 raise
 
@@ -145,7 +146,7 @@ class SSLConnection:
             self._lock.release()
 
 
-class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
+class pyOpenSSLAdapter(cheroot.server.SSLAdapter):
 
     """A wrapper for integrating pyOpenSSL with CherryPy."""
 
@@ -250,4 +251,4 @@ class pyOpenSSLAdapter(wsgiserver.SSLAdapter):
             f.ssl_timeout = timeout
             return f
         else:
-            return wsgiserver.CP_fileobject(sock, mode, bufsize)
+            return cheroot.server.CP_fileobject(sock, mode, bufsize)
