@@ -9,24 +9,18 @@ python:
 - pypy
 - pypy3
 - nightly
-
 matrix:
   fast_finish: true
   allow_failures:
-    # TODO: check what causes testing stuck
-    - python: pypy
-    # TODO: fix tests
-    - python: pypy3
-    - env: TOXENV=pre-commit
+  - python: pypy
+  - python: pypy3
+  - env: TOXENV=pre-commit
   include:
-    - python: 3.5
-      env: TOXENV=pre-commit
-
+  - python: 3.5
+    env: TOXENV=pre-commit
 cache: pip
-
 install: pip install tox
 script: tox
-
 deploy:
   provider: pypi
   on:
@@ -35,3 +29,5 @@ deploy:
   user: jaraco
   distributions: release
   skip_upload_docs: true
+  password:
+    secure: RAfz06AINvz7bfij/YhfkAreRqamgxS8a6jSRNxntYhtJke3ZszUbIDag8+n1I+G5XT2LnMhHqPNR7Plc+AeMz7VXTuy+b81Li5kse20NYlPhd7mBVmTUpXtqYQashV5J39F4qkATBLznCOrMEomM07VTXjO/o2hmQuXniab2Uo=
