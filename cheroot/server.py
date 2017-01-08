@@ -1942,6 +1942,21 @@ class HTTPServer(object):
         Systemd socket activation is automatic and doesn't require tempering
         with this variable""")
 
+    def safe_start(self):
+        """Run the server forever, and stop it cleanly on exit."""
+        try:
+            self.start()
+        except (KeyboardInterrupt, IOError):
+            # The time.sleep call might raise
+            # "IOError: [Errno 4] Interrupted function call" on KBInt.
+            self.error_log('Keyboard Interrupt: shutting down')
+            self.stop()
+            raise
+        except SystemExit:
+            self.error_log('SystemExit raised: shutting down')
+            self.stop()
+            raise
+
     def start(self):
         """Run the server forever."""
         # We don't have to trap KeyboardInterrupt or SystemExit here,
