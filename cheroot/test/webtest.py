@@ -30,8 +30,8 @@ import unittest
 
 import six
 
-from cherrypy._cpcompat import text_or_bytes, HTTPConnection
-from cherrypy._cpcompat import HTTPSConnection
+from cheroot._compat import text_or_bytes, HTTPConnection
+from cheroot._compat import HTTPSConnection
 
 
 def interface(host):

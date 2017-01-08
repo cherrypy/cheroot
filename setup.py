@@ -54,6 +54,7 @@ extras_require = {
     'testing': [
         'pytest',
         'backports.unittest_mock',
+        'nose',
     ],
 }
 """Feature flags end-users can use in dependencies"""

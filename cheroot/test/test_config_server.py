@@ -2,8 +2,12 @@
 
 import os
 
-import cherrypy
-from cherrypy.test import helper
+import pytest
+
+from cheroot.test import helper
+
+
+pytestmark = pytest.mark.skip(reason="Depends on CherryPy")
 
 
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -12,14 +16,13 @@ localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 #                             Client-side code                             #
 
 
-class ServerConfigTests(helper.CPWebCase):
+class ServerConfigTests(helper.CherootWebCase):
 
     @staticmethod
     def setup_server():
 
         class Root:
 
-            @cherrypy.expose
             def index(self):
                 return cherrypy.request.wsgi_environ['SERVER_PORT']
 

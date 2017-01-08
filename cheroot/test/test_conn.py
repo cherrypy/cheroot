@@ -8,41 +8,34 @@ import time
 import six
 import pytest
 
-import cherrypy
-from cherrypy._cpcompat import (
-    HTTPConnection, HTTPSConnection,
-    NotConnected, BadStatusLine,
-    ntob, tonative,
-    urlopen,
-)
-from cherrypy.test import helper, webtest
+from cheroot._compat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
+from cheroot._compat import ntob, urlopen
+from cheroot.test import webtest
+from cheroot.test import helper
+
+
+pytestmark = pytest.mark.skip(reason="incomplete")
 
 
 timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 
-def setup_server():
+def setup_server(cls):
 
-    def raise500():
-        raise cherrypy.HTTPError(500)
+    class Root(helper.Controller):
 
-    class Root:
-
-        @cherrypy.expose
-        def index(self):
+        def pov(self, req, resp):
             return pov
-        page1 = index
-        page2 = index
-        page3 = index
+        page1 = pov
+        page2 = pov
+        page3 = pov
 
-        @cherrypy.expose
-        def hello(self):
-            return 'Hello, world!'
+        def hello(self, req, resp):
+            return "Hello, world!"
 
-        @cherrypy.expose
-        def timeout(self, t):
-            return str(cherrypy.server.httpserver.timeout)
+        def timeout(self, req, resp):
+            return str(cls.httpserver.timeout)
 
         @cherrypy.expose
         @cherrypy.config(**{'response.stream': True})
@@ -96,15 +89,13 @@ def setup_server():
                 newbody.append(chunk)
             return newbody
 
-    cherrypy.tree.mount(Root())
-    cherrypy.config.update({
-        'server.max_request_body_size': 1001,
-        'server.socket_timeout': timeout,
-    })
+    cls.httpserver.wsgi_app = Root()
+    cls.httpserver.max_request_body_size = 1001
+    cls.httpserver.timeout = timeout
 
 
-class ConnectionCloseTests(helper.CPWebCase):
-    setup_server = staticmethod(setup_server)
+class ConnectionCloseTests(helper.CherootWebCase):
+    setup_server = classmethod(setup_server)
 
     def test_HTTP11(self):
         if cherrypy.server.protocol_version != 'HTTP/1.1':
@@ -273,8 +264,8 @@ class ConnectionCloseTests(helper.CPWebCase):
         # self.assertNoHeader("Connection")
 
 
-class PipelineTests(helper.CPWebCase):
-    setup_server = staticmethod(setup_server)
+class PipelineTests(helper.CherootWebCase):
+    setup_server = classmethod(setup_server)
 
     def test_HTTP11_Timeout(self):
         # If we timeout without sending any data,
@@ -518,8 +509,8 @@ class PipelineTests(helper.CPWebCase):
             conn.close()
 
 
-class ConnectionTests(helper.CPWebCase):
-    setup_server = staticmethod(setup_server)
+class ConnectionTests(helper.CherootWebCase):
+    setup_server = classmethod(setup_server)
 
     def test_readall_or_close(self):
         if cherrypy.server.protocol_version != 'HTTP/1.1':
@@ -742,7 +733,7 @@ class ConnectionTests(helper.CPWebCase):
         remote_data_conn.close()
 
 
-def setup_upload_server():
+def setup_upload_server(cls):
 
     class Root:
         @cherrypy.expose
@@ -775,8 +766,8 @@ socket_reset_errors += [
 ]
 
 
-class LimitedRequestQueueTests(helper.CPWebCase):
-    setup_server = staticmethod(setup_upload_server)
+class LimitedRequestQueueTests(helper.CherootWebCase):
+    setup_server = classmethod(setup_upload_server)
 
     @pytest.mark.xfail(reason='#1535')
     def test_queue_full(self):
@@ -839,8 +830,8 @@ class LimitedRequestQueueTests(helper.CPWebCase):
             if overflow_conn:
                 overflow_conn.close()
 
-class BadRequestTests(helper.CPWebCase):
-    setup_server = staticmethod(setup_server)
+class BadRequestTests(helper.CherootWebCase):
+    setup_server = classmethod(setup_server)
 
     def test_No_CRLF(self):
         self.persistent = True
