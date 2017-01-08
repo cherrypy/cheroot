@@ -22,21 +22,16 @@ thisdir = os.path.abspath(os.path.dirname(__file__))
 serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 
 
-def get_tst_config(overconf={}):
-    global _testconfig
-    if _testconfig is None:
-        _testconfig = {
-            'scheme': 'http',
-            'protocol': 'HTTP/1.1',
-            'port': 54583,
-            'host': '127.0.0.1',
-            'validate': False,
-            'server': 'wsgi',
-        }
-    conf = _testconfig.copy()
-    conf.update(overconf)
-
-    return conf
+config = {
+    'bind_addr': ('127.0.0.1', 54583),
+    'server': 'wsgi',
+}
+try:
+    import testconfig
+    if testconfig.config is not None:
+        config.update(testconfig.config)
+except ImportError:
+    pass
 
 
 class CherootWebCase(webtest.WebCase):
@@ -48,15 +43,15 @@ class CherootWebCase(webtest.WebCase):
         'wsgi': cheroot.server.WSGIServer,
         'native': cheroot.server.HTTPServer,
     }
-    default_server = 'wsgi'
 
     @classmethod
     def setup_class(cls):
-        ''
-        # Creates a server
-        conf = get_tst_config()
-        server_factory = cls.available_servers.get(
-            conf.get('server', 'wsgi'))
+        """Create and run one HTTP server per class."""
+        conf = config.copy()
+        conf.update(getattr(cls, 'config', {}))
+
+        s_class = conf.pop('server', 'wsgi')
+        server_factory = cls.available_servers.get(s_class)
         if server_factory is None:
             raise RuntimeError('Unknown server in config: %s' % conf['server'])
         cls.httpserver = server_factory(**conf)
