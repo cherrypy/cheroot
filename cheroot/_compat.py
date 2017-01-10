@@ -48,6 +48,9 @@ if six.PY3:
         if isinstance(n, bytes):
             return n.decode(encoding)
         return n
+
+    def bton(b, encoding='ISO-8859-1'):
+        return b.decode(encoding)
 else:
     # Python 2
     def ntob(n, encoding='ISO-8859-1'):
@@ -85,6 +88,9 @@ else:
         if isinstance(n, unicode):
             return n.encode(encoding)
         return n
+
+    def bton(b, encoding='ISO-8859-1'):
+        return b
 
 
 def assert_native(n):
