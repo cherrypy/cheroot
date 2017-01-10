@@ -2278,10 +2278,21 @@ class WSGIServer(HTTPServer):
     wsgi_version = (1, 0)
     """The version of WSGI to produce."""
 
-    def __init__(self, bind_addr, gateway=None, **kwargs):
-        self.wsgi_app = kwargs.pop('wsgi_app', None)
-        gateway = wsgi_gateways[self.wsgi_version]
-        super(WSGIServer, self).__init__(bind_addr, gateway=gateway, **kwargs)
+    def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
+                 max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
+                 accepted_queue_size=-1, accepted_queue_timeout=10):
+        super(WSGIServer, self).__init__(
+            bind_addr,
+            gateway=wsgi_gateways[self.wsgi_version],
+            server_name=server_name,
+        )
+        self.wsgi_app = wsgi_app
+        self.request_queue_size = request_queue_size
+        self.timeout = timeout
+        self.shutdown_timeout = shutdown_timeout
+        self.requests = ThreadPool(self, min=numthreads or 1, max=max,
+            accepted_queue_size=accepted_queue_size,
+            accepted_queue_timeout=accepted_queue_timeout)
 
     def _get_numthreads(self):
         return self.requests.min
