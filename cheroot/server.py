@@ -22,7 +22,7 @@ as you want in one instance by using a WSGIPathInfoDispatcher::
     d = WSGIPathInfoDispatcher({'/': my_crazy_app, '/blog': my_blog_app})
     server = cheroot.server.WSGIServer(('0.0.0.0', 80), d)
 
-Want SSL support? Just set server.ssl_adapter to an SSLAdapter instance.
+Want SSL support? Just set server.ssl_adapter to an ssl.Adapter instance.
 
 For those of you wanting to understand internals of this module, here's the
 basic call flow. The server's listening thread runs a very tight loop,
@@ -103,7 +103,6 @@ from .makefile import MakeFile
 
 __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
-           'SSLAdapter',
            'Gateway',
            'get_ssl_adapter_class',
 ]
@@ -1116,29 +1115,6 @@ else:
         fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
 
 
-class SSLAdapter(object):
-
-    """Base class for SSL driver library adapters.
-
-    Required methods:
-
-        * ``wrap(sock) -> (wrapped socket, ssl environ dict)``
-        * ``makefile(sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE) ->
-          socket file object``
-    """
-
-    def __init__(self, certificate, private_key, certificate_chain=None):
-        self.certificate = certificate
-        self.private_key = private_key
-        self.certificate_chain = certificate_chain
-
-    def wrap(self, sock):
-        raise NotImplemented
-
-    def makefile(self, sock, mode='r', bufsize=-1):
-        raise NotImplemented
-
-
 class HTTPServer(object):
 
     """An HTTP server."""
@@ -1203,7 +1179,7 @@ class HTTPServer(object):
     """The class to use for handling HTTP connections."""
 
     ssl_adapter = None
-    """An instance of SSLAdapter (or a subclass).
+    """An instance of ssl.Adapter (or a subclass).
 
     You must have the corresponding SSL driver library installed."""
 
@@ -1605,7 +1581,7 @@ class Gateway(object):
         raise NotImplemented
 
 
-# These may either be wsgiserver.SSLAdapter subclasses or the string names
+# These may either be ssl.Adapter subclasses or the string names
 # of such classes (in which case they will be lazily loaded).
 ssl_adapters = {
     'builtin': 'cherrypy.wsgiserver.ssl_builtin.BuiltinSSLAdapter',

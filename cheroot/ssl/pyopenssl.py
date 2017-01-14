@@ -5,7 +5,7 @@ The OpenSSL module must be importable for SSL functionality.
 You can obtain it from `here <https://launchpad.net/pyopenssl>`_.
 
 To use this module, set WSGIServer.ssl_adapter to an instance of
-SSLAdapter. There are two ways to use SSL:
+ssl.Adapter. There are two ways to use SSL:
 
 Method One
 ----------
@@ -35,15 +35,15 @@ import socket
 import threading
 import time
 
-import cheroot.server
-
 try:
     from OpenSSL import SSL
     from OpenSSL import crypto
 except ImportError:
     SSL = None
 
-from ..makefile import Makefile
+from . import Adapter
+from .. import errors
+from ..makefile import MakeFile
 
 
 class SSL_fileobject(MakeFile):
@@ -76,7 +76,7 @@ class SSL_fileobject(MakeFile):
                     return ''
 
                 errnum = e.args[0]
-                if is_reader and errnum in cheroot.server.socket_errors_to_ignore:
+                if is_reader and errnum in errors.socket_errors_to_ignore:
                     return ''
                 raise socket.error(errnum)
             except SSL.Error as e:
@@ -91,9 +91,9 @@ class SSL_fileobject(MakeFile):
 
                 if thirdarg == 'http request':
                     # The client is talking HTTP to an HTTPS server.
-                    raise cheroot.server.NoSSLError()
+                    raise errors.NoSSLError()
 
-                raise cheroot.server.FatalSSLAlert(*e.args)
+                raise errors.FatalSSLAlert(*e.args)
             except:
                 raise
 
@@ -148,7 +148,7 @@ class SSLConnection:
             self._lock.release()
 
 
-class pyOpenSSLAdapter(cheroot.server.SSLAdapter):
+class pyOpenSSLAdapter(Adapter):
 
     """A wrapper for integrating pyOpenSSL with CherryPy."""
 

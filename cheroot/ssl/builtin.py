@@ -22,11 +22,12 @@ except ImportError:
 
 import sys
 
-import cheroot.server
+from . import Adapter
+from .. import errors
 from ..makefile import MakeFile
 
 
-class BuiltinSSLAdapter(cheroot.server.SSLAdapter):
+class BuiltinSSLAdapter(Adapter):
 
     """A wrapper for integrating Python's builtin ssl module with CherryPy."""
 
@@ -83,7 +84,7 @@ class BuiltinSSLAdapter(cheroot.server.SSLAdapter):
             elif e.errno == ssl.SSL_ERROR_SSL:
                 if 'http request' in e.args[1]:
                     # The client is speaking HTTP to an HTTPS server.
-                    raise cheroot.server.NoSSLError
+                    raise errors.NoSSLError
                 elif 'unknown protocol' in e.args[1]:
                     # The client is speaking some non-HTTP protocol.
                     # Drop the conn.
