@@ -4,6 +4,7 @@ import six
 from six.moves import filter
 
 from . import server
+from .workers import threadpool
 from ._compat import ntob, bton
 
 
@@ -26,7 +27,7 @@ class WSGIServer(server.HTTPServer):
         self.request_queue_size = request_queue_size
         self.timeout = timeout
         self.shutdown_timeout = shutdown_timeout
-        self.requests = server.ThreadPool(self, min=numthreads or 1, max=max,
+        self.requests = threadpool.ThreadPool(self, min=numthreads or 1, max=max,
             accepted_queue_size=accepted_queue_size,
             accepted_queue_timeout=accepted_queue_timeout)
 
