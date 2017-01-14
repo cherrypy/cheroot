@@ -4,8 +4,9 @@
 import threading
 import time
 import sys
-import queue
 import socket
+
+from six.moves import queue
 
 
 __all__ = ['WorkerThread', 'ThreadPool']

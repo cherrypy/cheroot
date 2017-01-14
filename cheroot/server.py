@@ -71,10 +71,6 @@ True
 
 import os
 import io
-try:
-    import queue
-except:
-    import Queue as queue
 import re
 import email.utils
 import socket
@@ -89,6 +85,7 @@ except ImportError:
 import logging
 
 import six
+from six.moves import queue
 
 try:
     import pkg_resources
