@@ -5,7 +5,7 @@ python:
 - 3.3
 - 3.4
 - 3.5
-- 3.6-dev
+- 3.6
 - pypy
 - pypy3
 - nightly
@@ -16,7 +16,7 @@ matrix:
   - python: pypy3
   - env: TOXENV=pre-commit
   include:
-  - python: 3.5
+  - python: 3.6
     env: TOXENV=pre-commit
 cache: pip
 install: pip install tox
@@ -25,7 +25,7 @@ deploy:
   provider: pypi
   on:
     tags: true
-    python: 3.5
+    python: 3.6
   user: jaraco
   distributions: release
   skip_upload_docs: true
