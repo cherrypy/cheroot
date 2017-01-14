@@ -43,8 +43,10 @@ try:
 except ImportError:
     SSL = None
 
+from ..makefile import Makefile
 
-class SSL_fileobject(cheroot.server.CP_makefile):
+
+class SSL_fileobject(MakeFile):
 
     """SSL file object attached to a socket object."""
 

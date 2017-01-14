@@ -23,6 +23,8 @@ except ImportError:
 import sys
 
 import cheroot.server
+from ..makefile import MakeFile
+
 
 class BuiltinSSLAdapter(cheroot.server.SSLAdapter):
 
@@ -109,4 +111,4 @@ class BuiltinSSLAdapter(cheroot.server.SSLAdapter):
         return ssl_environ
 
     def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
-        return wsgiserver.CP_makefile(sock, mode, bufsize)
+        return MakeFile(sock, mode, bufsize)
