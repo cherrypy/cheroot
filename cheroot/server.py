@@ -86,7 +86,6 @@ try:
 except ImportError:
     from urlparse import unquote as unquote_to_bytes
     from urlparse import urlparse
-import errno
 import logging
 
 import six
@@ -104,14 +103,16 @@ except ImportError:
     pass
 
 
+from . import errors
+
+
 __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
            'CP_makefile',
-           'MaxSizeExceeded', 'NoSSLError', 'FatalSSLAlert',
            'WorkerThread', 'ThreadPool', 'SSLAdapter',
            'Gateway',
            'get_ssl_adapter_class',
-           'socket_errors_to_ignore']
+]
 
 
 if 'win' in sys.platform and hasattr(socket, 'AF_INET6'):
@@ -167,39 +168,6 @@ ASTERISK = b'*'
 FORWARD_SLASH = b'/'
 quoted_slash = re.compile(b'(?i)%2F')
 
-
-def plat_specific_errors(*errnames):
-    """Return error numbers for all errors in errnames on this platform.
-
-    The 'errno' module contains different global constants depending on
-    the specific platform (OS). This function will return the list of
-    numeric values for a given list of potential names.
-    """
-    errno_names = dir(errno)
-    nums = [getattr(errno, k) for k in errnames if k in errno_names]
-    # de-dupe the list
-    return list(dict.fromkeys(nums).keys())
-
-socket_error_eintr = plat_specific_errors('EINTR', 'WSAEINTR')
-
-socket_errors_to_ignore = plat_specific_errors(
-    'EPIPE',
-    'EBADF', 'WSAEBADF',
-    'ENOTSOCK', 'WSAENOTSOCK',
-    'ETIMEDOUT', 'WSAETIMEDOUT',
-    'ECONNREFUSED', 'WSAECONNREFUSED',
-    'ECONNRESET', 'WSAECONNRESET',
-    'ECONNABORTED', 'WSAECONNABORTED',
-    'ENETRESET', 'WSAENETRESET',
-    'EHOSTDOWN', 'EHOSTUNREACH',
-)
-socket_errors_to_ignore.append('timed out')
-socket_errors_to_ignore.append('The read operation timed out')
-if sys.platform == 'darwin':
-    socket_errors_to_ignore.append(plat_specific_errors('EPROTOTYPE'))
-
-socket_errors_nonblocking = plat_specific_errors(
-    'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
 
 comma_separated_headers = [
     ntob(h) for h in
@@ -265,10 +233,6 @@ def read_headers(rfile, hdict=None):
     return hdict
 
 
-class MaxSizeExceeded(Exception):
-    pass
-
-
 class SizeCheckWrapper(object):
 
     """Wraps a file-like object, raising MaxSizeExceeded if too large."""
@@ -280,7 +244,7 @@ class SizeCheckWrapper(object):
 
     def _check_length(self):
         if self.maxlen and self.bytes_read > self.maxlen:
-            raise MaxSizeExceeded()
+            raise errors.MaxSizeExceeded()
 
     def read(self, size=None):
         data = self.rfile.read(size)
@@ -421,7 +385,7 @@ class ChunkedRFile(object):
         self.bytes_read += len(line)
 
         if self.maxlen and self.bytes_read > self.maxlen:
-            raise MaxSizeExceeded('Request Entity Too Large', self.maxlen)
+            raise errors.MaxSizeExceeded('Request Entity Too Large', self.maxlen)
 
         line = line.strip().split(SEMICOLON, 1)
 
@@ -598,7 +562,7 @@ class HTTPRequest(object):
                                       self.server.max_request_header_size)
         try:
             success = self.read_request_line()
-        except MaxSizeExceeded:
+        except errors.MaxSizeExceeded:
             self.simple_response(
                 '414 Request-URI Too Long',
                 'The Request-URI sent with the request exceeds the maximum '
@@ -610,7 +574,7 @@ class HTTPRequest(object):
 
         try:
             success = self.read_request_headers()
-        except MaxSizeExceeded:
+        except errors.MaxSizeExceeded:
             self.simple_response(
                 '413 Request Entity Too Large',
                 'The headers sent with the request exceed the maximum '
@@ -800,7 +764,7 @@ class HTTPRequest(object):
                 self.conn.wfile.write(msg)
             except socket.error:
                 x = sys.exc_info()[1]
-                if x.args[0] not in socket_errors_to_ignore:
+                if x.args[0] not in errors.socket_errors_to_ignore:
                     raise
         return True
 
@@ -901,7 +865,7 @@ class HTTPRequest(object):
             self.conn.wfile.write(EMPTY.join(buf))
         except socket.error:
             x = sys.exc_info()[1]
-            if x.args[0] not in socket_errors_to_ignore:
+            if x.args[0] not in errors.esocket_errors_to_ignore:
                 raise
 
     def write(self, chunk):
@@ -987,18 +951,6 @@ class HTTPRequest(object):
         self.conn.wfile.write(EMPTY.join(buf))
 
 
-class NoSSLError(Exception):
-
-    """Exception raised when a client speaks HTTP to an HTTPS socket."""
-    pass
-
-
-class FatalSSLAlert(Exception):
-
-    """Exception raised when the SSL implementation signals a fatal alert."""
-    pass
-
-
 class CP_BufferedWriter(io.BufferedWriter):
 
     """Faux file object attached to a socket object."""
@@ -1048,7 +1000,7 @@ class CP_makefile_PY2(getattr(socket, '_fileobject', object)):
                 bytes_sent = self.send(data)
                 data = data[bytes_sent:]
             except socket.error as e:
-                if e.args[0] not in socket_errors_nonblocking:
+                if e.args[0] not in errors.socket_errors_nonblocking:
                     raise
 
     def send(self, data):
@@ -1069,8 +1021,8 @@ class CP_makefile_PY2(getattr(socket, '_fileobject', object)):
                 self.bytes_read += len(data)
                 return data
             except socket.error as e:
-                if (e.args[0] not in socket_errors_nonblocking
-                        and e.args[0] not in socket_error_eintr):
+                if (e.args[0] not in errors.socket_errors_nonblocking
+                        and e.args[0] not in errors.socket_error_eintr):
                     raise
 
     class FauxSocket(object):
@@ -1425,29 +1377,29 @@ class HTTPConnection(object):
                     if req and not req.sent_headers:
                         try:
                             req.simple_response('408 Request Timeout')
-                        except FatalSSLAlert:
+                        except errors.FatalSSLAlert:
                             # Close the connection.
                             return
-                        except NoSSLError:
+                        except errors.NoSSLError:
                             self._handle_no_ssl()
-            elif errnum not in socket_errors_to_ignore:
+            elif errnum not in errors.socket_errors_to_ignore:
                 self.server.error_log('socket.error %s' % repr(errnum),
                                       level=logging.WARNING, traceback=True)
                 if req and not req.sent_headers:
                     try:
                         req.simple_response('500 Internal Server Error')
-                    except FatalSSLAlert:
+                    except errors.FatalSSLAlert:
                         # Close the connection.
                         return
-                    except NoSSLError:
+                    except errors.NoSSLError:
                         self._handle_no_ssl()
             return
         except (KeyboardInterrupt, SystemExit):
             raise
-        except FatalSSLAlert:
+        except errors.FatalSSLAlert:
             # Close the connection.
             return
-        except NoSSLError:
+        except errors.NoSSLError:
             self._handle_no_ssl(req)
         except Exception:
             e = sys.exc_info()[1]
@@ -1455,7 +1407,7 @@ class HTTPConnection(object):
             if req and not req.sent_headers:
                 try:
                     req.simple_response('500 Internal Server Error')
-                except FatalSSLAlert:
+                except errors.FatalSSLAlert:
                     # Close the connection.
                     return
 
@@ -2102,7 +2054,7 @@ class HTTPServer(object):
             if self.ssl_adapter is not None:
                 try:
                     s, ssl_env = self.ssl_adapter.wrap(s)
-                except NoSSLError:
+                except errors.NoSSLError:
                     msg = ('The client sent a plain HTTP request, but '
                            'this server only speaks HTTPS on this port.')
                     buf = ['%s 400 Bad Request\r\n' % self.protocol,
@@ -2116,7 +2068,7 @@ class HTTPServer(object):
                         wfile.write(''.join(buf).encode('ISO-8859-1'))
                     except socket.error:
                         x = sys.exc_info()[1]
-                        if x.args[0] not in socket_errors_to_ignore:
+                        if x.args[0] not in errors.socket_errors_to_ignore:
                             raise
                     return
                 if not s:
@@ -2159,7 +2111,7 @@ class HTTPServer(object):
             x = sys.exc_info()[1]
             if self.stats['Enabled']:
                 self.stats['Socket Errors'] += 1
-            if x.args[0] in socket_error_eintr:
+            if x.args[0] in errors.socket_error_eintr:
                 # I *think* this is right. EINTR should occur when a signal
                 # is received during the accept() call; all docs say retry
                 # the call, and I *think* I'm reading it right that Python
@@ -2167,11 +2119,11 @@ class HTTPServer(object):
                 # elsewhere. See
                 # https://github.com/cherrypy/cherrypy/issues/707.
                 return
-            if x.args[0] in socket_errors_nonblocking:
+            if x.args[0] in errors.socket_errors_nonblocking:
                 # Just try again. See
                 # https://github.com/cherrypy/cherrypy/issues/479.
                 return
-            if x.args[0] in socket_errors_to_ignore:
+            if x.args[0] in errors.socket_errors_to_ignore:
                 # Our socket was closed.
                 # See https://github.com/cherrypy/cherrypy/issues/686.
                 return
@@ -2203,7 +2155,7 @@ class HTTPServer(object):
                     host, port = sock.getsockname()[:2]
                 except socket.error:
                     x = sys.exc_info()[1]
-                    if x.args[0] not in socket_errors_to_ignore:
+                    if x.args[0] not in errors.socket_errors_to_ignore:
                         # Changed to use error code and not message
                         # See
                         # https://github.com/cherrypy/cherrypy/issues/860.
