@@ -783,7 +783,7 @@ class HTTPRequest(object):
             # If there's a scheme (and it must be http or https), then:
             # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query
             # ]]
-            return parsed.scheme, parsed.authority, parsed.path
+            return parsed.scheme, parsed.netloc, parsed.path
 
         if uri.startswith(FORWARD_SLASH):
             # An abs_path.
