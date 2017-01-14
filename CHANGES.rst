@@ -1,3 +1,8 @@
+v5.0.1
+======
+
+Fix error in ``parse_request_uri`` created in 68a5769.
+
 v5.0.0
 ======
 
