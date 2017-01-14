@@ -778,13 +778,12 @@ class HTTPRequest(object):
             return None, None, uri
 
         parsed = urllib.parse.urlparse(uri)
-        scheme, authority, path, params, query, fragment = parsed
-        if scheme and QUESTION_MARK not in scheme:
+        if parsed.scheme and QUESTION_MARK not in parsed.scheme:
             # An absoluteURI.
             # If there's a scheme (and it must be http or https), then:
             # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query
             # ]]
-            return scheme, authority, path
+            return parsed.scheme, parsed.authority, parsed.path
 
         if uri.startswith(FORWARD_SLASH):
             # An abs_path.
