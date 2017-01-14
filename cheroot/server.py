@@ -77,15 +77,11 @@ import socket
 import sys
 import time
 import traceback as traceback_
-try:
-    from urllib.parse import unquote_to_bytes, urlparse
-except ImportError:
-    from urlparse import unquote as unquote_to_bytes
-    from urlparse import urlparse
 import logging
 
 import six
 from six.moves import queue
+from six.moves import urllib
 
 try:
     import pkg_resources
@@ -640,7 +636,10 @@ class HTTPRequest(object):
         # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
         # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
         try:
-            atoms = [unquote_to_bytes(x) for x in quoted_slash.split(path)]
+            atoms = [
+                urllib.parse.unquote_to_bytes(x)
+                for x in quoted_slash.split(path)
+            ]
         except ValueError:
             ex = sys.exc_info()[1]
             self.simple_response('400 Bad Request', ex.args[0])
@@ -778,7 +777,8 @@ class HTTPRequest(object):
         if uri == ASTERISK:
             return None, None, uri
 
-        scheme, authority, path, params, query, fragment = urlparse(uri)
+        parsed = urllib.parse.urlparse(uri)
+        scheme, authority, path, params, query, fragment = parsed
         if scheme and QUESTION_MARK not in scheme:
             # An absoluteURI.
             # If there's a scheme (and it must be http or https), then:
