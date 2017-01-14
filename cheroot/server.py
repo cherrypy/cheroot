@@ -79,6 +79,11 @@ import time
 import traceback as traceback_
 import logging
 
+try:
+    from urllib.parse import unquote_to_bytes
+except ImportError:
+    from urllib import unquote as unquote_to_bytes
+
 import six
 from six.moves import queue
 from six.moves import urllib
@@ -87,7 +92,6 @@ try:
     import pkg_resources
 except ImportError:
     pass
-
 
 from . import errors
 from .workers import threadpool
@@ -637,7 +641,7 @@ class HTTPRequest(object):
         # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
         try:
             atoms = [
-                urllib.parse.unquote_to_bytes(x)
+                unquote_to_bytes(x)
                 for x in quoted_slash.split(path)
             ]
         except ValueError:
