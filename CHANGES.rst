@@ -1,3 +1,12 @@
+v5.1.0
+======
+
+Removed the WSGI prefix from classes in :module:`cheroot.wsgi`.
+Kept aliases for compatibility.
+
+#1: Corrected docstrings in :module:`cheroot.server`
+and :module:`cheroot.wsgi`.
+
 v5.0.1
 ======
 
