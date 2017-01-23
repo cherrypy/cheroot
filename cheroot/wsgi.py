@@ -1,3 +1,29 @@
+"""
+Simplest example on how to use this server::
+
+    from cheroot import wsgi
+
+    def my_crazy_app(environ, start_response):
+        status = '200 OK'
+        response_headers = [('Content-type','text/plain')]
+        start_response(status, response_headers)
+        return ['Hello world!']
+
+    addr = '0.0.0.0', 8070
+    server = wsgi.WSGIServer(addr, my_crazy_app)
+    server.start()
+
+The Cheroot WSGI server can serve as many WSGI applications
+as you want in one instance by using a WSGIPathInfoDispatcher::
+
+    path_map = {
+        '/': my_crazy_app,
+        '/blog': my_blog_app,
+    }
+    d = wsgi.WSGIPathInfoDispatcher(path_map)
+    server = wsgi.WSGIServer(addr, d)
+"""
+
 import sys
 
 import six

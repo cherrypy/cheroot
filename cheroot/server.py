@@ -1,29 +1,6 @@
 """
 A high-speed, production ready, thread pooled, generic HTTP server.
 
-Simplest example on how to use this server::
-
-    import cheroot.server
-
-    def my_crazy_app(environ, start_response):
-        status = '200 OK'
-        response_headers = [('Content-type','text/plain')]
-        start_response(status, response_headers)
-        return ['Hello world!']
-
-    server = cheroot.server.WSGIServer(
-                ('0.0.0.0', 8070), my_crazy_app,
-                server_name='www.cherrypy.example')
-    server.start()
-
-The Cheroot WSGI server can serve as many WSGI applications
-as you want in one instance by using a WSGIPathInfoDispatcher::
-
-    d = WSGIPathInfoDispatcher({'/': my_crazy_app, '/blog': my_blog_app})
-    server = cheroot.server.WSGIServer(('0.0.0.0', 80), d)
-
-Want SSL support? Just set server.ssl_adapter to an ssl.Adapter instance.
-
 For those of you wanting to understand internals of this module, here's the
 basic call flow. The server's listening thread runs a very tight loop,
 sticking incoming connections onto a Queue::
