@@ -3,7 +3,7 @@ A library for integrating Python's builtin ``ssl`` library with Cheroot.
 
 The ssl module must be importable for SSL functionality.
 
-To use this module, set ``WSGIServer.ssl_adapter`` to an instance of
+To use this module, set ``HTTPServer.ssl_adapter`` to an instance of
 ``BuiltinSSLAdapter``.
 """
 

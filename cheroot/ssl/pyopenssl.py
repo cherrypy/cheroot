@@ -4,7 +4,7 @@ A library for integrating pyOpenSSL with Cheroot.
 The OpenSSL module must be importable for SSL functionality.
 You can obtain it from `here <https://launchpad.net/pyopenssl>`_.
 
-To use this module, set WSGIServer.ssl_adapter to an instance of
+To use this module, set HTTPServer.ssl_adapter to an instance of
 ssl.Adapter. There are two ways to use SSL:
 
 Method One

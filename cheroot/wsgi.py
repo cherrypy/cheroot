@@ -10,18 +10,18 @@ Simplest example on how to use this server::
         return ['Hello world!']
 
     addr = '0.0.0.0', 8070
-    server = wsgi.WSGIServer(addr, my_crazy_app)
+    server = wsgi.Server(addr, my_crazy_app)
     server.start()
 
 The Cheroot WSGI server can serve as many WSGI applications
-as you want in one instance by using a WSGIPathInfoDispatcher::
+as you want in one instance by using a PathInfoDispatcher::
 
     path_map = {
         '/': my_crazy_app,
         '/blog': my_blog_app,
     }
-    d = wsgi.WSGIPathInfoDispatcher(path_map)
-    server = wsgi.WSGIServer(addr, d)
+    d = wsgi.PathInfoDispatcher(path_map)
+    server = wsgi.Server(addr, d)
 """
 
 import sys
@@ -34,7 +34,7 @@ from .workers import threadpool
 from ._compat import ntob, bton
 
 
-class WSGIServer(server.HTTPServer):
+class Server(server.HTTPServer):
 
     """A subclass of HTTPServer which calls a WSGI application."""
 
@@ -44,7 +44,7 @@ class WSGIServer(server.HTTPServer):
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
                  accepted_queue_size=-1, accepted_queue_timeout=10):
-        super(WSGIServer, self).__init__(
+        super(Server, self).__init__(
             bind_addr,
             gateway=wsgi_gateways[self.wsgi_version],
             server_name=server_name,
@@ -65,7 +65,7 @@ class WSGIServer(server.HTTPServer):
     numthreads = property(_get_numthreads, _set_numthreads)
 
 
-class WSGIGateway(server.Gateway):
+class Gateway(server.Gateway):
 
     """A base class to interface HTTPServer with WSGI."""
 
@@ -189,7 +189,7 @@ class WSGIGateway(server.Gateway):
                     'Response body exceeds the declared Content-Length.')
 
 
-class WSGIGateway_10(WSGIGateway):
+class Gateway_10(Gateway):
 
     """A Gateway class to interface HTTPServer with WSGI 1.0.x."""
 
@@ -248,7 +248,7 @@ class WSGIGateway_10(WSGIGateway):
         return env
 
 
-class WSGIGateway_u0(WSGIGateway_10):
+class Gateway_u0(Gateway_10):
 
     """A Gateway class to interface HTTPServer with WSGI u.0.
 
@@ -259,7 +259,7 @@ class WSGIGateway_u0(WSGIGateway_10):
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version"""
         req = self.req
-        env_10 = WSGIGateway_10.get_environ(self)
+        env_10 = super(Gateway_u0, self).get_environ(self)
         env = dict(map(self._decode_key, env_10.items()))
         env[six.u('wsgi.version')] = ('u', 0)
 
@@ -295,12 +295,12 @@ class WSGIGateway_u0(WSGIGateway_10):
 
 
 wsgi_gateways = {
-    (1, 0): WSGIGateway_10,
-    ('u', 0): WSGIGateway_u0,
+    (1, 0): Gateway_10,
+    ('u', 0): Gateway_u0,
 }
 
 
-class WSGIPathInfoDispatcher(object):
+class PathInfoDispatcher(object):
 
     """A WSGI dispatcher for dispatch based on the PATH_INFO.
 
@@ -334,3 +334,13 @@ class WSGIPathInfoDispatcher(object):
         start_response('404 Not Found', [('Content-Type', 'text/plain'),
                                          ('Content-Length', '0')])
         return ['']
+
+
+# compatibility aliases
+globals().update(
+    WSGIServer=Server,
+    WSGIGateway=Gateway,
+    WSGIGateway_u0=Gateway_u0,
+    WSGIGateway_10=Gateway_10,
+    WSGIPathInfoDispatcher=PathInfoDispatcher,
+)
