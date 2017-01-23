@@ -7,6 +7,9 @@ Kept aliases for compatibility.
 #1: Corrected docstrings in :module:`cheroot.server`
 and :module:`cheroot.wsgi`.
 
+#2: Fixed ImportError when pkg_resources cannot find the
+    cheroot distribution.
+
 v5.0.1
 ======
 
