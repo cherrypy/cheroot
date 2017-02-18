@@ -1,3 +1,9 @@
+v5.2.0
+======
+
+Prevent tracebacks and drop bad HTTPS connections in the
+``BuiltinSSLAdapter``, similar to ``pyOpenSSLAdapter``.
+
 v5.1.0
 ======
 
