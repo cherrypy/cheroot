@@ -27,6 +27,7 @@ serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 config = {
     'bind_addr': ('127.0.0.1', 54583),
     'server': 'wsgi',
+    'wsgi_app': None,
 }
 try:
     import testconfig
