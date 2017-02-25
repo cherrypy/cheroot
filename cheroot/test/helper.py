@@ -16,6 +16,8 @@ import cheroot.server
 from cheroot._compat import HTTPSConnection, ntob
 from cheroot.test import webtest
 
+import cheroot.wsgi
+
 _testconfig = None
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
@@ -40,7 +42,7 @@ class CherootWebCase(webtest.WebCase):
     scheme = 'http'
 
     available_servers = {
-        'wsgi': cheroot.server.WSGIServer,
+        'wsgi': cheroot.wsgi.Server,
         'native': cheroot.server.HTTPServer,
     }
 
