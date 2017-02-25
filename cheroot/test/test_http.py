@@ -12,6 +12,9 @@ from cheroot._compat import HTTPConnection, HTTPSConnection, ntob
 
 from cheroot.test import helper
 
+import pytest
+pytestmark = pytest.mark.skip(reason="Depends on CherryPy")
+
 
 def encode_multipart_formdata(files):
     """Return (content_type, body) ready for httplib.HTTP instance.

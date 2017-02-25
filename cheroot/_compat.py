@@ -1,10 +1,8 @@
 """
 Compatibility code for using Cheroot with various versions of Python.
-
 Cheroot is compatible with Python versions 2.6+. This module provides a
 useful abstraction over the differences between Python versions, sometimes by
 preferring a newer idiom, sometimes an older one, and sometimes a custom one.
-
 In particular, Python 2 uses str and '' for byte strings, while Python 3
 uses str and '' for unicode strings. Refer to each of these the 'native
 string' type for each version. Because of this major difference, this module
@@ -307,7 +305,6 @@ try:
 except ImportError:
     def _args_from_interpreter_flags():
         """Tries to reconstruct original interpreter args from sys.flags for Python 2.6
-
         Backported from Python 3.5. Aims to return a list of
         command-line arguments reproducing the current
         settings in sys.flags and sys.warnoptions.
@@ -351,7 +348,6 @@ except ImportError:
 
 def escape_html(s, escape_quote=False):
     """Replace special characters "&", "<" and ">" to HTML-safe sequences.
-
     When escape_quote=True, escape (') and (") chars.
     """
     return escape(s, quote=escape_quote)
