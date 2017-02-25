@@ -10,8 +10,7 @@ import pytest
 
 from cheroot._compat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
 from cheroot._compat import ntob, urlopen
-from cheroot.test import webtest
-from cheroot.test import helper
+from cheroot.test import helper, webtest
 
 
 #avpytestmark = pytest.mark.skip(reason="incomplete")
@@ -668,7 +667,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         conn.putheader('Transfer-Encoding', 'chunked')
         conn.putheader('Content-Type', 'text/plain')
         # Chunked requests don't need a content-length
-##        conn.putheader("Content-Length", len(body))
+        # conn.putheader("Content-Length", len(body))
         conn.endheaders()
         conn.send(body)
         response = conn.getresponse()

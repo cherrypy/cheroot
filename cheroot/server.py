@@ -77,9 +77,7 @@ from .makefile import MakeFile
 
 __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
-           'Gateway',
-           'get_ssl_adapter_class',
-]
+           'Gateway', 'get_ssl_adapter_class']
 
 
 if 'win' in sys.platform and hasattr(socket, 'AF_INET6'):
@@ -357,7 +355,7 @@ class ChunkedRFile(object):
             self.closed = True
             return
 
-##            if line: chunk_extension = line[0]
+#            if line: chunk_extension = line[0]
 
         if self.maxlen and self.bytes_read + chunk_size > self.maxlen:
             raise IOError('Request Entity Too Large')
