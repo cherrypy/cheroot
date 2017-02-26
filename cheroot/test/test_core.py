@@ -5,6 +5,7 @@
 import os
 import sys
 import types
+import pathlib
 
 import cherrypy
 from cherrypy._cpcompat import itervalues, ntob, ntou
@@ -16,8 +17,12 @@ from cherrypy.test import helper
 
 
 localDir = os.path.dirname(__file__)
-favicon_path = os.path.join(os.getcwd(), localDir, '../favicon.ico')
+base_path = os.path.join(os.getcwd(), localDir)
+favicon_path = os.path.join(base_path, '../favicon.ico')
 
+favicon_ico_file = pathlib.Path(os.path.join(base_path, '../favicon.ico'))
+static_dir = pathlib.Path(os.path.join(base_path, 'static/'))
+index_html_file = pathlib.Path(os.path.join(base_path, 'static/index.html'))
 #                             Client-side code                             #
 
 
@@ -31,6 +36,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def index(self):
                 return 'hello'
 
+            if not static_dir.exists():
+                static_dir.mkdir()
+            for p in [favicon_ico_file, index_html_file]:
+                if p.exists():
+                    p.unlink()
+            favicon_ico_file.write_bytes(b'Test file')
+            index_html_file.write_bytes(b'Hello, world..')
             favicon_ico = tools.staticfile.handler(filename=favicon_path)
 
             @cherrypy.expose
@@ -717,6 +729,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
         self.assertBody('Mr. and Mrs. Watson')
 
+    @classmethod
+    def teardown_class(cls):
+        cls.supervisor.stop()
+        # remove the temp static files
+        for p in [favicon_ico_file, index_html_file]:
+            p.unlink()
+        static_dir.rmdir()
 
 class ErrorTests(helper.CPWebCase):
 
