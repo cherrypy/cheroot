@@ -89,12 +89,6 @@ if 'win' in sys.platform and hasattr(socket, 'AF_INET6'):
         socket.IPV6_V6ONLY = 27
 
 
-try:
-    cp_version = pkg_resources.require('cherrypy')[0].version
-except Exception:
-    cp_version = 'unknown'
-
-
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given
@@ -1130,7 +1124,6 @@ class HTTPServer(object):
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
 
-    # version = 'CherryPy/' + cp_version
     version = 'Cheroot/' + __version__
     """A version string for the HTTPServer."""
 

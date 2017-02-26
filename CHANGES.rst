@@ -1,3 +1,8 @@
+v5.1.0 + x / unreleased
+======
+
+#5: Set `Server.version` to Cheroot version instead of CherryPy version.
+
 v5.1.0
 ======
 
