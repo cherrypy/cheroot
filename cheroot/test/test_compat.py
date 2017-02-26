@@ -6,7 +6,7 @@ import six
 
 import nose
 
-from chroot import _compat as compat
+from cheroot import _compat as compat
 
 
 class StringTester(unittest.TestCase):
