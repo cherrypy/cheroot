@@ -70,7 +70,7 @@ try:
 except ImportError:
     pass
 
-from . import errors
+from . import errors, __version__
 from .workers import threadpool
 from .makefile import MakeFile
 
@@ -1130,7 +1130,8 @@ class HTTPServer(object):
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
 
-    version = 'CherryPy/' + cp_version
+    # version = 'CherryPy/' + cp_version
+    version = 'Cheroot/' + __version__
     """A version string for the HTTPServer."""
 
     software = None
