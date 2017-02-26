@@ -13,6 +13,7 @@ import nose
 import six
 
 import cheroot.server
+import cheroot.wsgi
 from cheroot._compat import HTTPSConnection, ntob
 from cheroot.test import webtest
 
@@ -40,7 +41,7 @@ class CherootWebCase(webtest.WebCase):
     scheme = 'http'
 
     available_servers = {
-        'wsgi': cheroot.server.WSGIServer,
+        'wsgi': cheroot.wsgi.WSGIServer,
         'native': cheroot.server.HTTPServer,
     }
 
