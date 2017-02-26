@@ -6,6 +6,8 @@ import os
 import sys
 import types
 
+import py
+
 import cherrypy
 from cherrypy._cpcompat import itervalues, ntob, ntou
 from cherrypy import _cptools, tools
@@ -13,7 +15,6 @@ from cherrypy.lib import httputil, static
 
 from cherrypy.test._test_decorators import ExposeExamples
 from cherrypy.test import helper
-
 
 localDir = os.path.dirname(__file__)
 favicon_path = os.path.join(os.getcwd(), localDir, '../favicon.ico')
@@ -32,6 +33,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 return 'hello'
 
             favicon_ico = tools.staticfile.handler(filename=favicon_path)
+            favicon_ico_file = py.path.local(favicon_path)
+            favicon_ico_file.write("Test file")
 
             @cherrypy.expose
             def defct(self, newct):
