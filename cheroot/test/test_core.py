@@ -19,8 +19,6 @@ from cherrypy.test import helper
 localDir = os.path.dirname(__file__)
 base_path = os.path.join(os.getcwd(), localDir)
 favicon_path = os.path.join(base_path, '../favicon.ico')
-static_dir = os.path.join(base_path, 'static/')
-index_html_path = os.path.join(base_path, 'static/index.html')
 #                             Client-side code                             #
 
 
@@ -28,6 +26,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
     @staticmethod
     def setup_server():
+
+        static_dir = os.path.join(base_path, 'static/')
+        if not os.path.exists(static_dir):
+            os.mkdir(static_dir)
+
         class Root:
 
             @cherrypy.expose
@@ -514,65 +517,62 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertBody('content')
 
     def testRanges(self):
-        os.mkdir(static_dir)
-        try:
-            with self.temp_file(index_html_path, 'Hello, world..'):
-                self.getPage('/ranges/get_ranges?bytes=3-6')
-                self.assertBody('[(3, 7)]')
+        index_html_path = os.path.join(base_path, 'static/index.html')
+        with self.temp_file(index_html_path, 'Hello, world..'):
+            self.getPage('/ranges/get_ranges?bytes=3-6')
+            self.assertBody('[(3, 7)]')
 
-                # Test multiple ranges and a suffix-byte-range-spec, for good measure.
-                self.getPage('/ranges/get_ranges?bytes=2-4,-1')
-                self.assertBody('[(2, 5), (7, 8)]')
+            # Test multiple ranges and a suffix-byte-range-spec, for good measure.
+            self.getPage('/ranges/get_ranges?bytes=2-4,-1')
+            self.assertBody('[(2, 5), (7, 8)]')
 
-                # Test a suffix-byte-range longer than the content
-                # length. Note that in this test, the content length
-                # is 8 bytes.
-                self.getPage('/ranges/get_ranges?bytes=-100')
-                self.assertBody('[(0, 8)]')
+            # Test a suffix-byte-range longer than the content
+            # length. Note that in this test, the content length
+            # is 8 bytes.
+            self.getPage('/ranges/get_ranges?bytes=-100')
+            self.assertBody('[(0, 8)]')
 
-                # Get a partial file.
-                if cherrypy.server.protocol_version == 'HTTP/1.1':
-                    self.getPage('/ranges/slice_file', [('Range', 'bytes=2-5')])
-                    self.assertStatus(206)
-                    self.assertHeader('Content-Type', 'text/html;charset=utf-8')
-                    self.assertHeader('Content-Range', 'bytes 2-5/14')
-                    self.assertBody('llo,')
+            # Get a partial file.
+            if cherrypy.server.protocol_version == 'HTTP/1.1':
+                self.getPage('/ranges/slice_file', [('Range', 'bytes=2-5')])
+                self.assertStatus(206)
+                self.assertHeader('Content-Type', 'text/html;charset=utf-8')
+                self.assertHeader('Content-Range', 'bytes 2-5/14')
+                self.assertBody('llo,')
 
-                    # What happens with overlapping ranges (and out of order, too)?
-                    self.getPage('/ranges/slice_file', [('Range', 'bytes=4-6,2-5')])
-                    self.assertStatus(206)
-                    ct = self.assertHeader('Content-Type')
-                    expected_type = 'multipart/byteranges; boundary='
-                    self.assert_(ct.startswith(expected_type))
-                    boundary = ct[len(expected_type):]
-                    expected_body = ('\r\n--%s\r\n'
-                                     'Content-type: text/html\r\n'
-                                     'Content-range: bytes 4-6/14\r\n'
-                                     '\r\n'
-                                     'o, \r\n'
-                                     '--%s\r\n'
-                                     'Content-type: text/html\r\n'
-                                     'Content-range: bytes 2-5/14\r\n'
-                                     '\r\n'
-                                     'llo,\r\n'
-                                     '--%s--\r\n' % (boundary, boundary, boundary))
-                    self.assertBody(expected_body)
-                    self.assertHeader('Content-Length')
+                # What happens with overlapping ranges (and out of order, too)?
+                self.getPage('/ranges/slice_file', [('Range', 'bytes=4-6,2-5')])
+                self.assertStatus(206)
+                ct = self.assertHeader('Content-Type')
+                expected_type = 'multipart/byteranges; boundary='
+                self.assert_(ct.startswith(expected_type))
+                boundary = ct[len(expected_type):]
+                expected_body = ('\r\n--%s\r\n'
+                                 'Content-type: text/html\r\n'
+                                 'Content-range: bytes 4-6/14\r\n'
+                                 '\r\n'
+                                 'o, \r\n'
+                                 '--%s\r\n'
+                                 'Content-type: text/html\r\n'
+                                 'Content-range: bytes 2-5/14\r\n'
+                                 '\r\n'
+                                 'llo,\r\n'
+                                 '--%s--\r\n' % (boundary, boundary, boundary))
+                self.assertBody(expected_body)
+                self.assertHeader('Content-Length')
 
-                    # Test "416 Requested Range Not Satisfiable"
-                    self.getPage('/ranges/slice_file', [('Range', 'bytes=2300-2900')])
-                    self.assertStatus(416)
-                    # "When this status code is returned for a byte-range request,
-                    # the response SHOULD include a Content-Range entity-header
-                    # field specifying the current length of the selected resource"
-                    self.assertHeader('Content-Range', 'bytes */14')
-                elif cherrypy.server.protocol_version == 'HTTP/1.0':
-                    # Test Range behavior with HTTP/1.0 request
-                    self.getPage('/ranges/slice_file', [('Range', 'bytes=2-5')])
-                    self.assertStatus(200)
-                    self.assertBody('Hello, world\r\n')
-        finally:
-            os.rmdir(static_dir)
+                # Test "416 Requested Range Not Satisfiable"
+                self.getPage('/ranges/slice_file', [('Range', 'bytes=2300-2900')])
+                self.assertStatus(416)
+                # "When this status code is returned for a byte-range request,
+                # the response SHOULD include a Content-Range entity-header
+                # field specifying the current length of the selected resource"
+                self.assertHeader('Content-Range', 'bytes */14')
+            elif cherrypy.server.protocol_version == 'HTTP/1.0':
+                # Test Range behavior with HTTP/1.0 request
+                self.getPage('/ranges/slice_file', [('Range', 'bytes=2-5')])
+                self.assertStatus(200)
+                self.assertBody('Hello, world\r\n')
 
     def testFavicon(self):
         with self.temp_file(favicon_path, 'Test file'):
