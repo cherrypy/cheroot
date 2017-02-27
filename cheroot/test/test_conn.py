@@ -169,15 +169,19 @@ class ConnectionCloseTests(helper.CherootWebCase):
         # Make another request on the same connection, which should error.
         self.assertRaises(NotConnected, self.getPage, "/pov")
 
+    @pytest.mark.xfail(reason="issue 1")
     def test_Streaming_no_len_11(self):
         self._streaming_11(set_cl=False)
 
+    @pytest.mark.xfail(reason="issue 1")
     def test_Streaming_with_len_11(self):
         self._streaming_11(set_cl=True)
 
+    @pytest.mark.xfail(reason="issue 1")
     def test_Streaming_no_len_10(self):
         self._streaming_10(set_cl=False)
 
+    @pytest.mark.xfail(reason="issue 1")
     def test_Streaming_with_len_10(self):
         self._streaming_10(set_cl=True)
 
@@ -441,6 +445,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertBody(pov)
         conn.close()
 
+    @pytest.mark.xfail(reason="issue 1")
     def test_HTTP11_pipelining(self):
         self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
@@ -530,6 +535,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertBody("thanks for '%s'" % body)
         conn.close()
 
+    @pytest.mark.xfail(reason="issue 1")
     def test_readall_or_close(self):
         self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"
@@ -600,6 +606,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
             self.assertBody("thanks for '%s'" % body)
             conn.close()
 
+    @pytest.mark.xfail(reason="issue 1")
     def test_No_Message_Body(self):
         self.PROTOCOL = "HTTP/1.1"
 
@@ -722,6 +729,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertBody("I too")
         conn.close()
 
+    @pytest.mark.xfail(reason="issue 1")
     def test_598(self):
         self.httpserver.protocol = "HTTP/1.1"
         self.PROTOCOL = "HTTP/1.1"

@@ -1,9 +1,12 @@
 import sys
 
+import pytest
+
 from cheroot._compat import ntob
 from cheroot.test import helper
 
 
+@pytest.mark.xfail(reason="issue 1")
 class WSGIGraftTests(helper.CherootWebCase):
 
     @staticmethod
