@@ -17,19 +17,23 @@ from cherrypy.test import helper
 
 
 localDir = os.path.dirname(__file__)
-base_path = os.path.join(os.getcwd(), localDir)
-favicon_path = os.path.join(base_path, '../favicon.ico')
+temp_dir = os.path.join(os.getcwd(), localDir, 'temp')
+favicon_path = os.path.join(temp_dir, 'favicon.ico')
 #                             Client-side code                             #
 
+@contextlib.contextmanager
+def temp_file(file, content):
+    with open(file, 'w') as f:
+        f.write(content)
+    try:
+        yield
+    finally:
+        os.remove(file)
 
 class CoreRequestHandlingTest(helper.CPWebCase):
 
     @staticmethod
     def setup_server():
-
-        static_dir = os.path.join(base_path, 'static/')
-        if not os.path.exists(static_dir):
-            os.mkdir(static_dir)
 
         class Root:
 
@@ -250,7 +254,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def slice_file(self):
                 path = os.path.join(os.getcwd(), os.path.dirname(__file__))
                 return static.serve_file(
-                    os.path.join(path, 'static/index.html'))
+                    os.path.join(path, 'temp/index.html'))
 
         class Cookies(Test):
 
@@ -285,17 +289,6 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     'WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
 
         cherrypy.tree.mount(root)
-
-    @staticmethod
-    @contextlib.contextmanager
-    def temp_file(file, content):
-        with open(file, 'w') as f:
-            f.write(content)
-        try:
-            yield
-        finally:
-            os.remove(file)
-
 
     def testStatus(self):
         self.getPage('/status/')
@@ -517,8 +510,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertBody('content')
 
     def testRanges(self):
-        index_html_path = os.path.join(base_path, 'static/index.html')
-        with self.temp_file(index_html_path, 'Hello, world..'):
+        index_html_path = os.path.join(temp_dir, 'index.html')
+        with temp_file(index_html_path, 'Hello, world..'):
             self.getPage('/ranges/get_ranges?bytes=3-6')
             self.assertBody('[(3, 7)]')
 
@@ -575,12 +568,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 self.assertBody('Hello, world\r\n')
 
     def testFavicon(self):
-        with self.temp_file(favicon_path, 'Test file'):
+        with temp_file(favicon_path, 'Test file'):
             # favicon.ico is served by staticfile.
-            icofilename = os.path.join(localDir, '../favicon.ico')
-            icofile = open(icofilename, 'rb')
-            data = icofile.read()
-            icofile.close()
+            with open(favicon_path, 'rb') as f:
+                data = f.read()
 
             self.getPage('/favicon.ico')
             self.assertBody(data)
