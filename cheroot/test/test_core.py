@@ -17,8 +17,8 @@ from cherrypy.test import helper
 
 
 localDir = os.path.dirname(__file__)
-temp_dir = os.path.join(os.getcwd(), localDir, 'temp')
-favicon_path = os.path.join(temp_dir, 'favicon.ico')
+static_dir = os.path.join(os.getcwd(), localDir, 'static')
+favicon_path = os.path.join(static_dir, 'favicon.ico')
 #                             Client-side code                             #
 
 @contextlib.contextmanager
@@ -254,7 +254,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def slice_file(self):
                 path = os.path.join(os.getcwd(), os.path.dirname(__file__))
                 return static.serve_file(
-                    os.path.join(path, 'temp/index.html'))
+                    os.path.join(path, 'static/index.html'))
 
         class Cookies(Test):
 
@@ -510,7 +510,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertBody('content')
 
     def testRanges(self):
-        index_html_path = os.path.join(temp_dir, 'index.html')
+        index_html_path = os.path.join(static_dir, 'index.html')
         with temp_file(index_html_path, 'Hello, world..'):
             self.getPage('/ranges/get_ranges?bytes=3-6')
             self.assertBody('[(3, 7)]')
