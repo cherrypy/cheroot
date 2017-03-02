@@ -23,7 +23,10 @@ matrix:
     env: TOXENV=pre-commit-pep257
   - python: 3.6
     env: TOXENV=pre-commit-flake8
-cache: pip
+cache:
+  pip: true
+  directories:
+  - $HOME/.pre-commit
 install: pip install tox
 script: tox
 deploy:
