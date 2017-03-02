@@ -62,18 +62,18 @@ class CherootWebCase(webtest.WebCase):
 
         cls.HOST, cls.PORT = cls.httpserver.bind_addr
         if cls.httpserver.ssl_adapter is None:
-            ssl = ""
+            ssl = ''
             cls.scheme = 'http'
         else:
-            ssl = " (ssl)"
+            ssl = ' (ssl)'
             cls.HTTP_CONN = HTTPSConnection
             cls.scheme = 'https'
 
         v = sys.version.split()[0]
-        log.info("Python version used to run this test script: %s" % v)
-        log.info("Cheroot version: %s" % cheroot.__version__)
-        log.info("HTTP server version: %s%s" % (cls.httpserver.protocol, ssl))
-        log.info("PID: %s" % os.getpid())
+        log.info('Python version used to run this test script: %s' % v)
+        log.info('Cheroot version: %s' % cheroot.__version__)
+        log.info('HTTP server version: %s%s' % (cls.httpserver.protocol, ssl))
+        log.info('PID: %s' % os.getpid())
 
         if hasattr(cls, 'setup_server'):
             # Clear the wsgi server so that
@@ -160,7 +160,7 @@ class Controller(object):
     def __call__(self, environ, start_response):
         req, resp = Request(environ), Response()
         try:
-            handler = getattr(self, environ["PATH_INFO"].lstrip("/").replace("/", "_"))
+            handler = getattr(self, environ['PATH_INFO'].lstrip('/').replace('/', '_'))
         except AttributeError:
             resp.status = '404 Not Found'
         else:

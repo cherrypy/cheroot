@@ -7,7 +7,7 @@ import pytest
 from cheroot.test import helper
 
 
-pytestmark = pytest.mark.skip(reason="Depends on CherryPy")
+pytestmark = pytest.mark.skip(reason='Depends on CherryPy')
 
 
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
