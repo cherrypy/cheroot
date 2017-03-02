@@ -17,6 +17,8 @@ import cheroot.wsgi
 from cheroot._compat import HTTPSConnection, ntob
 from cheroot.test import webtest
 
+import cheroot.wsgi
+
 _testconfig = None
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
@@ -26,6 +28,7 @@ serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 config = {
     'bind_addr': ('127.0.0.1', 54583),
     'server': 'wsgi',
+    'wsgi_app': None,
 }
 try:
     import testconfig
@@ -88,6 +91,8 @@ class CherootWebCase(webtest.WebCase):
     def start(cls):
         """Load and start the HTTP server."""
         threading.Thread(target=cls.httpserver.safe_start).start()
+        while not cls.httpserver.ready:
+            time.sleep(0.1)
 
     @classmethod
     def stop(cls):

@@ -8,10 +8,12 @@ from unittest import mock
 
 import six
 
-import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
+from cheroot._compat import HTTPConnection, HTTPSConnection, ntob
 
-from cherrypy.test import helper
+from cheroot.test import helper
+
+import pytest
+pytestmark = pytest.mark.skip(reason="Depends on CherryPy")
 
 
 def encode_multipart_formdata(files):
@@ -36,7 +38,7 @@ def encode_multipart_formdata(files):
     return content_type, body
 
 
-class HTTPTests(helper.CPWebCase):
+class HTTPTests(helper.CherootWebCase):
 
     def make_connection(self):
         if self.scheme == 'https':
