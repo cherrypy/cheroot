@@ -2,13 +2,12 @@
   sha: master
   hooks:
   - id: trailing-whitespace
-    exclude: cherrypy/test/static/index.html
   - id: flake8
   - id: check-merge-conflict
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
   - id: name-tests-test
-    include: cherrypy/test/
+    include: cheroot/test/
     args:
     - '--django'
     exclude: tests/dist-check.py
@@ -24,7 +23,7 @@
   - id: check-symlinks
   - id: check-yaml
   - id: detect-private-key
-    exclude: cherrypy/test/test.pem
+    exclude: cheroot/test/test.pem
   - id: requirements-txt-fixer
 
 - repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
