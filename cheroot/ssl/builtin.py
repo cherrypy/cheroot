@@ -85,7 +85,7 @@ class BuiltinSSLAdapter(Adapter):
                 if 'http request' in e.args[1]:
                     # The client is speaking HTTP to an HTTPS server.
                     raise errors.NoSSLError
-                
+
                 # Check if it's one of the known errors
                 # Errors that are caught by PyOpenSSL, but thrown by built-in ssl
                 _block_errors = ('unknown protocol', 'unknown ca', 'unknown_ca',
