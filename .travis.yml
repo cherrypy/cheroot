@@ -6,6 +6,7 @@ python:
 - 3.4
 - 3.5
 - 3.6
+- 3.7-dev
 - pypy
 - pypy3
 - nightly
@@ -14,6 +15,7 @@ matrix:
   allow_failures:
   - python: pypy
   - python: pypy3
+  - python: 3.7-dev
   - env: TOXENV=pre-commit
   include:
   - python: 3.6
