@@ -1,7 +1,10 @@
-v5.1.0 + x / unreleased
+v5.2.0
 ======
 
 #5: Set `Server.version` to Cheroot version instead of CherryPy version.
+
+Prevent tracebacks and drop bad HTTPS connections in the
+``BuiltinSSLAdapter``, similar to ``pyOpenSSLAdapter``.
 
 v5.1.0
 ======
