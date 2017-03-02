@@ -90,6 +90,8 @@ class CherootWebCase(webtest.WebCase):
     def start(cls):
         """Load and start the HTTP server."""
         threading.Thread(target=cls.httpserver.safe_start).start()
+        while not cls.httpserver.ready:
+            time.sleep(0.1)
 
     @classmethod
     def stop(cls):
