@@ -16,10 +16,13 @@ matrix:
   - python: pypy
   - python: pypy3
   - python: 3.7-dev
-  - env: TOXENV=pre-commit
+  - python: 3.6
+    env: TOXENV=pre-commit-pep257
   include:
   - python: 3.6
     env: TOXENV=pre-commit
+  - python: 3.6
+    env: TOXENV=pre-commit-pep257
 cache: pip
 install: pip install tox
 script: tox
