@@ -95,6 +95,7 @@ def assert_native(n):
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
 
+
 try:
     # Python 3.1+
     from base64 import decodebytes as _base64_decodebytes
@@ -275,8 +276,10 @@ except ImportError:
     # In Python 3, pickle is the sped-up C version.
     import pickle  # noqa
 
+
 def random20():
     return binascii.hexlify(os.urandom(20)).decode('ascii')
+
 
 try:
     from _thread import get_ident as get_thread_ident
@@ -330,7 +333,7 @@ except ImportError:
             v = getattr(sys.flags, flag)
             if v > 0:
                 if flag == 'hash_randomization':
-                    v = 1 # Handle specification of an exact seed
+                    v = 1  # Handle specification of an exact seed
                 args.append('-' + opt * v)
         for opt in sys.warnoptions:
             args.append('-W' + opt)
@@ -342,6 +345,7 @@ try:
     from html import escape
 except ImportError:
     from cgi import escape
+
 
 # html module needed the argument quote=False because in cgi the default
 # is False. With quote=True the results differ.
