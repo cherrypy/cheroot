@@ -1,10 +1,10 @@
 try:
-	import pkg_resources
+    import pkg_resources
 except ImportError:
-	pass
+    pass
 
 
 try:
-	__version__ = pkg_resources.get_distribution('cheroot').version
+    __version__ = pkg_resources.get_distribution('cheroot').version
 except Exception:
-	__version__ = 'unknown'
+    __version__ = 'unknown'

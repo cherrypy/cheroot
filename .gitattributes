@@ -1,0 +1,118 @@
+# These settings are for any web project
+
+# Handle line endings automatically for files detected as text
+# and leave all files detected as binary untouched.
+* text=auto
+
+#
+# The above will handle all files NOT found below
+#
+
+#
+## These files are text and should be normalized (Convert crlf => lf)
+#
+
+# source code
+*.css text
+*.sass text
+*.scss text
+*.less text
+*.styl text
+*.js text
+*.ts text
+*.json text
+*.htm text
+*.html text
+*.xml text
+*.txt text
+*.ini text
+*.py text
+*.pxd   text
+*.py3     text
+*.pyw     text
+*.pyx     text
+*.scm text
+*.sql text
+*.sh text
+
+# git config
+.gitattributes text
+.gitignore text
+.gitconfig text
+
+# code analysis config
+.jshintrc text
+.jscsrc text
+.jshintignore text
+.csslintrc text
+.eslintrc text
+.stylelintrc text
+
+# misc config
+*.yaml text
+*.yml text
+.editorconfig text
+.cfg text
+
+# build config
+*.npmignore text
+*.bowerrc text
+
+# Heroku
+Procfile text
+.slugignore text
+
+# Documentation
+*.md text
+LICENSE text
+AUTHORS text
+
+
+#
+## These files are binary and should be left untouched
+#
+
+# (binary is a macro for -text -diff)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.tif binary
+*.tiff binary
+*.ico binary
+*.eps binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.pyc binary
+*.pdf binary
+*.db    binary
+*.p     binary
+*.pkl     binary
+*.pyc     binary
+*.pyd   binary
+*.pyo     binary
+
+# Vector graphics:
+*.svg text
+*.ai binary
+
+# SSL key
+*.pem binary
+
+
+# Note: .db, .p, and .pkl files are associated
+# with the python modules ``pickle``, ``dbm.*``,
+# ``shelve``, ``marshal``, ``anydbm``, & ``bsddb``
+# (among others).

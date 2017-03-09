@@ -6,19 +6,27 @@ python:
 - 3.4
 - 3.5
 - 3.6
+- 3.7-dev
 - pypy
 - pypy3
 - nightly
 matrix:
   fast_finish: true
   allow_failures:
-  - python: pypy
-  - python: pypy3
-  - env: TOXENV=pre-commit
+  - python: 3.7-dev
+  - env: TOXENV=pre-commit-pep257
+  - env: TOXENV=pre-commit-flake8
   include:
   - python: 3.6
     env: TOXENV=pre-commit
-cache: pip
+  - python: 3.6
+    env: TOXENV=pre-commit-pep257
+  - python: 3.6
+    env: TOXENV=pre-commit-flake8
+cache:
+  pip: true
+  directories:
+  - $HOME/.pre-commit
 install: pip install tox
 script: tox
 deploy:

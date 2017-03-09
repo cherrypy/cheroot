@@ -1,15 +1,11 @@
 """Extensions to unittest for web frameworks.
-
 Use the WebCase.getPage method to request a page from your HTTP server.
-
 Framework Integration
 =====================
-
 If you have control over your server process, you can handle errors
 in the server-side of the HTTP conversation a bit better. You must run
 both the client (your WebCase tests) and the server in the same process
 (but in separate threads, obviously).
-
 When an error occurs in the framework, call server_error. It will print
 the traceback to stdout, and keep any assertions you have from running
 (the assumption is that, if the server errors, the page output will not
@@ -36,7 +32,6 @@ from cheroot._compat import HTTPSConnection
 
 def interface(host):
     """Return an IP address for a client connection given the server host.
-
     If the server is listening on '0.0.0.0' (INADDR_ANY)
     or '::' (IN6ADDR_ANY), this will return the proper localhost."""
     if host == '0.0.0.0':
@@ -89,11 +84,9 @@ class ReloadingTestLoader(unittest.TestLoader):
 
     def loadTestsFromName(self, name, module=None):
         """Return a suite of all tests cases given a string specifier.
-
         The name may resolve either to a module, a test case class, a
         test method within a test case class, or a callable object which
         returns a TestCase or TestSuite instance.
-
         The method optionally resolves the names relative to a given module.
         """
         parts = name.split('.')
@@ -218,11 +211,9 @@ class WebCase(unittest.TestCase):
 
     def set_persistent(self, on=True, auto_open=False):
         """Make our HTTP_CONN persistent (or not).
-
         If the 'on' argument is True (the default), then self.HTTP_CONN
         will be set to an instance of HTTPConnection (or HTTPS
         if self.scheme is "https"). This will then persist across requests.
-
         We only allow for a single open connection, so if you call this
         and we currently have an open connection, it will be closed.
         """
@@ -248,7 +239,6 @@ class WebCase(unittest.TestCase):
 
     def interface(self):
         """Return an IP address for a client connection.
-
         If the server is listening on '0.0.0.0' (INADDR_ANY)
         or '::' (IN6ADDR_ANY), this will return the proper localhost."""
         return interface(self.HOST)
@@ -256,7 +246,6 @@ class WebCase(unittest.TestCase):
     def getPage(self, url, headers=None, method='GET', body=None,
                 protocol=None, raise_subcls=None):
         """Open the url with debugging support. Return status, headers, body.
-
         `raise_subcls` must be a tuple with the exceptions classes
         or a single exception class that are not going to be considered
         a socket.error regardless that they were are subclass of a
@@ -526,7 +515,6 @@ def openURL(url, headers=None, method='GET', body=None,
             protocol='HTTP/1.1', raise_subcls=None):
     """
     Open the given HTTP resource and return status, headers, and body.
-
     `raise_subcls` must be a tuple with the exceptions classes
     or a single exception class that are not going to be considered
     a socket.error regardless that they were are subclass of a
@@ -578,8 +566,6 @@ def openURL(url, headers=None, method='GET', body=None,
                     raise
 
 
-
-
 # Add any exceptions which your web framework handles
 # normally (that you don't want server_error to trap).
 ignored_exceptions = []
@@ -596,7 +582,6 @@ class ServerError(Exception):
 
 def server_error(exc=None):
     """Server debug hook. Return True if exception handled, False if ignored.
-
     You probably want to wrap this, so you can still handle an error using
     your framework when it's ignored.
     """

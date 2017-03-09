@@ -1,10 +1,8 @@
 """
 Compatibility code for using Cheroot with various versions of Python.
-
 Cheroot is compatible with Python versions 2.6+. This module provides a
 useful abstraction over the differences between Python versions, sometimes by
 preferring a newer idiom, sometimes an older one, and sometimes a custom one.
-
 In particular, Python 2 uses str and '' for byte strings, while Python 3
 uses str and '' for unicode strings. Refer to each of these the 'native
 string' type for each version. Because of this major difference, this module
@@ -96,6 +94,7 @@ else:
 def assert_native(n):
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
+
 
 try:
     # Python 3.1+
@@ -277,8 +276,10 @@ except ImportError:
     # In Python 3, pickle is the sped-up C version.
     import pickle  # noqa
 
+
 def random20():
     return binascii.hexlify(os.urandom(20)).decode('ascii')
+
 
 try:
     from _thread import get_ident as get_thread_ident
@@ -307,7 +308,6 @@ try:
 except ImportError:
     def _args_from_interpreter_flags():
         """Tries to reconstruct original interpreter args from sys.flags for Python 2.6
-
         Backported from Python 3.5. Aims to return a list of
         command-line arguments reproducing the current
         settings in sys.flags and sys.warnoptions.
@@ -333,7 +333,7 @@ except ImportError:
             v = getattr(sys.flags, flag)
             if v > 0:
                 if flag == 'hash_randomization':
-                    v = 1 # Handle specification of an exact seed
+                    v = 1  # Handle specification of an exact seed
                 args.append('-' + opt * v)
         for opt in sys.warnoptions:
             args.append('-W' + opt)
@@ -346,12 +346,12 @@ try:
 except ImportError:
     from cgi import escape
 
+
 # html module needed the argument quote=False because in cgi the default
 # is False. With quote=True the results differ.
 
 def escape_html(s, escape_quote=False):
     """Replace special characters "&", "<" and ">" to HTML-safe sequences.
-
     When escape_quote=True, escape (') and (") chars.
     """
     return escape(s, quote=escape_quote)

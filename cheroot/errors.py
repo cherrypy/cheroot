@@ -30,6 +30,7 @@ def plat_specific_errors(*errnames):
     # de-dupe the list
     return list(dict.fromkeys(nums).keys())
 
+
 socket_error_eintr = plat_specific_errors('EINTR', 'WSAEINTR')
 
 socket_errors_to_ignore = plat_specific_errors(
