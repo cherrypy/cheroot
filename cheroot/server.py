@@ -654,9 +654,9 @@ class HTTPRequest(object):
 
         # then all the http headers
         try:
-            # Configurable using "`server.drop_underscore_headers": True`:
-#             drop_underscores = getattr(self.server.server_adapter,"drop_underscore_headers", False)
-            drop_underscores = getattr(self.server, "drop_underscore_headers", False)
+            # Configurable using `"server.drop_underscore_headers": True`:
+#             drop_underscores = getattr(self.server.server_adapter, 'drop_underscore_headers', False)
+            drop_underscores = getattr(self.server, 'drop_underscore_headers', False)
             read_headers(self.rfile, self.inheaders, drop_underscores)
         except ValueError:
             ex = sys.exc_info()[1]
