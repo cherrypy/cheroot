@@ -657,8 +657,8 @@ class HTTPRequest(object):
         # then all the http headers
         try:
             # Configurable using "`server.drop_underscore_headers": True`:
-#             drop_underscores = self.server.server_adapter.drop_underscore_headers
-            drop_underscores = self.server.drop_underscore_headers
+#             drop_underscores = getattr(self.server.server_adapter,"drop_underscore_headers", False)
+            drop_underscores = getattr(self.server, "drop_underscore_headers", False)
             read_headers(self.rfile, self.inheaders, drop_underscores)
         except ValueError:
             ex = sys.exc_info()[1]
@@ -1151,8 +1151,7 @@ class HTTPServer(object):
     nodelay = True
     """If True (the default since 3.1), sets the TCP_NODELAY socket option."""
 
-    # issue #17
-    drop_underscore_headers = False
+    drop_underscore_headers = False  # issue #17
     """If True, silently discards headers containing underscores ('_'). Use hyphens ('-') instead."""
 
     ConnectionClass = HTTPConnection
