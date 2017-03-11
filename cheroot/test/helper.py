@@ -13,8 +13,11 @@ import nose
 import six
 
 import cheroot.server
+import cheroot.wsgi
 from cheroot._compat import HTTPSConnection, ntob
 from cheroot.test import webtest
+
+import cheroot.wsgi
 
 _testconfig = None
 log = logging.getLogger(__name__)
@@ -25,6 +28,7 @@ serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 config = {
     'bind_addr': ('127.0.0.1', 54583),
     'server': 'wsgi',
+    'wsgi_app': None,
 }
 try:
     import testconfig
@@ -40,7 +44,7 @@ class CherootWebCase(webtest.WebCase):
     scheme = 'http'
 
     available_servers = {
-        'wsgi': cheroot.server.WSGIServer,
+        'wsgi': cheroot.wsgi.Server,
         'native': cheroot.server.HTTPServer,
     }
 
@@ -58,18 +62,18 @@ class CherootWebCase(webtest.WebCase):
 
         cls.HOST, cls.PORT = cls.httpserver.bind_addr
         if cls.httpserver.ssl_adapter is None:
-            ssl = ""
+            ssl = ''
             cls.scheme = 'http'
         else:
-            ssl = " (ssl)"
+            ssl = ' (ssl)'
             cls.HTTP_CONN = HTTPSConnection
             cls.scheme = 'https'
 
         v = sys.version.split()[0]
-        log.info("Python version used to run this test script: %s" % v)
-        log.info("Cheroot version: %s" % cheroot.__version__)
-        log.info("HTTP server version: %s%s" % (cls.httpserver.protocol, ssl))
-        log.info("PID: %s" % os.getpid())
+        log.info('Python version used to run this test script: %s' % v)
+        log.info('Cheroot version: %s' % cheroot.__version__)
+        log.info('HTTP server version: %s%s' % (cls.httpserver.protocol, ssl))
+        log.info('PID: %s' % os.getpid())
 
         if hasattr(cls, 'setup_server'):
             # Clear the wsgi server so that
@@ -87,6 +91,8 @@ class CherootWebCase(webtest.WebCase):
     def start(cls):
         """Load and start the HTTP server."""
         threading.Thread(target=cls.httpserver.safe_start).start()
+        while not cls.httpserver.ready:
+            time.sleep(0.1)
 
     @classmethod
     def stop(cls):
@@ -154,7 +160,7 @@ class Controller(object):
     def __call__(self, environ, start_response):
         req, resp = Request(environ), Response()
         try:
-            handler = getattr(self, environ["PATH_INFO"].lstrip("/").replace("/", "_"))
+            handler = getattr(self, environ['PATH_INFO'].lstrip('/').replace('/', '_'))
         except AttributeError:
             resp.status = '404 Not Found'
         else:

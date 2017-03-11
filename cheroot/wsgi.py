@@ -53,7 +53,8 @@ class Server(server.HTTPServer):
         self.request_queue_size = request_queue_size
         self.timeout = timeout
         self.shutdown_timeout = shutdown_timeout
-        self.requests = threadpool.ThreadPool(self, min=numthreads or 1, max=max,
+        self.requests = threadpool.ThreadPool(
+            self, min=numthreads or 1, max=max,
             accepted_queue_size=accepted_queue_size,
             accepted_queue_timeout=accepted_queue_timeout)
 

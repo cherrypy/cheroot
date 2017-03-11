@@ -22,8 +22,9 @@ class TrueyZero(object):
 
     def __radd__(self, other):
         return other
-trueyzero = TrueyZero()
 
+
+trueyzero = TrueyZero()
 
 _SHUTDOWNREQUEST = None
 
@@ -123,7 +124,7 @@ class ThreadPool(object):
     """
 
     def __init__(self, server, min=10, max=-1,
-        accepted_queue_size=-1, accepted_queue_timeout=10):
+                 accepted_queue_size=-1, accepted_queue_timeout=10):
         self.server = server
         self.min = min
         self.max = max
