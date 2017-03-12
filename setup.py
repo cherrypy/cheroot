@@ -1,91 +1,72 @@
+#!/usr/bin/env python
+
+# Project skeleton maintained at https://github.com/jaraco/skeleton
+
 import io
 
 import setuptools
 
+with io.open('README.rst', encoding='utf-8') as readme:
+    long_description = readme.read()
 
-###############################################################################
-# arguments for the setup command
-###############################################################################
 name = 'cheroot'
-desc = 'Highly-optimized, pure-python HTTP server'
-
-with io.open('README.rst', encoding='utf-8') as strm:
-    long_desc = strm.read()
-
-classifiers = [
-    'Development Status :: 5 - Production/Stable',
-    'Environment :: Web Environment',
-    'Intended Audience :: Developers',
-    'Operating System :: OS Independent',
-    'Framework :: CherryPy',
-    'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.1',
-    'Programming Language :: Python :: 3.2',
-    'Programming Language :: Python :: 3.3',
-    'Programming Language :: Python :: 3.4',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: Implementation',
-    'Programming Language :: Python :: Implementation :: CPython',
-    'Programming Language :: Python :: Implementation :: Jython',
-    'Programming Language :: Python :: Implementation :: PyPy',
-    'Topic :: Internet :: WWW/HTTP',
-    'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
-    'Topic :: Internet :: WWW/HTTP :: WSGI',
-    'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
-]
-author = 'CherryPy Team'
-author_email = 'team@cherrypy.org'
-url = 'http://www.cherrypy.org'
-packages = [
-    'cheroot', 'cheroot.test',
-]
-
-install_requires = [
-    'six',
-]
-
-extras_require = {
-    'testing': [
-        'pytest',
-        'backports.unittest_mock',
-        'nose',
-    ],
-}
-"""Feature flags end-users can use in dependencies"""
-
-###############################################################################
-# end arguments for setup
-###############################################################################
+description = 'Highly-optimized, pure-python HTTP server'
 
 params = dict(
     name=name,
     use_scm_version=True,
-    description=desc,
-    long_description=long_desc,
-    classifiers=classifiers,
-    author=author,
-    author_email=author_email,
-    url=url,
-    packages=packages,
+    author="CherryPy Team",
+    author_email="team@cherrypy.org",
+    description=description or name,
+    long_description=long_description,
+    url="https://github.com/cherrypy/" + name,
+    packages=setuptools.find_packages(),
     include_package_data=True,
-    install_requires=install_requires,
-    extras_require=extras_require,
-    setup_requires=[
-        'setuptools_scm',
-    ],
+    namespace_packages=name.split('.')[:-1],
     python_requires='>=2.6,!=3.0.*',
+    install_requires=[
+        'six',
+    ],
+    extras_require={
+        'testing': [
+            'pytest>=2.8',
+            'subprocess32; python_version=="2.6"',
+            'backports.unittest_mock',
+            'nose',
+        ],
+    },
+    setup_requires=[
+        'setuptools_scm>=1.15.0',
+    ],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'Operating System :: OS Independent',
+        'Framework :: CherryPy',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.1',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: Implementation',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: Jython',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
+        'Topic :: Internet :: WWW/HTTP :: WSGI',
+        'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
+    ],
+    entry_points={
+    },
 )
-
-
-def main():
-    setuptools.setup(**params)
-
-
 if __name__ == '__main__':
-    main()
+    setuptools.setup(**params)
