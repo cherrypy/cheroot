@@ -1,7 +1,7 @@
-v5.2.1
+v5.3.0
 ======
 
-#8: PEP8 improvements.
+#8: Updated style to better conform to PEP 8.
 
 v5.2.0
 ======
