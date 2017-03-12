@@ -3,6 +3,12 @@ v5.3.0
 
 #8: Updated style to better conform to PEP 8.
 
+Refreshed project with `jaraco skeleton
+<https://github.com/jaraco/skeleton>`_.
+
+Docs now built and `deployed at RTD
+<http://cheroot.readthedocs.io/en/latest/history.html>`_.
+
 v5.2.0
 ======
 
