@@ -27,7 +27,7 @@ cache:
   directories:
   - $HOME/.pre-commit
 install:
-- pip install tox "setuptools>=28.2"
+- pip install tox
 script:
 - tox
 branches:
