@@ -26,8 +26,10 @@ cache:
   pip: true
   directories:
   - $HOME/.pre-commit
+before_install:
+- "if [[ $TRAVIS_PYTHON_VERSION == 'pypy3' ]]; then . .travis/replace-pypy3 ; fi"
 install:
-- pip install tox "setuptools>=28.2,<30"
+- pip install tox "setuptools>=28.2"
 script:
 - tox
 branches:
