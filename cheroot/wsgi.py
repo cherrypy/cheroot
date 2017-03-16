@@ -36,7 +36,6 @@ from ._compat import ntob, bton
 
 
 class Server(server.HTTPServer):
-
     """A subclass of HTTPServer which calls a WSGI application."""
 
     wsgi_version = (1, 0)
@@ -68,7 +67,6 @@ class Server(server.HTTPServer):
 
 
 class Gateway(server.Gateway):
-
     """A base class to interface HTTPServer with WSGI."""
 
     def __init__(self, req):
@@ -189,7 +187,6 @@ class Gateway(server.Gateway):
 
 
 class Gateway_10(Gateway):
-
     """A Gateway class to interface HTTPServer with WSGI 1.0.x."""
 
     def get_environ(self):
@@ -248,7 +245,6 @@ class Gateway_10(Gateway):
 
 
 class Gateway_u0(Gateway_10):
-
     """A Gateway class to interface HTTPServer with WSGI u.0.
 
     WSGI u.0 is an experimental protocol, which uses unicode for keys
@@ -300,7 +296,6 @@ wsgi_gateways = {
 
 
 class PathInfoDispatcher(object):
-
     """A WSGI dispatcher for dispatch based on the PATH_INFO.
 
     apps: a dict or list of (path_prefix, app) pairs.

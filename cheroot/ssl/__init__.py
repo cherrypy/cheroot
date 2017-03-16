@@ -1,5 +1,4 @@
 class Adapter(object):
-
     """Base class for SSL driver library adapters.
 
     Required methods:

@@ -47,7 +47,6 @@ from ..makefile import MakeFile
 
 
 class SSL_fileobject(MakeFile):
-
     """SSL file object attached to a socket object."""
 
     ssl_timeout = 3
@@ -113,7 +112,6 @@ class SSL_fileobject(MakeFile):
 
 
 class SSLConnection:
-
     """A thread-safe wrapper for an SSL.Connection.
 
     ``*args``: the arguments to create the wrapped ``SSL.Connection(*args)``.
@@ -149,7 +147,6 @@ class SSLConnection:
 
 
 class pyOpenSSLAdapter(Adapter):
-
     """A wrapper for integrating pyOpenSSL with CherryPy."""
 
     context = None

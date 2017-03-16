@@ -13,7 +13,6 @@ from . import errors
 
 
 class BufferedWriter(io.BufferedWriter):
-
     """Faux file object attached to a socket object."""
 
     def write(self, b):
@@ -46,7 +45,6 @@ def MakeFile_PY3(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
 
 
 class MakeFile_PY2(getattr(socket, '_fileobject', object)):
-
     """Faux file object attached to a socket object."""
 
     def __init__(self, *args, **kwargs):
@@ -87,7 +85,6 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                     raise
 
     class FauxSocket(object):
-
         """Faux socket with the minimal interface required by pypy."""
 
         def _reuse(self):
