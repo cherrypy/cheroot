@@ -106,9 +106,7 @@ class Gateway(server.Gateway):
                 response.close()
 
     def start_response(self, status, headers, exc_info=None):
-        """
-        WSGI callable to begin the HTTP response.
-        """
+        """WSGI callable to begin the HTTP response."""
         # "The application may call start_response more than once,
         # if and only if the exc_info argument is provided."
         if self.started_response and not exc_info:
