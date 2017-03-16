@@ -43,20 +43,25 @@ class BuiltinSSLAdapter(Adapter):
     """The ssl.SSLContext that will be used to wrap sockets where available
     (on Python > 2.7.9 / 3.3)
     """
+    ciphers = None
+    """The ciphers list of SSL."""
     context = None
 
-    def __init__(self, certificate, private_key, certificate_chain=None):
+    def __init__(self, certificate, private_key, certificate_chain=None, ciphers=None):
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
         self.certificate = certificate
         self.private_key = private_key
         self.certificate_chain = certificate_chain
+        self.ciphers=None
         if hasattr(ssl, 'create_default_context'):
             self.context = ssl.create_default_context(
                 purpose=ssl.Purpose.CLIENT_AUTH,
                 cafile=certificate_chain
             )
             self.context.load_cert_chain(certificate, private_key)
+            if(self.ciphers != None):
+                self.context.set_ciphers(ciphers)
 
     def bind(self, sock):
         """Wrap and return the given socket."""
