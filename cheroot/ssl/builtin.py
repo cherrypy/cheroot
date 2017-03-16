@@ -28,7 +28,6 @@ from ..makefile import MakeFile
 
 
 class BuiltinSSLAdapter(Adapter):
-
     """A wrapper for integrating Python's builtin ssl module with CherryPy."""
 
     certificate = None
@@ -40,23 +39,29 @@ class BuiltinSSLAdapter(Adapter):
     certificate_chain = None
     """The filename of the certificate chain file."""
 
+    context = None
     """The ssl.SSLContext that will be used to wrap sockets where available
     (on Python > 2.7.9 / 3.3)
     """
-    context = None
 
-    def __init__(self, certificate, private_key, certificate_chain=None):
+    ciphers = None
+    """The ciphers list of SSL."""
+
+    def __init__(self, certificate, private_key, certificate_chain=None, ciphers=None):
+        """Set up context and ciphers in addition to base class properties if available."""
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
-        self.certificate = certificate
-        self.private_key = private_key
-        self.certificate_chain = certificate_chain
+
+        super(BuiltinSSLAdapter, self).__init__(certificate, private_key, certificate_chain, ciphers)
+
         if hasattr(ssl, 'create_default_context'):
             self.context = ssl.create_default_context(
                 purpose=ssl.Purpose.CLIENT_AUTH,
                 cafile=certificate_chain
             )
             self.context.load_cert_chain(certificate, private_key)
+            if self.ciphers is not None:
+                self.context.set_ciphers(ciphers)
 
     def bind(self, sock):
         """Wrap and return the given socket."""
@@ -118,4 +123,5 @@ class BuiltinSSLAdapter(Adapter):
         return ssl_environ
 
     def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
+        """Return socket file object."""
         return MakeFile(sock, mode, bufsize)

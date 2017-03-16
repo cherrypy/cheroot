@@ -171,10 +171,9 @@ class pyOpenSSLAdapter(Adapter):
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
+        super(pyOpenSSLAdapter, self).__init__(certificate, private_key, certificate_chain)
+
         self.context = None
-        self.certificate = certificate
-        self.private_key = private_key
-        self.certificate_chain = certificate_chain
         self._environ = None
 
     def bind(self, sock):
