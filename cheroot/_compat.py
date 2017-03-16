@@ -307,7 +307,7 @@ try:
     from subprocess import _args_from_interpreter_flags
 except ImportError:
     def _args_from_interpreter_flags():
-        """Tries to reconstruct original interpreter args from sys.flags for Python 2.6
+        """Try to reconstruct original interpreter args from sys.flags for Python 2.6
         Backported from Python 3.5. Aims to return a list of
         command-line arguments reproducing the current
         settings in sys.flags and sys.warnoptions.
