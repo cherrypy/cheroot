@@ -84,7 +84,7 @@ class HTTPTests(helper.CherootWebCase):
 
             @cherrypy.expose
             def post_filename(self, myfile):
-                '''Return the name of the file which was uploaded.'''
+                """Return the name of the file which was uploaded."""
                 return myfile.filename
 
         cherrypy.tree.mount(Root())

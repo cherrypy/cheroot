@@ -62,7 +62,7 @@ class TerseTestRunner(unittest.TextTestRunner):
         return TerseTestResult(self.stream, self.descriptions, self.verbosity)
 
     def run(self, test):
-        'Run the given test case or test suite.'
+        """Run the given test case or test suite."""
         # Overridden to remove unnecessary empty lines and separators
         result = self._makeResult()
         test(result)
