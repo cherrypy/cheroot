@@ -89,9 +89,7 @@ if 'win' in sys.platform and hasattr(socket, 'AF_INET6'):
 
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given
-        encoding.
-        """
+        """Return the given native string as a byte string in the given encoding."""
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
 
@@ -99,9 +97,7 @@ if six.PY3:
         return b.decode(encoding)
 else:
     def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given
-        encoding.
-        """
+        """Return the given native string as a byte string in the given encoding."""
         # In Python 2, the native string type is bytes. Assume it's already
         # in the given encoding, which for ISO-8859-1 is almost always what
         # was intended.
@@ -1041,7 +1037,8 @@ class HTTPConnection(object):
             pass
 
     def _close_kernel_socket(self):
-        """
+        """Close kernel socket in outdated Python versions.
+
         On old Python versions,
         Python's socket module does NOT call close on the kernel
         socket when you call socket.close(). We do so manually here
@@ -1098,8 +1095,7 @@ class HTTPServer(object):
     """The minimum number of worker threads to create (default 10)."""
 
     maxthreads = None
-    """The maximum number of worker threads to create (default -1 = no limit).
-    """
+    """The maximum number of worker threads to create (default -1 = no limit)."""
 
     server_name = None
     """The name of the server; defaults to socket.gethostname()."""
@@ -1111,13 +1107,10 @@ class HTTPServer(object):
     features used in the response."""
 
     request_queue_size = 5
-    """The 'backlog' arg to socket.listen(); max queued connections
-    (default 5).
-    """
+    """The 'backlog' arg to socket.listen(); max queued connections (default 5)."""
 
     shutdown_timeout = 5
-    """The total time, in seconds, to wait for worker threads to cleanly exit.
-    """
+    """The total time, in seconds, to wait for worker threads to cleanly exit."""
 
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
@@ -1128,12 +1121,11 @@ class HTTPServer(object):
     software = None
     """The value to set for the SERVER_SOFTWARE entry in the WSGI environ.
 
-    If None, this defaults to ``'%s Server' % self.version``."""
+    If None, this defaults to ``'%s Server' % self.version``.
+    """
 
     ready = False
-    """An internal flag which marks whether the socket is accepting
-    connections.
-    """
+    """An internal flag which marks whether the socket is accepting connections."""
 
     max_request_header_size = 0
     """The maximum size, in bytes, for request headers, or 0 for no limit."""
@@ -1150,7 +1142,8 @@ class HTTPServer(object):
     ssl_adapter = None
     """An instance of ssl.Adapter (or a subclass).
 
-    You must have the corresponding SSL driver library installed."""
+    You must have the corresponding SSL driver library installed.
+    """
 
     def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1,
                  server_name=None):
@@ -1539,8 +1532,7 @@ class HTTPServer(object):
 
 class Gateway(object):
 
-    """A base class to interface HTTPServer with other systems, such as WSGI.
-    """
+    """A base class to interface HTTPServer with other systems, such as WSGI."""
 
     def __init__(self, req):
         self.req = req

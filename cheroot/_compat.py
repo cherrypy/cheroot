@@ -25,17 +25,13 @@ import six
 
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given
-        encoding.
-        """
+        """Return the given native string as a byte string in the given encoding."""
         assert_native(n)
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
 
     def ntou(n, encoding='ISO-8859-1'):
-        """Return the given native string as a unicode string with the given
-        encoding.
-        """
+        """Return the given native string as a unicode string with the given encoding."""
         assert_native(n)
         # In Python 3, the native string type is unicode
         return n
@@ -52,9 +48,7 @@ if six.PY3:
 else:
     # Python 2
     def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given
-        encoding.
-        """
+        """Return the given native string as a byte string in the given encoding."""
         assert_native(n)
         # In Python 2, the native string type is bytes. Assume it's already
         # in the given encoding, which for ISO-8859-1 is almost always what
@@ -62,9 +56,7 @@ else:
         return n
 
     def ntou(n, encoding='ISO-8859-1'):
-        """Return the given native string as a unicode string with the given
-        encoding.
-        """
+        """Return the given native string as a unicode string with the given encoding."""
         assert_native(n)
         # In Python 2, the native string type is bytes.
         # First, check for the special encoding 'escape'. The test suite uses
@@ -307,7 +299,8 @@ try:
     from subprocess import _args_from_interpreter_flags
 except ImportError:
     def _args_from_interpreter_flags():
-        """Try to reconstruct original interpreter args from sys.flags for Python 2.6
+        """Try to reconstruct original interpreter args from sys.flags for Python 2.6.
+
         Backported from Python 3.5. Aims to return a list of
         command-line arguments reproducing the current
         settings in sys.flags and sys.warnoptions.

@@ -277,7 +277,8 @@ class WebCase(unittest.TestCase):
 
     @NonDataProperty
     def interactive(self):
-        """
+        """Determine whether tests are run in interactive mode.
+
         Load interactivity setting from environment, where
         the value can be numeric or a string like true or
         False or 1 or 0.
@@ -394,7 +395,7 @@ class WebCase(unittest.TestCase):
         self._handlewebError(msg)
 
     def assertHeaderItemValue(self, key, value, msg=None):
-        """Fail if the header does not contain the specified value"""
+        """Fail if the header does not contain the specified value."""
         actual_value = self.assertHeader(key, msg=msg)
         header_values = map(str.strip, actual_value.split(','))
         if value in header_values:

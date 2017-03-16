@@ -61,9 +61,7 @@ class HTTPTests(helper.CherootWebCase):
 
             @cherrypy.expose
             def post_multipart(self, file):
-                """Return a summary ("a * 65536\nb * 65536") of the uploaded
-                file.
-                """
+                r"""Return a summary ("a * 65536\nb * 65536") of the uploaded file."""
                 contents = file.file.read()
                 summary = []
                 curchar = None
@@ -152,10 +150,12 @@ class HTTPTests(helper.CherootWebCase):
         self.assertBody(', '.join(['%s * 65536' % c for c in alphabet]))
 
     def test_post_filename_with_special_characters(self):
-        '''Testing that we can handle filenames with special characters. This
-        was reported as a bug in:
-           https://github.com/cherrypy/cherrypy/issues/1146/
-           https://github.com/cherrypy/cherrypy/issues/1397'''
+        """Test that we can handle filenames with special characters.
+        
+        This was reported as a bug in:
+           https://github.com/cherrypy/cherrypy/issues/1146
+           https://github.com/cherrypy/cherrypy/issues/1397
+        """
         # We'll upload a bunch of files with differing names.
         fnames = ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
                   'file;name.csv', 'file; name.csv']

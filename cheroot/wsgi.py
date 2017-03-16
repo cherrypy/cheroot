@@ -1,4 +1,5 @@
-"""
+"""This class holds Cheroot WSGI server implementation.
+
 Simplest example on how to use this server::
 
     from cheroot import wsgi
@@ -77,7 +78,7 @@ class Gateway(server.Gateway):
         self.remaining_bytes_out = None
 
     def get_environ(self):
-        """Return a new environ dict targeting the given wsgi.version"""
+        """Return a new environ dict targeting the given wsgi.version."""
         raise NotImplemented
 
     def respond(self):
@@ -142,7 +143,8 @@ class Gateway(server.Gateway):
 
     @staticmethod
     def _encode_status(status):
-        """
+        """Cast status to bytes representation of current Python version.
+
         According to PEP 3333, when using Python 3, the response status
         and headers must be bytes masquerading as unicode; that is, they
         must be of type "str" but are restricted to code points in the
@@ -195,7 +197,7 @@ class Gateway_10(Gateway):
     """A Gateway class to interface HTTPServer with WSGI 1.0.x."""
 
     def get_environ(self):
-        """Return a new environ dict targeting the given wsgi.version"""
+        """Return a new environ dict targeting the given wsgi.version."""
         req = self.req
         env = {
             # set a non-standard environ entry so the WSGI app can know what
@@ -258,7 +260,7 @@ class Gateway_u0(Gateway_10):
     """
 
     def get_environ(self):
-        """Return a new environ dict targeting the given wsgi.version"""
+        """Return a new environ dict targeting the given wsgi.version."""
         req = self.req
         env_10 = super(Gateway_u0, self).get_environ(self)
         env = dict(map(self._decode_key, env_10.items()))

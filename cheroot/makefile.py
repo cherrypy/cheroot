@@ -88,7 +88,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
 
     class FauxSocket(object):
 
-        """Faux socket with the minimal interface required by pypy"""
+        """Faux socket with the minimal interface required by pypy."""
 
         def _reuse(self):
             pass
