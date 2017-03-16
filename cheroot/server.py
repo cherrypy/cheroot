@@ -645,7 +645,6 @@ class HTTPRequest(object):
 
     def read_request_headers(self):
         """Read self.rfile into self.inheaders. Return success."""
-
         # then all the http headers
         try:
             read_headers(self.rfile, self.inheaders)

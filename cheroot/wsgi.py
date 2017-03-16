@@ -82,9 +82,8 @@ class Gateway(server.Gateway):
         raise NotImplemented
 
     def respond(self):
-        """Process the current request."""
+        """Process the current request.
 
-        """
         From PEP 333:
 
             The start_response callable must not actually transmit
@@ -94,7 +93,6 @@ class Gateway(server.Gateway):
             a NON-EMPTY string, or upon the application's first
             invocation of the write() callable.
         """
-
         response = self.req.server.wsgi_app(self.env, self.start_response)
         try:
             for chunk in filter(None, response):
