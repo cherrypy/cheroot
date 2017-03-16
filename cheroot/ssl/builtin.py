@@ -50,10 +50,9 @@ class BuiltinSSLAdapter(Adapter):
     def __init__(self, certificate, private_key, certificate_chain=None, ciphers=None):
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
-        self.certificate = certificate
-        self.private_key = private_key
-        self.certificate_chain = certificate_chain
-        self.ciphers=None
+
+        super(BuiltinSSLAdapter, self).__init__(certificate, private_key, certificate_chain, ciphers)
+
         if hasattr(ssl, 'create_default_context'):
             self.context = ssl.create_default_context(
                 purpose=ssl.Purpose.CLIENT_AUTH,
