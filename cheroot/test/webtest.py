@@ -32,8 +32,10 @@ from cheroot._compat import HTTPSConnection
 
 def interface(host):
     """Return an IP address for a client connection given the server host.
+
     If the server is listening on '0.0.0.0' (INADDR_ANY)
-    or '::' (IN6ADDR_ANY), this will return the proper localhost."""
+    or '::' (IN6ADDR_ANY), this will return the proper localhost.
+    """
     if host == '0.0.0.0':
         # INADDR_ANY, which should respond on localhost.
         return '127.0.0.1'
@@ -239,8 +241,10 @@ class WebCase(unittest.TestCase):
 
     def interface(self):
         """Return an IP address for a client connection.
+
         If the server is listening on '0.0.0.0' (INADDR_ANY)
-        or '::' (IN6ADDR_ANY), this will return the proper localhost."""
+        or '::' (IN6ADDR_ANY), this will return the proper localhost.
+        """
         return interface(self.HOST)
 
     def getPage(self, url, headers=None, method='GET', body=None,
