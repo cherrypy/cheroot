@@ -59,7 +59,7 @@ class BuiltinSSLAdapter(Adapter):
                 cafile=certificate_chain
             )
             self.context.load_cert_chain(certificate, private_key)
-            if(self.ciphers != None):
+            if self.ciphers is not None:
                 self.context.set_ciphers(ciphers)
 
     def bind(self, sock):
