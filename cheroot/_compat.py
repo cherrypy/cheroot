@@ -1,5 +1,5 @@
-"""
-Compatibility code for using Cheroot with various versions of Python.
+"""Compatibility code for using Cheroot with various versions of Python.
+
 Cheroot is compatible with Python versions 2.6+. This module provides a
 useful abstraction over the differences between Python versions, sometimes by
 preferring a newer idiom, sometimes an older one, and sometimes a custom one.
@@ -345,6 +345,7 @@ except ImportError:
 
 def escape_html(s, escape_quote=False):
     """Replace special characters "&", "<" and ">" to HTML-safe sequences.
+
     When escape_quote=True, escape (') and (") chars.
     """
     return escape(s, quote=escape_quote)

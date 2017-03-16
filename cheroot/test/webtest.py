@@ -1,4 +1,5 @@
 """Extensions to unittest for web frameworks.
+
 Use the WebCase.getPage method to request a page from your HTTP server.
 Framework Integration
 =====================
@@ -86,6 +87,7 @@ class ReloadingTestLoader(unittest.TestLoader):
 
     def loadTestsFromName(self, name, module=None):
         """Return a suite of all tests cases given a string specifier.
+
         The name may resolve either to a module, a test case class, a
         test method within a test case class, or a callable object which
         returns a TestCase or TestSuite instance.
@@ -213,6 +215,7 @@ class WebCase(unittest.TestCase):
 
     def set_persistent(self, on=True, auto_open=False):
         """Make our HTTP_CONN persistent (or not).
+
         If the 'on' argument is True (the default), then self.HTTP_CONN
         will be set to an instance of HTTPConnection (or HTTPS
         if self.scheme is "https"). This will then persist across requests.
@@ -250,6 +253,7 @@ class WebCase(unittest.TestCase):
     def getPage(self, url, headers=None, method='GET', body=None,
                 protocol=None, raise_subcls=None):
         """Open the url with debugging support. Return status, headers, body.
+
         `raise_subcls` must be a tuple with the exceptions classes
         or a single exception class that are not going to be considered
         a socket.error regardless that they were are subclass of a
@@ -520,6 +524,7 @@ def openURL(url, headers=None, method='GET', body=None,
             protocol='HTTP/1.1', raise_subcls=None):
     """
     Open the given HTTP resource and return status, headers, and body.
+
     `raise_subcls` must be a tuple with the exceptions classes
     or a single exception class that are not going to be considered
     a socket.error regardless that they were are subclass of a
@@ -586,7 +591,9 @@ class ServerError(Exception):
 
 
 def server_error(exc=None):
-    """Server debug hook. Return True if exception handled, False if ignored.
+    """Server debug hook.
+    
+    Return True if exception handled, False if ignored.
     You probably want to wrap this, so you can still handle an error using
     your framework when it's ignored.
     """
