@@ -13,7 +13,7 @@ from cheroot._compat import ntob, urlopen
 from cheroot.test import helper, webtest
 
 
-#avpytestmark = pytest.mark.skip(reason="incomplete")
+# avpytestmark = pytest.mark.skip(reason="incomplete")
 
 
 timeout = 1
