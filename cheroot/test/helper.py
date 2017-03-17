@@ -227,10 +227,6 @@ server.ssl_private_key: r'%s'
 
         args = [
             os.path.join(thisdir, '..', 'cherryd'),
-            # TODO: find a way to remove `cherrypy/cherryd` script completely
-            # '-c',
-            # '''"__requires__ = 'CherryPy'; import pkg_resources, re, sys; sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0]); sys.exit(pkg_resources.load_entry_point('CherryPy', 'console_scripts', 'cherryd')())"''',
-            # '--',
             '-c', self.config_file,
             '-p', self.pid_file,
         ]
