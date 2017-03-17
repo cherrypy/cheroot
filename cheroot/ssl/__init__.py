@@ -1,3 +1,11 @@
+"""Implementation of the SSL adapter base interface."""
+
+from abc import ABCMeta, abstractmethod
+
+from six import add_metaclass
+
+
+@add_metaclass(ABCMeta)
 class Adapter(object):
     """Base class for SSL driver library adapters.
 
@@ -8,15 +16,31 @@ class Adapter(object):
           socket file object``
     """
 
+    @abstractmethod
     def __init__(self, certificate, private_key, certificate_chain=None, ciphers=None):
+        """Set up certificates, private key ciphers and reset context."""
         self.certificate = certificate
         self.private_key = private_key
         self.certificate_chain = certificate_chain
         self.ciphers = ciphers
         self.context = None
 
-    def wrap(self, sock):
-        raise NotImplemented
+    @abstractmethod
+    def bind(self, sock):
+        """Wrap and return the given socket."""
+        return sock
 
+    @abstractmethod
+    def wrap(self, sock):
+        """Wrap and return the given socket, plus WSGI environ entries."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_environ(self):
+        """Return WSGI environ entries to be merged into each request."""
+        raise NotImplementedError
+
+    @abstractmethod
     def makefile(self, sock, mode='r', bufsize=-1):
-        raise NotImplemented
+        """Return socket file object."""
+        raise NotImplementedError

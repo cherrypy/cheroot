@@ -245,6 +245,7 @@ class pyOpenSSLAdapter(Adapter):
         return ssl_environ
 
     def makefile(self, sock, mode='r', bufsize=-1):
+        """Return socket file object."""
         if SSL and isinstance(sock, SSL.ConnectionType):
             timeout = sock.gettimeout()
             f = SSL_fileobject(sock, mode, bufsize)

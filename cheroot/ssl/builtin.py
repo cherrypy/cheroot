@@ -48,7 +48,7 @@ class BuiltinSSLAdapter(Adapter):
     """The ciphers list of SSL."""
 
     def __init__(self, certificate, private_key, certificate_chain=None, ciphers=None):
-        """Set up context and ciphers in addition to base class properties if available."""
+        """Set up context in addition to base class properties if available."""
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
 
@@ -65,7 +65,7 @@ class BuiltinSSLAdapter(Adapter):
 
     def bind(self, sock):
         """Wrap and return the given socket."""
-        return sock
+        return super(BuiltinSSLAdapter, self).bind(sock)
 
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
