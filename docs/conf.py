@@ -23,7 +23,7 @@ dist_info_cmd = [sys.executable, setup_script] + fields
 output_bytes = subprocess.check_output(dist_info_cmd, cwd=root)
 project, version, url, author = output_bytes.decode('utf-8').strip().split('\n')
 
-origin_date = datetime.date(2017,1,1)
+origin_date = datetime.date(2017, 1, 1)
 today = datetime.date.today()
 
 copyright = '{origin_date.year}-{today.year} {author}'.format(**locals())
