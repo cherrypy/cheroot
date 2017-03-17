@@ -591,7 +591,7 @@ class ServerError(Exception):
 
 def server_error(exc=None):
     """Server debug hook.
-    
+
     Return True if exception handled, False if ignored.
     You probably want to wrap this, so you can still handle an error using
     your framework when it's ignored.

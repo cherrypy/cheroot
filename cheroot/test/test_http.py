@@ -151,7 +151,7 @@ class HTTPTests(helper.CherootWebCase):
 
     def test_post_filename_with_special_characters(self):
         """Test that we can handle filenames with special characters.
-        
+
         This was reported as a bug in:
            https://github.com/cherrypy/cherrypy/issues/1146
            https://github.com/cherrypy/cherrypy/issues/1397
