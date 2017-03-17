@@ -77,8 +77,6 @@ class WSGIGraftTests(helper.CherootWebCase):
 
                 return Reverser(results)
 
-
-
     wsgi_output = '''Hello, world!
 This is a wsgi app running within CherryPy!'''
 
