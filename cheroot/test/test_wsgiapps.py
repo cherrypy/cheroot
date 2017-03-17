@@ -11,9 +11,6 @@ class WSGIGraftTests(helper.CherootWebCase):
 
     @staticmethod
     def setup_server():
-        import os
-        curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-
         def test_app(environ, start_response):
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain')]
