@@ -33,6 +33,7 @@ params = dict(
             'subprocess32; python_version=="2.6"',
             'backports.unittest_mock',
             'nose',
+            'portend',
         ],
     },
     setup_requires=[

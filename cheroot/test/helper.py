@@ -1,4 +1,4 @@
-"""A library of helper functions for the CherryPy test suite."""
+"""A library of helper functions for the Cheroot test suite."""
 
 import datetime
 import io
@@ -11,6 +11,7 @@ import threading
 
 import nose
 import six
+import portend
 
 import cheroot.server
 import cheroot.wsgi
@@ -196,8 +197,8 @@ log.access_file: r'%(access_log)s'
         self.wait = wait
         self.daemonize = daemonize
         self.ssl = ssl
-        self.host = socket_host or cherrypy.server.socket_host
-        self.port = socket_port or cherrypy.server.socket_port
+        self.host = socket_host
+        self.port = socket_port
 
     def write_conf(self, extra=''):
         if self.ssl:
@@ -222,7 +223,7 @@ server.ssl_private_key: r'%s'
 
     def start(self, imports=None):
         """Start cherryd in a subprocess."""
-        cherrypy._cpserver.wait_for_free_port(self.host, self.port)
+        portend.free(self.host, self.port, timeout=1)
 
         args = [
             os.path.join(thisdir, '..', 'cherryd'),
@@ -253,7 +254,7 @@ server.ssl_private_key: r'%s'
         if self.wait:
             self.exit_code = self._proc.wait()
         else:
-            cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
+            portend.occupied(self.host, self.port, timeout=5)
 
         # Give the engine a wee bit more time to finish STARTING
         if self.daemonize:

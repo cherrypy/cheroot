@@ -42,7 +42,7 @@ except ImportError:
     SSL = None
 
 from . import Adapter
-from .. import errors
+from .. import errors, server as cheroot_server
 from ..makefile import MakeFile
 
 
@@ -252,4 +252,4 @@ class pyOpenSSLAdapter(Adapter):
             f.ssl_timeout = timeout
             return f
         else:
-            return cheroot.server.CP_fileobject(sock, mode, bufsize)
+            return cheroot_server.CP_fileobject(sock, mode, bufsize)

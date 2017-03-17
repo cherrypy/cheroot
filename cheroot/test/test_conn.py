@@ -59,7 +59,7 @@ def setup_server(cls):
             return 'Code = 304'
 
         def err_before_read(self, req, resp):
-            foobar
+            foobar  # noqa: F821
             return 'ok'
 
         def one_megabyte_of_a(self, req, resp):

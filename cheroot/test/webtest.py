@@ -23,6 +23,8 @@ import types
 import os
 import json
 
+from imp import reload
+
 import unittest
 
 import six

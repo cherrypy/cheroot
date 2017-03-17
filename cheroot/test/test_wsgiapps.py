@@ -57,7 +57,7 @@ class WSGIGraftTests(helper.CherootWebCase):
                 self.app = app
 
             def __call__(self, environ, start_response):
-                results = app(environ, start_response)
+                results = self.app(environ, start_response)
 
                 class Reverser(WSGIResponse):
 
