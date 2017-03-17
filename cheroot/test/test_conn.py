@@ -1,11 +1,9 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
-import errno
 import socket
 import sys
 import time
 
-import six
 import pytest
 
 from cheroot._compat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine

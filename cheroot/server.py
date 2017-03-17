@@ -65,11 +65,6 @@ import six
 from six.moves import queue
 from six.moves import urllib
 
-try:
-    import pkg_resources
-except ImportError:
-    pass
-
 from . import errors, __version__
 from .workers import threadpool
 from .makefile import MakeFile
