@@ -149,9 +149,6 @@ class SSLConnection:
 class pyOpenSSLAdapter(Adapter):
     """A wrapper for integrating pyOpenSSL with CherryPy."""
 
-    context = None
-    """An instance of SSL.Context."""
-
     certificate = None
     """The filename of the server SSL certificate."""
 
@@ -164,13 +161,18 @@ class pyOpenSSLAdapter(Adapter):
     This is needed for cheaper "chained root" SSL certificates, and should be
     left as None if not required."""
 
-    def __init__(self, certificate, private_key, certificate_chain=None):
+    context = None
+    """An instance of SSL.Context."""
+
+    ciphers = None
+    """The ciphers list of SSL."""
+
+    def __init__(self, certificate, private_key, certificate_chain=None, ciphers=None):
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
-        super(pyOpenSSLAdapter, self).__init__(certificate, private_key, certificate_chain)
+        super(pyOpenSSLAdapter, self).__init__(certificate, private_key, certificate_chain, ciphers)
 
-        self.context = None
         self._environ = None
 
     def bind(self, sock):

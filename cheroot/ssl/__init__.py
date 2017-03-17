@@ -13,6 +13,7 @@ class Adapter(object):
         self.private_key = private_key
         self.certificate_chain = certificate_chain
         self.ciphers = ciphers
+        self.context = None
 
     def wrap(self, sock):
         raise NotImplemented
