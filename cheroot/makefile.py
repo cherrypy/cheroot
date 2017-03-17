@@ -80,8 +80,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 self.bytes_read += len(data)
                 return data
             except socket.error as e:
-                if (e.args[0] not in errors.socket_errors_nonblocking
-                        and e.args[0] not in errors.socket_error_eintr):
+                if e.args[0] not in errors.socket_errors_nonblocking and e.args[0] not in errors.socket_error_eintr:
                     raise
 
     class FauxSocket(object):

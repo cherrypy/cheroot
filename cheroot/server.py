@@ -840,8 +840,7 @@ class HTTPRequest(object):
             if status < 200 or status in (204, 205, 304):
                 pass
             else:
-                if (self.response_protocol == 'HTTP/1.1'
-                        and self.method != b'HEAD'):
+                if self.response_protocol == 'HTTP/1.1' and self.method != b'HEAD':
                     # Use the chunked transfer-coding
                     self.chunked_write = True
                     self.outheaders.append((b'Transfer-Encoding', b'chunked'))
@@ -1354,8 +1353,7 @@ class HTTPServer(object):
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See
         # https://github.com/cherrypy/cherrypy/issues/871.
-        if (hasattr(socket, 'AF_INET6') and family == socket.AF_INET6
-                and host in ('::', '::0', '::0.0.0.0')):
+        if hasattr(socket, 'AF_INET6') and family == socket.AF_INET6 and host in ('::', '::0', '::0.0.0.0'):
             try:
                 self.socket.setsockopt(
                     socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
