@@ -14,10 +14,9 @@ import six
 
 import cheroot.server
 import cheroot.wsgi
+
 from cheroot._compat import HTTPSConnection, ntob
 from cheroot.test import webtest
-
-import cheroot.wsgi
 
 _testconfig = None
 log = logging.getLogger(__name__)
