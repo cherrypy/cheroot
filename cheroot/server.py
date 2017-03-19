@@ -173,6 +173,9 @@ class HeaderReader(object):
                 k = self._transform_key(k)
                 hname = k
 
+            if not self._allow_header(k):
+                continue
+
             if k in comma_separated_headers:
                 existing = hdict.get(hname)
                 if existing:
@@ -180,6 +183,9 @@ class HeaderReader(object):
             hdict[hname] = v
 
         return hdict
+
+    def _allow_header(self, key_name):
+        return key_name
 
     def _transform_key(self, key_name):
         # TODO: what about TE and WWW-Authenticate?
