@@ -131,8 +131,11 @@ if not hasattr(logging, 'statistics'):
     logging.statistics = {}
 
 
-def read_headers(rfile, hdict=None):
-    """Read headers from the given stream into the given header dict.
+class HeaderReader(object):
+
+  def __call__(self, rfile, hdict=None):
+    """
+    Read headers from the given stream into the given header dict.
 
     If hdict is None, a new header dict is created. Returns the populated
     header dict.
@@ -479,6 +482,11 @@ class HTTPRequest(object):
 
     This value is set automatically inside send_headers."""
 
+    header_reader = HeaderReader()
+    """
+    A HeaderReader instance or compatible reader.
+    """
+
     def __init__(self, server, conn):
         self.server = server
         self.conn = conn
@@ -638,7 +646,7 @@ class HTTPRequest(object):
         """Read self.rfile into self.inheaders. Return success."""
         # then all the http headers
         try:
-            read_headers(self.rfile, self.inheaders)
+            self.header_reader(self.rfile, self.inheaders)
         except ValueError:
             ex = sys.exc_info()[1]
             self.simple_response('400 Bad Request', ex.args[0])
