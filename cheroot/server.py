@@ -169,9 +169,8 @@ class HeaderReader(object):
                     k, v = line.split(COLON, 1)
                 except ValueError:
                     raise ValueError('Illegal header line.')
-                # TODO: what about TE and WWW-Authenticate?
-                k = k.strip().title()
                 v = v.strip()
+                k = self._transform_key(k)
                 hname = k
 
             if k in comma_separated_headers:
@@ -181,6 +180,10 @@ class HeaderReader(object):
             hdict[hname] = v
 
         return hdict
+
+    def _transform_key(self, key_name):
+        # TODO: what about TE and WWW-Authenticate?
+        return key_name.strip().title()
 
 
 class SizeCheckWrapper(object):
