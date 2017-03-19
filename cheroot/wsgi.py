@@ -75,6 +75,13 @@ class Gateway(server.Gateway):
         self.env = self.get_environ()
         self.remaining_bytes_out = None
 
+    @classmethod
+    def gateway_map(cls):
+        return dict(
+            (gw.version, gw)
+            for gw in cls.__subclasses__()
+        )
+
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
         raise NotImplemented
@@ -188,6 +195,7 @@ class Gateway(server.Gateway):
 
 class Gateway_10(Gateway):
     """A Gateway class to interface HTTPServer with WSGI 1.0.x."""
+    version = (1, 0)
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
@@ -214,7 +222,7 @@ class Gateway_10(Gateway):
             'wsgi.multithread': True,
             'wsgi.run_once': False,
             'wsgi.url_scheme': bton(req.scheme),
-            'wsgi.version': (1, 0),
+            'wsgi.version': self.version,
         }
 
         if isinstance(req.server.bind_addr, six.string_types):
@@ -250,13 +258,13 @@ class Gateway_u0(Gateway_10):
     WSGI u.0 is an experimental protocol, which uses unicode for keys
     and values in both Python 2 and Python 3.
     """
+    version = ('u', 0)
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
         req = self.req
         env_10 = super(Gateway_u0, self).get_environ(self)
         env = dict(map(self._decode_key, env_10.items()))
-        env[six.u('wsgi.version')] = ('u', 0)
 
         # Request-URI
         enc = env.setdefault(six.u('wsgi.url_encoding'), six.u('utf-8'))
@@ -289,10 +297,7 @@ class Gateway_u0(Gateway_10):
         return k, v.decode('ISO-8859-1')
 
 
-wsgi_gateways = {
-    (1, 0): Gateway_10,
-    ('u', 0): Gateway_u0,
-}
+wsgi_gateways = Gateway.gateway_map()
 
 
 class PathInfoDispatcher(object):
