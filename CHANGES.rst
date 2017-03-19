@@ -1,3 +1,8 @@
+v5.4.0
+======
+
+#22: Add "ciphers" parameter to SSLAdapter.
+
 v5.3.0
 ======
 
