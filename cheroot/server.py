@@ -133,54 +133,54 @@ if not hasattr(logging, 'statistics'):
 
 class HeaderReader(object):
 
-  def __call__(self, rfile, hdict=None):
-    """
-    Read headers from the given stream into the given header dict.
+    def __call__(self, rfile, hdict=None):
+        """
+        Read headers from the given stream into the given header dict.
 
-    If hdict is None, a new header dict is created. Returns the populated
-    header dict.
+        If hdict is None, a new header dict is created. Returns the populated
+        header dict.
 
-    Headers which are repeated are folded together using a comma if their
-    specification so dictates.
+        Headers which are repeated are folded together using a comma if their
+        specification so dictates.
 
-    This function raises ValueError when the read bytes violate the HTTP spec.
-    You should probably return "400 Bad Request" if this happens.
-    """
-    if hdict is None:
-        hdict = {}
+        This function raises ValueError when the read bytes violate the HTTP spec.
+        You should probably return "400 Bad Request" if this happens.
+        """
+        if hdict is None:
+            hdict = {}
 
-    while True:
-        line = rfile.readline()
-        if not line:
-            # No more data--illegal end of headers
-            raise ValueError('Illegal end of headers.')
+        while True:
+            line = rfile.readline()
+            if not line:
+                # No more data--illegal end of headers
+                raise ValueError('Illegal end of headers.')
 
-        if line == CRLF:
-            # Normal end of headers
-            break
-        if not line.endswith(CRLF):
-            raise ValueError('HTTP requires CRLF terminators')
+            if line == CRLF:
+                # Normal end of headers
+                break
+            if not line.endswith(CRLF):
+                raise ValueError('HTTP requires CRLF terminators')
 
-        if line[0] in (SPACE, TAB):
-            # It's a continuation line.
-            v = line.strip()
-        else:
-            try:
-                k, v = line.split(COLON, 1)
-            except ValueError:
-                raise ValueError('Illegal header line.')
-            # TODO: what about TE and WWW-Authenticate?
-            k = k.strip().title()
-            v = v.strip()
-            hname = k
+            if line[0] in (SPACE, TAB):
+                # It's a continuation line.
+                v = line.strip()
+            else:
+                try:
+                    k, v = line.split(COLON, 1)
+                except ValueError:
+                    raise ValueError('Illegal header line.')
+                # TODO: what about TE and WWW-Authenticate?
+                k = k.strip().title()
+                v = v.strip()
+                hname = k
 
-        if k in comma_separated_headers:
-            existing = hdict.get(hname)
-            if existing:
-                v = b', '.join((existing, v))
-        hdict[hname] = v
+            if k in comma_separated_headers:
+                existing = hdict.get(hname)
+                if existing:
+                    v = b', '.join((existing, v))
+            hdict[hname] = v
 
-    return hdict
+        return hdict
 
 
 class SizeCheckWrapper(object):
