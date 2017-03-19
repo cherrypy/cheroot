@@ -195,7 +195,7 @@ class Gateway(server.Gateway):
 
 class Gateway_10(Gateway):
     """A Gateway class to interface HTTPServer with WSGI 1.0.x."""
-    version = (1, 0)
+    version = 1, 0
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
@@ -258,7 +258,7 @@ class Gateway_u0(Gateway_10):
     WSGI u.0 is an experimental protocol, which uses unicode for keys
     and values in both Python 2 and Python 3.
     """
-    version = ('u', 0)
+    version = 'u', 0
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
