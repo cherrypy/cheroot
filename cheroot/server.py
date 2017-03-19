@@ -192,6 +192,12 @@ class HeaderReader(object):
         return key_name.strip().title()
 
 
+class DropUnderscoreHeaderReader(HeaderReader):
+    def _allow_header(self, key_name):
+        orig = super(DropUnderscoreHeaderReader, self)._allow_header(key_name)
+        return orig and '_' not in key_name
+
+
 class SizeCheckWrapper(object):
     """Wraps a file-like object, raising MaxSizeExceeded if too large."""
 
