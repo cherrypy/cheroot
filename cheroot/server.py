@@ -600,8 +600,7 @@ class HTTPRequest(object):
                 unquote_to_bytes(x)
                 for x in quoted_slash.split(path)
             ]
-        except ValueError:
-            ex = sys.exc_info()[1]
+        except ValueError as ex:
             self.simple_response('400 Bad Request', ex.args[0])
             return False
         path = b'%2F'.join(atoms)
@@ -639,8 +638,7 @@ class HTTPRequest(object):
         # then all the http headers
         try:
             read_headers(self.rfile, self.inheaders)
-        except ValueError:
-            ex = sys.exc_info()[1]
+        except ValueError as ex:
             self.simple_response('400 Bad Request', ex.args[0])
             return False
 
@@ -707,9 +705,8 @@ class HTTPRequest(object):
             msg += b' 100 Continue\r\n\r\n'
             try:
                 self.conn.wfile.write(msg)
-            except socket.error:
-                x = sys.exc_info()[1]
-                if x.args[0] not in errors.socket_errors_to_ignore:
+            except socket.error as ex:
+                if ex.args[0] not in errors.socket_errors_to_ignore:
                     raise
         return True
 
@@ -808,9 +805,8 @@ class HTTPRequest(object):
 
         try:
             self.conn.wfile.write(EMPTY.join(buf))
-        except socket.error:
-            x = sys.exc_info()[1]
-            if x.args[0] not in errors.socket_errors_to_ignore:
+        except socket.error as ex:
+            if ex.args[0] not in errors.socket_errors_to_ignore:
                 raise
 
     def write(self, chunk):
@@ -942,9 +938,8 @@ class HTTPConnection(object):
                 req.respond()
                 if req.close_connection:
                     return
-        except socket.error:
-            e = sys.exc_info()[1]
-            errnum = e.args[0]
+        except socket.error as ex:
+            errnum = ex.args[0]
             # sadly SSL sockets return a different (longer) time out string
             if (
                 errnum == 'timed out' or
@@ -984,9 +979,8 @@ class HTTPConnection(object):
             return
         except errors.NoSSLError:
             self._handle_no_ssl(req)
-        except Exception:
-            e = sys.exc_info()[1]
-            self.server.error_log(repr(e), level=logging.ERROR, traceback=True)
+        except Exception as ex:
+            self.server.error_log(repr(ex), level=logging.ERROR, traceback=True)
             if req and not req.sent_headers:
                 try:
                     req.simple_response('500 Internal Server Error')
@@ -1395,9 +1389,8 @@ class HTTPServer(object):
                     wfile = mf(sock_to_make, 'wb', io.DEFAULT_BUFFER_SIZE)
                     try:
                         wfile.write(''.join(buf).encode('ISO-8859-1'))
-                    except socket.error:
-                        x = sys.exc_info()[1]
-                        if x.args[0] not in errors.socket_errors_to_ignore:
+                    except socket.error as ex:
+                        if ex.args[0] not in errors.socket_errors_to_ignore:
                             raise
                     return
                 if not s:
@@ -1436,11 +1429,10 @@ class HTTPServer(object):
             # notice keyboard interrupts on Win32, which don't interrupt
             # accept() by default
             return
-        except socket.error:
-            x = sys.exc_info()[1]
+        except socket.error as ex:
             if self.stats['Enabled']:
                 self.stats['Socket Errors'] += 1
-            if x.args[0] in errors.socket_error_eintr:
+            if ex.args[0] in errors.socket_error_eintr:
                 # I *think* this is right. EINTR should occur when a signal
                 # is received during the accept() call; all docs say retry
                 # the call, and I *think* I'm reading it right that Python
@@ -1448,11 +1440,11 @@ class HTTPServer(object):
                 # elsewhere. See
                 # https://github.com/cherrypy/cherrypy/issues/707.
                 return
-            if x.args[0] in errors.socket_errors_nonblocking:
+            if ex.args[0] in errors.socket_errors_nonblocking:
                 # Just try again. See
                 # https://github.com/cherrypy/cherrypy/issues/479.
                 return
-            if x.args[0] in errors.socket_errors_to_ignore:
+            if ex.args[0] in errors.socket_errors_to_ignore:
                 # Our socket was closed.
                 # See https://github.com/cherrypy/cherrypy/issues/686.
                 return
@@ -1482,9 +1474,8 @@ class HTTPServer(object):
                 # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]
-                except socket.error:
-                    x = sys.exc_info()[1]
-                    if x.args[0] not in errors.socket_errors_to_ignore:
+                except socket.error as ex:
+                    if ex.args[0] not in errors.socket_errors_to_ignore:
                         # Changed to use error code and not message
                         # See
                         # https://github.com/cherrypy/cherrypy/issues/860.

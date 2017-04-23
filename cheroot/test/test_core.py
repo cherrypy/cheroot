@@ -129,8 +129,7 @@ class HTTPTests(helper.CherootWebCase):
             self.assertEqual(response.status, 400)
             self.assertEqual(response.fp.read(22), b'Malformed Request-Line')
             c.close()
-        except socket.error:
-            e = sys.exc_info()[1]
+        except socket.error as ex:
             # "Connection reset by peer" is also acceptable.
-            if e.errno != errno.ECONNRESET:
+            if ex.errno != errno.ECONNRESET:
                 raise

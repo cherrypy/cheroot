@@ -107,9 +107,8 @@ class WorkerThread(threading.Thread):
                         self.work_time += time.time() - self.start_time
                         self.start_time = None
                     self.conn = None
-        except (KeyboardInterrupt, SystemExit):
-            exc = sys.exc_info()[1]
-            self.server.interrupt = exc
+        except (KeyboardInterrupt, SystemExit) as ex:
+            self.server.interrupt = ex
 
 
 class ThreadPool(object):

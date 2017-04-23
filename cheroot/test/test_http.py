@@ -237,10 +237,9 @@ class HTTPTests(helper.CherootWebCase):
             self.body = response.read()
             self.assertBody('The client sent a plain HTTP request, but this '
                             'server only speaks HTTPS on this port.')
-        except socket.error:
-            e = sys.exc_info()[1]
+        except socket.error as ex:
             # "Connection reset by peer" is also acceptable.
-            if e.errno != errno.ECONNRESET:
+            if ex.errno != errno.ECONNRESET:
                 raise
 
     def test_garbage_in(self):
@@ -255,8 +254,7 @@ class HTTPTests(helper.CherootWebCase):
             self.assertEqual(response.fp.read(22),
                              ntob('Malformed Request-Line'))
             c.close()
-        except socket.error:
-            e = sys.exc_info()[1]
+        except socket.error as ex:
             # "Connection reset by peer" is also acceptable.
-            if e.errno != errno.ECONNRESET:
+            if ex.errno != errno.ECONNRESET:
                 raise

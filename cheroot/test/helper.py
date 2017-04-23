@@ -287,7 +287,6 @@ server.ssl_private_key: r'%s'
                     pass
                 else:
                     os.waitpid(pid, 0)
-        except OSError:
-            x = sys.exc_info()[1]
-            if x.args != (10, 'No child processes'):
+        except OSError as ex:
+            if ex.args != (10, 'No child processes'):
                 raise

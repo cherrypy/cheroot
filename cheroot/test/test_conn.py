@@ -384,11 +384,11 @@ class ConnectionCloseTests(helper.CherootWebCase):
         response = conn.response_class(conn.sock, method='GET')
         try:
             response.begin()
-        except:
-            if not isinstance(sys.exc_info()[1],
+        except Exception as ex:
+            if not isinstance(ex,
                               (socket.error, BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
-                          ' as it should have: %s' % sys.exc_info()[1])
+                          ' as it should have: %s' % ex)
         else:
             if response.status != 408:
                 self.fail("Writing to timed out socket didn't fail"
@@ -417,11 +417,11 @@ class ConnectionCloseTests(helper.CherootWebCase):
         response = conn.response_class(conn.sock, method='GET')
         try:
             response.begin()
-        except:
-            if not isinstance(sys.exc_info()[1],
+        except Exception as ex:
+            if not isinstance(ex,
                               (socket.error, BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
-                          ' as it should have: %s' % sys.exc_info()[1])
+                          ' as it should have: %s' % ex)
         else:
             self.fail("Writing to timed out socket didn't fail"
                       ' as it should have: %s' %
