@@ -2,15 +2,15 @@ from __future__ import unicode_literals
 
 import unittest
 
+import pytest
 import six
-
-import nose
 
 from cheroot import _compat as compat
 
 
 class StringTester(unittest.TestCase):
 
+    @pytest.mark.skipif(six.PY3, reason='Only useful on Python 2')
     def test_ntob_non_native(self):
         """ntob should raise an Exception on unicode.
 
@@ -18,9 +18,8 @@ class StringTester(unittest.TestCase):
 
         See #1132 for discussion.
         """
-        if six.PY3:
-            raise nose.SkipTest('Only useful on Python 2')
-        self.assertRaises(Exception, compat.ntob, 'fight')
+        with self.assertRaises(TypeError):
+            compat.ntob('fight')
 
 
 class EscapeTester(unittest.TestCase):
