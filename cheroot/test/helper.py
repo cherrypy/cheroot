@@ -9,9 +9,9 @@ import sys
 import time
 import threading
 
-import nose
-import six
 import portend
+import pytest
+import six
 
 import cheroot.server
 import cheroot.wsgi
@@ -115,7 +115,7 @@ class CherootWebCase(webtest.WebCase):
         sys.exit()
 
     def skip(self, msg='skipped '):
-        raise nose.SkipTest(msg)
+        pytest.skip(msg)
 
     date_tolerance = 2
 
@@ -287,7 +287,6 @@ server.ssl_private_key: r'%s'
                     pass
                 else:
                     os.waitpid(pid, 0)
-        except OSError:
-            x = sys.exc_info()[1]
-            if x.args != (10, 'No child processes'):
+        except OSError as ex:
+            if ex.args != (10, 'No child processes'):
                 raise

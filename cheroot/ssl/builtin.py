@@ -79,15 +79,14 @@ class BuiltinSSLAdapter(Adapter):
                                     keyfile=self.private_key,
                                     ssl_version=ssl.PROTOCOL_SSLv23,
                                     ca_certs=self.certificate_chain)
-        except ssl.SSLError:
-            e = sys.exc_info()[1]
-            if e.errno == ssl.SSL_ERROR_EOF:
+        except ssl.SSLError as ex:
+            if ex.errno == ssl.SSL_ERROR_EOF:
                 # This is almost certainly due to the cherrypy engine
                 # 'pinging' the socket to assert it's connectable;
                 # the 'ping' isn't SSL.
                 return None, {}
-            elif e.errno == ssl.SSL_ERROR_SSL:
-                if 'http request' in e.args[1]:
+            elif ex.errno == ssl.SSL_ERROR_SSL:
+                if 'http request' in ex.args[1]:
                     # The client is speaking HTTP to an HTTPS server.
                     raise errors.NoSSLError
 
@@ -97,10 +96,10 @@ class BuiltinSSLAdapter(Adapter):
                                  'inappropriate fallback', 'wrong version number',
                                  'no shared cipher', 'certificate unknown', 'ccs received early')
                 for error_text in _block_errors:
-                    if error_text in e.args[1].lower():
+                    if error_text in ex.args[1].lower():
                         # Accepted error, let's pass
                         return None, {}
-            elif 'handshake operation timed out' in e.args[0]:
+            elif 'handshake operation timed out' in ex.args[0]:
                 # This error is thrown by builtin SSL after a timeout
                 # when client is speaking HTTP to an HTTPS server.
                 # The connection can safely be dropped.
