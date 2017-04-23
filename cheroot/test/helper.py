@@ -19,7 +19,6 @@ import cheroot.wsgi
 from cheroot._compat import HTTPSConnection, ntob
 from cheroot.test import webtest
 
-_testconfig = None
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
 serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
@@ -30,12 +29,6 @@ config = {
     'server': 'wsgi',
     'wsgi_app': None,
 }
-try:
-    import testconfig
-    if testconfig.config is not None:
-        config.update(testconfig.config)
-except ImportError:
-    pass
 
 
 class CherootWebCase(webtest.WebCase):
