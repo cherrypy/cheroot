@@ -20,8 +20,7 @@ class StringTester(unittest.TestCase):
 
         See #1132 for discussion.
         """
-        with self.assertRaises(TypeError):
-            compat.ntob('fight')
+        self.assertRaises(TypeError, compat.ntob, 'fight')
 
 
 class EscapeTester(unittest.TestCase):
