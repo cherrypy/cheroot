@@ -189,7 +189,7 @@ class HeaderReader(object):
         return hdict
 
     def _allow_header(self, key_name):
-        return key_name
+        return True
 
     def _transform_key(self, key_name):
         # TODO: what about TE and WWW-Authenticate?
