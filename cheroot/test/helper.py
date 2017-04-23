@@ -9,9 +9,9 @@ import sys
 import time
 import threading
 
-import nose
-import six
 import portend
+import pytest
+import six
 
 import cheroot.server
 import cheroot.wsgi
@@ -115,7 +115,7 @@ class CherootWebCase(webtest.WebCase):
         sys.exit()
 
     def skip(self, msg='skipped '):
-        raise nose.SkipTest(msg)
+        pytest.skip(msg)
 
     date_tolerance = 2
 
