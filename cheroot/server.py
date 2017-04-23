@@ -131,7 +131,7 @@ if not hasattr(logging, 'statistics'):
     logging.statistics = {}
 
 
-def read_headers(rfile, hdict=None):
+def read_headers(rfile, hdict=None, drop_underscores=False):
     """Read headers from the given stream into the given header dict.
 
     If hdict is None, a new header dict is created. Returns the populated
@@ -166,6 +166,8 @@ def read_headers(rfile, hdict=None):
                 k, v = line.split(COLON, 1)
             except ValueError:
                 raise ValueError('Illegal header line.')
+            if drop_underscores and '_' in k:
+                continue
             # TODO: what about TE and WWW-Authenticate?
             k = k.strip().title()
             v = v.strip()
@@ -638,7 +640,10 @@ class HTTPRequest(object):
         """Read self.rfile into self.inheaders. Return success."""
         # then all the http headers
         try:
-            read_headers(self.rfile, self.inheaders)
+            # Configurable using `"server.drop_underscore_headers": True`:
+#             drop_underscores = getattr(self.server.server_adapter, 'drop_underscore_headers', False)
+            drop_underscores = getattr(self.server, 'drop_underscore_headers', False)
+            read_headers(self.rfile, self.inheaders, drop_underscores)
         except ValueError:
             ex = sys.exc_info()[1]
             self.simple_response('400 Bad Request', ex.args[0])
@@ -1122,6 +1127,9 @@ class HTTPServer(object):
 
     nodelay = True
     """If True (the default since 3.1), sets the TCP_NODELAY socket option."""
+
+    drop_underscore_headers = False  # issue #17
+    """If True, silently discards headers containing underscores ('_'). Use hyphens ('-') instead."""
 
     ConnectionClass = HTTPConnection
     """The class to use for handling HTTP connections."""
