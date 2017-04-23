@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
+"""CherryPy package setuptools installer."""
 
 # Project skeleton maintained at https://github.com/jaraco/skeleton
 
@@ -32,7 +33,6 @@ params = dict(
             'pytest>=2.8',
             'pytest-sugar',
             'backports.unittest_mock',
-            'nose',
             'portend',
         ],
     },
