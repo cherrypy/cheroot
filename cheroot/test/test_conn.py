@@ -1,7 +1,6 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
 import socket
-import sys
 import time
 
 import pytest

@@ -2,7 +2,6 @@
 
 import errno
 import socket
-import sys
 
 from cheroot._compat import HTTPConnection, HTTPSConnection
 
