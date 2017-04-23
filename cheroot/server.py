@@ -810,7 +810,7 @@ class HTTPRequest(object):
             self.conn.wfile.write(EMPTY.join(buf))
         except socket.error:
             x = sys.exc_info()[1]
-            if x.args[0] not in errors.esocket_errors_to_ignore:
+            if x.args[0] not in errors.socket_errors_to_ignore:
                 raise
 
     def write(self, chunk):
