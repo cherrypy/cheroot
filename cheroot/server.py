@@ -132,6 +132,10 @@ if not hasattr(logging, 'statistics'):
 
 
 class HeaderReader(object):
+    """
+    Interface and default implementation of an object for reading
+    headers from an HTTP request.
+    """
 
     def __call__(self, rfile, hdict=None):
         """
@@ -193,6 +197,11 @@ class HeaderReader(object):
 
 
 class DropUnderscoreHeaderReader(HeaderReader):
+    """
+    Custom HeaderReader to exclude any headers with underscores
+    in them.
+    """
+
     def _allow_header(self, key_name):
         orig = super(DropUnderscoreHeaderReader, self)._allow_header(key_name)
         return orig and '_' not in key_name
