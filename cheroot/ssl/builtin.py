@@ -20,8 +20,6 @@ except ImportError:
     except ImportError:
         DEFAULT_BUFFER_SIZE = -1
 
-import sys
-
 from . import Adapter
 from .. import errors
 from ..makefile import MakeFile
