@@ -66,6 +66,8 @@ _base_envs:
   - *install_python
   - *switch_python
   - *python_version
+  before_cache:
+  - brew --cache
 matrix:
   fast_finish: true
   allow_failures:
@@ -146,6 +148,7 @@ cache:
   pip: true
   directories:
   - $HOME/.pre-commit
+  - $HOME/Library/Caches/Homebrew
 before_install:
 - "if [[ $TRAVIS_PYTHON_VERSION == 'pypy3' ]]; then . .travis/replace-pypy3 ; fi"
 install:
