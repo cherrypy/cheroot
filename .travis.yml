@@ -72,7 +72,6 @@ matrix:
   fast_finish: true
   allow_failures:
   - env: TOXENV=pre-commit-pep257
-  - os: osx
   include:
   - <<: *linux_python_base
     python: pypy
