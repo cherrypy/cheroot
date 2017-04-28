@@ -57,7 +57,8 @@ matrix:
   fast_finish: true
   allow_failures:
   - env: TOXENV=pre-commit-pep257
-  - python: pypy
+  - python: pypy3
+    env: PYPY_VERSION=pypy3.5-5.7.1-beta
   include:
   - <<: *pypy_base
     python: pypy
@@ -65,6 +66,12 @@ matrix:
     - PYPY_VERSION=pypy2-5.7.1
     - PYENV_ROOT="$HOME/.pyenv"
     - PATH="$PYENV_ROOT/bin:$PATH"
+    - <<: *pypy_base
+      python: pypy3
+      env:
+      - PYPY_VERSION=pypy3.5-5.7.1-beta
+      - PYENV_ROOT="$HOME/.pyenv"
+      - PATH="$PYENV_ROOT/bin:$PATH"
   - python: 3.6
     env: TOXENV=pre-commit
   - python: 3.6
