@@ -72,12 +72,6 @@ matrix:
   - env: TOXENV=pre-commit-pep257
   - os: osx
   include:
-  - <<: *osx_python_base
-    python: pypy2-5.7.1
-    env:
-    - PYTHON_VERSION=pypy2-5.7.1
-    - *env_pyenv
-    - *env_path
   - <<: *linux_python_base
     python: pypy
     env:
@@ -86,6 +80,60 @@ matrix:
     - *env_path
   - <<: *linux_python_base
     python: pypy3
+    env:
+    - PYTHON_VERSION=pypy3.5-5.7.1-beta
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 2.6
+    env:
+    - PYTHON_VERSION=2.6
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 2.7
+    env:
+    - PYTHON_VERSION=2.7
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 3.3
+    env:
+    - PYTHON_VERSION=3.3
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 3.4
+    env:
+    - PYTHON_VERSION=3.4
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 3.5
+    env:
+    - PYTHON_VERSION=3.5
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: 3.6
+    env:
+    - PYTHON_VERSION=3.6
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: nightly
+    env:
+    - PYTHON_VERSION=nightly
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: pypy2-5.7.1
+    env:
+    - PYTHON_VERSION=pypy2-5.7.1
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
+    python: pypy3.5-5.7.1-beta
     env:
     - PYTHON_VERSION=pypy3.5-5.7.1-beta
     - *env_pyenv
