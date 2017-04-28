@@ -52,6 +52,7 @@ _base_envs:
   - &python_version python --version
 - &osx_base
   <<: *pypy_base
+  os: osx
   before_install:
   - brew update
   - brew install readline xz
