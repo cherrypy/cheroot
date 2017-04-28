@@ -89,43 +89,43 @@ matrix:
   - <<: *osx_python_base
     python: 2.6
     env:
-    - PYTHON_VERSION=2.6
+    - PYTHON_VERSION=2.6.9
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     python: 2.7
     env:
-    - PYTHON_VERSION=2.7
+    - PYTHON_VERSION=2.7.13
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     python: 3.3
     env:
-    - PYTHON_VERSION=3.3
+    - PYTHON_VERSION=3.3.6
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     python: 3.4
     env:
-    - PYTHON_VERSION=3.4
+    - PYTHON_VERSION=3.4.6
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     python: 3.5
     env:
-    - PYTHON_VERSION=3.5
+    - PYTHON_VERSION=3.5.3
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     python: 3.6
     env:
-    - PYTHON_VERSION=3.6
+    - PYTHON_VERSION=3.6.1
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     python: nightly
     env:
-    - PYTHON_VERSION=nightly
+    - PYTHON_VERSION=3.7-dev
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
