@@ -135,9 +135,9 @@ matrix:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    python: pypy3.5-5.7.1-beta
+    python: pypy3.5-5.7.1-beta-src
     env:
-    - PYTHON_VERSION=pypy3.5-5.7.1-beta
+    - PYTHON_VERSION=pypy3.5-5.7.1-beta-src
     - *env_pyenv
     - *env_path
   - python: 3.6
