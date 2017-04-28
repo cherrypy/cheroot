@@ -7,9 +7,6 @@ python:
 - 3.4
 - 3.5
 - 3.6
-# disabled per https://github.com/cherrypy/cheroot/issues/21
-# - pypy
-- pypy3
 - nightly
 _base_envs:
 - &pypy_base
@@ -57,8 +54,6 @@ matrix:
   fast_finish: true
   allow_failures:
   - env: TOXENV=pre-commit-pep257
-  - python: pypy3
-    env: PYPY_VERSION=pypy3.5-5.7.1-beta
   include:
   - <<: *pypy_base
     python: pypy
