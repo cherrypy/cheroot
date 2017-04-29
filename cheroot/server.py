@@ -131,53 +131,80 @@ if not hasattr(logging, 'statistics'):
     logging.statistics = {}
 
 
-def read_headers(rfile, hdict=None):
-    """Read headers from the given stream into the given header dict.
-
-    If hdict is None, a new header dict is created. Returns the populated
-    header dict.
-
-    Headers which are repeated are folded together using a comma if their
-    specification so dictates.
-
-    This function raises ValueError when the read bytes violate the HTTP spec.
-    You should probably return "400 Bad Request" if this happens.
+class HeaderReader(object):
     """
-    if hdict is None:
-        hdict = {}
+    Interface and default implementation of an object for reading
+    headers from an HTTP request.
+    """
 
-    while True:
-        line = rfile.readline()
-        if not line:
-            # No more data--illegal end of headers
-            raise ValueError('Illegal end of headers.')
+    def __call__(self, rfile, hdict=None):
+        """
+        Read headers from the given stream into the given header dict.
 
-        if line == CRLF:
-            # Normal end of headers
-            break
-        if not line.endswith(CRLF):
-            raise ValueError('HTTP requires CRLF terminators')
+        If hdict is None, a new header dict is created. Returns the populated
+        header dict.
 
-        if line[0] in (SPACE, TAB):
-            # It's a continuation line.
-            v = line.strip()
-        else:
-            try:
-                k, v = line.split(COLON, 1)
-            except ValueError:
-                raise ValueError('Illegal header line.')
-            # TODO: what about TE and WWW-Authenticate?
-            k = k.strip().title()
-            v = v.strip()
-            hname = k
+        Headers which are repeated are folded together using a comma if their
+        specification so dictates.
 
-        if k in comma_separated_headers:
-            existing = hdict.get(hname)
-            if existing:
-                v = b', '.join((existing, v))
-        hdict[hname] = v
+        This function raises ValueError when the read bytes violate the HTTP spec.
+        You should probably return "400 Bad Request" if this happens.
+        """
+        if hdict is None:
+            hdict = {}
 
-    return hdict
+        while True:
+            line = rfile.readline()
+            if not line:
+                # No more data--illegal end of headers
+                raise ValueError('Illegal end of headers.')
+
+            if line == CRLF:
+                # Normal end of headers
+                break
+            if not line.endswith(CRLF):
+                raise ValueError('HTTP requires CRLF terminators')
+
+            if line[0] in (SPACE, TAB):
+                # It's a continuation line.
+                v = line.strip()
+            else:
+                try:
+                    k, v = line.split(COLON, 1)
+                except ValueError:
+                    raise ValueError('Illegal header line.')
+                v = v.strip()
+                k = self._transform_key(k)
+                hname = k
+
+            if not self._allow_header(k):
+                continue
+
+            if k in comma_separated_headers:
+                existing = hdict.get(hname)
+                if existing:
+                    v = b', '.join((existing, v))
+            hdict[hname] = v
+
+        return hdict
+
+    def _allow_header(self, key_name):
+        return True
+
+    def _transform_key(self, key_name):
+        # TODO: what about TE and WWW-Authenticate?
+        return key_name.strip().title()
+
+
+class DropUnderscoreHeaderReader(HeaderReader):
+    """
+    Custom HeaderReader to exclude any headers with underscores
+    in them.
+    """
+
+    def _allow_header(self, key_name):
+        orig = super(DropUnderscoreHeaderReader, self)._allow_header(key_name)
+        return orig and '_' not in key_name
 
 
 class SizeCheckWrapper(object):
@@ -479,6 +506,11 @@ class HTTPRequest(object):
 
     This value is set automatically inside send_headers."""
 
+    header_reader = HeaderReader()
+    """
+    A HeaderReader instance or compatible reader.
+    """
+
     def __init__(self, server, conn):
         self.server = server
         self.conn = conn
@@ -637,7 +669,7 @@ class HTTPRequest(object):
         """Read self.rfile into self.inheaders. Return success."""
         # then all the http headers
         try:
-            read_headers(self.rfile, self.inheaders)
+            self.header_reader(self.rfile, self.inheaders)
         except ValueError as ex:
             self.simple_response('400 Bad Request', ex.args[0])
             return False
