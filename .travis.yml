@@ -133,12 +133,13 @@ matrix:
     - PYTHON_VERSION=pypy2-5.7.1
     - *env_pyenv
     - *env_path
-  - <<: *osx_python_base
-    python: pypy3.5-5.7.1-beta-src
-    env:
-    - PYTHON_VERSION=pypy3.5-5.7.1-beta-src
-    - *env_pyenv
-    - *env_path
+  # Fails under OS X:
+  #- <<: *osx_python_base
+  #  python: pypy3.5-5.7.1-beta
+  #  env:
+  #  - PYTHON_VERSION=pypy3.5-5.7.1-beta
+  #  - *env_pyenv
+  #  - *env_path
   - python: 3.6
     env: TOXENV=pre-commit
   - python: 3.6
