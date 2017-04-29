@@ -1,3 +1,18 @@
+v5.5.0
+======
+
+- #17 via #25: Instead of a read_headers function, cheroot now
+  supplies a HeaderReader class to perform the same function.
+
+  Any HTTPRequest object may override the header_reader attribute
+  to customize the handling of incoming headers.
+
+  The server module also presents a provisional implementation of
+  a DropUnderscoreHeaderReader that will exclude any headers
+  containing an underscore. It remains an exercise for the
+  implementer to demonstrate how this functionality might be
+  employed in a server such as CherryPy.
+
 v5.4.0
 ======
 
