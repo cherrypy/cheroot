@@ -13,6 +13,8 @@ v5.5.0
   implementer to demonstrate how this functionality might be
   employed in a server such as CherryPy.
 
+- #26: Configured TravisCI to run tests under OS X.
+
 v5.4.0
 ======
 
