@@ -68,7 +68,7 @@ _base_envs:
   - *python_version
   before_cache:
   - brew --cache
-matrix:
+jobs:
   fast_finish: true
   allow_failures:
   - env: TOXENV=pre-commit-pep257
