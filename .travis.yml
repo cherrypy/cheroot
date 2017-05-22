@@ -136,8 +136,10 @@ matrix:
   # pypy3.5-5.7.1-beta fails under OS X because it's unsupported (PR #26)
   - python: 3.6
     env: TOXENV=pre-commit
+    after_failure: skip
   - python: 3.6
     env: TOXENV=pre-commit-pep257
+    after_failure: skip
 cache:
   pip: true
   directories:
@@ -149,6 +151,19 @@ install:
 - pip install tox "setuptools>=28.2"
 script:
 - tox
+after_failure:
+- echo "Here's a list of installed Python packages:"
+- pip list --format=columns
+- echo Dumping logs, because tests failed to succeed
+- |
+    for log in `ls cheroot/test/*.log`
+    do
+      echo Outputting $log
+      cat $log
+    done
+- py_log=/home/travis/build/cherrypy/cheroot/.tox/python/log/python-0.log
+- echo Outputting python invokation log from $py_log
+- cat $py_log
 branches:
   except:
   - skeleton
