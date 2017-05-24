@@ -31,6 +31,7 @@ _base_envs:
       - xz-utils
       - tk-dev
 - &pyenv_base
+  stage: test
   python: pypy
   env:
   - PYTHON_VERSION=pypy2-5.7.1
@@ -68,11 +69,19 @@ _base_envs:
   - *python_version
   before_cache:
   - brew --cache
+- &pure_python_base
+  stage: lint
+  python: 3.6
+  after_failure: skip
 jobs:
   fast_finish: true
   allow_failures:
   - env: TOXENV=pre-commit-pep257
   include:
+  - <<: *pure_python_base
+    env: TOXENV=pre-commit
+  - <<: *pure_python_base
+    env: TOXENV=pre-commit-pep257
   - <<: *linux_python_base
     python: pypy
     env:
@@ -134,12 +143,6 @@ jobs:
     - *env_pyenv
     - *env_path
   # pypy3.5-5.7.1-beta fails under OS X because it's unsupported (PR #26)
-  - python: 3.6
-    env: TOXENV=pre-commit
-    after_failure: skip
-  - python: 3.6
-    env: TOXENV=pre-commit-pep257
-    after_failure: skip
   - stage: upload new version of python package to PYPI (only for tagged commits)
     python: 3.6
     deploy:
