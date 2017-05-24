@@ -6,7 +6,7 @@ python:
 - 3.3
 - 3.4
 - 3.5
-- 3.6
+- &mainstream_python 3.6
 - nightly
 _base_envs:
 - &linux_base
@@ -71,7 +71,7 @@ _base_envs:
   - brew --cache
 - &pure_python_base
   stage: lint
-  python: 3.6
+  python: *mainstream_python
   after_failure: skip
 jobs:
   fast_finish: true
@@ -125,7 +125,7 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    python: 3.6
+    python: *mainstream_python
     env:
     - PYTHON_VERSION=3.6.1
     - *env_pyenv
@@ -144,14 +144,14 @@ jobs:
     - *env_path
   # pypy3.5-5.7.1-beta fails under OS X because it's unsupported (PR #26)
   - stage: upload new version of python package to PYPI (only for tagged commits)
-    python: 3.6
+    python: *mainstream_python
     deploy:
       provider: pypi
       server: https://upload.pypi.org/legacy/
       on:
         tags: true
         all_branches: true
-        python: 3.6
+        python: *mainstream_python
       user: jaraco
       distributions: dists
       skip_upload_docs: true
