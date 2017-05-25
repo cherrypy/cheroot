@@ -1,9 +1,15 @@
 language: python
 _base_envs:
-- &stage_test
-  stage: test
 - &stage_lint
   stage: lint
+- &stage_test
+  stage: test
+- &stage_test_priority
+  stage: test against latest Python versions first (under GNU/Linux)
+- &stage_test_osx
+  stage: test under OS X (last chance to fail before deploy available)
+- &stage_deploy
+  stage: upload new version of python package to PYPI (only for tagged commits)
 - &linux_base
   os: linux
   dist: trusty
@@ -53,6 +59,7 @@ _base_envs:
   <<: *pyenv_base
 - &osx_python_base
   <<: *pyenv_base
+  <<: *stage_test_osx
   os: osx
   language: generic
   before_install:
@@ -68,6 +75,9 @@ _base_envs:
   <<: *stage_test
   sudo: false
   python: &mainstream_python 3.6
+- &pure_python_base_priority
+  <<: *pure_python_base
+  <<: *stage_test_priority
 - &lint_python_base
   <<: *stage_lint
   python: *mainstream_python
@@ -81,6 +91,10 @@ jobs:
     env: TOXENV=pre-commit
   - <<: *lint_python_base
     env: TOXENV=pre-commit-pep257
+  - <<: *pure_python_base_priority
+    # mainstream here (3.6)
+  - <<: *pure_python_base_priority
+    python: nightly
   - <<: *pure_python_base
     python: 2.6
   - <<: *pure_python_base
@@ -91,10 +105,6 @@ jobs:
     python: 3.4
   - <<: *pure_python_base
     python: 3.5
-  - <<: *pure_python_base
-    # mainstream here (3.6)
-  - <<: *pure_python_base
-    python: nightly
   - <<: *linux_python_base
     python: pypy
     env:
@@ -156,7 +166,7 @@ jobs:
     - *env_pyenv
     - *env_path
   # pypy3.5-5.7.1-beta fails under OS X because it's unsupported (PR #26)
-  - stage: upload new version of python package to PYPI (only for tagged commits)
+  - <<: *stage_deploy
     python: *mainstream_python
     deploy:
       provider: pypi
