@@ -1,14 +1,15 @@
-sudo: false
 language: python
-python:
-- 2.6
-- 2.7
-- 3.3
-- 3.4
-- 3.5
-- 3.6
-- nightly
 _base_envs:
+- &stage_lint
+  stage: lint
+- &stage_test
+  stage: test
+- &stage_test_priority
+  stage: test against latest Python versions first (under GNU/Linux)
+- &stage_test_osx
+  stage: test under OS X (last chance to fail before deploy available)
+- &stage_deploy
+  stage: upload new version of python package to PYPI (only for tagged commits)
 - &linux_base
   os: linux
   dist: trusty
@@ -31,6 +32,7 @@ _base_envs:
       - xz-utils
       - tk-dev
 - &pyenv_base
+  <<: *stage_test
   python: pypy
   env:
   - PYTHON_VERSION=pypy2-5.7.1
@@ -57,6 +59,7 @@ _base_envs:
   <<: *pyenv_base
 - &osx_python_base
   <<: *pyenv_base
+  <<: *stage_test_osx
   os: osx
   language: generic
   before_install:
@@ -68,11 +71,40 @@ _base_envs:
   - *python_version
   before_cache:
   - brew --cache
-matrix:
+- &pure_python_base
+  <<: *stage_test
+  sudo: false
+  python: &mainstream_python 3.6
+- &pure_python_base_priority
+  <<: *pure_python_base
+  <<: *stage_test_priority
+- &lint_python_base
+  <<: *stage_lint
+  python: *mainstream_python
+  after_failure: skip
+jobs:
   fast_finish: true
   allow_failures:
   - env: TOXENV=pre-commit-pep257
   include:
+  - <<: *lint_python_base
+    env: TOXENV=pre-commit
+  - <<: *lint_python_base
+    env: TOXENV=pre-commit-pep257
+  - <<: *pure_python_base_priority
+    # mainstream here (3.6)
+  - <<: *pure_python_base_priority
+    python: nightly
+  - <<: *pure_python_base
+    python: 2.6
+  - <<: *pure_python_base
+    python: 2.7
+  - <<: *pure_python_base
+    python: 3.3
+  - <<: *pure_python_base
+    python: 3.4
+  - <<: *pure_python_base
+    python: 3.5
   - <<: *linux_python_base
     python: pypy
     env:
@@ -116,7 +148,7 @@ matrix:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    python: 3.6
+    python: *mainstream_python
     env:
     - PYTHON_VERSION=3.6.1
     - *env_pyenv
@@ -134,19 +166,25 @@ matrix:
     - *env_pyenv
     - *env_path
   # pypy3.5-5.7.1-beta fails under OS X because it's unsupported (PR #26)
-  - python: 3.6
-    env: TOXENV=pre-commit
-    after_failure: skip
-  - python: 3.6
-    env: TOXENV=pre-commit-pep257
-    after_failure: skip
+  - <<: *stage_deploy
+    python: *mainstream_python
+    deploy:
+      provider: pypi
+      server: https://upload.pypi.org/legacy/
+      on:
+        tags: true
+        all_branches: true
+        python: *mainstream_python
+      user: jaraco
+      distributions: dists
+      skip_upload_docs: true
+      password:
+        secure: RAfz06AINvz7bfij/YhfkAreRqamgxS8a6jSRNxntYhtJke3ZszUbIDag8+n1I+G5XT2LnMhHqPNR7Plc+AeMz7VXTuy+b81Li5kse20NYlPhd7mBVmTUpXtqYQashV5J39F4qkATBLznCOrMEomM07VTXjO/o2hmQuXniab2Uo=
 cache:
   pip: true
   directories:
   - $HOME/.pre-commit
   - $HOME/Library/Caches/Homebrew
-before_install:
-- "if [[ $TRAVIS_PYTHON_VERSION == 'pypy3' ]]; then . .travis/replace-pypy3 ; fi"
 install:
 - pip install tox "setuptools>=28.2"
 script:
@@ -167,15 +205,3 @@ after_failure:
 branches:
   except:
   - skeleton
-deploy:
-  provider: pypi
-  server: https://upload.pypi.org/legacy/
-  on:
-    tags: true
-    all_branches: true
-    python: 3.6
-  user: jaraco
-  distributions: dists
-  skip_upload_docs: true
-  password:
-    secure: RAfz06AINvz7bfij/YhfkAreRqamgxS8a6jSRNxntYhtJke3ZszUbIDag8+n1I+G5XT2LnMhHqPNR7Plc+AeMz7VXTuy+b81Li5kse20NYlPhd7mBVmTUpXtqYQashV5J39F4qkATBLznCOrMEomM07VTXjO/o2hmQuXniab2Uo=
