@@ -1,14 +1,9 @@
-sudo: false
 language: python
-python:
-- 2.6
-- 2.7
-- 3.3
-- 3.4
-- 3.5
-- &mainstream_python 3.6
-- nightly
 _base_envs:
+- &stage_test
+  stage: test
+- &stage_lint
+  stage: lint
 - &linux_base
   os: linux
   dist: trusty
@@ -31,7 +26,7 @@ _base_envs:
       - xz-utils
       - tk-dev
 - &pyenv_base
-  stage: test
+  <<: *stage_test
   python: pypy
   env:
   - PYTHON_VERSION=pypy2-5.7.1
@@ -70,7 +65,11 @@ _base_envs:
   before_cache:
   - brew --cache
 - &pure_python_base
-  stage: lint
+  <<: *stage_test
+  sudo: false
+  python: &mainstream_python 3.6
+- &lint_python_base
+  <<: *stage_lint
   python: *mainstream_python
   after_failure: skip
 jobs:
@@ -78,10 +77,24 @@ jobs:
   allow_failures:
   - env: TOXENV=pre-commit-pep257
   include:
-  - <<: *pure_python_base
+  - <<: *lint_python_base
     env: TOXENV=pre-commit
-  - <<: *pure_python_base
+  - <<: *lint_python_base
     env: TOXENV=pre-commit-pep257
+  - <<: *pure_python_base
+    python: 2.6
+  - <<: *pure_python_base
+    python: 2.7
+  - <<: *pure_python_base
+    python: 3.3
+  - <<: *pure_python_base
+    python: 3.4
+  - <<: *pure_python_base
+    python: 3.5
+  - <<: *pure_python_base
+    # mainstream here (3.6)
+  - <<: *pure_python_base
+    python: nightly
   - <<: *linux_python_base
     python: pypy
     env:
