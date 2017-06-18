@@ -1,3 +1,12 @@
+v5.5.2
+======
+
+- #32: Ignore "unknown error" and "https proxy request" SSL errors
+
+  Ref: sabnzbd/sabnzbd#820
+
+  Ref: sabnzbd/sabnzbd#860
+
 v5.5.1
 ======
 
