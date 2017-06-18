@@ -1,7 +1,7 @@
 v5.5.2
 ======
 
-- #32: Ignore "unknown error" and "https proxy request" SSL errors
+- #32: Ignore "unknown error" and "https proxy request" SSL errors.
 
   Ref: sabnzbd/sabnzbd#820
 
@@ -10,7 +10,15 @@ v5.5.2
 v5.5.1
 ======
 
-- #31: Ignore "Protocol wrong type for socket" (EPROTOTYPE) @ OSX for non-blocking sockets
+- Make Appveyor list separate tests in corresponding tab.
+
+- #29: Configure Travis CI build stages.
+
+  Prioritize tests by stages.
+
+  Move deploy stage to be run very last after all other stages finish.
+
+- #31: Ignore "Protocol wrong type for socket" (EPROTOTYPE) @ OSX for non-blocking sockets.
 
   This was originally fixed for regular sockets in cherrypy/cherrypy#1392.
 
