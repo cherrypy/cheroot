@@ -258,9 +258,11 @@ class SizeCheckWrapper(object):
         self.rfile.close()
 
     def __iter__(self):
+        """Return file iterator."""
         return self
 
     def __next__(self):
+        """Generate next file chunk."""
         data = next(self.rfile)
         self.bytes_read += len(data)
         self._check_length()
@@ -321,9 +323,11 @@ class KnownLengthRFile(object):
         self.rfile.close()
 
     def __iter__(self):
+        """Return file iterator."""
         return self
 
     def __next__(self):
+        """Generate next file chunk."""
         data = next(self.rfile)
         self.remaining -= len(data)
         return data
@@ -1206,6 +1210,7 @@ class HTTPServer(object):
             return self._run_time + (time.time() - self._start_time)
 
     def __str__(self):
+        """Render Server instance representing bind address."""
         return '%s.%s(%r)' % (self.__module__, self.__class__.__name__,
                               self.bind_addr)
 
