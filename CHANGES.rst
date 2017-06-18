@@ -1,3 +1,12 @@
+v5.5.1
+======
+
+- #31: Ignore "Protocol wrong type for socket" (EPROTOTYPE) @ OSX for non-blocking sockets
+
+  This was originally fixed for regular sockets in cherrypy/cherrypy#1392.
+
+  Ref: https://forums.sabnzbd.org/viewtopic.php?f=2&t=22728&p=112251
+
 v5.5.0
 ======
 
