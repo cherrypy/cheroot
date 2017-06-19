@@ -208,6 +208,12 @@ class SizeCheckWrapper(object):
     """Wraps a file-like object, raising MaxSizeExceeded if too large."""
 
     def __init__(self, rfile, maxlen):
+        """Initialize SizeCheckWrapper instance.
+        
+        Args:
+            rfile (file): file of a limited size
+            maxlen (int): maximum length of the file being read
+        """
         self.rfile = rfile
         self.maxlen = maxlen
         self.bytes_read = 0
@@ -279,6 +285,12 @@ class KnownLengthRFile(object):
     """Wraps a file-like object, returning an empty string when exhausted."""
 
     def __init__(self, rfile, content_length):
+        """Initialize KnownLengthRFile instance.
+        
+        Args:
+            rfile (file): file of a known size
+            content_length (int): length of the file being read
+        """
         self.rfile = rfile
         self.remaining = content_length
 
@@ -342,6 +354,13 @@ class ChunkedRFile(object):
     """
 
     def __init__(self, rfile, maxlen, bufsize=8192):
+        """Initialize ChunkedRFile instance.
+        
+        Args:
+            rfile (file): file encoded with the 'chunked' transfer encoding
+            maxlen (int): maximum length of the file being read
+            bufsize (int): size of the buffer used to read the file
+        """
         self.rfile = rfile
         self.maxlen = maxlen
         self.bytes_read = 0
@@ -513,6 +532,12 @@ class HTTPRequest(object):
     """
 
     def __init__(self, server, conn):
+        """Initialize HTTP request container instance.
+        
+        Args:
+            server (HTTPServer): web server object receiving this request
+            conn (HTTPConnection): HTTP connection object for this request
+        """
         self.server = server
         self.conn = conn
 
@@ -925,12 +950,7 @@ class HTTPRequest(object):
 
 
 class HTTPConnection(object):
-    """An HTTP connection (active socket).
-
-    server: the Server object which received this connection.
-    socket: the raw socket object (usually TCP) for this connection.
-    makefile: a fileobject class for reading from the socket.
-    """
+    """An HTTP connection (active socket)."""
 
     remote_addr = None
     remote_port = None
@@ -940,6 +960,13 @@ class HTTPConnection(object):
     RequestHandlerClass = HTTPRequest
 
     def __init__(self, server, sock, makefile=MakeFile):
+        """Initialize HTTPConnection instance.
+        
+        Args:
+            server (HTTPServer): web server object receiving this request
+            socket (socket._socketobject): the raw socket object (usually TCP) for this connection
+            makefile (file): a fileobject class for reading from the socket
+        """
         self.server = server
         self.socket = sock
         self.rfile = makefile(sock, 'rb', self.rbufsize)
@@ -1159,8 +1186,16 @@ class HTTPServer(object):
     You must have the corresponding SSL driver library installed.
     """
 
-    def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1,
-                 server_name=None):
+    def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1, server_name=None):
+        """Initialize HTTPServer instance.
+        
+        Args:
+            bind_addr (tuple): network interface to listen to
+            gateway (Gateway): gateway for processing HTTP requests
+            minthreads (int): minimum number of threads for HTTP thread pool
+            maxthreads (int): maximum number of threads for HTTP thread pool
+            server_name (str): web server name to be advertised via Server HTTP header
+        """
         self.bind_addr = bind_addr
         self.gateway = gateway
 
@@ -1545,6 +1580,11 @@ class Gateway(object):
     """A base class to interface HTTPServer with other systems, such as WSGI."""
 
     def __init__(self, req):
+        """Initialize Gateway instance with request.
+        
+        Args:
+            req (HTTPRequest): current HTTP request
+        """
         self.req = req
 
     def respond(self):
