@@ -300,6 +300,7 @@ class SizeCheckWrapper(object):
         return data
 
     def next(self):
+        """Generate next file chunk."""
         data = self.rfile.next()
         self.bytes_read += len(data)
         self._check_length()
@@ -1292,6 +1293,7 @@ class HTTPServer(object):
         self.clear_stats()
 
     def clear_stats(self):
+        """Reset server stat counters.."""
         self._start_time = None
         self._run_time = 0
         self.stats = {
@@ -1324,6 +1326,7 @@ class HTTPServer(object):
         logging.statistics['CherryPy HTTPServer %d' % id(self)] = self.stats
 
     def runtime(self):
+        """Return server uptime."""
         if self._start_time is None:
             return self._run_time
         else:
@@ -1477,6 +1480,13 @@ class HTTPServer(object):
                     raise self.interrupt
 
     def error_log(self, msg='', level=20, traceback=False):
+        """Write error message to log.
+
+        Args:
+            msg (str): error message
+            level (int): logging level
+            traceback (bool): add traceback to output or not
+        """
         # Override this in subclasses as desired
         sys.stderr.write(msg + '\n')
         sys.stderr.flush()
