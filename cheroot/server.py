@@ -223,12 +223,28 @@ class SizeCheckWrapper(object):
             raise errors.MaxSizeExceeded()
 
     def read(self, size=None):
+        """Read a chunk from rfile buffer and return it.
+
+        Args:
+            size (int): amount of data to read
+
+        Returns:
+            bytes: Chunk from rfile, limited by size if specified.
+        """
         data = self.rfile.read(size)
         self.bytes_read += len(data)
         self._check_length()
         return data
 
     def readline(self, size=None):
+        """Read a single line from rfile buffer and return it.
+
+        Args:
+            size (int): minimum amount of data to read
+
+        Returns:
+            bytes: One line from rfile.
+        """
         if size is not None:
             data = self.rfile.readline(size)
             self.bytes_read += len(data)
@@ -248,6 +264,14 @@ class SizeCheckWrapper(object):
                 return EMPTY.join(res)
 
     def readlines(self, sizehint=0):
+        """Read all lines from rfile buffer and return them.
+
+        Args:
+            sizehint (int): hint of minimum amount of data to read
+
+        Returns:
+            list[bytes]: Lines of bytes read from rfile.
+        """
         # Shamelessly stolen from StringIO
         total = 0
         lines = []
@@ -261,6 +285,7 @@ class SizeCheckWrapper(object):
         return lines
 
     def close(self):
+        """Release resources allocated for rfile."""
         self.rfile.close()
 
     def __iter__(self):
@@ -295,6 +320,14 @@ class KnownLengthRFile(object):
         self.remaining = content_length
 
     def read(self, size=None):
+        """Read a chunk from rfile buffer and return it.
+
+        Args:
+            size (int): amount of data to read
+
+        Returns:
+            bytes: Chunk from rfile, limited by size if specified.
+        """
         if self.remaining == 0:
             return b''
         if size is None:
@@ -307,6 +340,14 @@ class KnownLengthRFile(object):
         return data
 
     def readline(self, size=None):
+        """Read a single line from rfile buffer and return it.
+
+        Args:
+            size (int): minimum amount of data to read
+
+        Returns:
+            bytes: One line from rfile.
+        """
         if self.remaining == 0:
             return b''
         if size is None:
@@ -319,6 +360,14 @@ class KnownLengthRFile(object):
         return data
 
     def readlines(self, sizehint=0):
+        """Read all lines from rfile buffer and return them.
+
+        Args:
+            sizehint (int): hint of minimum amount of data to read
+
+        Returns:
+            list[bytes]: Lines of bytes read from rfile.
+        """
         # Shamelessly stolen from StringIO
         total = 0
         lines = []
@@ -332,6 +381,7 @@ class KnownLengthRFile(object):
         return lines
 
     def close(self):
+        """Release resources allocated for rfile."""
         self.rfile.close()
 
     def __iter__(self):
@@ -406,6 +456,14 @@ class ChunkedRFile(object):
                 'got ' + repr(crlf) + ')')
 
     def read(self, size=None):
+        """Read a chunk from rfile buffer and return it.
+
+        Args:
+            size (int): amount of data to read
+
+        Returns:
+            bytes: Chunk from rfile, limited by size if specified.
+        """
         data = EMPTY
         while True:
             if size and len(data) >= size:
@@ -425,6 +483,14 @@ class ChunkedRFile(object):
                 data += self.buffer
 
     def readline(self, size=None):
+        """Read a single line from rfile buffer and return it.
+
+        Args:
+            size (int): minimum amount of data to read
+
+        Returns:
+            bytes: One line from rfile.
+        """
         data = EMPTY
         while True:
             if size and len(data) >= size:
@@ -454,6 +520,14 @@ class ChunkedRFile(object):
                     self.buffer = self.buffer[newline_pos:]
 
     def readlines(self, sizehint=0):
+        """Read all lines from rfile buffer and return them.
+
+        Args:
+            sizehint (int): hint of minimum amount of data to read
+
+        Returns:
+            list[bytes]: Lines of bytes read from rfile.
+        """
         # Shamelessly stolen from StringIO
         total = 0
         lines = []
@@ -467,6 +541,11 @@ class ChunkedRFile(object):
         return lines
 
     def read_trailer_lines(self):
+        """Read HTTP headers and yield them.
+
+        Returns:
+            Generator: yields CRLF separated lines.
+        """
         if not self.closed:
             raise ValueError(
                 'Cannot read trailers until the request body has been read.')
@@ -490,6 +569,7 @@ class ChunkedRFile(object):
             yield line
 
     def close(self):
+        """Release resources allocated for rfile."""
         self.rfile.close()
 
 
@@ -588,6 +668,11 @@ class HTTPRequest(object):
         self.ready = True
 
     def read_request_line(self):
+        """Read and parse first line of the HTTP request.
+
+        Returns:
+            bool: True if the request line is valid or False if it's malformed.
+        """
         # HTTP/1.1 connections are persistent by default. If a client
         # requests a page, then idles (leaves the connection open),
         # then rfile.readline() will raise socket.error("timed out").
