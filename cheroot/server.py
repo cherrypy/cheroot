@@ -209,7 +209,7 @@ class SizeCheckWrapper(object):
 
     def __init__(self, rfile, maxlen):
         """Initialize SizeCheckWrapper instance.
-        
+
         Args:
             rfile (file): file of a limited size
             maxlen (int): maximum length of the file being read
@@ -311,7 +311,7 @@ class KnownLengthRFile(object):
 
     def __init__(self, rfile, content_length):
         """Initialize KnownLengthRFile instance.
-        
+
         Args:
             rfile (file): file of a known size
             content_length (int): length of the file being read
@@ -405,7 +405,7 @@ class ChunkedRFile(object):
 
     def __init__(self, rfile, maxlen, bufsize=8192):
         """Initialize ChunkedRFile instance.
-        
+
         Args:
             rfile (file): file encoded with the 'chunked' transfer encoding
             maxlen (int): maximum length of the file being read
@@ -613,7 +613,7 @@ class HTTPRequest(object):
 
     def __init__(self, server, conn):
         """Initialize HTTP request container instance.
-        
+
         Args:
             server (HTTPServer): web server object receiving this request
             conn (HTTPConnection): HTTP connection object for this request
@@ -1046,7 +1046,7 @@ class HTTPConnection(object):
 
     def __init__(self, server, sock, makefile=MakeFile):
         """Initialize HTTPConnection instance.
-        
+
         Args:
             server (HTTPServer): web server object receiving this request
             socket (socket._socketobject): the raw socket object (usually TCP) for this connection
@@ -1273,7 +1273,7 @@ class HTTPServer(object):
 
     def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1, server_name=None):
         """Initialize HTTPServer instance.
-        
+
         Args:
             bind_addr (tuple): network interface to listen to
             gateway (Gateway): gateway for processing HTTP requests
@@ -1666,7 +1666,7 @@ class Gateway(object):
 
     def __init__(self, req):
         """Initialize Gateway instance with request.
-        
+
         Args:
             req (HTTPRequest): current HTTP request
         """
