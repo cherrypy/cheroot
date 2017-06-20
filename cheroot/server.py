@@ -275,13 +275,13 @@ class SizeCheckWrapper(object):
         # Shamelessly stolen from StringIO
         total = 0
         lines = []
-        line = self.readline()
+        line = self.readline(sizehint)
         while line:
             lines.append(line)
             total += len(line)
             if 0 < sizehint <= total:
                 break
-            line = self.readline()
+            line = self.readline(sizehint)
         return lines
 
     def close(self):
