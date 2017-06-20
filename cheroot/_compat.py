@@ -44,6 +44,7 @@ if six.PY3:
         return n
 
     def bton(b, encoding='ISO-8859-1'):
+        """Return the given byte string as a native string in the given encoding."""
         return b.decode(encoding)
 else:
     # Python 2
@@ -80,10 +81,16 @@ else:
         return n
 
     def bton(b, encoding='ISO-8859-1'):
+        """Return the given byte string as a native string in the given encoding."""
         return b
 
 
 def assert_native(n):
+    """Check whether the input is of nativ ``str`` type.
+
+    Raises:
+        TypeError: in case of failed check
+    """
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
 
@@ -115,6 +122,7 @@ try:
     sorted = sorted
 except NameError:
     def sorted(i):
+        """Return sorted sequence."""
         i = i[:]
         i.sort()
         return i
@@ -123,6 +131,7 @@ try:
     reversed = reversed
 except NameError:
     def reversed(x):
+        """Return sequence in reversed order."""
         i = len(x)
         while i > 0:
             i -= 1
@@ -218,6 +227,7 @@ try:
     from urllib.parse import unquote as parse_unquote
 
     def unquote_qs(atom, encoding, errors='strict'):
+        """Return urldecoded query string."""
         return parse_unquote(
             atom.replace('+', ' '),
             encoding=encoding,
@@ -227,6 +237,7 @@ except ImportError:
     from urllib import unquote as parse_unquote
 
     def unquote_qs(atom, encoding, errors='strict'):
+        """Return urldecoded query string."""
         return parse_unquote(atom.replace('+', ' ')).decode(encoding, errors)
 
 try:
@@ -245,15 +256,18 @@ except ImportError:
         json = None
 
         def json_decode(s):
+            """Alert that decoding JSON is not supported because of missing package."""
             raise ValueError('No JSON library is available')
 
         def _json_encode(s):
+            """Alert that encoding JSON is not supported because of missing package."""
             raise ValueError('No JSON library is available')
 finally:
     if json and six.PY3:
         # The two Python 3 implementations (simplejson/json)
         # outputs str. We need bytes.
         def json_encode(value):
+            """Return JSON string as bytes."""
             for chunk in _json_encode(value):
                 yield chunk.encode('utf8')
     else:
@@ -270,6 +284,7 @@ except ImportError:
 
 
 def random20():
+    """Return a random string of 20 bytes."""
     return binascii.hexlify(os.urandom(20)).decode('ascii')
 
 
@@ -284,6 +299,7 @@ try:
 except NameError:
     # Python 2
     def next(i):
+        """Return the next value of an iterator."""
         return i.next()
 
 if sys.version_info >= (3, 3):
