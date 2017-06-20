@@ -12,6 +12,10 @@ _base_envs:
   stage: upload new version of python package to PYPI (only for tagged commits)
 - &linux_base
   os: linux
+  sudo: false
+- &pyenv_base
+  <<: *stage_test
+  python: pypy
   dist: trusty
   sudo: required
   addons:
@@ -31,9 +35,6 @@ _base_envs:
       - libncursesw5-dev
       - xz-utils
       - tk-dev
-- &pyenv_base
-  <<: *stage_test
-  python: pypy
   env:
   - PYTHON_VERSION=pypy2-5.7.1
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
