@@ -44,6 +44,20 @@ class Server(server.HTTPServer):
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
                  max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
                  accepted_queue_size=-1, accepted_queue_timeout=10):
+        """Initialize WSGI Server instance.
+
+        Args:
+            bind_addr (tuple): network interface to listen to
+            wsgi_app (callable): WSGI application callable
+            numthreads (int): number of threads for WSGI thread pool
+            server_name (str): web server name to be advertised via Server HTTP header
+            max (int): maximum number of worker threads
+            request_queue_size (int): the 'backlog' arg to socket.listen(); max queued connections
+            timeout (int): the timeout in seconds for accepted connections
+            shutdown_timeout (int): the total time, in seconds, to wait for worker threads to cleanly exit
+            accepted_queue_size (int): maximum number of active requests in queue
+            accepted_queue_timeout (int): timeout for putting request into queue
+        """
         super(Server, self).__init__(
             bind_addr,
             gateway=wsgi_gateways[self.wsgi_version],
@@ -70,6 +84,11 @@ class Gateway(server.Gateway):
     """A base class to interface HTTPServer with WSGI."""
 
     def __init__(self, req):
+        """Initialize WSGI Gateway instance with request.
+
+        Args:
+            req (HTTPRequest): current HTTP request
+        """
         self.req = req
         self.started_response = False
         self.env = self.get_environ()
@@ -77,6 +96,11 @@ class Gateway(server.Gateway):
 
     @classmethod
     def gateway_map(cls):
+        """Create a mapping of gateways and their versions.
+
+        Returns:
+            dict[tuple[int,int],class]: map of gateway version and corresponding class
+        """
         return dict(
             (gw.version, gw)
             for gw in cls.__subclasses__()
@@ -195,6 +219,7 @@ class Gateway(server.Gateway):
 
 class Gateway_10(Gateway):
     """A Gateway class to interface HTTPServer with WSGI 1.0.x."""
+
     version = 1, 0
 
     def get_environ(self):
@@ -258,6 +283,7 @@ class Gateway_u0(Gateway_10):
     WSGI u.0 is an experimental protocol, which uses unicode for keys
     and values in both Python 2 and Python 3.
     """
+
     version = 'u', 0
 
     def get_environ(self):
@@ -301,12 +327,14 @@ wsgi_gateways = Gateway.gateway_map()
 
 
 class PathInfoDispatcher(object):
-    """A WSGI dispatcher for dispatch based on the PATH_INFO.
-
-    apps: a dict or list of (path_prefix, app) pairs.
-    """
+    """A WSGI dispatcher for dispatch based on the PATH_INFO."""
 
     def __init__(self, apps):
+        """Initialize path info WSGI app dispatcher.
+
+        Args:
+            apps (dict[str,object]|list[tuple[str,object]]): URI prefix and WSGI app pairs
+        """
         try:
             apps = list(apps.items())
         except AttributeError:
@@ -321,6 +349,17 @@ class PathInfoDispatcher(object):
         self.apps = [(p.rstrip('/'), a) for p, a in apps]
 
     def __call__(self, environ, start_response):
+        """Process incoming WSGI request.
+
+        Ref: PEP 3333
+
+        Args:
+            environ (Mapping): a dict containing WSGI environment variables
+            start_response (callable): function, which sets response status and headers
+
+        Returns:
+            list[bytes]: iterable containing bytes to be returned in HTTP response body
+        """
         path = environ['PATH_INFO'] or '/'
         for p, app in self.apps:
             # The apps list should be sorted by length, descending.
