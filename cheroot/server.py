@@ -70,9 +70,9 @@ from .workers import threadpool
 from .makefile import MakeFile
 
 
-__all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
+__all__ = ('HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
-           'Gateway', 'get_ssl_adapter_class']
+           'Gateway', 'get_ssl_adapter_class')
 
 
 if 'win' in sys.platform and hasattr(socket, 'AF_INET6'):

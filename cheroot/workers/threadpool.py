@@ -8,7 +8,7 @@ import socket
 from six.moves import queue
 
 
-__all__ = ['WorkerThread', 'ThreadPool']
+__all__ = ('WorkerThread', 'ThreadPool')
 
 
 class TrueyZero(object):
