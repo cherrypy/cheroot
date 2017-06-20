@@ -1,3 +1,5 @@
+"""Cheroot is the high-performance, pure-Python HTTP server used by CherryPy."""
+
 try:
     import pkg_resources
 except ImportError:

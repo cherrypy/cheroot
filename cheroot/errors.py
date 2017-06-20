@@ -1,21 +1,22 @@
+"""Collection of exceptions raised and/or processed by Cheroot."""
+
 import errno
 import sys
 
 
 class MaxSizeExceeded(Exception):
-    pass
+    """Exception raised when a client sends more data then acceptable within limit.
+
+    Depends on ``request.body.maxbytes`` config option if used within CherryPy
+    """
 
 
 class NoSSLError(Exception):
     """Exception raised when a client speaks HTTP to an HTTPS socket."""
 
-    pass
-
 
 class FatalSSLAlert(Exception):
     """Exception raised when the SSL implementation signals a fatal alert."""
-
-    pass
 
 
 def plat_specific_errors(*errnames):
