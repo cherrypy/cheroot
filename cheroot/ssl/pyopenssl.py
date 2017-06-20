@@ -100,13 +100,16 @@ class SSL_fileobject(MakeFile):
                 raise socket.timeout('timed out')
 
     def recv(self, size):
+        """Receive message of a size from the socket."""
         return self._safe_call(True, super(SSL_fileobject, self).recv, size)
 
     def sendall(self, *args, **kwargs):
+        """Send whole message to the socket."""
         return self._safe_call(False, super(SSL_fileobject, self).sendall,
                                *args, **kwargs)
 
     def send(self, *args, **kwargs):
+        """Send some part of message to the socket."""
         return self._safe_call(False, super(SSL_fileobject, self).send,
                                *args, **kwargs)
 
@@ -118,6 +121,7 @@ class SSLConnection:
     """
 
     def __init__(self, *args):
+        """Initialize SSLConnection instance."""
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
 
@@ -138,9 +142,12 @@ class SSLConnection:
 """ % (f, f))
 
     def shutdown(self, *args):
+        """Shutdown the SSL connection.
+
+        Ignore all incoming args since pyOpenSSL.socket.shutdown takes no args.
+        """
         self._lock.acquire()
         try:
-            # pyOpenSSL.socket.shutdown takes no args
             return self._ssl_conn.shutdown()
         finally:
             self._lock.release()
@@ -168,6 +175,7 @@ class pyOpenSSLAdapter(Adapter):
     """The ciphers list of SSL."""
 
     def __init__(self, certificate, private_key, certificate_chain=None, ciphers=None):
+        """Initialize OpenSSL Adapter instance."""
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
