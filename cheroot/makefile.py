@@ -1,3 +1,5 @@
+"""Socket file object."""
+
 import socket
 
 try:
@@ -16,6 +18,7 @@ class BufferedWriter(io.BufferedWriter):
     """Faux file object attached to a socket object."""
 
     def write(self, b):
+        """Write bytes to buffer."""
         self._checkClosed()
         if isinstance(b, str):
             raise TypeError("can't write str to binary stream")
@@ -38,6 +41,7 @@ class BufferedWriter(io.BufferedWriter):
 
 
 def MakeFile_PY3(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
+    """File object attached to a socket object."""
     if 'r' in mode:
         return io.BufferedReader(socket.SocketIO(sock, mode), bufsize)
     else:
@@ -48,6 +52,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
     """Faux file object attached to a socket object."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize faux file object."""
         self.bytes_read = 0
         self.bytes_written = 0
         socket._fileobject.__init__(self, *args, **kwargs)
@@ -63,17 +68,20 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                     raise
 
     def send(self, data):
+        """Send some part of message to the socket."""
         bytes_sent = self._sock.send(data)
         self.bytes_written += bytes_sent
         return bytes_sent
 
     def flush(self):
+        """Write all data from buffer to socket and reset write buffer."""
         if self._wbuf:
             buffer = ''.join(self._wbuf)
             self._wbuf = []
             self.write(buffer)
 
     def recv(self, size):
+        """Receive message of a size from the socket."""
         while True:
             try:
                 data = self._sock.recv(size)
@@ -97,6 +105,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
 
     if not _fileobject_uses_str_type:
         def read(self, size=-1):
+            """Read data from the socket to buffer."""
             # Use max, disallow tiny reads in a loop as they are very
             # inefficient.
             # We never leave read() with any leftover data from a new recv()
@@ -162,6 +171,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return buf.getvalue()
 
         def readline(self, size=-1):
+            """Read line from the socket to buffer."""
             buf = self._rbuf
             buf.seek(0, 2)  # seek end
             if buf.tell() > 0:
@@ -252,6 +262,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return buf.getvalue()
     else:
         def read(self, size=-1):
+            """Read data from the socket to buffer."""
             if size < 0:
                 # Read until EOF
                 buffers = [self._rbuf]
@@ -294,6 +305,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return ''.join(buffers)
 
         def readline(self, size=-1):
+            """Read line from the socket to buffer."""
             data = self._rbuf
             if size < 0:
                 # Read until \n or EOF, whichever comes first
