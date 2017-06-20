@@ -466,10 +466,10 @@ class ChunkedRFile(object):
             bytes: Chunk from rfile, limited by size if specified.
         """
         data = EMPTY
-        
+
         if size == 0:
             return data
-        
+
         while True:
             if size and len(data) >= size:
                 return data
@@ -497,10 +497,10 @@ class ChunkedRFile(object):
             bytes: One line from rfile.
         """
         data = EMPTY
-        
+
         if size == 0:
             return data
-        
+
         while True:
             if size and len(data) >= size:
                 return data
