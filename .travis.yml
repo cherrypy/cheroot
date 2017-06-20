@@ -18,6 +18,7 @@ _base_envs:
   python: pypy
   dist: trusty
   sudo: required
+  group: edge
   addons:
     apt:
       packages:
