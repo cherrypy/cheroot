@@ -36,6 +36,7 @@
     sha: f464d46
     hooks:
     -   id: pep257
+        exclude: cheroot/test
 
 -   repo: git://github.com/Lucas-C/pre-commit-hooks
     sha: 1e30aa4
