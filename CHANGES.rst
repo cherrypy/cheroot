@@ -1,3 +1,22 @@
+v5.6.0
+======
+
+- Fix all PEP 257 related errors in all non-test modules.
+
+  ``cheroot/test/*`` folder is only one left allowed to fail with this linter.
+
+- #30: Optimize chunked body reader loop by returning empty data is the size is 0.
+
+  Ref: cherrypy/cherrypy#1602
+
+- Reset buffer if the body size is unknown
+
+  Ref: cherrypy/cherrypy#1486
+
+- Add missing size hint to SizeCheckWrapper
+
+  Ref: cherrypy/cherrypy#1131
+
 v5.5.2
 ======
 
