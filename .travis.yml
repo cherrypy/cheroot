@@ -15,6 +15,7 @@ _base_envs:
   sudo: false
 - &pyenv_base
   <<: *stage_test
+  language: generic
   python: pypy
   dist: trusty
   sudo: required
