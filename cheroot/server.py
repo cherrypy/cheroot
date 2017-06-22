@@ -1115,7 +1115,7 @@ class HTTPConnection(object):
                             # Close the connection.
                             return
                         except errors.NoSSLError:
-                            self._handle_no_ssl()
+                            self._handle_no_ssl(req)
             elif errnum not in errors.socket_errors_to_ignore:
                 self.server.error_log('socket.error %s' % repr(errnum),
                                       level=logging.WARNING, traceback=True)
@@ -1126,7 +1126,7 @@ class HTTPConnection(object):
                         # Close the connection.
                         return
                     except errors.NoSSLError:
-                        self._handle_no_ssl()
+                        self._handle_no_ssl(req)
             return
         except (KeyboardInterrupt, SystemExit):
             raise
