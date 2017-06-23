@@ -62,7 +62,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
                 return 'Code = 304'
 
             def err_before_read(self, req, resp):
-                foobar  # noqa: F821
+                resp.status = '500 Internal Server Error'
                 return 'ok'
 
             def one_megabyte_of_a(self, req, resp):
@@ -474,7 +474,6 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertBody("thanks for '%s'" % body)
         conn.close()
 
-    @pytest.mark.xfail(reason='issue 1')
     def test_readall_or_close(self):
         self.httpserver.protocol = 'HTTP/1.1'
         self.PROTOCOL = 'HTTP/1.1'
