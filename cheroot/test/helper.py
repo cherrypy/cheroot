@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import threading
+import types
 
 import portend
 import pytest
@@ -142,10 +143,12 @@ class Response(object):
     def output(self):
         if self.body is None:
             return []
-        elif isinstance(self.body, (tuple, list)):
-            return [ntob(x) for x in self.body]
-        else:
+        elif isinstance(self.body, six.text_type):
             return [ntob(self.body)]
+        elif isinstance(self.body, six.binary_type):
+            return [self.body]
+        else:
+            return [ntob(x) for x in self.body]
 
 
 class Controller(object):
@@ -160,7 +163,11 @@ class Controller(object):
             output = handler(req, resp)
             if output is not None:
                 resp.body = output
-                resp.headers.setdefault('Content-Length', str(len(output)))
+                try:
+                    resp.headers.setdefault('Content-Length', str(len(output)))
+                except TypeError:
+                    if not isinstance(output, types.GeneratorType):
+                        raise
         start_response(resp.status, resp.headers.items())
         return resp.output()
 
