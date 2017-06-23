@@ -667,7 +667,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertBody('I too')
         conn.close()
 
-    @pytest.mark.xfail(reason='issue 1')
+    @pytest.mark.xfail(reason='Sometimes this test fails due to low timeout')
     def test_598(self):
         self.httpserver.protocol = 'HTTP/1.1'
         self.PROTOCOL = 'HTTP/1.1'
