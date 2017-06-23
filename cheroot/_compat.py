@@ -100,7 +100,7 @@ try:
     from base64 import decodebytes as _base64_decodebytes
 except ImportError:
     # Python 3.0-
-    # since CherryPy claims compability with Python 2.3, we must use
+    # since Cheroot claims compability with Python 2.6+, we must use
     # the legacy API of base64
     from base64 import decodestring as _base64_decodebytes
 
@@ -190,7 +190,7 @@ except ImportError:
 
 try:
     # Python 2. We try Python 2 first clients on Python 2
-    # don't try to import the 'http' module from cherrypy.lib
+    # don't try to import the 'http' module from cheroot submodules directly
     from Cookie import SimpleCookie, CookieError
     from httplib import BadStatusLine, HTTPConnection, IncompleteRead
     from httplib import NotConnected
