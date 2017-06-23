@@ -17,68 +17,9 @@ timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 
-def setup_server(cls):
-
-    class Root(helper.Controller):
-
-        def pov(self, req, resp):
-            return pov
-        page1 = pov
-        page2 = pov
-        page3 = pov
-
-        def hello(self, req, resp):
-            return 'Hello, world!'
-
-        def timeout(self, req, resp):
-            return str(cls.httpserver.timeout)
-
-        def stream(self, req, resp):
-            if 'set_cl' in req.environ['QUERY_STRING']:
-                resp.headers['Content-Length'] = str(10)
-
-            def content():
-                for x in range(10):
-                    yield str(x)
-
-            return content()
-
-        def upload(self, req, resp):
-            if not req.environ['REQUEST_METHOD'] == 'POST':
-                raise AssertionError("'POST' != request.method %r" %
-                                     req.environ['REQUEST_METHOD'])
-            return "thanks for '%s'" % req.environ['wsgi.input'].read()
-
-        def custom_204(self, req, resp):
-            resp.status = '204'
-            return 'Code = 204'
-
-        def custom_304(self, req, resp):
-            resp.status = '304'
-            return 'Code = 304'
-
-        def err_before_read(self, req, resp):
-            foobar  # noqa: F821
-            return 'ok'
-
-        def one_megabyte_of_a(self, req, resp):
-            return ['a' * 1024] * 1024
-
-        def wrong_cl_buffered(self, req, resp):
-            resp.headers['Content-Length'] = '5'
-            return 'I have too many bytes'
-
-        def wrong_cl_unbuffered(self, req, resp):
-            resp.headers['Content-Length'] = '5'
-            return ['I too', ' have too many bytes']
-
-    cls.httpserver.wsgi_app = Root()
-    cls.httpserver.max_request_body_size = 1001
-    cls.httpserver.timeout = timeout
-
-
 class ConnectionCloseTests(helper.CherootWebCase):
 
+    @classmethod
     def setup_server(cls):
 
         class Root(helper.Controller):
@@ -120,6 +61,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
                 return 'Code = 304'
 
             def err_before_read(self, req, resp):
+                foobar  # noqa: F821
                 return 'ok'
 
             def one_megabyte_of_a(self, req, resp):
@@ -136,7 +78,6 @@ class ConnectionCloseTests(helper.CherootWebCase):
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.max_request_body_size = 1001
         cls.httpserver.timeout = timeout
-    setup_server = classmethod(setup_server)
 
     def test_HTTP11_persistent_connections(self):
         self.httpserver.protocol = 'HTTP/1.1'
