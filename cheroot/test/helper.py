@@ -161,7 +161,9 @@ class Controller(object):
             resp.status = '404 Not Found'
         else:
             output = handler(req, resp)
-            if output is not None:
+            if (output is not None and
+                    not any(resp.status.startswith(status_code)
+                            for status_code in ('204', '304'))):
                 resp.body = output
                 try:
                     resp.headers.setdefault('Content-Length', str(len(output)))

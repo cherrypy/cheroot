@@ -544,7 +544,6 @@ class ConnectionCloseTests(helper.CherootWebCase):
             self.assertBody("thanks for '%s'" % body)
             conn.close()
 
-    @pytest.mark.xfail(reason='issue 1')
     def test_No_Message_Body(self):
         self.PROTOCOL = 'HTTP/1.1'
 
