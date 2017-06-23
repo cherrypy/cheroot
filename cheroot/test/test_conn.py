@@ -3,6 +3,7 @@
 import socket
 import time
 
+import six
 import pytest
 
 from cheroot._compat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
@@ -399,6 +400,12 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
             # Retrieve previous response
             response = conn.response_class(conn.sock, method='GET')
+            # there is a bug in python3 regarding the buffering of
+            # ``conn.sock``. Until that bug get's fixed we will
+            # monkey patch the ``reponse`` instance.
+            # https://bugs.python.org/issue23377
+            if six.PY3:
+                response.fp = conn.sock.makefile('rb', 0)
             response.begin()
             body = response.read(13)
             self.assertEqual(response.status, 200)
