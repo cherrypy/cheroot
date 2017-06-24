@@ -154,7 +154,7 @@ class SSLConnection:
 
 
 class pyOpenSSLAdapter(Adapter):
-    """A wrapper for integrating pyOpenSSL with CherryPy."""
+    """A wrapper for integrating pyOpenSSL with Cheroot."""
 
     certificate = None
     """The filename of the server SSL certificate."""

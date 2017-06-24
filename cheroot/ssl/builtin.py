@@ -26,7 +26,7 @@ from ..makefile import MakeFile
 
 
 class BuiltinSSLAdapter(Adapter):
-    """A wrapper for integrating Python's builtin ssl module with CherryPy."""
+    """A wrapper for integrating Python's builtin ssl module with Cheroot."""
 
     certificate = None
     """The filename of the server SSL certificate."""

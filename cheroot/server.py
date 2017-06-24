@@ -1321,7 +1321,7 @@ class HTTPServer(object):
                  for w in s['Worker Threads'].values()], 0),
             'Worker Threads': {},
         }
-        logging.statistics['CherryPy HTTPServer %d' % id(self)] = self.stats
+        logging.statistics['Cheroot HTTPServer %d' % id(self)] = self.stats
 
     def runtime(self):
         """Return server uptime."""

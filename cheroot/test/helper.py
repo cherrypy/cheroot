@@ -244,7 +244,7 @@ server.ssl_private_key: r'%s'
             args.append('-d')
 
         env = os.environ.copy()
-        # Make sure we import the cherrypy package in which this module is
+        # Make sure we import the cheroot package in which this module is
         # defined.
         grandparentdir = os.path.abspath(os.path.join(thisdir, '..', '..'))
         if env.get('PYTHONPATH', ''):
