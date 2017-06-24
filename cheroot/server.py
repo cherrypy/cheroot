@@ -1235,7 +1235,7 @@ class HTTPServer(object):
     """The maximum number of worker threads to create (default -1 = no limit)."""
 
     server_name = None
-    """The name of the server; defaults to socket.gethostname()."""
+    """The name of the server; defaults to ``self.version``."""
 
     protocol = 'HTTP/1.1'
     """The version string to write in the Status-Line of all HTTP responses.
@@ -1298,7 +1298,14 @@ class HTTPServer(object):
         self.requests = threadpool.ThreadPool(self, min=minthreads or 1, max=maxthreads)
 
         if not server_name:
-            server_name = socket.gethostname()
+            server_name = self.version
+            """
+            Default server name. It is used to fall back to ``socket.gethostname()``.
+            Ref: cherrypy/cheroot#33. If the previous logic needed the following should restore it:
+
+            >>> from cheroot._compat import import ntou, tonative
+            >>> ntou(tonative(ntou(tonative(hn, 'utf-8'), 'utf-8').encode('idna')))
+            """
         self.server_name = server_name
         self.clear_stats()
 
