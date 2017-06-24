@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""CherryPy package setuptools installer."""
+"""Cheroot package setuptools installer."""
 
 # Project skeleton maintained at https://github.com/jaraco/skeleton
 
