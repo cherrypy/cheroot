@@ -1,3 +1,29 @@
+v5.7.0
+======
+
+- CI improvements:
+  * Don't run tests during deploy stage
+  * Use VM based build job env only for pyenv envs
+  * Opt-in for beta trusty image @ Travis CI
+  * Be verbose when running tests (show test names)
+  * Show xfail/skip details during test run
+
+- #34: Fix ``_handle_no_ssl`` error handler calls
+
+- #21: Fix ``test_conn`` tests:
+  * Improve setup_server def in HTTP connection tests
+  * Fix HTTP streaming tests
+  * Fix HTTP/1.1 pipelining test under Python 3
+  * Fix ``test_readall_or_close`` test
+  * Fix ``test_No_Message_Body``
+  * Clarify ``test_598`` fail reason
+
+- #36: Add GitHub templates for PR, issue && contributing
+
+- #27: Default HTTP Server header to Cheroot version str
+
+- Cleanup _compat functions from server module
+
 v5.6.0
 ======
 
