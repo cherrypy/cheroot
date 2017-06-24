@@ -66,6 +66,7 @@ from six.moves import queue
 from six.moves import urllib
 
 from . import errors, __version__
+from ._compat import ntob
 from .workers import threadpool
 from .makefile import MakeFile
 
@@ -80,26 +81,6 @@ if 'win' in sys.platform and hasattr(socket, 'AF_INET6'):
         socket.IPPROTO_IPV6 = 41
     if not hasattr(socket, 'IPV6_V6ONLY'):
         socket.IPV6_V6ONLY = 27
-
-
-if six.PY3:
-    def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given encoding."""
-        # In Python 3, the native string type is unicode
-        return n.encode(encoding)
-
-    def bton(b, encoding='ISO-8859-1'):
-        return b.decode(encoding)
-else:
-    def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given encoding."""
-        # In Python 2, the native string type is bytes. Assume it's already
-        # in the given encoding, which for ISO-8859-1 is almost always what
-        # was intended.
-        return n
-
-    def bton(b, encoding='ISO-8859-1'):
-        return b
 
 
 LF = b'\n'
