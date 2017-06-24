@@ -1289,6 +1289,13 @@ class HTTPServer(object):
 
         if not server_name:
             server_name = self.version
+            """
+            Default server name. It is used to fall back to ``socket.gethostname()``.
+            Ref: cherrypy/cheroot#33. If the previous logic needed the following should restore it:
+
+            >>> from cheroot._compat import import ntou, tonative
+            >>> ntou(tonative(ntou(tonative(hn, 'utf-8'), 'utf-8').encode('idna')))
+            """
         self.server_name = server_name
         self.clear_stats()
 
