@@ -26,8 +26,9 @@ as you want in one instance by using a PathInfoDispatcher::
 """
 
 import sys
-
+import struct
 import six
+import socket
 from six.moves import filter
 
 from . import server
@@ -263,6 +264,7 @@ class Gateway_10(Gateway):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
             env['SERVER_PORT'] = ''
+            env['_REMOTE_UID'] = self._get_peer_uid()
         else:
             env['SERVER_PORT'] = str(req.server.bind_addr[1])
 
@@ -284,6 +286,11 @@ class Gateway_10(Gateway):
             env.update(req.conn.ssl_env)
 
         return env
+
+    def _get_peer_uid(self):
+        creds = self.req.server.socket.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i'))
+        pid, uid, gid = struct.unpack('3i', creds)
+        return uid
 
 
 class Gateway_u0(Gateway_10):
