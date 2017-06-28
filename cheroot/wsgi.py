@@ -299,7 +299,7 @@ class Gateway_10(Gateway):
         # NOTE: the value for SO_PEERCRED can be architecture specific
         SO_PEERCRED = getattr(socket, 'SO_PEERCRED', 17)
         try:
-            creds = self.req.server.socket.getsockopt(socket.SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
+            creds = self.req.conn.socket.getsockopt(socket.SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
             pid, uid, gid = struct.unpack('3i', creds)
             return uid
         except socket.error:
