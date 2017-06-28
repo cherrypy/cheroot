@@ -56,6 +56,7 @@ import time
 import traceback as traceback_
 import logging
 import platform
+import struct
 
 import six
 from six.moves import queue
@@ -1227,6 +1228,28 @@ class HTTPConnection(object):
             # Someday, perhaps, we'll do the full lingering_close that
             # Apache does, but not today.
             pass
+
+    def get_peer_uid(self):
+        """Returns the UID of the peer socket in the case of UNIX domain sockets
+
+        This function uses SO_PEERCRED to query the UNIX UID of the peer, which
+        is only available if the bind address is a UNIX domain socket.
+        """
+
+        if self.socket.family != socket.AF_UNIX:
+            return None
+
+        # NOTE: the value for SO_PEERCRED can be architecture specific, in
+        # which case the getsockopt() will hopefully fail.  The arch
+        # specific value could be derived from platform.processor()
+        SO_PEERCRED = getattr(socket, 'SO_PEERCRED', 17)
+        try:
+            creds = self.socket.getsockopt(socket.SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
+            pid, uid, gid = struct.unpack('3i', creds)
+            return uid
+        except socket.error:
+            pass
+
 
     def _close_kernel_socket(self):
         """Close kernel socket in outdated Python versions.

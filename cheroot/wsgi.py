@@ -264,7 +264,7 @@ class Gateway_10(Gateway):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
             env['SERVER_PORT'] = ''
-            uid = self._get_peer_uid()
+            uid = self.req.conn.get_peer_uid()
             if uid is not None:
                 env['_REMOTE_UID'] = str(uid)
         else:
@@ -289,21 +289,6 @@ class Gateway_10(Gateway):
 
         return env
 
-    def _get_peer_uid(self):
-        """Returns the UID of the peer socket in the case of UNIX domain sockets
-
-        This function uses SO_PEERCRED to query the UNIX UID of the peer, which
-        is only available if the bind address is a UNIX domain socket.
-        """
-
-        # NOTE: the value for SO_PEERCRED can be architecture specific
-        SO_PEERCRED = getattr(socket, 'SO_PEERCRED', 17)
-        try:
-            creds = self.req.conn.socket.getsockopt(socket.SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
-            pid, uid, gid = struct.unpack('3i', creds)
-            return uid
-        except socket.error:
-            pass
 
 class Gateway_u0(Gateway_10):
     """A Gateway class to interface HTTPServer with WSGI u.0.
