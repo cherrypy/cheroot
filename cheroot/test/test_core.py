@@ -25,6 +25,9 @@ class HTTPTests(helper.CherootWebCase):
                     return
                 return 'Hello world!'
 
+            def query_string(self, req, resp):
+                return req.environ.get('QUERY_STRING', '')
+
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.max_request_body_size = 30000000
     setup_server = classmethod(setup_server)
@@ -33,6 +36,16 @@ class HTTPTests(helper.CherootWebCase):
         self.getPage('/hello')
         self.assertStatus(200)
         self.assertBody(b'Hello world!')
+
+    def test_query_string_request(self):
+        self.getPage('/query_string?test=True')
+        self.assertStatus(200)
+        self.assertBody(b'test=True')
+
+    def test_parse_uri(self):
+        for uri in ['*', '/test', 'http://google.com/', '/whatever?test=True']:
+            self.getPage(uri)
+            self.assertStatus(404)
 
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the
