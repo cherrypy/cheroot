@@ -598,7 +598,7 @@ class HTTPRequest(object):
     A HeaderReader instance or compatible reader.
     """
 
-    def __init__(self, server, conn):
+    def __init__(self, server, conn, proxy=False):
         """Initialize HTTP request container instance.
 
         Args:
@@ -623,6 +623,7 @@ class HTTPRequest(object):
         self.close_connection = self.__class__.close_connection
         self.chunked_read = False
         self.chunked_write = self.__class__.chunked_write
+        self.proxy = proxy
 
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
@@ -700,40 +701,51 @@ class HTTPRequest(object):
         self.uri = uri
         self.method = method
 
-        # uri may be an abs_path (including "http://host.domain.tld");
-        scheme, authority, path = self.parse_request_uri(uri)
-        if path is None:
-            self.simple_response('400 Bad Request',
-                                 'Invalid path in Request-URI.')
-            return False
-        if NUMBER_SIGN in path:
-            self.simple_response('400 Bad Request',
-                                 'Illegal #fragment in Request-URI.')
-            return False
+        scheme = authority = path = qs = EMPTY
 
-        if scheme:
-            self.scheme = scheme
+        if method.upper() == 'OPTIONS':
+            # https://tools.ietf.org/html/rfc7230#section-5.3.4
+            path = uri
+        elif method.upper() == 'CONNECT':
+            if not self.proxy:
+                self.simple_response('400 Bad Request')
+                return False
 
-        qs = EMPTY
-        if QUESTION_MARK in path:
-            path, qs = path.split(QUESTION_MARK, 1)
+            # https://tools.ietf.org/html/rfc7230#section-5.3.3
+            authority = uri
+            path = ''
+        else:
+            # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
+            # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
+            scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
 
-        # Unquote the path+params (e.g. "/this%20path" -> "/this path").
-        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-        #
-        # But note that "...a URI must be separated into its components
-        # before the escaped characters within those components can be
-        # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
-        # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
-        try:
-            atoms = [
-                unquote_to_bytes(x)
-                for x in quoted_slash.split(path)
-            ]
-        except ValueError as ex:
-            self.simple_response('400 Bad Request', ex.args[0])
-            return False
-        path = b'%2F'.join(atoms)
+            if fragment:
+                self.simple_response('400 Bad Request',
+                                     'Illegal #fragment in Request-URI.')
+                return False
+
+            if path is None:
+                self.simple_response('400 Bad Request',
+                                     'Invalid path in Request-URI.')
+                return False
+
+            # Unquote the path+params (e.g. "/this%20path" -> "/this path").
+            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+            #
+            # But note that "...a URI must be separated into its components
+            # before the escaped characters within those components can be
+            # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
+            # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
+            try:
+                atoms = [
+                    unquote_to_bytes(x)
+                    for x in quoted_slash.split(path)
+                ]
+            except ValueError as ex:
+                self.simple_response('400 Bad Request', ex.args[0])
+                return False
+            path = b'%2F'.join(atoms)
+
         self.path = path
 
         # Note that, like wsgiref and most other HTTP servers,
@@ -839,44 +851,6 @@ class HTTPRequest(object):
                 if ex.args[0] not in errors.socket_errors_to_ignore:
                     raise
         return True
-
-    def parse_request_uri(self, uri):
-        """Parse a Request-URI into (scheme, authority, path).
-
-        Note that Request-URI's must be one of::
-
-            Request-URI    = "*" | absoluteURI | abs_path | authority
-
-        Therefore, a Request-URI which starts with a double forward-slash
-        cannot be a "net_path"::
-
-            net_path      = "//" authority [ abs_path ]
-
-        Instead, it must be interpreted as an "abs_path" with an empty first
-        path segment::
-
-            abs_path      = "/"  path_segments
-            path_segments = segment *( "/" segment )
-            segment       = *pchar *( ";" param )
-            param         = *pchar
-        """
-        if uri == ASTERISK:
-            return None, None, uri
-
-        parsed = urllib.parse.urlparse(uri)
-        if parsed.scheme and QUESTION_MARK not in parsed.scheme:
-            # An absoluteURI.
-            # If there's a scheme (and it must be http or https), then:
-            # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query
-            # ]]
-            return parsed.scheme, parsed.netloc, parsed.path
-
-        if uri.startswith(FORWARD_SLASH):
-            # An abs_path.
-            return None, None, uri
-        else:
-            # An authority.
-            return None, uri, None
 
     def respond(self):
         """Call the gateway and write its iterable output."""
