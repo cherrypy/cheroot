@@ -723,7 +723,6 @@ class HTTPRequest(object):
 
             # https://tools.ietf.org/html/rfc7230#section-5.3.3
             authority = uri
-            path = ''
         else:
             # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
             # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
@@ -761,6 +760,9 @@ class HTTPRequest(object):
                 self.simple_response('400 Bad Request', ex.args[0])
                 return False
             path = b'%2F'.join(atoms)
+
+        if path[0] != b'/':
+            path = b'/' + path
 
         if scheme is not EMPTY:
             self.scheme = scheme
