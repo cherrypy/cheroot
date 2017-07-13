@@ -43,9 +43,17 @@ class HTTPTests(helper.CherootWebCase):
         self.assertBody(b'test=True')
 
     def test_parse_uri(self):
-        for uri in ['*', '/test', 'http://google.com/', '/whatever?test=True']:
+        for uri in ['/hello', '/query_string?test=True', 'hello']:
             self.getPage(uri)
-            self.assertStatus(404)
+            self.assertStatus(200)
+
+    def test_parse_uri_absolute_uri(self):
+        self.getPage('http://google.com/')
+        self.assertStatus(400)
+
+    def test_parse_uri_asterisk_uri(self):
+        self.getPage('*', method='OPTIONS')
+        self.assertStatus(404)
 
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the
