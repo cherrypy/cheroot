@@ -55,6 +55,10 @@ class HTTPTests(helper.CherootWebCase):
         self.getPage('*', method='OPTIONS')
         self.assertStatus(404)
 
+    def test_parse_uri_fragment_uri(self):
+        self.getPage('/hello?test=something#fake')
+        self.assertStatus(400)
+
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the
         # inclusion of a Content-Length or Transfer-Encoding header field in
