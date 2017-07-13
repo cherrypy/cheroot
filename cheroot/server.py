@@ -703,8 +703,10 @@ class HTTPRequest(object):
 
         scheme = authority = path = qs = EMPTY
 
-        if method.upper() == 'OPTIONS':
+        if method.upper() == 'OPTIONS' and not self.proxy:
             # https://tools.ietf.org/html/rfc7230#section-5.3.4
+            path = uri if uri == ASTERISK else urllib.parse.urlsplit(uri).path
+        elif method.upper() == 'OPTIONS' and self.proxy:
             path = uri
         elif method.upper() == 'CONNECT':
             if not self.proxy:
