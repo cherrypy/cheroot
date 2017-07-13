@@ -748,6 +748,9 @@ class HTTPRequest(object):
                 return False
             path = b'%2F'.join(atoms)
 
+        if scheme is not EMPTY:
+            self.scheme = scheme
+        self.authority = authority
         self.path = path
 
         # Note that, like wsgiref and most other HTTP servers,
