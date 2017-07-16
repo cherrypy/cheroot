@@ -38,7 +38,7 @@ after_test:
 deploy_script:
   - ps: >-
       if($env:appveyor_repo_tag -eq 'True') {
-          Invoke-Expression "python -m twine upload dist/* --username $env:PYPI_USERNAME --password $env:PYPI_PASSWORD
+          Invoke-Expression "python -m twine upload dist/* --username $env:PYPI_USERNAME --password $env:PYPI_PASSWORD"
       }
 
 artifacts:
