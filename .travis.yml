@@ -203,7 +203,7 @@ jobs:
       # set by default.
       # Besides above, we don't do cleanup of `dist/*`, because it's being done
       # by Travis CI PYPI deployment provider after upload, unconditionally.
-      distributions: dists
+      distributions: source_dist
       password:
         secure: RAfz06AINvz7bfij/YhfkAreRqamgxS8a6jSRNxntYhtJke3ZszUbIDag8+n1I+G5XT2LnMhHqPNR7Plc+AeMz7VXTuy+b81Li5kse20NYlPhd7mBVmTUpXtqYQashV5J39F4qkATBLznCOrMEomM07VTXjO/o2hmQuXniab2Uo=
 cache:
