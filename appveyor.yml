@@ -13,7 +13,8 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python -m pip install tox"
 
-build: off
+build_script:
+  - python -m setup bdist_wheel
 
 test_script: tox
 
@@ -21,3 +22,6 @@ after_test:
   - ps: |
       $wc = New-Object 'System.Net.WebClient'
       $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\junit-test-results.xml))
+
+artifacts:
+  - path: dist\*
