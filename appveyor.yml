@@ -20,6 +20,10 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python -m pip install tox"
 
+
+before_build:
+  - "python -m pip install wheel"
+
 build_script:
   - python -m setup bdist_wheel
 
