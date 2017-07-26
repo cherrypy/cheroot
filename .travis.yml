@@ -184,6 +184,7 @@ jobs:
       fi
     install: skip
     script:
+    - mkdir dist  # so that it whould have priviliges of the current Travis user
     - ./build_manylinux1_wheels.sh "cheroot"
     deploy:
       provider: pypi
