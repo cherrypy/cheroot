@@ -598,7 +598,7 @@ class HTTPRequest(object):
     A HeaderReader instance or compatible reader.
     """
 
-    def __init__(self, server, conn, proxy_mode=False, strict=True):
+    def __init__(self, server, conn, proxy_mode=False, strict_mode=True):
         """Initialize HTTP request container instance.
 
         Args:
@@ -606,7 +606,7 @@ class HTTPRequest(object):
             conn (HTTPConnection): HTTP connection object for this request
             proxy_mode (bool): whether this HTTPServer should behave as a PROXY
             server for certain requests
-            strict (bool): whether we should return a 400 Bad Request when
+            strict_mode (bool): whether we should return a 400 Bad Request when
             we encounter a request that a HTTP compliant client should not be
             making
         """
@@ -629,7 +629,7 @@ class HTTPRequest(object):
         self.chunked_read = False
         self.chunked_write = self.__class__.chunked_write
         self.proxy_mode = proxy_mode
-        self.strict = strict
+        self.strict_mode = strict_mode
 
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
@@ -726,7 +726,7 @@ class HTTPRequest(object):
             # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
             scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
 
-            if (self.strict and not self.proxy_mode) and (scheme or authority):
+            if (self.strict_mode and not self.proxy_mode) and (scheme or authority):
                 self.simple_response('400 Bad Request',
                                      'Absolute URI not allowed if server is not a proxy.'
                                      )
