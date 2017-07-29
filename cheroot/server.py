@@ -728,8 +728,7 @@ class HTTPRequest(object):
 
             if (self.strict_mode and not self.proxy_mode) and (scheme or authority):
                 self.simple_response('400 Bad Request',
-                                     'Absolute URI not allowed if server is not a proxy.'
-                                     )
+                                     'Absolute URI not allowed if server is not a proxy.')
                 return False
 
             if fragment:
