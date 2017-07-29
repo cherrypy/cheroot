@@ -604,11 +604,9 @@ class HTTPRequest(object):
         Args:
             server (HTTPServer): web server object receiving this request
             conn (HTTPConnection): HTTP connection object for this request
-
-        Kwargs:
-            proxy (Boolean): Whether this HTTPServer should behave as a PROXY
-            server for certain requests.
-            strict (Boolean): Whether we should return a 400 Bad Request when
+            proxy (bool): whether this HTTPServer should behave as a PROXY
+            server for certain requests
+            strict (bool): whether we should return a 400 Bad Request when
             we encounter a request that a HTTP compliant client should not be
             making
         """
