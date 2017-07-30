@@ -705,16 +705,24 @@ class HTTPRequest(object):
             return False
 
         self.uri = uri
-        self.method = method
+        self.method = method.upper()
+
+        if self.strict_mode and method != self.method:
+            self.simple_response(
+                '400 Bad Request',
+                'Malformed method name: According to RFC 2616 (section 5.1.1) and its successors '
+                'RFC 7230 (section 3.1.1) and RFC 7231 (section 4.1) method names are case-sensitive and uppercase.'
+            )
+            return False
 
         scheme = authority = path = qs = EMPTY
 
-        if method.upper() == 'OPTIONS' and not self.proxy_mode:
-            # https://tools.ietf.org/html/rfc7230#section-5.3.4
-            path = uri if uri == ASTERISK else urllib.parse.urlsplit(uri).path
-        elif method.upper() == 'OPTIONS' and self.proxy_mode:
-            path = uri
-        elif method.upper() == 'CONNECT':
+        if self.method == 'OPTIONS':
+            path = (uri
+                    # https://tools.ietf.org/html/rfc7230#section-5.3.4
+                    if self.proxy_mode or uri == ASTERISK
+                    else urllib.parse.urlsplit(uri).path)
+        elif self.method == 'CONNECT':
             if not self.proxy_mode:
                 self.simple_response('400 Bad Request')
                 return False
