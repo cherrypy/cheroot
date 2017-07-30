@@ -56,17 +56,12 @@ import time
 import traceback as traceback_
 import logging
 
-try:
-    from urllib.parse import unquote_to_bytes
-except ImportError:
-    from urllib import unquote as unquote_to_bytes
-
 import six
 from six.moves import queue
 from six.moves import urllib
 
 from . import errors, __version__
-from ._compat import ntob
+from ._compat import ntob, unquote_to_bytes
 from .workers import threadpool
 from .makefile import MakeFile
 

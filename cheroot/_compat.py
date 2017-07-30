@@ -137,18 +137,20 @@ except NameError:
             i -= 1
             yield x[i]
 
-try:
-    # Python 3
-    from urllib.parse import urljoin, urlencode
-    from urllib.parse import quote, quote_plus
-    from urllib.request import unquote, urlopen
+from six.moves.urllib.parse import (  # noqa: F401
+    quote, quote_plus,
+    unquote as parse_unquote,
+    urlencode, urljoin
+)
+from six.moves.urllib.request import urlopen  # noqa: F401
+# TODO: uncomment this once new six released
+# Ref: https://github.com/benjaminp/six/pull/172
+# from six.moves.urllib.parse import unquote_to_bytes
+if six.PY3:
+    from urllib.parse import unquote_to_bytes
     from urllib.request import parse_http_list, parse_keqv_list
-except ImportError:
-    # Python 2
-    from urlparse import urljoin  # noqa
-    from urllib import urlencode, urlopen  # noqa
-    from urllib import quote, quote_plus  # noqa
-    from urllib import unquote  # noqa
+else:
+    from urllib import unquote as unquote_to_bytes  # noqa
     from urllib2 import parse_http_list, parse_keqv_list  # noqa
 
 try:
@@ -222,20 +224,14 @@ except NameError:
     # Python 3
     xrange = range
 
-try:
-    # Python 3
-    from urllib.parse import unquote as parse_unquote
-
+if six.PY3:
     def unquote_qs(atom, encoding, errors='strict'):
         """Return urldecoded query string."""
         return parse_unquote(
             atom.replace('+', ' '),
             encoding=encoding,
             errors=errors)
-except ImportError:
-    # Python 2
-    from urllib import unquote as parse_unquote
-
+else:
     def unquote_qs(atom, encoding, errors='strict'):
         """Return urldecoded query string."""
         return parse_unquote(atom.replace('+', ' ')).decode(encoding, errors)
