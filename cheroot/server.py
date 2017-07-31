@@ -731,9 +731,13 @@ class HTTPRequest(object):
             # https://tools.ietf.org/html/rfc7230#section-5.3.3
             authority = uri
         else:
-            # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
-            # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
-            scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
+            try:
+                # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
+                # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
+                scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
+            except UnicodeError:
+                self.simple_response('400 Bad Request', 'Malformed Request-URI')
+                return False
 
             if (self.strict_mode and not self.proxy_mode) and (scheme or authority):
                 self.simple_response('400 Bad Request',
@@ -746,6 +750,7 @@ class HTTPRequest(object):
                 return False
 
             if path is None:
+                # FIXME: It looks like this case cannot happen
                 self.simple_response('400 Bad Request',
                                      'Invalid path in Request-URI.')
                 return False
@@ -758,6 +763,8 @@ class HTTPRequest(object):
             # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
             # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
             try:
+                # TODO: Figure out whether exception can really happen here.
+                # It looks like it's caught on urlsplit() call above.
                 atoms = [
                     unquote_to_bytes(x)
                     for x in QUOTED_SLASH_REGEX.split(path)

@@ -5,8 +5,10 @@
 import errno
 import socket
 
-from cheroot._compat import HTTPConnection, HTTPSConnection, quote as url_quote
-
+from cheroot._compat import (
+    HTTPConnection, HTTPSConnection,
+    quote as url_quote, ntob
+)
 from cheroot.test import helper
 
 
@@ -55,6 +57,24 @@ class HTTPTests(helper.CherootWebCase):
                     )]:
             self.getPage(uri)
             self.assertStatus(200)
+
+    def test_parse_uri_invalid_uri(self):
+        if self.scheme == 'https':
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c._output(ntob('GET /йопта! HTTP/1.1', 'utf-8'))
+        c._send_output()
+        if hasattr(c, 'strict'):
+            response = c.response_class(c.sock, strict=c.strict, method='GET')
+        else:
+            # Python 3.2 removed the 'strict' feature, saying:
+            # "http.client now always assumes HTTP/1.x compliant servers."
+            response = c.response_class(c.sock, method='GET')
+        response.begin()
+        assert response.status == 400
+        assert response.fp.read(21) == b'Malformed Request-URI'
+        c.close()
 
     def test_parse_uri_absolute_uri(self):
         self.getPage('http://google.com/')
