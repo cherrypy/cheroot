@@ -89,7 +89,8 @@ NUMBER_SIGN = b'#'
 QUESTION_MARK = b'?'
 ASTERISK = b'*'
 FORWARD_SLASH = b'/'
-quoted_slash = re.compile(b'(?i)%2F')
+QUOTED_SLASH = b'%2F'
+QUOTED_SLASH_REGEX = re.compile(b'(?i)' + QUOTED_SLASH)
 
 
 comma_separated_headers = [
@@ -759,12 +760,12 @@ class HTTPRequest(object):
             try:
                 atoms = [
                     unquote_to_bytes(x)
-                    for x in quoted_slash.split(path)
+                    for x in QUOTED_SLASH_REGEX.split(path)
                 ]
             except ValueError as ex:
                 self.simple_response('400 Bad Request', ex.args[0])
                 return False
-            path = b'%2F'.join(atoms)
+            path = QUOTED_SLASH.join(atoms)
 
         if not path.startswith(FORWARD_SLASH):
             path = FORWARD_SLASH + path
