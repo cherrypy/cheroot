@@ -1,9 +1,11 @@
 """Tests for managing HTTP issues (malformed requests, etc)."""
+# -*- coding: utf-8 -*-
+# vim: set fileencoding=utf-8 :
 
 import errno
 import socket
 
-from cheroot._compat import HTTPConnection, HTTPSConnection
+from cheroot._compat import HTTPConnection, HTTPSConnection, quote as url_quote
 
 from cheroot.test import helper
 
@@ -28,6 +30,9 @@ class HTTPTests(helper.CherootWebCase):
             def query_string(self, req, resp):
                 return req.environ.get('QUERY_STRING', '')
 
+        setattr(Root, 'привіт', Root.hello)
+        setattr(Root, 'Юххууу', Root.hello)
+
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.max_request_body_size = 30000000
     setup_server = classmethod(setup_server)
@@ -43,7 +48,11 @@ class HTTPTests(helper.CherootWebCase):
         self.assertBody(b'test=True')
 
     def test_parse_uri(self):
-        for uri in ['/hello', '/query_string?test=True', 'hello']:
+        for uri in ['/hello', '/query_string?test=True', 'hello',
+                    url_quote('привіт'),
+                    '/{}?{}={}'.format(
+                        *map(url_quote, ('Юххууу', 'ї', 'йо'))
+                    )]:
             self.getPage(uri)
             self.assertStatus(200)
 
