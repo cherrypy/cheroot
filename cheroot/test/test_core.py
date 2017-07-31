@@ -50,7 +50,7 @@ class HTTPTests(helper.CherootWebCase):
     def test_parse_uri(self):
         for uri in ['/hello', '/query_string?test=True', 'hello',
                     url_quote('привіт'),
-                    '/{}?{}={}'.format(
+                    '/{0}?{1}={2}'.format(
                         *map(url_quote, ('Юххууу', 'ї', 'йо'))
                     )]:
             self.getPage(uri)
