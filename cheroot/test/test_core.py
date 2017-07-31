@@ -59,6 +59,7 @@ class HTTPTests(helper.CherootWebCase):
     def test_parse_uri_absolute_uri(self):
         self.getPage('http://google.com/')
         self.assertStatus(400)
+        self.assertBody(b'Absolute URI not allowed if server is not a proxy.')
 
     def test_parse_uri_asterisk_uri(self):
         self.getPage('*', method='OPTIONS')
@@ -67,6 +68,7 @@ class HTTPTests(helper.CherootWebCase):
     def test_parse_uri_fragment_uri(self):
         self.getPage('/hello?test=something#fake')
         self.assertStatus(400)
+        self.assertBody(b'Illegal #fragment in Request-URI.')
 
     def test_no_content_length(self):
         # "The presence of a message-body in a request is signaled by the
