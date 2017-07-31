@@ -766,8 +766,8 @@ class HTTPRequest(object):
                 return False
             path = b'%2F'.join(atoms)
 
-        if not path.startswith(b'/'):
-            path = b'/' + path
+        if not path.startswith(FORWARD_SLASH):
+            path = FORWARD_SLASH + path
 
         if scheme is not EMPTY:
             self.scheme = scheme
