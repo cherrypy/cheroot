@@ -716,12 +716,14 @@ class HTTPRequest(object):
 
         scheme = authority = path = qs = EMPTY
 
-        if self.method == 'OPTIONS':
+        if self.method == b'OPTIONS':
+            # TODO: cover this branch with tests
             path = (uri
                     # https://tools.ietf.org/html/rfc7230#section-5.3.4
                     if self.proxy_mode or uri == ASTERISK
                     else urllib.parse.urlsplit(uri).path)
-        elif self.method == 'CONNECT':
+        elif self.method == b'CONNECT':
+            # TODO: cover this branch with tests
             if not self.proxy_mode:
                 self.simple_response('400 Bad Request')
                 return False
