@@ -766,7 +766,7 @@ class HTTPRequest(object):
                 return False
             path = b'%2F'.join(atoms)
 
-        if path[0] != b'/':
+        if not path.startswith(b'/'):
             path = b'/' + path
 
         if scheme is not EMPTY:
