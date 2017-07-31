@@ -1,4 +1,8 @@
 language: python
+os: linux
+dist: trusty
+sudo: false
+group: edge
 _base_envs:
 - &stage_lint
   stage: lint
@@ -10,35 +14,12 @@ _base_envs:
   stage: test under OS X (last chance to fail before deploy available)
 - &stage_deploy
   stage: upload new version of python package to PYPI (only for tagged commits)
-- &linux_base
-  os: linux
-  sudo: false
 - &pyenv_base
   <<: *stage_test
   language: generic
   python: pypy
-  dist: trusty
-  sudo: required
-  group: edge
-  addons:
-    apt:
-      packages:
-      - make
-      - build-essential
-      - libssl-dev
-      - zlib1g-dev
-      - libbz2-dev
-      - libreadline-dev
-      - libsqlite3-dev
-      - wget
-      - curl
-      - llvm
-      - libncurses5-dev
-      - libncursesw5-dev
-      - xz-utils
-      - tk-dev
   env:
-  - PYTHON_VERSION=pypy2.7-5.8.0
+  - &env_pypy2 PYTHON_VERSION=pypy2.7-5.8.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
   - &env_path PATH="$PYENV_ROOT/bin:$PATH"
   before_install:
@@ -56,9 +37,6 @@ _base_envs:
   - &install_python pyenv install --skip-existing --keep --verbose "$PYTHON_VERSION"
   - &switch_python pyenv shell "$PYTHON_VERSION"
   - &python_version python --version
-- &linux_python_base
-  <<: *linux_base
-  <<: *pyenv_base
 - &osx_python_base
   <<: *pyenv_base
   <<: *stage_test_osx
@@ -75,7 +53,6 @@ _base_envs:
   - brew --cache
 - &pure_python_base
   <<: *stage_test
-  sudo: false
   python: &mainstream_python 3.6
 - &pure_python_base_priority
   <<: *pure_python_base
@@ -107,18 +84,10 @@ jobs:
     python: 3.4
   - <<: *pure_python_base
     python: 3.5
-  - <<: *linux_python_base
-    python: pypy
-    env:
-    - PYTHON_VERSION=pypy2.7-5.8.0
-    - *env_pyenv
-    - *env_path
-  - <<: *linux_python_base
-    python: pypy3
-    env:
-    - PYTHON_VERSION=pypy3.5-5.8.0
-    - *env_pyenv
-    - *env_path
+  - <<: *pure_python_base
+    python: &pypy2 pypy2.7-5.8.0
+  - <<: *pure_python_base
+    python: &pypy3 pypy3.5-5.8.0
   - <<: *osx_python_base
     python: 2.6
     env:
@@ -162,16 +131,14 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    python: pypy2.7-5.8.0
+    python: *pypy2
     env:
-    - PYTHON_VERSION=pypy2.7-5.8.0
+    - *env_pypy2
     - *env_pyenv
     - *env_path
   # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
   - <<: *stage_deploy
     python: *mainstream_python
-    dist: trusty
-    group: edge
     services:
     - docker
     before_install:
