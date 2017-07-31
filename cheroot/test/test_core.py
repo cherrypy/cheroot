@@ -121,6 +121,22 @@ class HTTPTests(helper.CherootWebCase):
         self.assertEqual(response.fp.read(22), b'Malformed Request-Line')
         c.close()
 
+    def test_malformed_http_method(self):
+
+        if self.scheme == 'https':
+            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
+        else:
+            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c.putrequest('GeT', '/malformed_method_case')
+        c.putheader('Content-Type', 'text/plain')
+        c.endheaders()
+
+        response = c.getresponse()
+        self.status = str(response.status)
+        self.assertStatus(400)
+        self.body = response.fp.read(21)
+        self.assertBody('Malformed method name')
+
     def test_malformed_header(self):
 
         if self.scheme == 'https':
