@@ -61,7 +61,7 @@ from six.moves import queue
 from six.moves import urllib
 
 from . import errors, __version__
-from ._compat import ntob, unquote_to_bytes
+from ._compat import ntob, bton, ntou, unquote_to_bytes
 from .workers import threadpool
 from .makefile import MakeFile
 
@@ -734,6 +734,10 @@ class HTTPRequest(object):
             try:
                 # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
                 # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
+                if six.PY2:  # FIXME: Figure out better way to do this
+                    # Ref: https://stackoverflow.com/a/196392/595220 (like this?)
+                    """This is a dummy check for unicode in URI."""
+                    ntou(bton(uri, 'ascii'), 'ascii')
                 scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
             except UnicodeError:
                 self.simple_response('400 Bad Request', 'Malformed Request-URI')
