@@ -5,6 +5,5 @@ jobs:
     - image: python:3-alpine3.6
     steps:
     - checkout
-    - run:
-      - pip install tox
-      - tox
+    - run:  pip install tox
+    - run: tox
