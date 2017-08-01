@@ -1,3 +1,18 @@
+v5.8.0
+======
+
+- CI improvements:
+  * Switch to native PyPy support in Travis CI
+  * Take into account PEP 257 compliant modules
+  * Build wheel in Appveyor and store it as an artifact
+- Improve urllib support in ``_compat`` module
+- #38 via #39: Improve URI parsing:
+  * Make it compliant with RFC 7230, RFC 7231 and RFC 2616
+  * Fix setting of ``environ['QUERY_STRING']`` in WSGI
+  * Introduce ``proxy_mode`` and ``strict_mode`` argument in ``server.HTTPRequest``
+  * Fix decoding of unicode URIs in WSGI 1.0 gateway
+
+
 v5.7.0
 ======
 
