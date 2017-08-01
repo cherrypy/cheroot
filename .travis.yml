@@ -139,39 +139,15 @@ jobs:
   # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
   - <<: *stage_deploy
     python: *mainstream_python
-    services:
-    - docker
-    before_install:
-    # This must prevent further job progress
-    - |
-      if [ -z "$TRAVIS_TAG" ]
-      then
-        echo Not building wheels
-        exit 0
-      fi
     install: skip
-    script:
-    - mkdir dist  # so that it whould have priviliges of the current Travis user
-    - ./build_manylinux1_wheels.sh "cheroot"
+    script: skip
     deploy:
       provider: pypi
-      # `skip_cleanup: true` is required to preserve binary wheels, built
-      # inside of manylinux1 docker container during `script` step above.
-      skip_cleanup: true
       on:
         tags: true
         all_branches: true
       user: jaraco
-      # Although Travis CI instructs `setup.py` to build source distribution,
-      # which is default value for distribution option (`distribution: sdist`),
-      # it will also upload all wheels we've previously built in manylinux1
-      # docker container using `twine upload -r pypi dist/*` command.
-      # Also since commit https://github.com/travis-ci/dpl/commit/90b5e39
-      # it is default that Travis PYPI provider has `skip_upload_docs: true`
-      # set by default.
-      # Besides above, we don't do cleanup of `dist/*`, because it's being done
-      # by Travis CI PYPI deployment provider after upload, unconditionally.
-      distributions: source_dist
+      distributions: dists
       password:
         secure: RAfz06AINvz7bfij/YhfkAreRqamgxS8a6jSRNxntYhtJke3ZszUbIDag8+n1I+G5XT2LnMhHqPNR7Plc+AeMz7VXTuy+b81Li5kse20NYlPhd7mBVmTUpXtqYQashV5J39F4qkATBLznCOrMEomM07VTXjO/o2hmQuXniab2Uo=
 cache:

@@ -35,11 +35,11 @@ after_test:
       $wc = New-Object 'System.Net.WebClient'
       $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\junit-test-results.xml))
 
-deploy_script:
-  - ps: >-
-      if($env:appveyor_repo_tag -eq 'True') {
-          Invoke-Expression "python -m twine upload dist/* --username $env:PYPI_USERNAME --password $env:PYPI_PASSWORD"
-      }
+#deploy_script:
+#  - ps: >-
+#      if($env:appveyor_repo_tag -eq 'True') {
+#          Invoke-Expression "python -m twine upload dist/* --username $env:PYPI_USERNAME --password $env:PYPI_PASSWORD"
+#      }
 
 artifacts:
   - path: dist\*
