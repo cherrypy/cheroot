@@ -61,7 +61,7 @@ from six.moves import queue
 from six.moves import urllib
 
 from . import errors, __version__
-from ._compat import ntob, unquote_to_bytes
+from ._compat import ntob, bton, ntou, unquote_to_bytes
 from .workers import threadpool
 from .makefile import MakeFile
 
@@ -85,11 +85,10 @@ SPACE = b' '
 COLON = b':'
 SEMICOLON = b';'
 EMPTY = b''
-NUMBER_SIGN = b'#'
-QUESTION_MARK = b'?'
 ASTERISK = b'*'
 FORWARD_SLASH = b'/'
-quoted_slash = re.compile(b'(?i)%2F')
+QUOTED_SLASH = b'%2F'
+QUOTED_SLASH_REGEX = re.compile(b'(?i)' + QUOTED_SLASH)
 
 
 comma_separated_headers = [
@@ -598,12 +597,17 @@ class HTTPRequest(object):
     A HeaderReader instance or compatible reader.
     """
 
-    def __init__(self, server, conn):
+    def __init__(self, server, conn, proxy_mode=False, strict_mode=True):
         """Initialize HTTP request container instance.
 
         Args:
             server (HTTPServer): web server object receiving this request
             conn (HTTPConnection): HTTP connection object for this request
+            proxy_mode (bool): whether this HTTPServer should behave as a PROXY
+            server for certain requests
+            strict_mode (bool): whether we should return a 400 Bad Request when
+            we encounter a request that a HTTP compliant client should not be
+            making
         """
         self.server = server
         self.conn = conn
@@ -623,6 +627,8 @@ class HTTPRequest(object):
         self.close_connection = self.__class__.close_connection
         self.chunked_read = False
         self.chunked_write = self.__class__.chunked_write
+        self.proxy_mode = proxy_mode
+        self.strict_mode = strict_mode
 
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
@@ -698,42 +704,86 @@ class HTTPRequest(object):
             return False
 
         self.uri = uri
-        self.method = method
+        self.method = method.upper()
 
-        # uri may be an abs_path (including "http://host.domain.tld");
-        scheme, authority, path = self.parse_request_uri(uri)
-        if path is None:
-            self.simple_response('400 Bad Request',
-                                 'Invalid path in Request-URI.')
-            return False
-        if NUMBER_SIGN in path:
-            self.simple_response('400 Bad Request',
-                                 'Illegal #fragment in Request-URI.')
+        if self.strict_mode and method != self.method:
+            self.simple_response(
+                '400 Bad Request',
+                'Malformed method name: According to RFC 2616 (section 5.1.1) and its successors '
+                'RFC 7230 (section 3.1.1) and RFC 7231 (section 4.1) method names are case-sensitive and uppercase.'
+            )
             return False
 
-        if scheme:
+        scheme = authority = path = qs = EMPTY
+
+        if self.method == b'OPTIONS':
+            # TODO: cover this branch with tests
+            path = (uri
+                    # https://tools.ietf.org/html/rfc7230#section-5.3.4
+                    if self.proxy_mode or uri == ASTERISK
+                    else urllib.parse.urlsplit(uri).path)
+        elif self.method == b'CONNECT':
+            # TODO: cover this branch with tests
+            if not self.proxy_mode:
+                self.simple_response('400 Bad Request')
+                return False
+
+            # https://tools.ietf.org/html/rfc7230#section-5.3.3
+            authority = uri
+        else:
+            try:
+                # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
+                # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
+                if six.PY2:  # FIXME: Figure out better way to do this
+                    # Ref: https://stackoverflow.com/a/196392/595220 (like this?)
+                    """This is a dummy check for unicode in URI."""
+                    ntou(bton(uri, 'ascii'), 'ascii')
+                scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
+            except UnicodeError:
+                self.simple_response('400 Bad Request', 'Malformed Request-URI')
+                return False
+
+            if (self.strict_mode and not self.proxy_mode) and (scheme or authority):
+                self.simple_response('400 Bad Request',
+                                     'Absolute URI not allowed if server is not a proxy.')
+                return False
+
+            if fragment:
+                self.simple_response('400 Bad Request',
+                                     'Illegal #fragment in Request-URI.')
+                return False
+
+            if path is None:
+                # FIXME: It looks like this case cannot happen
+                self.simple_response('400 Bad Request',
+                                     'Invalid path in Request-URI.')
+                return False
+
+            # Unquote the path+params (e.g. "/this%20path" -> "/this path").
+            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+            #
+            # But note that "...a URI must be separated into its components
+            # before the escaped characters within those components can be
+            # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
+            # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
+            try:
+                # TODO: Figure out whether exception can really happen here.
+                # It looks like it's caught on urlsplit() call above.
+                atoms = [
+                    unquote_to_bytes(x)
+                    for x in QUOTED_SLASH_REGEX.split(path)
+                ]
+            except ValueError as ex:
+                self.simple_response('400 Bad Request', ex.args[0])
+                return False
+            path = QUOTED_SLASH.join(atoms)
+
+        if not path.startswith(FORWARD_SLASH):
+            path = FORWARD_SLASH + path
+
+        if scheme is not EMPTY:
             self.scheme = scheme
-
-        qs = EMPTY
-        if QUESTION_MARK in path:
-            path, qs = path.split(QUESTION_MARK, 1)
-
-        # Unquote the path+params (e.g. "/this%20path" -> "/this path").
-        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
-        #
-        # But note that "...a URI must be separated into its components
-        # before the escaped characters within those components can be
-        # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
-        # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
-        try:
-            atoms = [
-                unquote_to_bytes(x)
-                for x in quoted_slash.split(path)
-            ]
-        except ValueError as ex:
-            self.simple_response('400 Bad Request', ex.args[0])
-            return False
-        path = b'%2F'.join(atoms)
+        self.authority = authority
         self.path = path
 
         # Note that, like wsgiref and most other HTTP servers,
@@ -839,44 +889,6 @@ class HTTPRequest(object):
                 if ex.args[0] not in errors.socket_errors_to_ignore:
                     raise
         return True
-
-    def parse_request_uri(self, uri):
-        """Parse a Request-URI into (scheme, authority, path).
-
-        Note that Request-URI's must be one of::
-
-            Request-URI    = "*" | absoluteURI | abs_path | authority
-
-        Therefore, a Request-URI which starts with a double forward-slash
-        cannot be a "net_path"::
-
-            net_path      = "//" authority [ abs_path ]
-
-        Instead, it must be interpreted as an "abs_path" with an empty first
-        path segment::
-
-            abs_path      = "/"  path_segments
-            path_segments = segment *( "/" segment )
-            segment       = *pchar *( ";" param )
-            param         = *pchar
-        """
-        if uri == ASTERISK:
-            return None, None, uri
-
-        parsed = urllib.parse.urlparse(uri)
-        if parsed.scheme and QUESTION_MARK not in parsed.scheme:
-            # An absoluteURI.
-            # If there's a scheme (and it must be http or https), then:
-            # http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query
-            # ]]
-            return parsed.scheme, parsed.netloc, parsed.path
-
-        if uri.startswith(FORWARD_SLASH):
-            # An abs_path.
-            return None, None, uri
-        else:
-            # An authority.
-            return None, uri, None
 
     def respond(self):
         """Call the gateway and write its iterable output."""
