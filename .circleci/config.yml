@@ -2,8 +2,8 @@ version: 2
 jobs:
   build:
     docker:
-    - image: python:3-alpine3.6
+    - image: python:stretch
     steps:
     - checkout
-    - run:  pip install tox
+    - run: pip install tox
     - run: tox
