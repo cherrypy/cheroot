@@ -2,8 +2,8 @@ version: 2
 jobs:
   build:
     docker:
-    - image: python:stretch
+    - image: randomknowledge/docker-pyenv-tox
     steps:
     - checkout
     - run: pip install tox
-    - run: tox
+    - run: tox -e py27,py32,py33,py34,py35,py36
