@@ -17,7 +17,7 @@ import six
 import cheroot.server
 import cheroot.wsgi
 
-from cheroot._compat import HTTPSConnection, ntob
+from cheroot._compat import HTTPSConnection, ntob, bton
 from cheroot.test import webtest
 
 log = logging.getLogger(__name__)
@@ -156,7 +156,15 @@ class Controller(object):
     def __call__(self, environ, start_response):
         req, resp = Request(environ), Response()
         try:
-            handler = getattr(self, environ['PATH_INFO'].lstrip('/').replace('/', '_'))
+            # Recode handler name as Python supports unicode method names
+            # and we should try match those first.
+            # Source of the idea: cherrypy._cpwsgi.AppResponse.recode_path_qs
+            latin1_handler_name = environ['PATH_INFO'].lstrip('/').replace('/', '_')
+            try:
+                unicode_handler_name = bton(ntob(latin1_handler_name), 'utf-8')
+                handler = getattr(self, unicode_handler_name)
+            except (UnicodeError, AttributeError):
+                handler = getattr(self, latin1_handler_name)
         except AttributeError:
             resp.status = '404 Not Found'
         else:
