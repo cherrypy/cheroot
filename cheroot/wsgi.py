@@ -230,11 +230,7 @@ class Gateway_10(Gateway):
             # the *real* server protocol is (and what features to support).
             # See http://www.faqs.org/rfcs/rfc2145.html.
             'ACTUAL_SERVER_PROTOCOL': req.server.protocol,
-            # Attention! We are using UTF-8 here, because `unquote_to_bytes`
-            # call which is used to process URI in server module uses that
-            # internally and it's a part of stdlib
-            # Ref: https://github.com/python/cpython/blob/90e01e5/Lib/urllib/parse.py#L566-L621
-            'PATH_INFO': bton(req.path, 'utf-8'),
+            'PATH_INFO': bton(req.path),
             'QUERY_STRING': bton(req.qs),
             'REMOTE_ADDR': req.conn.remote_addr or '',
             'REMOTE_PORT': str(req.conn.remote_port or ''),
