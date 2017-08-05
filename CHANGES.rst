@@ -1,3 +1,12 @@
+v5.8.1
+======
+
+- CI improvements:
+  * Add basic working Circle CI v2 config
+
+- Fix URI encoding bug introduced in #39
+  * Improve cheroot.test.helper.Controller to properly match unicode
+
 v5.8.0
 ======
 
