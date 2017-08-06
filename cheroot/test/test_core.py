@@ -56,8 +56,7 @@ class HTTPTests(helper.CherootWebCase):
         self.assertBody(b'test=True')
 
     def test_parse_uri(self):
-        for uri in ['/hello', '/query_string?test=True', 'hello',
-                    url_quote('привіт'),
+        for uri in ['/hello', '/query_string?test=True',
                     '/{0}?{1}={2}'.format(
                         *map(url_quote, ('Юххууу', 'ї', 'йо'))
                     )]:
@@ -81,6 +80,11 @@ class HTTPTests(helper.CherootWebCase):
         assert response.status == HTTP_BAD_REQUEST
         assert response.fp.read(21) == b'Malformed Request-URI'
         c.close()
+
+        for uri in ['hello',
+                    url_quote('привіт')]:
+            self.getPage(uri)
+            self.assertStatus(HTTP_BAD_REQUEST)
 
     def test_parse_uri_absolute_uri(self):
         self.getPage('http://google.com/')

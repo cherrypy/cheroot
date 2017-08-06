@@ -1,3 +1,10 @@
+v5.8.2
+======
+
+- Fix #39 regression. Add HTTP request line check:
+  absolute URI path must start with a
+  forward slash ("/").
+
 v5.8.1
 ======
 

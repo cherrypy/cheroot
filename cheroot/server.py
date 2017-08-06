@@ -732,8 +732,6 @@ class HTTPRequest(object):
             authority = uri
         else:
             try:
-                # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
-                # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
                 if six.PY2:  # FIXME: Figure out better way to do this
                     # Ref: https://stackoverflow.com/a/196392/595220 (like this?)
                     """This is a dummy check for unicode in URI."""
@@ -743,9 +741,23 @@ class HTTPRequest(object):
                 self.simple_response('400 Bad Request', 'Malformed Request-URI')
                 return False
 
-            if (self.strict_mode and not self.proxy_mode) and (scheme or authority):
+            uri_is_absolute_form = (scheme or authority)
+
+            if (self.strict_mode and not self.proxy_mode) and uri_is_absolute_form:
+                # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
+                """Absolute URI is only allowed within proxies."""
                 self.simple_response('400 Bad Request',
                                      'Absolute URI not allowed if server is not a proxy.')
+                return False
+
+            if self.strict_mode and not uri.startswith(FORWARD_SLASH) and not uri_is_absolute_form:
+                # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
+                """Path should start with a forward slash."""
+                self.simple_response('400 Bad Request',
+                                     'Invalid path in Request-URI: '
+                                     'request-target must contain origin-form '
+                                     'which starts with absolute-path '
+                                     '(URI starting with a slash "/").')
                 return False
 
             if fragment:
