@@ -12,6 +12,12 @@ from cheroot._compat import (
 from cheroot.test import helper
 
 
+HTTP_BAD_REQUEST = 400
+HTTP_LENGTH_REQUIRED = 411
+HTTP_NOT_FOUND = 404
+HTTP_OK = 200
+
+
 class HTTPTests(helper.CherootWebCase):
 
     def setup_server(cls):
@@ -41,12 +47,12 @@ class HTTPTests(helper.CherootWebCase):
 
     def test_normal_request(self):
         self.getPage('/hello')
-        self.assertStatus(200)
+        self.assertStatus(HTTP_OK)
         self.assertBody(b'Hello world!')
 
     def test_query_string_request(self):
         self.getPage('/query_string?test=True')
-        self.assertStatus(200)
+        self.assertStatus(HTTP_OK)
         self.assertBody(b'test=True')
 
     def test_parse_uri(self):
@@ -56,7 +62,7 @@ class HTTPTests(helper.CherootWebCase):
                         *map(url_quote, ('Юххууу', 'ї', 'йо'))
                     )]:
             self.getPage(uri)
-            self.assertStatus(200)
+            self.assertStatus(HTTP_OK)
 
     def test_parse_uri_invalid_uri(self):
         if self.scheme == 'https':
@@ -72,22 +78,22 @@ class HTTPTests(helper.CherootWebCase):
             # "http.client now always assumes HTTP/1.x compliant servers."
             response = c.response_class(c.sock, method='GET')
         response.begin()
-        assert response.status == 400
+        assert response.status == HTTP_BAD_REQUEST
         assert response.fp.read(21) == b'Malformed Request-URI'
         c.close()
 
     def test_parse_uri_absolute_uri(self):
         self.getPage('http://google.com/')
-        self.assertStatus(400)
+        self.assertStatus(HTTP_BAD_REQUEST)
         self.assertBody(b'Absolute URI not allowed if server is not a proxy.')
 
     def test_parse_uri_asterisk_uri(self):
         self.getPage('*', method='OPTIONS')
-        self.assertStatus(404)
+        self.assertStatus(HTTP_NOT_FOUND)
 
     def test_parse_uri_fragment_uri(self):
         self.getPage('/hello?test=something#fake')
-        self.assertStatus(400)
+        self.assertStatus(HTTP_BAD_REQUEST)
         self.assertBody(b'Illegal #fragment in Request-URI.')
 
     def test_no_content_length(self):
@@ -104,7 +110,7 @@ class HTTPTests(helper.CherootWebCase):
         response = c.getresponse()
         self.body = response.fp.read()
         self.status = str(response.status)
-        self.assertStatus(200)
+        self.assertStatus(HTTP_OK)
         self.assertBody(b'Hello world!')
 
     def test_content_length_required(self):
@@ -121,7 +127,7 @@ class HTTPTests(helper.CherootWebCase):
         self.body = response.fp.read()
 
         self.status = str(response.status)
-        self.assertStatus(411)
+        self.assertStatus(HTTP_LENGTH_REQUIRED)
 
     def test_malformed_request_line(self):
         # Test missing version in Request-Line
@@ -139,7 +145,7 @@ class HTTPTests(helper.CherootWebCase):
             # "http.client now always assumes HTTP/1.x compliant servers."
             response = c.response_class(c.sock, method='GET')
         response.begin()
-        self.assertEqual(response.status, 400)
+        self.assertEqual(response.status, HTTP_BAD_REQUEST)
         self.assertEqual(response.fp.read(22), b'Malformed Request-Line')
         c.close()
 
@@ -155,7 +161,7 @@ class HTTPTests(helper.CherootWebCase):
 
         response = c.getresponse()
         self.status = str(response.status)
-        self.assertStatus(400)
+        self.assertStatus(HTTP_BAD_REQUEST)
         self.body = response.fp.read(21)
         self.assertBody('Malformed method name')
 
@@ -173,7 +179,7 @@ class HTTPTests(helper.CherootWebCase):
 
         response = c.getresponse()
         self.status = str(response.status)
-        self.assertStatus(400)
+        self.assertStatus(HTTP_BAD_REQUEST)
         self.body = response.fp.read(20)
         self.assertBody('Illegal header line.')
 
@@ -197,7 +203,7 @@ class HTTPTests(helper.CherootWebCase):
         response = c.response_class(c.sock, method='GET')
         try:
             response.begin()
-            self.assertEqual(response.status, 400)
+            self.assertEqual(response.status, HTTP_BAD_REQUEST)
             self.assertEqual(response.fp.read(22), b'Malformed Request-Line')
             c.close()
         except socket.error as ex:
