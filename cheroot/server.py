@@ -697,8 +697,18 @@ class HTTPRequest(object):
 
         try:
             method, uri, req_protocol = request_line.strip().split(SPACE, 2)
-            req_protocol_str = req_protocol.decode('ascii')
-            rp = int(req_protocol_str[5]), int(req_protocol_str[7])
+            if not req_protocol.startswith(b'HTTP/'):
+                self.simple_response(
+                    '400 Bad Request', 'Malformed Request-Line: bad protocol'
+                )
+                return False
+            rp = req_protocol[5:].split(b'.', 1)
+            rp = tuple(map(int, rp))  # Minor.Major must be threat as integers
+            if rp > (1, 1):
+                self.simple_response(
+                    '505 HTTP Version Not Supported', 'Cannot fulfill request'
+                )
+                return False
         except (ValueError, IndexError):
             self.simple_response('400 Bad Request', 'Malformed Request-Line')
             return False

@@ -16,6 +16,7 @@ HTTP_BAD_REQUEST = 400
 HTTP_LENGTH_REQUIRED = 411
 HTTP_NOT_FOUND = 404
 HTTP_OK = 200
+HTTP_VERSION_NOT_SUPPORTED = 505
 
 
 class HTTPTests(helper.CherootWebCase):
@@ -134,23 +135,48 @@ class HTTPTests(helper.CherootWebCase):
         self.assertStatus(HTTP_LENGTH_REQUIRED)
 
     def test_malformed_request_line(self):
-        # Test missing version in Request-Line
+        """Test missing or invalid HTTP version in Request-Line."""
 
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        c._output(b'GET /')
-        c._send_output()
-        if hasattr(c, 'strict'):
-            response = c.response_class(c.sock, strict=c.strict, method='GET')
-        else:
+        def _get_conn():
+            conn_cls = (
+                HTTPSConnection
+                if self.scheme == 'https'
+                else HTTPConnection
+            )
+            return conn_cls('%s:%s' % (self.interface(), self.PORT))
+
+        def _get_resp(connection, method='GET'):
+            c = connection
+            kwargs = {'strict': c.strict} if hasattr(c, 'strict') else {}
             # Python 3.2 removed the 'strict' feature, saying:
             # "http.client now always assumes HTTP/1.x compliant servers."
-            response = c.response_class(c.sock, method='GET')
+            return c.response_class(c.sock, method='GET', **kwargs)
+
+        c = _get_conn()
+        c._output(b'GET /')
+        c._send_output()
+        response = _get_resp(c, method='GET')
         response.begin()
-        self.assertEqual(response.status, HTTP_BAD_REQUEST)
-        self.assertEqual(response.fp.read(22), b'Malformed Request-Line')
+        assert response.status == HTTP_BAD_REQUEST
+        assert response.fp.read(22) == b'Malformed Request-Line'
+        c.close()
+
+        c = _get_conn()
+        c._output(b'GET / HTTPS/1.1')
+        c._send_output()
+        response = _get_resp(c, method='GET')
+        response.begin()
+        assert response.status == HTTP_BAD_REQUEST
+        assert response.fp.read(36) == b'Malformed Request-Line: bad protocol'
+        c.close()
+
+        c = _get_conn()
+        c._output(b'GET / HTTP/2.15')
+        c._send_output()
+        response = _get_resp(c, method='GET')
+        response.begin()
+        assert response.status == HTTP_VERSION_NOT_SUPPORTED
+        assert response.fp.read(22) == b'Cannot fulfill request'
         c.close()
 
     def test_malformed_http_method(self):
