@@ -21,6 +21,7 @@ HTTP_VERSION_NOT_SUPPORTED = 505
 
 class HTTPTests(helper.CherootWebCase):
 
+    @classmethod
     def setup_server(cls):
         class Root(helper.Controller):
 
@@ -44,7 +45,27 @@ class HTTPTests(helper.CherootWebCase):
 
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.max_request_body_size = 30000000
-    setup_server = classmethod(setup_server)
+
+    def _get_http_connection(self):
+        """Instantiate connection object depending on scheme"""
+        return (
+            HTTPSConnection
+            if self.scheme == 'https'
+            else HTTPConnection
+        )(
+            '{interface}:{port}'.format(
+                interface=self.interface(),
+                port=self.PORT
+            )
+        )
+
+    @staticmethod
+    def _get_http_response(connection, method='GET'):
+        c = connection
+        kwargs = {'strict': c.strict} if hasattr(c, 'strict') else {}
+        # Python 3.2 removed the 'strict' feature, saying:
+        # "http.client now always assumes HTTP/1.x compliant servers."
+        return c.response_class(c.sock, method=method, **kwargs)
 
     def test_normal_request(self):
         self.getPage('/hello')
@@ -65,18 +86,10 @@ class HTTPTests(helper.CherootWebCase):
             self.assertStatus(HTTP_OK)
 
     def test_parse_uri_invalid_uri(self):
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self._get_http_connection()
         c._output(ntob('GET /йопта! HTTP/1.1', 'utf-8'))
         c._send_output()
-        if hasattr(c, 'strict'):
-            response = c.response_class(c.sock, strict=c.strict, method='GET')
-        else:
-            # Python 3.2 removed the 'strict' feature, saying:
-            # "http.client now always assumes HTTP/1.x compliant servers."
-            response = c.response_class(c.sock, method='GET')
+        response = self._get_http_response(c, method='GET')
         response.begin()
         assert response.status == HTTP_BAD_REQUEST
         assert response.fp.read(21) == b'Malformed Request-URI'
@@ -107,10 +120,7 @@ class HTTPTests(helper.CherootWebCase):
         # the request's message-headers."
         #
         # Send a message with neither header and no body.
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self._get_http_connection()
         c.request('POST', '/no_body')
         response = c.getresponse()
         self.body = response.fp.read()
@@ -123,10 +133,7 @@ class HTTPTests(helper.CherootWebCase):
         # Verify that CP times out the socket and responds
         # with 411 Length Required.
 
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self._get_http_connection()
         c.request('POST', '/body_required')
         response = c.getresponse()
         self.body = response.fp.read()
@@ -137,43 +144,28 @@ class HTTPTests(helper.CherootWebCase):
     def test_malformed_request_line(self):
         """Test missing or invalid HTTP version in Request-Line."""
 
-        def _get_conn():
-            conn_cls = (
-                HTTPSConnection
-                if self.scheme == 'https'
-                else HTTPConnection
-            )
-            return conn_cls('%s:%s' % (self.interface(), self.PORT))
-
-        def _get_resp(connection, method='GET'):
-            c = connection
-            kwargs = {'strict': c.strict} if hasattr(c, 'strict') else {}
-            # Python 3.2 removed the 'strict' feature, saying:
-            # "http.client now always assumes HTTP/1.x compliant servers."
-            return c.response_class(c.sock, method='GET', **kwargs)
-
-        c = _get_conn()
+        c = self._get_http_connection()
         c._output(b'GET /')
         c._send_output()
-        response = _get_resp(c, method='GET')
+        response = self._get_http_response(c, method='GET')
         response.begin()
         assert response.status == HTTP_BAD_REQUEST
         assert response.fp.read(22) == b'Malformed Request-Line'
         c.close()
 
-        c = _get_conn()
+        c = self._get_http_connection()
         c._output(b'GET / HTTPS/1.1')
         c._send_output()
-        response = _get_resp(c, method='GET')
+        response = self._get_http_response(c, method='GET')
         response.begin()
         assert response.status == HTTP_BAD_REQUEST
         assert response.fp.read(36) == b'Malformed Request-Line: bad protocol'
         c.close()
 
-        c = _get_conn()
+        c = self._get_http_connection()
         c._output(b'GET / HTTP/2.15')
         c._send_output()
-        response = _get_resp(c, method='GET')
+        response = self._get_http_response(c, method='GET')
         response.begin()
         assert response.status == HTTP_VERSION_NOT_SUPPORTED
         assert response.fp.read(22) == b'Cannot fulfill request'
@@ -181,10 +173,7 @@ class HTTPTests(helper.CherootWebCase):
 
     def test_malformed_http_method(self):
 
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self._get_http_connection()
         c.putrequest('GeT', '/malformed_method_case')
         c.putheader('Content-Type', 'text/plain')
         c.endheaders()
@@ -197,10 +186,7 @@ class HTTPTests(helper.CherootWebCase):
 
     def test_malformed_header(self):
 
-        if self.scheme == 'https':
-            c = HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
-        else:
-            c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = self._get_http_connection()
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
         # See http://www.bitbucket.org/cherrypy/cherrypy/issue/941
