@@ -51,5 +51,5 @@ socket_errors_nonblocking = plat_specific_errors(
     'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
 
 if sys.platform == 'darwin':
-    socket_errors_to_ignore.append(plat_specific_errors('EPROTOTYPE'))
-    socket_errors_nonblocking.append(plat_specific_errors('EPROTOTYPE'))
+    socket_errors_to_ignore.extend(plat_specific_errors('EPROTOTYPE'))
+    socket_errors_nonblocking.extend(plat_specific_errors('EPROTOTYPE'))
