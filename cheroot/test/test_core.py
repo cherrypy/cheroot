@@ -43,6 +43,12 @@ class HTTPTests(helper.CherootWebCase):
         setattr(Root, 'привіт', Root.hello)
         setattr(Root, 'Юххууу', Root.hello)
 
+        setattr(Root, '*',
+                lambda self, req, resp: ('Got asterisk URI path with ' +
+                                         req.environ.get('REQUEST_METHOD',
+                                                         'NO METHOD FOUND') +
+                                         ' method'))
+
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.max_request_body_size = 30000000
 
@@ -107,7 +113,8 @@ class HTTPTests(helper.CherootWebCase):
 
     def test_parse_uri_asterisk_uri(self):
         self.getPage('*', method='OPTIONS')
-        self.assertStatus(HTTP_NOT_FOUND)
+        self.assertStatus(HTTP_OK)
+        self.assertBody(b'Got asterisk URI path with OPTIONS method')
 
     def test_parse_uri_fragment_uri(self):
         self.getPage('/hello?test=something#fake')
