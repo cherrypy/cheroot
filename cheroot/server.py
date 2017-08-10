@@ -726,31 +726,51 @@ class HTTPRequest(object):
 
         scheme = authority = path = qs = EMPTY
 
+        try:
+            if six.PY2:  # FIXME: Figure out better way to do this
+                # Ref: https://stackoverflow.com/a/196392/595220 (like this?)
+                """This is a dummy check for unicode in URI."""
+                ntou(bton(uri, 'ascii'), 'ascii')
+            scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
+        except UnicodeError:
+            self.simple_response('400 Bad Request', 'Malformed Request-URI')
+            return False
+
         if self.method == b'OPTIONS':
             # TODO: cover this branch with tests
             path = (uri
                     # https://tools.ietf.org/html/rfc7230#section-5.3.4
                     if self.proxy_mode or uri == ASTERISK
-                    else urllib.parse.urlsplit(uri).path)
+                    else path)
         elif self.method == b'CONNECT':
             # TODO: cover this branch with tests
             if not self.proxy_mode:
-                self.simple_response('400 Bad Request')
+                self.simple_response('405 Method Not Allowed')
                 return False
 
-            # https://tools.ietf.org/html/rfc7230#section-5.3.3
-            authority = uri
-        else:
+            # `urlsplit()` above parses "example.com:3128" as path part of URI.
+            # this is a workaround, which makes it detect netloc correctly
+            uri_split = urllib.parse.urlsplit(b'//' + uri)
+            _scheme, _authority, _path, _qs, _fragment = uri_split
+            _port = EMPTY
             try:
-                if six.PY2:  # FIXME: Figure out better way to do this
-                    # Ref: https://stackoverflow.com/a/196392/595220 (like this?)
-                    """This is a dummy check for unicode in URI."""
-                    ntou(bton(uri, 'ascii'), 'ascii')
-                scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
-            except UnicodeError:
-                self.simple_response('400 Bad Request', 'Malformed Request-URI')
+                _port = uri_split.port
+            except ValueError:
+                pass
+
+            # FIXME: use third-party validation to make checks against RFC
+            # the validation doesn't take into account, that urllib parses
+            # invalid URIs without raising errors
+            # https://tools.ietf.org/html/rfc7230#section-5.3.3
+            if _authority != uri or not _port or any((_scheme, _path, _qs, _fragment)):
+                self.simple_response('400 Bad Request',
+                                     'Invalid path in Request-URI: request-'
+                                     'target must match authority-form.')
                 return False
 
+            authority = path = _authority
+            scheme = qs = fragment = EMPTY
+        else:
             uri_is_absolute_form = (scheme or authority)
 
             if (self.strict_mode and not self.proxy_mode) and uri_is_absolute_form:
