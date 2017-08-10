@@ -73,6 +73,10 @@ class HTTPTests(helper.CherootWebCase):
         # "http.client now always assumes HTTP/1.x compliant servers."
         return c.response_class(c.sock, method=method, **kwargs)
 
+    def test_http_connect_request(self):
+        self.getPage('/anything', method='CONNECT')
+        self.assertStatus(405)
+
     def test_normal_request(self):
         self.getPage('/hello')
         self.assertStatus(HTTP_OK)
