@@ -11,6 +11,10 @@
 
 .. image:: https://img.shields.io/pypi/dm/cheroot.svg
 
+.. image:: https://codecov.io/gh/cherrypy/cheroot/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/cherrypy/cheroot
+   :alt: codecov
+
 Cheroot is the high-performance, pure-Python HTTP server used by CherryPy.
 
 License
