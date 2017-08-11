@@ -1729,7 +1729,7 @@ class Gateway(object):
 
     def respond(self):
         """Process the current request. Must be overridden in a subclass."""
-        raise NotImplemented
+        raise NotImplementedError
 
 
 # These may either be ssl.Adapter subclasses or the string names
