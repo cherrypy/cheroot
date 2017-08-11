@@ -724,8 +724,6 @@ class HTTPRequest(object):
             )
             return False
 
-        scheme = authority = path = qs = EMPTY
-
         try:
             if six.PY2:  # FIXME: Figure out better way to do this
                 # Ref: https://stackoverflow.com/a/196392/595220 (like this?)
