@@ -89,7 +89,7 @@ class Gateway(server.Gateway):
         Args:
             req (HTTPRequest): current HTTP request
         """
-        self.req = req
+        super(Gateway, self).__init__(req)
         self.started_response = False
         self.env = self.get_environ()
         self.remaining_bytes_out = None
