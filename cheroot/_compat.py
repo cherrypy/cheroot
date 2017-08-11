@@ -118,25 +118,6 @@ def base64_decode(n, encoding='ISO-8859-1'):
         return b
 
 
-try:
-    sorted = sorted
-except NameError:
-    def sorted(i):
-        """Return sorted sequence."""
-        i = i[:]
-        i.sort()
-        return i
-
-try:
-    reversed = reversed
-except NameError:
-    def reversed(x):
-        """Return sequence in reversed order."""
-        i = len(x)
-        while i > 0:
-            i -= 1
-            yield x[i]
-
 from six.moves.urllib.parse import (  # noqa: F401
     quote, quote_plus,
     unquote as parse_unquote,
