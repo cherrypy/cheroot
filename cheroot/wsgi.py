@@ -289,7 +289,7 @@ class Gateway_u0(Gateway_10):
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
         req = self.req
-        env_10 = super(Gateway_u0, self).get_environ(self)
+        env_10 = super(Gateway_u0, self).get_environ()
         env = dict(map(self._decode_key, env_10.items()))
 
         # Request-URI
