@@ -30,7 +30,11 @@ params = dict(
     ],
     extras_require={
         'testing': [
+            'coverage',  # inspects tests coverage
+            'codecov',   # sends tests coverage to codecov.io
+
             'pytest>=2.8',
+            'pytest-cov',
             'pytest-sugar',
             'backports.unittest_mock',
             'portend',
