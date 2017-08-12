@@ -108,7 +108,7 @@ class Gateway(server.Gateway):
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
-        raise NotImplemented
+        raise NotImplementedError
 
     def respond(self):
         """Process the current request.
