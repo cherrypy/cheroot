@@ -1,4 +1,4 @@
 .
 jaraco.packaging>=3.2
 rst.linker>=1.9
-sphinx
+sphinx==1.6.3
