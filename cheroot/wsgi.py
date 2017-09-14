@@ -264,9 +264,9 @@ class Gateway_10(Gateway):
             # address unix domain sockets. But it's better than nothing.
             env['SERVER_PORT'] = ''
             try:
-                env['_REMOTE_PID'] = str(req_conn.peer_pid)
-                env['_REMOTE_UID'] = str(req_conn.peer_uid)
-                env['_REMOTE_GID'] = str(req_conn.peer_gid)
+                env['X_REMOTE_PID'] = str(req_conn.peer_pid)
+                env['X_REMOTE_UID'] = str(req_conn.peer_uid)
+                env['X_REMOTE_GID'] = str(req_conn.peer_gid)
             except RuntimeError:
                 """Unsupported by current kernel or socket error happened, or unsupported socket type."""
                 pass
