@@ -26,9 +26,7 @@ as you want in one instance by using a PathInfoDispatcher::
 """
 
 import sys
-import struct
 import six
-import socket
 from six.moves import filter
 
 from . import server
