@@ -58,6 +58,11 @@ import logging
 import platform
 import struct
 
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
+
 import six
 from six.moves import queue
 from six.moves import urllib
@@ -1141,6 +1146,8 @@ class HTTPConnection(object):
         self.wfile = makefile(sock, 'wb', self.wbufsize)
         self.requests_seen = 0
 
+        self.get_peer_creds = lru_cache(maxsize=1)(self.get_peer_creds)  # https://stackoverflow.com/a/14946506/595220
+
     def communicate(self):
         """Read each request and respond appropriately."""
         request_seen = False
@@ -1238,7 +1245,7 @@ class HTTPConnection(object):
             # Apache does, but not today.
             pass
 
-    def get_peer_creds(self):
+    def get_peer_creds(self):  # LRU cached on per-instance basis, see __init__
         """Return the PID, UID, GID tuple of the peer socket in the case of UNIX domain sockets.
 
         This function uses SO_PEERCRED to query the UNIX PID, UID, GID of the
