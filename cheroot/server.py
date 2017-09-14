@@ -80,6 +80,15 @@ if platform.system() == 'Windows' and hasattr(socket, 'AF_INET6'):
         socket.IPV6_V6ONLY = 27
 
 
+if not hasattr(socket, 'SO_PEERCRED'):
+    """
+    NOTE: the value for SO_PEERCRED can be architecture specific, in
+    which case the getsockopt() will hopefully fail. The arch
+    specific value could be derived from platform.processor()
+    """
+    socket.SO_PEERCRED = 17
+
+
 LF = b'\n'
 CRLF = b'\r\n'
 TAB = b'\t'
@@ -1229,27 +1238,57 @@ class HTTPConnection(object):
             # Apache does, but not today.
             pass
 
-    def get_peer_uid(self):
-        """Returns the UID of the peer socket in the case of UNIX domain sockets
+    def get_peer_creds(self):
+        """Return the PID, UID, GID tuple of the peer socket in the case of UNIX domain sockets.
 
-        This function uses SO_PEERCRED to query the UNIX UID of the peer, which
-        is only available if the bind address is a UNIX domain socket.
+        This function uses SO_PEERCRED to query the UNIX PID, UID, GID of the
+        peer, which is only available if the bind address is a UNIX domain socket.
+
+        Raises:
+            NotImplementedError: in case of unsupported socket type
+            RuntimeError: in case of SO_PEERCRED lookup unsupported
         """
+        PEERCRED_STRUCT_DEF = '3i'
 
         if self.socket.family != socket.AF_UNIX:
-            return None
+            raise NotImplementedError(
+                'SO_PEERCRED is only supported in Linux kernel and WSL'
+            )
 
-        # NOTE: the value for SO_PEERCRED can be architecture specific, in
-        # which case the getsockopt() will hopefully fail.  The arch
-        # specific value could be derived from platform.processor()
-        SO_PEERCRED = getattr(socket, 'SO_PEERCRED', 17)
         try:
-            creds = self.socket.getsockopt(socket.SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
-            pid, uid, gid = struct.unpack('3i', creds)
-            return uid
-        except socket.error:
-            pass
+            peer_creds = self.socket.getsockopt(
+                socket.SOL_SOCKET, socket.SO_PEERCRED,
+                struct.calcsize(PEERCRED_STRUCT_DEF)
+            )
+        except socket.error as socket_err:
+            """Non-Linux kernels don't support SO_PEERCRED.
 
+            Ref: http://welz.org.za/notes/on-peer-cred.html
+            Ref: https://github.com/daveti/tcpSockHack
+            Ref: https://msdn.microsoft.com/en-us/commandline/wsl/release_notes#build-15025
+            """
+            six.raise_from(RuntimeError, socket_err)  # 3.6+: raise RuntimeError from socket_err
+        else:
+            pid, uid, gid = struct.unpack(PEERCRED_STRUCT_DEF, peer_creds)
+            return pid, uid, gid
+
+    @property
+    def peer_pid(self):
+        """Return the id of the connected peer process."""
+        pid, _, _ = self.get_peer_creds()
+        return pid
+
+    @property
+    def peer_uid(self):
+        """Return the user id of the connected peer process."""
+        _, uid, _ = self.get_peer_creds()
+        return uid
+
+    @property
+    def peer_gid(self):
+        """Return the group id of the connected peer process."""
+        _, _, gid = self.get_peer_creds()
+        return gid
 
     def _close_kernel_socket(self):
         """Close kernel socket in outdated Python versions.

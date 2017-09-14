@@ -232,6 +232,7 @@ class Gateway_10(Gateway):
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
         req = self.req
+        req_conn = req.conn
         env = {
             # set a non-standard environ entry so the WSGI app can know what
             # the *real* server protocol is (and what features to support).
@@ -239,8 +240,8 @@ class Gateway_10(Gateway):
             'ACTUAL_SERVER_PROTOCOL': req.server.protocol,
             'PATH_INFO': bton(req.path),
             'QUERY_STRING': bton(req.qs),
-            'REMOTE_ADDR': req.conn.remote_addr or '',
-            'REMOTE_PORT': str(req.conn.remote_port or ''),
+            'REMOTE_ADDR': req_conn.remote_addr or '',
+            'REMOTE_PORT': str(req_conn.remote_port or ''),
             'REQUEST_METHOD': bton(req.method),
             'REQUEST_URI': bton(req.uri),
             'SCRIPT_NAME': '',
@@ -262,9 +263,13 @@ class Gateway_10(Gateway):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
             env['SERVER_PORT'] = ''
-            uid = self.req.conn.get_peer_uid()
-            if uid is not None:
-                env['_REMOTE_UID'] = str(uid)
+            try:
+                env['_REMOTE_PID'] = str(req_conn.peer_pid)
+                env['_REMOTE_UID'] = str(req_conn.peer_uid)
+                env['_REMOTE_GID'] = str(req_conn.peer_gid)
+            except RuntimeError:
+                """Unsupported by current kernel or socket error happened, or unsupported socket type."""
+                pass
         else:
             env['SERVER_PORT'] = str(req.server.bind_addr[1])
 
