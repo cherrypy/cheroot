@@ -61,6 +61,14 @@ _base_envs:
   <<: *stage_lint
   python: *mainstream_python
   after_failure: skip
+python:
+- 2.6
+- 2.7
+- 3.3
+- 3.4
+- 3.5
+- *pypy2
+- &pypy3 pypy3.5-5.8.0
 jobs:
   fast_finish: true
   allow_failures:
@@ -74,20 +82,6 @@ jobs:
     # mainstream here (3.6)
   - <<: *pure_python_base_priority
     python: nightly
-  - <<: *pure_python_base
-    python: 2.6
-  - <<: *pure_python_base
-    python: 2.7
-  - <<: *pure_python_base
-    python: 3.3
-  - <<: *pure_python_base
-    python: 3.4
-  - <<: *pure_python_base
-    python: 3.5
-  - <<: *pure_python_base
-    python: *pypy2
-  - <<: *pure_python_base
-    python: &pypy3 pypy3.5-5.8.0
   - <<: *osx_python_base
     python: 2.6
     env:
