@@ -5,15 +5,15 @@ sudo: false
 group: edge
 _base_envs:
 - &stage_lint
-  stage: lint
+  stage: &stage_lint_name lint
 - &stage_test
-  stage: test
+  stage: &stage_test_name test
 - &stage_test_priority
-  stage: test against latest Python versions first (under GNU/Linux)
+  stage: &stage_test_priority_name test against latest Python versions first (under GNU/Linux)
 - &stage_test_osx
-  stage: test under OS X (last chance to fail before deploy available)
+  stage: &stage_test_osx_name test under OS X (last chance to fail before deploy available)
 - &stage_deploy
-  stage: upload new version of python package to PYPI (only for tagged commits)
+  stage: &stage_deploy_name upload new version of python package to PYPI (only for tagged commits)
 - &pyenv_base
   <<: *stage_test
   language: generic
@@ -138,7 +138,6 @@ jobs:
     - *env_path
   # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
   - <<: *stage_deploy
-    if: tag IS present
     python: *mainstream_python
     install: skip
     script: skip
@@ -173,6 +172,11 @@ after_failure:
 - py_log=/home/travis/build/cherrypy/cheroot/.tox/python/log/python-0.log
 - echo Outputting python invocation log from $py_log
 - cat $py_log
-branches:
-  except:
-  - skeleton
+stages:
+- *stage_lint_name
+- *stage_test_priority_name
+- *stage_test_name
+- name: *stage_test_osx_name
+  if: type IN (api, cron) OR tag IS present
+- name: *stage_deploy_name
+  if: tag IS present
