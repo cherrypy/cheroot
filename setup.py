@@ -29,6 +29,13 @@ params = dict(
         'six',
     ],
     extras_require={
+        'docs': [
+            'sphinx',
+            'docutils',
+            'alabaster',
+            'rst.linker>=1.9',
+            'jaraco.packaging>=3.2',
+        ],
         'testing': [
             'coverage',  # inspects tests coverage
             'codecov',   # sends tests coverage to codecov.io
