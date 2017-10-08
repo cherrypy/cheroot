@@ -74,6 +74,13 @@ jobs:
   allow_failures:
   - env: &pep257_env TOXENV=pre-commit-pep257
   include:
+  - <<: *osx_python_base
+    stage: test_jython
+    python: 2.7
+    env:
+    - PYTHON_VERSION=jython-2.7.0
+    - *env_pyenv
+    - *env_path
   - <<: *lint_python_base
     env: TOXENV=pre-commit
   - <<: *lint_python_base
@@ -169,6 +176,7 @@ after_failure:
 - echo Outputting python invocation log from $py_log
 - cat $py_log
 stages:
+- test_jython
 - *stage_lint_name
 - *stage_test_priority_name
 - *stage_test_name
