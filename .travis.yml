@@ -189,12 +189,12 @@ cache:
   - $HOME/.pre-commit
   - $HOME/Library/Caches/Homebrew
 install:
-- pip install tox "setuptools>=28.2"
+- python -m pip install tox "setuptools>=28.2"
 script:
 - tox
 after_failure:
 - echo "Here's a list of installed Python packages:"
-- pip list --format=columns
+- python -m pip list --format=columns
 - echo Dumping logs, because tests failed to succeed
 - |
     for log in `ls cheroot/test/*.log`
