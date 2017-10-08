@@ -105,14 +105,14 @@ jobs:
     stage: test_jython
     python: 2.7
     env:
-    - PYTHON_VERSION=jython-2.7.0
+    - PYTHON_VERSION=jython-2.7.1
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     stage: test_jython
     python: 2.7
     env:
-    - PYTHON_VERSION=jython-2.7.0
+    - PYTHON_VERSION=jython-2.7.1
     - *env_pyenv
     - *env_path
   - <<: *lint_python_base
