@@ -94,6 +94,7 @@ class WebCase(unittest.TestCase):
 
     scheme = 'http'
     url = None
+    ssl_context = None
 
     status = None
     headers = None
@@ -192,7 +193,7 @@ class WebCase(unittest.TestCase):
         start = time.time()
         result = openURL(url, headers, method, body, self.HOST, self.PORT,
                          self.HTTP_CONN, protocol or self.PROTOCOL,
-                         raise_subcls)
+                         raise_subcls, ssl_context=self.ssl_context)
         self.time = time.time() - start
         self.status, self.headers, self.body = result
 
@@ -452,7 +453,7 @@ def shb(response):
 
 def openURL(url, headers=None, method='GET', body=None,
             host='127.0.0.1', port=8000, http_conn=http_client.HTTPConnection,
-            protocol='HTTP/1.1', raise_subcls=None):
+            protocol='HTTP/1.1', raise_subcls=None, ssl_context=None):
     """
     Open the given HTTP resource and return status, headers, and body.
 
@@ -471,7 +472,10 @@ def openURL(url, headers=None, method='GET', body=None,
             if hasattr(http_conn, 'host'):
                 conn = http_conn
             else:
-                conn = http_conn(interface(host), port)
+                kw = {}
+                if ssl_context:
+                    kw['context'] = ssl_context
+                conn = http_conn(interface(host), port, **kw)
 
             conn._http_vsn_str = protocol
             conn._http_vsn = int(''.join([x for x in protocol if x.isdigit()]))

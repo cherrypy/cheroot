@@ -29,7 +29,7 @@ repos:
     -   id: check-symlinks
     -   id: check-yaml
     -   id: detect-private-key
-        exclude: cheroot/test/test.pem
+        exclude: cheroot/test/(test.pem|ssl/*)
     -   id: requirements-txt-fixer
 
 -   repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
