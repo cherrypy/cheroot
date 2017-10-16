@@ -1544,6 +1544,7 @@ class HTTPServer(object):
         """Create (or recreate) the actual socket object."""
         self.socket = socket.socket(family, type, proto)
         prevent_socket_inheritance(self.socket)
+        # Windows have different semantics for SO_REUSEADDR, so don't set it there.
         if 'win' not in sys.platform:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if self.nodelay and not isinstance(self.bind_addr, str):
