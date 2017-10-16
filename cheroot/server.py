@@ -1545,6 +1545,7 @@ class HTTPServer(object):
         self.socket = socket.socket(family, type, proto)
         prevent_socket_inheritance(self.socket)
         # Windows have different semantics for SO_REUSEADDR, so don't set it there.
+        # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
         if 'win' not in sys.platform:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if self.nodelay and not isinstance(self.bind_addr, str):
