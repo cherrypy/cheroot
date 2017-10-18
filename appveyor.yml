@@ -1,7 +1,4 @@
 environment:
-
-  APPVEYOR: true
-
 #  Use the following web UI to encrypt your password:
 #  https://ci.appveyor.com/tools/encrypt
 #  Ref: https://github.com/cherrypy/cheroot/issues/40
