@@ -42,6 +42,7 @@ class HTTPTests(helper.CherootWebCase):
 
         setattr(Root, 'привіт', Root.hello)
         setattr(Root, 'Юххууу', Root.hello)
+        setattr(Root, '\xa0Ðblah key 0 900 4 data', Root.hello)
 
         setattr(Root, '*',
                 lambda self, req, resp: ('Got asterisk URI path with ' +
@@ -94,6 +95,30 @@ class HTTPTests(helper.CherootWebCase):
                     )]:
             self.getPage(uri)
             self.assertStatus(HTTP_OK)
+
+    def test_parse_uri_unsafe_uri(self):
+        """Test that malicious URI does not allow HTTP injection.
+
+        This effectively checks that sending GET request with URL
+
+        /%A0%D0blah%20key%200%20900%204%20data
+
+        is not converted into
+
+        GET /
+        blah key 0 900 4 data
+        HTTP/1.1
+
+        which would be a security issue otherwise.
+        """
+        c = self._get_http_connection()
+        c._output(ntob('GET /%A0%D0blah%20key%200%20900%204%20data HTTP/1.1', 'utf-8'))
+        c._send_output()
+        response = self._get_http_response(c, method='GET')
+        response.begin()
+        assert response.status == HTTP_OK
+        assert response.fp.read(12) == b'Hello world!'
+        c.close()
 
     def test_parse_uri_invalid_uri(self):
         c = self._get_http_connection()
