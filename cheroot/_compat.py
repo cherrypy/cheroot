@@ -121,18 +121,11 @@ def base64_decode(n, encoding='ISO-8859-1'):
 from six.moves.urllib.parse import (  # noqa: F401
     quote, quote_plus,
     unquote as parse_unquote,
-    urlencode, urljoin
+    urlencode, urljoin, unquote_to_bytes,
 )
-from six.moves.urllib.request import urlopen  # noqa: F401
-# TODO: uncomment this once new six released
-# Ref: https://github.com/benjaminp/six/pull/172
-# from six.moves.urllib.parse import unquote_to_bytes
-if six.PY3:
-    from urllib.parse import unquote_to_bytes
-    from urllib.request import parse_http_list, parse_keqv_list
-else:
-    from urllib import unquote as unquote_to_bytes  # noqa
-    from urllib2 import parse_http_list, parse_keqv_list  # noqa
+from six.moves.urllib.request import (  # noqa: F401
+    urlopen, parse_http_list, parse_keqv_list,
+)
 
 try:
     dict.iteritems

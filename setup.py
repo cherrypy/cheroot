@@ -26,7 +26,7 @@ params = dict(
     namespace_packages=name.split('.')[:-1],
     python_requires='>=2.6,!=3.0.*',
     install_requires=[
-        'six',
+        'six>=1.11.0',
     ],
     extras_require={
         'docs': [
