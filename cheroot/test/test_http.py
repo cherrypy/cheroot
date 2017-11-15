@@ -3,7 +3,6 @@
 import errno
 import mimetypes
 import socket
-import sys
 from unittest import mock
 
 import six
