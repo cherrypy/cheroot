@@ -5,12 +5,14 @@
 import errno
 import socket
 
+from six.moves import urllib
+
 import pytest
 import six
 
 from cheroot._compat import (
     HTTPConnection, HTTPSConnection,
-    quote as url_quote, ntob
+    ntob
 )
 from cheroot.test import helper
 
@@ -91,7 +93,7 @@ class HTTPTests(helper.CherootWebCase):
     def test_parse_uri(self):
         for uri in ['/hello', '/query_string?test=True',
                     '/{0}?{1}={2}'.format(
-                        *map(url_quote, ('Юххууу', 'ї', 'йо'))
+                        *map(urllib.parse.quote, ('Юххууу', 'ї', 'йо'))
                     )]:
             self.getPage(uri)
             self.assertStatus(HTTP_OK)
@@ -132,7 +134,7 @@ class HTTPTests(helper.CherootWebCase):
         c.close()
 
         for uri in ['hello',
-                    url_quote('привіт')]:
+                    urllib.parse.quote('привіт')]:
             self.getPage(uri)
             self.assertStatus(HTTP_BAD_REQUEST)
 
