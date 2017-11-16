@@ -100,8 +100,6 @@ else:
             atom.replace('+', ' '),
         ).decode(encoding, errors)
 
-text_or_bytes = six.text_type, six.binary_type
-
 # html module come in 3.2 version
 try:
     from html import escape

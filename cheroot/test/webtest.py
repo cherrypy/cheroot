@@ -31,8 +31,6 @@ import unittest
 
 import six
 
-from cheroot._compat import text_or_bytes
-
 
 def interface(host):
     """Return an IP address for a client connection given the server host.
@@ -355,6 +353,7 @@ class WebCase(unittest.TestCase):
 
     def assertStatus(self, status, msg=None):
         """Fail if self.status != status."""
+        text_or_bytes = six.text_type, six.binary_type
         if isinstance(status, text_or_bytes):
             if not self.status == status:
                 if msg is None:
