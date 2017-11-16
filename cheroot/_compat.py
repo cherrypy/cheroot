@@ -190,13 +190,6 @@ else:
     except ImportError:
         HTTPSConnection = None
 
-try:
-    # Python 2
-    xrange = xrange
-except NameError:
-    # Python 3
-    xrange = range
-
 if six.PY3:
     def unquote_qs(atom, encoding, errors='strict'):
         """Return urldecoded query string."""
