@@ -1,17 +1,4 @@
 """Compatibility code for using Cheroot with various versions of Python.
-
-Cheroot is compatible with Python versions 2.6+. This module provides a
-useful abstraction over the differences between Python versions, sometimes by
-preferring a newer idiom, sometimes an older one, and sometimes a custom one.
-In particular, Python 2 uses str and '' for byte strings, while Python 3
-uses str and '' for unicode strings. Refer to each of these the 'native
-string' type for each version. Because of this major difference, this module
-provides
-'ntou', which translates native
-strings to unicode strings. This also provides a 'BytesIO' name for dealing
-specifically with bytes, and a 'StringIO' name for dealing with native strings.
-It also provides a 'base64_decode' function with native strings as input and
-output.
 """
 
 import re
