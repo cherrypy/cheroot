@@ -241,12 +241,13 @@ class WebCase(unittest.TestCase):
             else self._Conn
         )
 
-    def _get_persistent(self):
+    @property
+    def persistent(self):
         return hasattr(self.HTTP_CONN, '__class__')
 
-    def _set_persistent(self, on):
+    @persistent.setter
+    def persistent(self, on):
         self.set_persistent(on)
-    persistent = property(_get_persistent, _set_persistent)
 
     def interface(self):
         """Return an IP address for a client connection.
