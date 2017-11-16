@@ -119,7 +119,6 @@ def base64_decode(n, encoding='ISO-8859-1'):
 
 
 from six.moves.urllib.parse import (  # noqa: F401
-    quote_plus,
     unquote as parse_unquote,
     urlencode, urljoin, unquote_to_bytes,
 )
