@@ -85,13 +85,21 @@ class HTTPTests(helper.CherootWebCase):
         self.assertStatus(HTTP_OK)
         self.assertBody(b'test=True')
 
-    def test_parse_uri(self):
-        for uri in ['/hello', '/query_string?test=True',
-                    '/{0}?{1}={2}'.format(
-                        *map(urllib.parse.quote, ('Юххууу', 'ї', 'йо'))
-                    )]:
-            self.getPage(uri)
-            self.assertStatus(HTTP_OK)
+    def _test_parse_acceptable_uri(self, uri):
+        self.getPage(uri)
+        self.assertStatus(HTTP_OK)
+
+    def test_parse_uri_plain(self):
+        self._test_parse_acceptable_uri('/hello')
+
+    def test_parse_uri_query(self):
+        self._test_parse_acceptable_uri('/query_string?test=True')
+
+    def test_parse_uri_quoted_unicode(self):
+        uri = '/{0}?{1}={2}'.format(
+            *map(urllib.parse.quote, ('Юххууу', 'ї', 'йо'))
+        )
+        self._test_parse_acceptable_uri(uri)
 
     @pytest.mark.xfail(six.PY2, reason='Fails on Python 2')
     def test_parse_uri_unsafe_uri(self):
