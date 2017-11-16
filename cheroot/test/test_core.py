@@ -134,7 +134,7 @@ class HTTPTests(helper.CherootWebCase):
         """
         self.getPage(urllib.parse.quote(uri))
         self.assertStatus(HTTP_BAD_REQUEST)
-        assert b"starting with a slash" in self.body
+        assert b'starting with a slash' in self.body
 
     # TODO: the following two tests could be implemented as a
     # parametrized fixture on one test if only this test suite
