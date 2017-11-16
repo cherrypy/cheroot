@@ -7,8 +7,7 @@ In particular, Python 2 uses str and '' for byte strings, while Python 3
 uses str and '' for unicode strings. Refer to each of these the 'native
 string' type for each version. Because of this major difference, this module
 provides
-two functions: 'ntob', which translates native strings (of type 'str') into
-byte strings regardless of Python version, and 'ntou', which translates native
+'ntou', which translates native
 strings to unicode strings. This also provides a 'BytesIO' name for dealing
 specifically with bytes, and a 'StringIO' name for dealing with native strings.
 It also provides a 'base64_decode' function with native strings as input and
@@ -25,12 +24,6 @@ import six
 from six.moves import urllib
 
 if six.PY3:
-    def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given encoding."""
-        assert_native(n)
-        # In Python 3, the native string type is unicode
-        return n.encode(encoding)
-
     def ntou(n, encoding='ISO-8859-1'):
         """Return the given native string as a unicode string with the given encoding."""
         assert_native(n)
@@ -49,13 +42,6 @@ if six.PY3:
         return b.decode(encoding)
 else:
     # Python 2
-    def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given encoding."""
-        assert_native(n)
-        # In Python 2, the native string type is bytes. Assume it's already
-        # in the given encoding, which for ISO-8859-1 is almost always what
-        # was intended.
-        return n
 
     def ntou(n, encoding='ISO-8859-1'):
         """Return the given native string as a unicode string with the given encoding."""

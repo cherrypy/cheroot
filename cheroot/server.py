@@ -61,7 +61,7 @@ from six.moves import queue
 from six.moves import urllib
 
 from . import errors, __version__
-from ._compat import ntob, bton, ntou, unquote_to_bytes
+from ._compat import bton, ntou, unquote_to_bytes
 from .workers import threadpool
 from .makefile import MakeFile
 
@@ -92,13 +92,12 @@ QUOTED_SLASH_REGEX = re.compile(b'(?i)' + QUOTED_SLASH)
 
 
 comma_separated_headers = [
-    ntob(h) for h in
-    ['Accept', 'Accept-Charset', 'Accept-Encoding',
-     'Accept-Language', 'Accept-Ranges', 'Allow', 'Cache-Control',
-     'Connection', 'Content-Encoding', 'Content-Language', 'Expect',
-     'If-Match', 'If-None-Match', 'Pragma', 'Proxy-Authenticate', 'TE',
-     'Trailer', 'Transfer-Encoding', 'Upgrade', 'Vary', 'Via', 'Warning',
-     'WWW-Authenticate']
+    b'Accept', b'Accept-Charset', b'Accept-Encoding',
+    b'Accept-Language', b'Accept-Ranges', b'Allow', b'Cache-Control',
+    b'Connection', b'Content-Encoding', b'Content-Language', b'Expect',
+    b'If-Match', b'If-None-Match', b'Pragma', b'Proxy-Authenticate', b'TE',
+    b'Trailer', b'Transfer-Encoding', b'Upgrade', b'Vary', b'Via', b'Warning',
+    b'WWW-Authenticate',
 ]
 
 

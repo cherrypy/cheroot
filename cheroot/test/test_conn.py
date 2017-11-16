@@ -9,7 +9,7 @@ import six
 import pytest
 
 from cheroot._compat import NotConnected, BadStatusLine
-from cheroot._compat import ntob, urlopen
+from cheroot._compat import urlopen
 from cheroot.test import helper, webtest
 
 
@@ -302,7 +302,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
         # Make a second request on the same socket
         conn._output(b'GET /hello HTTP/1.1')
-        conn._output(ntob('Host: %s' % self.HOST, 'ascii'))
+        conn._output(('Host: %s' % self.HOST).encode('ascii'))
         conn._send_output()
         response = conn.response_class(conn.sock, method='GET')
         response.begin()
@@ -315,7 +315,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
         # Make another request on the same socket, which should error
         conn._output(b'GET /hello HTTP/1.1')
-        conn._output(ntob('Host: %s' % self.HOST, 'ascii'))
+        conn._output(('Host: %s' % self.HOST).encode('ascii'))
         conn._send_output()
         response = conn.response_class(conn.sock, method='GET')
         try:
@@ -393,8 +393,8 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
         for trial in range(5):
             # Put next request
-            conn._output(ntob('GET /hello?%s HTTP/1.1' % trial))
-            conn._output(ntob('Host: %s' % self.HOST, 'ascii'))
+            conn._output(('GET /hello?%s HTTP/1.1' % trial).encode('iso-8859-1'))
+            conn._output(('Host: %s' % self.HOST).encode('ascii'))
             conn._send_output()
 
             # Retrieve previous response
@@ -505,7 +505,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
                     break
 
             # ...send the body
-            conn.send(ntob('x' * 1000))
+            conn.send(b'x' * 1000)
 
             # ...get the final response
             response.begin()
@@ -514,7 +514,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
             # Now try a working page with an Expect header...
             conn._output(b'POST /upload HTTP/1.1')
-            conn._output(ntob('Host: %s' % self.HOST, 'ascii'))
+            conn._output(('Host: %s' % self.HOST).encode('ascii'))
             conn._output(b'Content-Type: text/plain')
             conn._output(b'Content-Length: 17')
             conn._output(b'Expect: 100-continue')

@@ -17,7 +17,7 @@ import six
 import cheroot.server
 import cheroot.wsgi
 
-from cheroot._compat import HTTPSConnection, ntob, bton
+from cheroot._compat import HTTPSConnection, bton
 from cheroot.test import webtest
 
 log = logging.getLogger(__name__)
@@ -144,11 +144,11 @@ class Response(object):
         if self.body is None:
             return []
         elif isinstance(self.body, six.text_type):
-            return [ntob(self.body)]
+            return [self.body.encode('iso-8859-1')]
         elif isinstance(self.body, six.binary_type):
             return [self.body]
         else:
-            return [ntob(x) for x in self.body]
+            return [x.encode('iso-8859-1') for x in self.body]
 
 
 class Controller(object):
@@ -161,7 +161,7 @@ class Controller(object):
             # Source of the idea: cherrypy._cpwsgi.AppResponse.recode_path_qs
             latin1_handler_name = environ['PATH_INFO'].lstrip('/').replace('/', '_')
             try:
-                unicode_handler_name = bton(ntob(latin1_handler_name), 'utf-8')
+                unicode_handler_name = bton(latin1_handler_name.encode('iso-8859-1'), 'utf-8')
                 handler = getattr(self, unicode_handler_name)
             except (UnicodeError, AttributeError):
                 handler = getattr(self, latin1_handler_name)
