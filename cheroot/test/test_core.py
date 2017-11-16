@@ -93,7 +93,7 @@ class HTTPTests(helper.CherootWebCase):
             self.getPage(uri)
             self.assertStatus(HTTP_OK)
 
-    @pytest.mark.xfail(six.PY2, reason='Fails on Python 3')
+    @pytest.mark.xfail(six.PY2, reason='Fails on Python 2')
     def test_parse_uri_unsafe_uri(self):
         """Test that malicious URI does not allow HTTP injection.
 
