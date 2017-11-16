@@ -22,14 +22,13 @@ import traceback
 import types
 import os
 import json
-
+import unittest
 from imp import reload
 
-from six.moves import range, http_client
-
-import unittest
-
+from six.moves import range, http_client, map
 import six
+
+from more_itertools.more import always_iterable
 
 
 def interface(host):
@@ -352,34 +351,30 @@ class WebCase(unittest.TestCase):
     def exit(self):
         sys.exit()
 
+    @property
+    def status_code(self):
+        return int(self.status[:3])
+
+    def status_matches(self, expected):
+        actual = (
+            self.status_code
+            if isinstance(expected, int) else
+            self.status
+        )
+        return expected == actual
+
     def assertStatus(self, status, msg=None):
-        """Fail if self.status != status."""
-        if isinstance(status, six.string_types):
-            if not self.status == status:
-                if msg is None:
-                    msg = 'Status (%r) != %r' % (self.status, status)
-                self._handlewebError(msg)
-        elif isinstance(status, int):
-            code = int(self.status[:3])
-            if code != status:
-                if msg is None:
-                    msg = 'Status (%r) != %r' % (self.status, status)
-                self._handlewebError(msg)
-        else:
-            # status is a tuple or list.
-            match = False
-            for s in status:
-                if isinstance(s, six.string_types):
-                    if self.status == s:
-                        match = True
-                        break
-                elif int(self.status[:3]) == s:
-                    match = True
-                    break
-            if not match:
-                if msg is None:
-                    msg = 'Status (%r) not in %r' % (self.status, status)
-                self._handlewebError(msg)
+        """Fail if self.status != status.
+
+        status may be integer code, exact string status, or
+        iterable of allowed possibilities.
+        """
+        if any(map(self.status_matches, always_iterable(status))):
+            return
+
+        tmpl = 'Status {self.status} does not match {status}'
+        msg = msg or tmpl.format(**locals())
+        self._handlewebError(msg)
 
     def assertHeader(self, key, value=None, msg=None):
         """Fail if (key, [value]) not in self.headers."""

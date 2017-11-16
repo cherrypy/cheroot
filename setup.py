@@ -45,6 +45,7 @@ params = dict(
             'pytest-sugar',
             'backports.unittest_mock',
             'portend',
+            'more_itertools',
         ],
     },
     setup_requires=[
