@@ -3,6 +3,8 @@
 import socket
 import time
 
+from six.moves import range
+
 import six
 import pytest
 

@@ -25,6 +25,8 @@ import json
 
 from imp import reload
 
+from six.moves import range
+
 import unittest
 
 import six
