@@ -9,20 +9,14 @@
 
 .. image:: https://img.shields.io/pypi/pyversions/cheroot.svg
 
-.. image:: https://img.shields.io/pypi/dm/cheroot.svg
-
 .. image:: https://codecov.io/gh/cherrypy/cheroot/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/cherrypy/cheroot
    :alt: codecov
 
+.. image:: https://readthedocs.org/projects/cheroot/badge/?version=latest
+   :target: http://cheroot.readthedocs.io/en/latest/?badge=latest
+
 Cheroot is the high-performance, pure-Python HTTP server used by CherryPy.
-
-License
-=======
-
-License is indicated in the project metadata (typically one or more
-of the Trove classifiers). For more details, see `this explanation
-<https://github.com/jaraco/skeleton/issues/1>`_.
 
 Status
 ======

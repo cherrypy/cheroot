@@ -27,6 +27,8 @@ build_script:
 test_script:
   - tox
 
+version: '{build}'
+
 after_test:
   - ps: |
       $wc = New-Object 'System.Net.WebClient'

@@ -12,6 +12,11 @@ with io.open('README.rst', encoding='utf-8') as readme:
 
 name = 'cheroot'
 description = 'Highly-optimized, pure-python HTTP server'
+nspkg_technique = 'native'
+"""
+Does this package use "native" namespace packages or
+pkg_resources "managed" namespace packages?
+"""
 
 params = dict(
     name=name,
@@ -23,7 +28,10 @@ params = dict(
     url='https://github.com/cherrypy/' + name,
     packages=setuptools.find_packages(),
     include_package_data=True,
-    namespace_packages=name.split('.')[:-1],
+    namespace_packages=(
+        name.split('.')[:-1] if nspkg_technique == 'managed'
+        else []
+    ),
     python_requires='>=2.6,!=3.0.*',
     install_requires=[
         'six>=1.11.0',
@@ -31,18 +39,23 @@ params = dict(
     extras_require={
         'docs': [
             'sphinx',
-            'docutils',
-            'alabaster',
             'rst.linker>=1.9',
             'jaraco.packaging>=3.2',
+
+            'docutils',
+            'alabaster',
         ],
         'testing': [
-            'coverage',  # inspects tests coverage
-            'codecov',   # sends tests coverage to codecov.io
-
             'pytest>=2.8',
-            'pytest-cov',
             'pytest-sugar',
+            'collective.checkdocs',
+
+            # measure test coverage
+            'coverage',
+            # send test coverage to codecov.io
+            'codecov',
+
+            'pytest-cov',
             'backports.unittest_mock',
             'portend',
         ],
