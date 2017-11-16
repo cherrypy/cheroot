@@ -1,3 +1,14 @@
+v5.9.0
+======
+
+- CherryPy #1088 and #53: Avoid using SO_REUSEADDR on Windows
+  where it has different semantics.
+
+- ``cheroot.tests.webtest`` adopts the one method that was unique
+  in CherryPy, now superseding the implementation there.
+
+- Substantial cleanup around compatibility functions (_compat module).
+
 v5.8.3
 ======
 
