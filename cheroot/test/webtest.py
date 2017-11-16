@@ -354,8 +354,7 @@ class WebCase(unittest.TestCase):
 
     def assertStatus(self, status, msg=None):
         """Fail if self.status != status."""
-        text_or_bytes = six.text_type, six.binary_type
-        if isinstance(status, text_or_bytes):
+        if isinstance(status, six.string_types):
             if not self.status == status:
                 if msg is None:
                     msg = 'Status (%r) != %r' % (self.status, status)
@@ -370,7 +369,7 @@ class WebCase(unittest.TestCase):
             # status is a tuple or list.
             match = False
             for s in status:
-                if isinstance(s, text_or_bytes):
+                if isinstance(s, six.string_types):
                     if self.status == s:
                         match = True
                         break
