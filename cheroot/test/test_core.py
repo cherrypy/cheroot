@@ -128,10 +128,22 @@ class HTTPTests(helper.CherootWebCase):
         assert response.fp.read(21) == b'Malformed Request-URI'
         c.close()
 
-        for uri in ['hello',
-                    urllib.parse.quote('привіт')]:
-            self.getPage(uri)
-            self.assertStatus(HTTP_BAD_REQUEST)
+    def _test_parse_no_leading_slash_invalid(self, uri):
+        """
+        URIs with no leading slash produce a 400
+        """
+        self.getPage(urllib.parse.quote(uri))
+        self.assertStatus(HTTP_BAD_REQUEST)
+        assert b"starting with a slash" in self.body
+
+    # TODO: the following two tests could be implemented as a
+    # parametrized fixture on one test if only this test suite
+    # weren't based on unittest.
+    def test_parse_no_leading_slash_invalid_ascii(self):
+        self._test_parse_no_leading_slash_invalid('hello')
+
+    def test_parse_no_leading_slash_invalid_non_ascii(self):
+        self._test_parse_no_leading_slash_invalid('привіт')
 
     def test_parse_uri_absolute_uri(self):
         self.getPage('http://google.com/')
