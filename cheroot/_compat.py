@@ -22,6 +22,7 @@ import sys
 import threading
 
 import six
+from six.moves import urllib
 
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
@@ -119,7 +120,6 @@ def base64_decode(n, encoding='ISO-8859-1'):
 
 
 from six.moves.urllib.parse import (  # noqa: F401
-    unquote as parse_unquote,
     urlencode, urljoin, unquote_to_bytes,
 )
 from six.moves.urllib.request import (  # noqa: F401
@@ -200,14 +200,17 @@ except NameError:
 if six.PY3:
     def unquote_qs(atom, encoding, errors='strict'):
         """Return urldecoded query string."""
-        return parse_unquote(
+        return urllib.parse.unquote(
             atom.replace('+', ' '),
             encoding=encoding,
-            errors=errors)
+            errors=errors,
+        )
 else:
     def unquote_qs(atom, encoding, errors='strict'):
         """Return urldecoded query string."""
-        return parse_unquote(atom.replace('+', ' ')).decode(encoding, errors)
+        return urllib.parse.unquote(
+            atom.replace('+', ' '),
+        ).decode(encoding, errors)
 
 try:
     # Prefer simplejson, which is usually more advanced than the builtin
