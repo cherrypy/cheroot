@@ -17,7 +17,6 @@ output.
 import re
 
 import six
-from six.moves import urllib
 
 if six.PY3:
     def ntou(n, encoding='ISO-8859-1'):
