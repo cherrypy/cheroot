@@ -10,6 +10,8 @@ import time
 import threading
 import types
 
+from six.moves import http_client
+
 import portend
 import pytest
 import six
@@ -17,7 +19,7 @@ import six
 import cheroot.server
 import cheroot.wsgi
 
-from cheroot._compat import HTTPSConnection, bton
+from cheroot._compat import bton
 from cheroot.test import webtest
 
 log = logging.getLogger(__name__)
@@ -60,7 +62,7 @@ class CherootWebCase(webtest.WebCase):
             cls.scheme = 'http'
         else:
             ssl = ' (ssl)'
-            cls.HTTP_CONN = HTTPSConnection
+            cls.HTTP_CONN = http_client.HTTPSConnection
             cls.scheme = 'https'
 
         v = sys.version.split()[0]
