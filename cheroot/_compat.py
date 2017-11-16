@@ -14,11 +14,7 @@ It also provides a 'base64_decode' function with native strings as input and
 output.
 """
 
-import binascii
-import os
 import re
-import sys
-import threading
 
 import six
 from six.moves import urllib
@@ -104,105 +100,7 @@ else:
             atom.replace('+', ' '),
         ).decode(encoding, errors)
 
-try:
-    # Prefer simplejson, which is usually more advanced than the builtin
-    # module.
-    import simplejson as json
-    json_decode = json.JSONDecoder().decode
-    _json_encode = json.JSONEncoder().iterencode
-except ImportError:
-    if sys.version_info >= (2, 6):
-        # Python >=2.6 : json is part of the standard library
-        import json
-        json_decode = json.JSONDecoder().decode
-        _json_encode = json.JSONEncoder().iterencode
-    else:
-        json = None
-
-        def json_decode(s):
-            """Alert that decoding JSON is not supported because of missing package."""
-            raise ValueError('No JSON library is available')
-
-        def _json_encode(s):
-            """Alert that encoding JSON is not supported because of missing package."""
-            raise ValueError('No JSON library is available')
-finally:
-    if json and six.PY3:
-        # The two Python 3 implementations (simplejson/json)
-        # outputs str. We need bytes.
-        def json_encode(value):
-            """Return JSON string as bytes."""
-            for chunk in _json_encode(value):
-                yield chunk.encode('utf8')
-    else:
-        json_encode = _json_encode
-
 text_or_bytes = six.text_type, six.binary_type
-
-try:
-    import cPickle as pickle
-except ImportError:
-    # In Python 2, pickle is a Python version.
-    # In Python 3, pickle is the sped-up C version.
-    import pickle  # noqa
-
-
-def random20():
-    """Return a random string of 20 bytes."""
-    return binascii.hexlify(os.urandom(20)).decode('ascii')
-
-
-try:
-    from _thread import get_ident as get_thread_ident
-except ImportError:
-    from thread import get_ident as get_thread_ident  # noqa
-
-if sys.version_info >= (3, 3):
-    Timer = threading.Timer
-    Event = threading.Event
-else:
-    # Python 3.2 and earlier
-    Timer = threading._Timer
-    Event = threading._Event
-
-try:
-    # Python 2.7+
-    from subprocess import _args_from_interpreter_flags
-except ImportError:
-    def _args_from_interpreter_flags():
-        """Try to reconstruct original interpreter args from sys.flags for Python 2.6.
-
-        Backported from Python 3.5. Aims to return a list of
-        command-line arguments reproducing the current
-        settings in sys.flags and sys.warnoptions.
-        """
-        flag_opt_map = {
-            'debug': 'd',
-            # 'inspect': 'i',
-            # 'interactive': 'i',
-            'optimize': 'O',
-            'dont_write_bytecode': 'B',
-            'no_user_site': 's',
-            'no_site': 'S',
-            'ignore_environment': 'E',
-            'verbose': 'v',
-            'bytes_warning': 'b',
-            'quiet': 'q',
-            'hash_randomization': 'R',
-            'py3k_warning': '3',
-        }
-
-        args = []
-        for flag, opt in flag_opt_map.items():
-            v = getattr(sys.flags, flag)
-            if v > 0:
-                if flag == 'hash_randomization':
-                    v = 1  # Handle specification of an exact seed
-                args.append('-' + opt * v)
-        for opt in sys.warnoptions:
-            args.append('-W' + opt)
-
-        return args
 
 # html module come in 3.2 version
 try:
