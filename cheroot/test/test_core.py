@@ -47,11 +47,12 @@ class HTTPTests(helper.CherootWebCase):
         setattr(Root, 'Юххууу', Root.hello)
         setattr(Root, '\xa0Ðblah key 0 900 4 data', Root.hello)
 
-        setattr(Root, '*',
-                lambda self, req, resp: ('Got asterisk URI path with ' +
-                                         req.environ.get('REQUEST_METHOD',
-                                                         'NO METHOD FOUND') +
-                                         ' method'))
+        def _asterisk(self, req, resp):
+            method = req.environ.get('REQUEST_METHOD', 'NO METHOD FOUND')
+            tmpl = 'Got asterisk URI path with {method} method'
+            return tmpl.format(**locals())
+
+        setattr(Root, '*', _asterisk)
 
         cls.httpserver.wsgi_app = Root()
         cls.httpserver.max_request_body_size = 30000000
