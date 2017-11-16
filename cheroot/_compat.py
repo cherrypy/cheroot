@@ -127,36 +127,6 @@ from six.moves.urllib.request import (  # noqa: F401
 )
 
 try:
-    dict.iteritems
-    # Python 2
-    iteritems = lambda d: d.iteritems()
-    copyitems = lambda d: d.items()
-except AttributeError:
-    # Python 3
-    iteritems = lambda d: d.items()
-    copyitems = lambda d: list(d.items())
-
-try:
-    dict.iterkeys
-    # Python 2
-    iterkeys = lambda d: d.iterkeys()
-    copykeys = lambda d: d.keys()
-except AttributeError:
-    # Python 3
-    iterkeys = lambda d: d.keys()
-    copykeys = lambda d: list(d.keys())
-
-try:
-    dict.itervalues
-    # Python 2
-    itervalues = lambda d: d.itervalues()
-    copyvalues = lambda d: d.values()
-except AttributeError:
-    # Python 3
-    itervalues = lambda d: d.values()
-    copyvalues = lambda d: list(d.values())
-
-try:
     # Python 3
     import builtins
 except ImportError:
