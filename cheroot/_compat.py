@@ -112,40 +112,6 @@ from six.moves.urllib.request import (  # noqa: F401
     urlopen, parse_http_list, parse_keqv_list,
 )
 
-try:
-    # Python 3
-    import builtins
-except ImportError:
-    # Python 2
-    import __builtin__ as builtins  # noqa
-
-try:
-    # Python 2. We try Python 2 first clients on Python 2
-    # don't try to import the 'http' module from cheroot submodules directly
-    from Cookie import SimpleCookie, CookieError
-    from httplib import BadStatusLine, HTTPConnection, IncompleteRead
-    from httplib import NotConnected
-    from BaseHTTPServer import BaseHTTPRequestHandler
-except ImportError:
-    # Python 3
-    from http.cookies import SimpleCookie, CookieError  # noqa
-    from http.client import BadStatusLine, HTTPConnection, IncompleteRead  # noqa
-    from http.client import NotConnected  # noqa
-    from http.server import BaseHTTPRequestHandler  # noqa
-
-# Some platforms don't expose HTTPSConnection, so handle it separately
-if six.PY3:
-    try:
-        from http.client import HTTPSConnection
-    except ImportError:
-        # Some platforms which don't have SSL don't expose HTTPSConnection
-        HTTPSConnection = None
-else:
-    try:
-        from httplib import HTTPSConnection
-    except ImportError:
-        HTTPSConnection = None
-
 if six.PY3:
     def unquote_qs(atom, encoding, errors='strict'):
         """Return urldecoded query string."""
