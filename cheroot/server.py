@@ -61,7 +61,7 @@ from six.moves import queue
 from six.moves import urllib
 
 from . import errors, __version__
-from ._compat import bton, ntou, unquote_to_bytes
+from ._compat import bton, ntou
 from .workers import threadpool
 from .makefile import MakeFile
 
@@ -809,7 +809,7 @@ class HTTPRequest(object):
                 # TODO: Figure out whether exception can really happen here.
                 # It looks like it's caught on urlsplit() call above.
                 atoms = [
-                    unquote_to_bytes(x)
+                    urllib.parse.unquote_to_bytes(x)
                     for x in QUOTED_SLASH_REGEX.split(path)
                 ]
             except ValueError as ex:
