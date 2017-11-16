@@ -1,5 +1,4 @@
-"""Compatibility code for using Cheroot with various versions of Python.
-"""
+"""Compatibility code for using Cheroot with various versions of Python."""
 
 import re
 
