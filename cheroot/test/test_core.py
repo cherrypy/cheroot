@@ -58,16 +58,12 @@ class HTTPTests(helper.CherootWebCase):
 
     def _get_http_connection(self):
         """Instantiate connection object depending on scheme"""
-        return (
-            HTTPSConnection
-            if self.scheme == 'https'
-            else HTTPConnection
-        )(
-            '{interface}:{port}'.format(
-                interface=self.interface(),
-                port=self.PORT
-            )
+        cls = HTTPSConnection if self.scheme == 'https' else HTTPConnection
+        name = '{interface}:{port}'.format(
+            interface=self.interface(),
+            port=self.PORT,
         )
+        return cls(name)
 
     @staticmethod
     def _get_http_response(connection, method='GET'):
