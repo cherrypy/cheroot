@@ -8,7 +8,7 @@ from six.moves import range
 import six
 import pytest
 
-from cheroot._compat import HTTPConnection, HTTPSConnection, NotConnected, BadStatusLine
+from cheroot._compat import NotConnected, BadStatusLine
 from cheroot._compat import ntob, urlopen
 from cheroot.test import helper, webtest
 
@@ -222,10 +222,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
     def _keepalive(self):
         self.PROTOCOL = 'HTTP/1.0'
-        if self.scheme == 'https':
-            self.HTTP_CONN = HTTPSConnection
-        else:
-            self.HTTP_CONN = HTTPConnection
+        self.HTTP_CONN = self._Conn
 
         # Test a normal HTTP/1.0 request.
         self.getPage('/page2')
@@ -480,10 +477,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.httpserver.protocol = 'HTTP/1.1'
         self.PROTOCOL = 'HTTP/1.1'
 
-        if self.scheme == 'https':
-            self.HTTP_CONN = HTTPSConnection
-        else:
-            self.HTTP_CONN = HTTPConnection
+        self.HTTP_CONN = self._Conn
 
         # Test a max of 0 (the default) and then reset to what it was above.
         old_max = self.httpserver.max_request_body_size

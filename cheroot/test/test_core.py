@@ -5,15 +5,12 @@
 import errno
 import socket
 
-from six.moves import urllib
+from six.moves import urllib, http_client
 
 import pytest
 import six
 
-from cheroot._compat import (
-    HTTPConnection, HTTPSConnection,
-    ntob
-)
+from cheroot._compat import ntob
 from cheroot.test import helper
 
 
@@ -61,12 +58,11 @@ class HTTPTests(helper.CherootWebCase):
 
     def _get_http_connection(self):
         """Instantiate connection object depending on scheme"""
-        cls = HTTPSConnection if self.scheme == 'https' else HTTPConnection
         name = '{interface}:{port}'.format(
             interface=self.interface(),
             port=self.PORT,
         )
-        return cls(name)
+        return self._Conn(name)
 
     @staticmethod
     def _get_http_response(connection, method='GET'):
@@ -252,7 +248,7 @@ class HTTPTests(helper.CherootWebCase):
     def test_garbage_in(self):
         # Connect without SSL regardless of server.scheme
 
-        c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
+        c = http_client.HTTPConnection('%s:%s' % (self.interface(), self.PORT))
         c._output(b'gjkgjklsgjklsgjkljklsg')
         c._send_output()
         response = c.response_class(c.sock, method='GET')

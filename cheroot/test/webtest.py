@@ -25,14 +25,13 @@ import json
 
 from imp import reload
 
-from six.moves import range
+from six.moves import range, http_client
 
 import unittest
 
 import six
 
-from cheroot._compat import text_or_bytes, HTTPConnection
-from cheroot._compat import HTTPSConnection
+from cheroot._compat import text_or_bytes
 
 
 def interface(host):
@@ -193,7 +192,7 @@ class NonDataProperty(object):
 class WebCase(unittest.TestCase):
     HOST = '127.0.0.1'
     PORT = 8000
-    HTTP_CONN = HTTPConnection
+    HTTP_CONN = http_client.HTTPConnection
     PROTOCOL = 'HTTP/1.1'
 
     scheme = 'http'
@@ -207,13 +206,18 @@ class WebCase(unittest.TestCase):
 
     time = None
 
+    @property
+    def _Conn(self):
+        """
+        Return http.client.HTTPConnection or HTTPSConnection
+        based on self.scheme.
+        """
+        cls_name = '{scheme}Connection'.format(scheme=self.scheme.upper())
+        return getattr(http_client, cls_name)
+
     def get_conn(self, auto_open=False):
         """Return a connection to our HTTP server."""
-        if self.scheme == 'https':
-            cls = HTTPSConnection
-        else:
-            cls = HTTPConnection
-        conn = cls(self.interface(), self.PORT)
+        conn = self._Conn(self.interface(), self.PORT)
         # Automatically re-connect?
         conn.auto_open = auto_open
         conn.connect()
@@ -233,13 +237,11 @@ class WebCase(unittest.TestCase):
         except (TypeError, AttributeError):
             pass
 
-        if on:
-            self.HTTP_CONN = self.get_conn(auto_open=auto_open)
-        else:
-            if self.scheme == 'https':
-                self.HTTP_CONN = HTTPSConnection
-            else:
-                self.HTTP_CONN = HTTPConnection
+        self.HTTP_CONN = (
+            self.get_conn(auto_open=auto_open)
+            if on
+            else self._Conn
+        )
 
     def _get_persistent(self):
         return hasattr(self.HTTP_CONN, '__class__')
@@ -526,7 +528,7 @@ def shb(response):
 
 
 def openURL(url, headers=None, method='GET', body=None,
-            host='127.0.0.1', port=8000, http_conn=HTTPConnection,
+            host='127.0.0.1', port=8000, http_conn=http_client.HTTPConnection,
             protocol='HTTP/1.1', raise_subcls=None):
     """
     Open the given HTTP resource and return status, headers, and body.
