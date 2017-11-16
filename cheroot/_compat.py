@@ -12,13 +12,6 @@ if six.PY3:
         # In Python 3, the native string type is unicode
         return n
 
-    def tonative(n, encoding='ISO-8859-1'):
-        """Return the given string as a native string in the given encoding."""
-        # In Python 3, the native string type is unicode
-        if isinstance(n, bytes):
-            return n.decode(encoding)
-        return n
-
     def bton(b, encoding='ISO-8859-1'):
         """Return the given byte string as a native string in the given encoding."""
         return b.decode(encoding)
@@ -41,13 +34,6 @@ else:
         # Assume it's already in the given encoding, which for ISO-8859-1
         # is almost always what was intended.
         return n.decode(encoding)
-
-    def tonative(n, encoding='ISO-8859-1'):
-        """Return the given string as a native string in the given encoding."""
-        # In Python 2, the native string type is bytes.
-        if isinstance(n, six.text_type):
-            return n.encode(encoding)
-        return n
 
     def bton(b, encoding='ISO-8859-1'):
         """Return the given byte string as a native string in the given encoding."""
