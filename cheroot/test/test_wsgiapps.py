@@ -2,7 +2,6 @@ import sys
 
 import pytest
 
-from cheroot._compat import ntob
 from cheroot.test import helper
 
 
@@ -21,15 +20,13 @@ class WSGIGraftTests(helper.CherootWebCase):
             keys.sort()
             for k in keys:
                 output.append('%s: %s\n' % (k, environ[k]))
-            return [ntob(x, 'utf-8') for x in output]
+            return [x.encode('utf-8') for x in output]
 
         def test_empty_string_app(environ, start_response):
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)
-            return [
-                ntob('Hello'), ntob(''), ntob(' '), ntob(''), ntob('world')
-            ]
+            return b'Hello', b'', b' ', b'', b'world'
 
         class WSGIResponse(object):
 

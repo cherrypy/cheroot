@@ -12,7 +12,6 @@ import six
 
 from cheroot._compat import (
     HTTPConnection, HTTPSConnection,
-    ntob
 )
 from cheroot.test import helper
 
@@ -115,7 +114,7 @@ class HTTPTests(helper.CherootWebCase):
         which would be a security issue otherwise.
         """
         c = self._get_http_connection()
-        c._output(ntob('GET /%A0%D0blah%20key%200%20900%204%20data HTTP/1.1', 'utf-8'))
+        c._output(('GET /%A0%D0blah%20key%200%20900%204%20data HTTP/1.1').encode('utf-8'))
         c._send_output()
         response = self._get_http_response(c, method='GET')
         response.begin()
@@ -125,7 +124,7 @@ class HTTPTests(helper.CherootWebCase):
 
     def test_parse_uri_invalid_uri(self):
         c = self._get_http_connection()
-        c._output(ntob('GET /йопта! HTTP/1.1', 'utf-8'))
+        c._output(u'GET /йопта! HTTP/1.1'.encode('utf-8'))
         c._send_output()
         response = self._get_http_response(c, method='GET')
         response.begin()
