@@ -3,13 +3,11 @@
 import socket
 import time
 
-from six.moves import range
+from six.moves import range, http_client, urllib
 
 import six
 import pytest
 
-from cheroot._compat import NotConnected, BadStatusLine
-from cheroot._compat import urlopen
 from cheroot.test import helper, webtest
 
 
@@ -107,7 +105,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
         self.assertHeader('Connection', 'close')
 
         # Make another request on the same connection, which should error.
-        self.assertRaises(NotConnected, self.getPage, '/pov')
+        self.assertRaises(http_client.NotConnected, self.getPage, '/pov')
 
     def test_Streaming_no_len_11(self):
         self._streaming_11(set_cl=False)
@@ -166,7 +164,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
                 # Make another request on the same connection, which should
                 # error.
-                self.assertRaises(NotConnected, self.getPage, '/pov')
+                self.assertRaises(http_client.NotConnected, self.getPage, '/pov')
 
             # Try HEAD.
             # See http://www.bitbucket.org/cherrypy/cherrypy/issue/864.
@@ -210,7 +208,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
             self.assertNoHeader('Transfer-Encoding')
 
             # Make another request on the same connection, which should error.
-            self.assertRaises(NotConnected, self.getPage, '/pov')
+            self.assertRaises(http_client.NotConnected, self.getPage, '/pov')
 
     def test_HTTP10_to_10_KeepAlive(self):
         self.httpserver.protocol = 'HTTP/1.0'
@@ -322,7 +320,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
             response.begin()
         except Exception as ex:
             if not isinstance(ex,
-                              (socket.error, BadStatusLine)):
+                              (socket.error, http_client.BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
                           ' as it should have: %s' % ex)
         else:
@@ -355,7 +353,7 @@ class ConnectionCloseTests(helper.CherootWebCase):
             response.begin()
         except Exception as ex:
             if not isinstance(ex,
-                              (socket.error, BadStatusLine)):
+                              (socket.error, http_client.BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
                           ' as it should have: %s' % ex)
         else:
@@ -666,8 +664,10 @@ class ConnectionCloseTests(helper.CherootWebCase):
     def test_598(self):
         self.httpserver.protocol = 'HTTP/1.1'
         self.PROTOCOL = 'HTTP/1.1'
-        remote_data_conn = urlopen('%s://%s:%s/one_megabyte_of_a' %
-                                   (self.scheme, self.HOST, self.PORT))
+        remote_data_conn = urllib.request.urlopen(
+            '%s://%s:%s/one_megabyte_of_a'
+            % (self.scheme, self.HOST, self.PORT)
+        )
         buf = remote_data_conn.read(512)
         time.sleep(timeout * 0.6)
         remaining = (1024 * 1024) - 512
