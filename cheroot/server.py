@@ -1455,13 +1455,13 @@ class HTTPServer(object):
             # So we can reuse the socket...
             try:
                 os.unlink(self.bind_addr)
-            except:
+            except Exception:
                 pass
 
             # So everyone can access the socket...
             try:
                 os.chmod(self.bind_addr, 0o777)
-            except:
+            except Exception:
                 pass
 
             info = [
@@ -1513,7 +1513,7 @@ class HTTPServer(object):
                 self.tick()
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except:
+            except Exception:
                 self.error_log('Error in HTTPServer.tick', level=logging.ERROR,
                                traceback=True)
 

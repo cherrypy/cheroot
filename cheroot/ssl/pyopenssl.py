@@ -93,8 +93,6 @@ class SSL_fileobject(MakeFile):
                     raise errors.NoSSLError()
 
                 raise errors.FatalSSLAlert(*e.args)
-            except:
-                raise
 
             if time.time() - start > self.ssl_timeout:
                 raise socket.timeout('timed out')
