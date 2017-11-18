@@ -32,7 +32,7 @@ from six.moves import filter
 
 from . import server
 from .workers import threadpool
-from ._compat import bton
+from ._compat import ntob, bton
 
 
 class Server(server.HTTPServer):
@@ -161,7 +161,7 @@ class Gateway(server.Gateway):
                     'WSGI response header value %r is not of type str.' % v)
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
-            out_header = k.encode('iso-8859-1'), v.encode('iso-8859-1')
+            out_header = ntob(k), ntob(v)
             self.req.outheaders.append(out_header)
 
         return self.write

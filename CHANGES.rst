@@ -1,3 +1,9 @@
+v5.9.1
+======
+
+- #58: Reverted encoding behavior in wsgi module to correct
+  regression in CherryPy tests.
+
 v5.9.0
 ======
 
