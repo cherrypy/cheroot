@@ -38,9 +38,7 @@ class BuiltinSSLAdapter(Adapter):
     """The filename of the certificate chain file."""
 
     context = None
-    """The ssl.SSLContext that will be used to wrap sockets where available
-    (on Python > 2.7.9 / 3.3)
-    """
+    """The ssl.SSLContext that will be used to wrap sockets."""
 
     ciphers = None
     """The ciphers list of SSL."""
@@ -55,14 +53,13 @@ class BuiltinSSLAdapter(Adapter):
         super(BuiltinSSLAdapter, self).__init__(
             certificate, private_key, certificate_chain, ciphers)
 
-        if hasattr(ssl, 'create_default_context'):
-            self.context = ssl.create_default_context(
-                purpose=ssl.Purpose.CLIENT_AUTH,
-                cafile=certificate_chain
-            )
-            self.context.load_cert_chain(certificate, private_key)
-            if self.ciphers is not None:
-                self.context.set_ciphers(ciphers)
+        self.context = ssl.create_default_context(
+            purpose=ssl.Purpose.CLIENT_AUTH,
+            cafile=certificate_chain
+        )
+        self.context.load_cert_chain(certificate, private_key)
+        if self.ciphers is not None:
+            self.context.set_ciphers(ciphers)
 
     def bind(self, sock):
         """Wrap and return the given socket."""
@@ -71,16 +68,9 @@ class BuiltinSSLAdapter(Adapter):
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
         try:
-            if self.context is not None:
-                s = self.context.wrap_socket(
-                    sock, do_handshake_on_connect=True, server_side=True)
-            else:
-                s = ssl.wrap_socket(sock, do_handshake_on_connect=True,
-                                    server_side=True,
-                                    certfile=self.certificate,
-                                    keyfile=self.private_key,
-                                    ssl_version=ssl.PROTOCOL_SSLv23,
-                                    ca_certs=self.certificate_chain)
+            s = self.context.wrap_socket(
+                sock, do_handshake_on_connect=True, server_side=True,
+            )
         except ssl.SSLError as ex:
             if ex.errno == ssl.SSL_ERROR_EOF:
                 # This is almost certainly due to the cherrypy engine
