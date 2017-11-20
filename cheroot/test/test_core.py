@@ -118,7 +118,11 @@ class HTTPTests(helper.CherootWebCase):
         which would be a security issue otherwise.
         """
         c = self._get_http_connection()
-        c._output(('GET /%A0%D0blah%20key%200%20900%204%20data HTTP/1.1').encode('utf-8'))
+        resource = '/\xa0Ðblah key 0 900 4 data'.encode('latin-1')
+        quoted = urllib.parse.quote(resource)
+        assert quoted == '/%A0%D0blah%20key%200%20900%204%20data'
+        request = 'GET {quoted} HTTP/1.1'.format(**locals())
+        c._output(request.encode('utf-8'))
         c._send_output()
         response = self._get_http_response(c, method='GET')
         response.begin()
