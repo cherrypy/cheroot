@@ -25,7 +25,7 @@ class HelloController(helper.Controller):
         return 'Hello world!'
 
     def body_required(req, resp):
-        if req.environ.get('Content-Lingth', None) is None:
+        if req.environ.get('Content-Length', None) is None:
             resp.status = '411 Length Required'
             return
         return 'Hello world!'
