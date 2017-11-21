@@ -1194,6 +1194,7 @@ class HTTPConnection(object):
 
     def _conditional_error(self, req, response):
         """Respond with an error.
+
         Don't bother writing if a response
         has already started being written.
         """
