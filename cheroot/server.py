@@ -122,7 +122,8 @@ class HeaderReader(object):
         Headers which are repeated are folded together using a comma if their
         specification so dictates.
 
-        This function raises ValueError when the read bytes violate the HTTP spec.
+        This function raises ValueError when the read bytes violate the HTTP
+        spec.
         You should probably return "400 Bad Request" if this happens.
         """
         if hdict is None:
@@ -402,7 +403,8 @@ class ChunkedRFile(object):
         self.bytes_read += len(line)
 
         if self.maxlen and self.bytes_read > self.maxlen:
-            raise errors.MaxSizeExceeded('Request Entity Too Large', self.maxlen)
+            raise errors.MaxSizeExceeded(
+                'Request Entity Too Large', self.maxlen)
 
         line = line.strip().split(SEMICOLON, 1)
 
@@ -717,11 +719,13 @@ class HTTPRequest(object):
         self.method = method.upper()
 
         if self.strict_mode and method != self.method:
-            self.simple_response(
-                '400 Bad Request',
-                'Malformed method name: According to RFC 2616 (section 5.1.1) and its successors '
-                'RFC 7230 (section 3.1.1) and RFC 7231 (section 4.1) method names are case-sensitive and uppercase.'
+            resp = (
+                'Malformed method name: According to RFC 2616 '
+                '(section 5.1.1) and its successors '
+                'RFC 7230 (section 3.1.1) and RFC 7231 (section 4.1) '
+                'method names are case-sensitive and uppercase.'
             )
+            self.simple_response('400 Bad Request', resp)
             return False
 
         try:
@@ -760,7 +764,12 @@ class HTTPRequest(object):
             # the validation doesn't take into account, that urllib parses
             # invalid URIs without raising errors
             # https://tools.ietf.org/html/rfc7230#section-5.3.3
-            if _authority != uri or not _port or any((_scheme, _path, _qs, _fragment)):
+            invalid_path = (
+                _authority != uri
+                or not _port
+                or any((_scheme, _path, _qs, _fragment))
+            )
+            if invalid_path:
                 self.simple_response('400 Bad Request',
                                      'Invalid path in Request-URI: request-'
                                      'target must match authority-form.')
@@ -771,21 +780,36 @@ class HTTPRequest(object):
         else:
             uri_is_absolute_form = (scheme or authority)
 
-            if (self.strict_mode and not self.proxy_mode) and uri_is_absolute_form:
-                # https://tools.ietf.org/html/rfc7230#section-5.3.2 (absolute form)
+            disallowed_absolute = (
+                self.strict_mode
+                and not self.proxy_mode
+                and uri_is_absolute_form
+            )
+            if disallowed_absolute:
+                # https://tools.ietf.org/html/rfc7230#section-5.3.2
+                # (absolute form)
                 """Absolute URI is only allowed within proxies."""
-                self.simple_response('400 Bad Request',
-                                     'Absolute URI not allowed if server is not a proxy.')
+                self.simple_response(
+                    '400 Bad Request',
+                    'Absolute URI not allowed if server is not a proxy.',
+                )
                 return False
 
-            if self.strict_mode and not uri.startswith(FORWARD_SLASH) and not uri_is_absolute_form:
-                # https://tools.ietf.org/html/rfc7230#section-5.3.1 (origin_form) and
+            invalid_path = (
+                self.strict_mode
+                and not uri.startswith(FORWARD_SLASH)
+                and not uri_is_absolute_form
+            )
+            if invalid_path:
+                # https://tools.ietf.org/html/rfc7230#section-5.3.1
+                # (origin_form) and
                 """Path should start with a forward slash."""
-                self.simple_response('400 Bad Request',
-                                     'Invalid path in Request-URI: '
-                                     'request-target must contain origin-form '
-                                     'which starts with absolute-path '
-                                     '(URI starting with a slash "/").')
+                resp = (
+                    'Invalid path in Request-URI: request-target must contain '
+                    'origin-form which starts with absolute-path (URI '
+                    'starting with a slash "/").'
+                )
+                self.simple_response('400 Bad Request', resp)
                 return False
 
             if fragment:
@@ -805,7 +829,8 @@ class HTTPRequest(object):
             # But note that "...a URI must be separated into its components
             # before the escaped characters within those components can be
             # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
-            # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not "/this/path".
+            # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not
+            # "/this/path".
             try:
                 # TODO: Figure out whether exception can really happen here.
                 # It looks like it's caught on urlsplit() call above.
@@ -1018,7 +1043,11 @@ class HTTPRequest(object):
             if status < 200 or status in (204, 205, 304):
                 pass
             else:
-                if self.response_protocol == 'HTTP/1.1' and self.method != b'HEAD':
+                needs_chunked = (
+                    self.response_protocol == 'HTTP/1.1'
+                    and self.method != b'HEAD'
+                )
+                if needs_chunked:
                     # Use the chunked transfer-coding
                     self.chunked_write = True
                     self.outheaders.append((b'Transfer-Encoding', b'chunked'))
@@ -1088,7 +1117,8 @@ class HTTPConnection(object):
 
         Args:
             server (HTTPServer): web server object receiving this request
-            socket (socket._socketobject): the raw socket object (usually TCP) for this connection
+            socket (socket._socketobject): the raw socket object (usually
+                TCP) for this connection
             makefile (file): a fileobject class for reading from the socket
         """
         self.server = server
@@ -1144,7 +1174,8 @@ class HTTPConnection(object):
         except errors.NoSSLError:
             self._handle_no_ssl(req)
         except Exception as ex:
-            self.server.error_log(repr(ex), level=logging.ERROR, traceback=True)
+            self.server.error_log(
+                repr(ex), level=logging.ERROR, traceback=True)
             self._conditional_error(req, '500 Internal Server Error')
 
     linger = False
@@ -1250,7 +1281,9 @@ class HTTPServer(object):
     """The minimum number of worker threads to create (default 10)."""
 
     maxthreads = None
-    """The maximum number of worker threads to create (default -1 = no limit)."""
+    """The maximum number of worker threads to create.
+
+    (default -1 = no limit)"""
 
     server_name = None
     """The name of the server; defaults to ``self.version``."""
@@ -1262,10 +1295,14 @@ class HTTPServer(object):
     features used in the response."""
 
     request_queue_size = 5
-    """The 'backlog' arg to socket.listen(); max queued connections (default 5)."""
+    """The 'backlog' arg to socket.listen(); max queued connections.
+
+    (default 5)."""
 
     shutdown_timeout = 5
-    """The total time, in seconds, to wait for worker threads to cleanly exit."""
+    """The total time to wait for worker threads to cleanly exit.
+
+    Specified in seconds."""
 
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
@@ -1280,7 +1317,7 @@ class HTTPServer(object):
     """
 
     ready = False
-    """An internal flag which marks whether the socket is accepting connections."""
+    """Internal flag which indicating the socket is accepting connections."""
 
     max_request_header_size = 0
     """The maximum size, in bytes, for request headers, or 0 for no limit."""
@@ -1300,7 +1337,9 @@ class HTTPServer(object):
     You must have the corresponding SSL driver library installed.
     """
 
-    def __init__(self, bind_addr, gateway, minthreads=10, maxthreads=-1, server_name=None):
+    def __init__(
+            self, bind_addr, gateway, minthreads=10, maxthreads=-1,
+            server_name=None):
         """Initialize HTTPServer instance.
 
         Args:
@@ -1308,12 +1347,14 @@ class HTTPServer(object):
             gateway (Gateway): gateway for processing HTTP requests
             minthreads (int): minimum number of threads for HTTP thread pool
             maxthreads (int): maximum number of threads for HTTP thread pool
-            server_name (str): web server name to be advertised via Server HTTP header
+            server_name (str): web server name to be advertised via Server
+                HTTP header
         """
         self.bind_addr = bind_addr
         self.gateway = gateway
 
-        self.requests = threadpool.ThreadPool(self, min=minthreads or 1, max=maxthreads)
+        self.requests = threadpool.ThreadPool(
+            self, min=minthreads or 1, max=maxthreads)
 
         if not server_name:
             server_name = self.version
@@ -1543,7 +1584,12 @@ class HTTPServer(object):
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See
         # https://github.com/cherrypy/cherrypy/issues/871.
-        if hasattr(socket, 'AF_INET6') and family == socket.AF_INET6 and host in ('::', '::0', '::0.0.0.0'):
+        listening_ipv6 = (
+            hasattr(socket, 'AF_INET6')
+            and family == socket.AF_INET6
+            and host in ('::', '::0', '::0.0.0.0')
+        )
+        if listening_ipv6:
             try:
                 self.socket.setsockopt(
                     socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
@@ -1704,7 +1750,7 @@ class HTTPServer(object):
 
 
 class Gateway(object):
-    """A base class to interface HTTPServer with other systems, such as WSGI."""
+    """Base class to interface HTTPServer with other systems, such as WSGI."""
 
     def __init__(self, req):
         """Initialize Gateway instance with request.
