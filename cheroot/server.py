@@ -1134,27 +1134,11 @@ class HTTPConnection(object):
                 # in the middle of a request.
                 # See https://github.com/cherrypy/cherrypy/issues/853
                 if (not request_seen) or (req and req.started_request):
-                    # Don't bother writing the 408 if the response
-                    # has already started being written.
-                    if req and not req.sent_headers:
-                        try:
-                            req.simple_response('408 Request Timeout')
-                        except errors.FatalSSLAlert:
-                            # Close the connection.
-                            return
-                        except errors.NoSSLError:
-                            self._handle_no_ssl(req)
+                    self._conditional_error(req, '408 Request Timeout')
             elif errnum not in errors.socket_errors_to_ignore:
                 self.server.error_log('socket.error %s' % repr(errnum),
                                       level=logging.WARNING, traceback=True)
-                if req and not req.sent_headers:
-                    try:
-                        req.simple_response('500 Internal Server Error')
-                    except errors.FatalSSLAlert:
-                        # Close the connection.
-                        return
-                    except errors.NoSSLError:
-                        self._handle_no_ssl(req)
+                self._conditional_error(req, '500 Internal Server Error')
             return
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -1165,14 +1149,7 @@ class HTTPConnection(object):
             self._handle_no_ssl(req)
         except Exception as ex:
             self.server.error_log(repr(ex), level=logging.ERROR, traceback=True)
-            if req and not req.sent_headers:
-                try:
-                    req.simple_response('500 Internal Server Error')
-                except errors.FatalSSLAlert:
-                    # Close the connection.
-                    return
-                except errors.NoSSLError:
-                    self._handle_no_ssl(req)
+            self._conditional_error(req, '500 Internal Server Error')
 
     linger = False
 
@@ -1187,6 +1164,19 @@ class HTTPConnection(object):
         )
         req.simple_response('400 Bad Request', msg)
         self.linger = True
+
+    def _conditional_error(self, req, response):
+        """Respond with an error.
+        Don't bother writing if a response
+        has already started being written.
+        """
+        if req and not req.sent_headers:
+            try:
+                req.simple_response('408 Request Timeout')
+            except errors.FatalSSLAlert:
+                pass
+            except errors.NoSSLError:
+                self._handle_no_ssl(req)
 
     def close(self):
         """Close the socket underlying this connection."""
