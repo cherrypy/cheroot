@@ -96,9 +96,9 @@ class ConnectionCloseTests(helper.CherootWebCase):
     def setup_server(cls):
         app = Controller()
 
-        def timeout(req, resp):
+        def _timeout(req, resp):
             return str(cls.httpserver.timeout)
-        app.handlers['/timeout'] = timeout
+        app.handlers['/timeout'] = _timeout
         cls.httpserver.wsgi_app = app
         cls.httpserver.max_request_body_size = 1001
         cls.httpserver.timeout = timeout
