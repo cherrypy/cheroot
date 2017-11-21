@@ -19,7 +19,6 @@ import six
 import cheroot.server
 import cheroot.wsgi
 
-from cheroot._compat import bton
 from cheroot.test import webtest
 
 log = logging.getLogger(__name__)
