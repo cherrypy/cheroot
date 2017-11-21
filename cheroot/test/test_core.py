@@ -141,6 +141,16 @@ class HTTPTests(helper.CherootWebCase):
         assert response.fp.read(12) == b'Hello world!'
         c.close()
 
+    def test_parse_uri_invalid_uri(self):
+        c = self._get_http_connection()
+        c._output(u'GET /йопта! HTTP/1.1'.encode('utf-8'))
+        c._send_output()
+        response = self._get_http_response(c, method='GET')
+        response.begin()
+        assert response.status == HTTP_BAD_REQUEST
+        assert response.fp.read(21) == b'Malformed Request-URI'
+        c.close()
+
     def _test_parse_no_leading_slash_invalid(self, uri):
         """
         URIs with no leading slash produce a 400
