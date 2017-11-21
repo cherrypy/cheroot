@@ -1139,12 +1139,10 @@ class HTTPConnection(object):
                 self.server.error_log('socket.error %s' % repr(errnum),
                                       level=logging.WARNING, traceback=True)
                 self._conditional_error(req, '500 Internal Server Error')
-            return
         except (KeyboardInterrupt, SystemExit):
             raise
         except errors.FatalSSLAlert:
-            # Close the connection.
-            return
+            pass
         except errors.NoSSLError:
             self._handle_no_ssl(req)
         except Exception as ex:
