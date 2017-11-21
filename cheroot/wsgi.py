@@ -341,7 +341,8 @@ class PathInfoDispatcher(object):
             pass
 
         # Sort the apps by len(path), descending
-        by_path_len = lambda app: len(app[0])
+        def by_path_len(app):
+            return len(app[0])
         apps.sort(key=by_path_len, reverse=True)
 
         # The path_prefix strings must start, but not end, with a slash.
