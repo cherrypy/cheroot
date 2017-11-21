@@ -183,4 +183,3 @@ stages:
 - name: *stage_test_osx_name
   if: type IN (api, cron) OR tag IS present
 - name: *stage_deploy_name
-  if: tag IS present
