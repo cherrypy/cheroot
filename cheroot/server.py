@@ -1170,13 +1170,15 @@ class HTTPConnection(object):
         Don't bother writing if a response
         has already started being written.
         """
-        if req and not req.sent_headers:
-            try:
-                req.simple_response('408 Request Timeout')
-            except errors.FatalSSLAlert:
-                pass
-            except errors.NoSSLError:
-                self._handle_no_ssl(req)
+        if not req or req.sent_headers:
+            return
+
+        try:
+            req.simple_response('408 Request Timeout')
+        except errors.FatalSSLAlert:
+            pass
+        except errors.NoSSLError:
+            self._handle_no_ssl(req)
 
     def close(self):
         """Close the socket underlying this connection."""
