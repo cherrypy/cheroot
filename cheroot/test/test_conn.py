@@ -95,7 +95,10 @@ class ConnectionCloseTests(helper.CherootWebCase):
     @classmethod
     def setup_server(cls):
         app = Controller()
-        app.handlers['/timeout'] = lambda req, resp: str(cls.httpserver.timeout)
+
+        def timeout(req, resp):
+            return str(cls.httpserver.timeout)
+        app.handlers['/timeout'] = timeout
         cls.httpserver.wsgi_app = app
         cls.httpserver.max_request_body_size = 1001
         cls.httpserver.timeout = timeout
@@ -184,7 +187,8 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
                 # Make another request on the same connection, which should
                 # error.
-                self.assertRaises(http_client.NotConnected, self.getPage, '/pov')
+                self.assertRaises(
+                    http_client.NotConnected, self.getPage, '/pov')
 
             # Try HEAD.
             # See http://www.bitbucket.org/cherrypy/cherrypy/issue/864.
@@ -411,7 +415,9 @@ class ConnectionCloseTests(helper.CherootWebCase):
 
         for trial in range(5):
             # Put next request
-            conn._output(('GET /hello?%s HTTP/1.1' % trial).encode('iso-8859-1'))
+            conn._output(
+                ('GET /hello?%s HTTP/1.1' % trial).encode('iso-8859-1')
+            )
             conn._output(('Host: %s' % self.HOST).encode('ascii'))
             conn._send_output()
 

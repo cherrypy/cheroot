@@ -172,12 +172,15 @@ class pyOpenSSLAdapter(Adapter):
     ciphers = None
     """The ciphers list of SSL."""
 
-    def __init__(self, certificate, private_key, certificate_chain=None, ciphers=None):
+    def __init__(
+            self, certificate, private_key, certificate_chain=None,
+            ciphers=None):
         """Initialize OpenSSL Adapter instance."""
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
-        super(pyOpenSSLAdapter, self).__init__(certificate, private_key, certificate_chain, ciphers)
+        super(pyOpenSSLAdapter, self).__init__(
+            certificate, private_key, certificate_chain, ciphers)
 
         self._environ = None
 

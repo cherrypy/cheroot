@@ -50,13 +50,18 @@ class Server(server.HTTPServer):
             bind_addr (tuple): network interface to listen to
             wsgi_app (callable): WSGI application callable
             numthreads (int): number of threads for WSGI thread pool
-            server_name (str): web server name to be advertised via Server HTTP header
+            server_name (str): web server name to be advertised via
+                Server HTTP header
             max (int): maximum number of worker threads
-            request_queue_size (int): the 'backlog' arg to socket.listen(); max queued connections
+            request_queue_size (int): the 'backlog' arg to
+                socket.listen(); max queued connections
             timeout (int): the timeout in seconds for accepted connections
-            shutdown_timeout (int): the total time, in seconds, to wait for worker threads to cleanly exit
-            accepted_queue_size (int): maximum number of active requests in queue
-            accepted_queue_timeout (int): timeout for putting request into queue
+            shutdown_timeout (int): the total time, in seconds, to
+                wait for worker threads to cleanly exit
+            accepted_queue_size (int): maximum number of active
+                requests in queue
+            accepted_queue_timeout (int): timeout for putting request
+                into queue
         """
         super(Server, self).__init__(
             bind_addr,
@@ -99,7 +104,8 @@ class Gateway(server.Gateway):
         """Create a mapping of gateways and their versions.
 
         Returns:
-            dict[tuple[int,int],class]: map of gateway version and corresponding class
+            dict[tuple[int,int],class]: map of gateway version and
+                corresponding class
         """
         return dict(
             (gw.version, gw)
@@ -333,7 +339,8 @@ class PathInfoDispatcher(object):
         """Initialize path info WSGI app dispatcher.
 
         Args:
-            apps (dict[str,object]|list[tuple[str,object]]): URI prefix and WSGI app pairs
+            apps (dict[str,object]|list[tuple[str,object]]): URI prefix
+                and WSGI app pairs
         """
         try:
             apps = list(apps.items())
@@ -356,10 +363,12 @@ class PathInfoDispatcher(object):
 
         Args:
             environ (Mapping): a dict containing WSGI environment variables
-            start_response (callable): function, which sets response status and headers
+            start_response (callable): function, which sets response
+                status and headers
 
         Returns:
-            list[bytes]: iterable containing bytes to be returned in HTTP response body
+            list[bytes]: iterable containing bytes to be returned in
+                HTTP response body
         """
         path = environ['PATH_INFO'] or '/'
         for p, app in self.apps:
