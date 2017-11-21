@@ -1171,6 +1171,8 @@ class HTTPConnection(object):
                 except errors.FatalSSLAlert:
                     # Close the connection.
                     return
+                except errors.NoSSLError:
+                    self._handle_no_ssl(req)
 
     linger = False
 
