@@ -1125,10 +1125,8 @@ class HTTPConnection(object):
         except socket.error as ex:
             errnum = ex.args[0]
             # sadly SSL sockets return a different (longer) time out string
-            if (
-                errnum == 'timed out' or
-                errnum == 'The read operation timed out'
-            ):
+            timeout_errs = 'timed out', 'The read operation timed out'
+            if errnum in timeout_errs:
                 # Don't error if we're between requests; only error
                 # if 1) no request has been started at all, or 2) we're
                 # in the middle of a request.
