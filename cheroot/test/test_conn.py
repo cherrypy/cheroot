@@ -18,65 +18,85 @@ timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 
+class Controller(helper.Controller):
+    def hello(req, resp):
+        return 'Hello, world!'
+
+    def pov(req, resp):
+        return pov
+
+    def stream(req, resp):
+        if 'set_cl' in req.environ['QUERY_STRING']:
+            resp.headers['Content-Length'] = str(10)
+
+        def content():
+            for x in range(10):
+                yield str(x)
+
+        return content()
+
+    def upload(req, resp):
+        if not req.environ['REQUEST_METHOD'] == 'POST':
+            raise AssertionError("'POST' != request.method %r" %
+                                 req.environ['REQUEST_METHOD'])
+        return "thanks for '%s'" % req.environ['wsgi.input'].read()
+
+    def custom_204(req, resp):
+        resp.status = '204'
+        return 'Code = 204'
+
+    def custom_304(req, resp):
+        resp.status = '304'
+        return 'Code = 304'
+
+    def err_before_read(req, resp):
+        resp.status = '500 Internal Server Error'
+        return 'ok'
+
+    def one_megabyte_of_a(req, resp):
+        return ['a' * 1024] * 1024
+
+    def wrong_cl_buffered(req, resp):
+        resp.headers['Content-Length'] = '5'
+        return 'I have too many bytes'
+
+    def wrong_cl_unbuffered(req, resp):
+        resp.headers['Content-Length'] = '5'
+        return ['I too', ' have too many bytes']
+
+    def _munge(string):
+        """
+        WSGI 1.0 is a mess around unicode. Create endpoints
+        that match the PATH_INFO that it produces.
+        """
+        if six.PY3:
+            return string.encode('utf-8').decode('latin-1')
+        return string
+
+    handlers = {
+        '/hello': hello,
+        '/pov': pov,
+        '/page1': pov,
+        '/page2': pov,
+        '/page3': pov,
+        '/stream': stream,
+        '/upload': upload,
+        '/custom/204': custom_204,
+        '/custom/304': custom_304,
+        '/err_before_read': err_before_read,
+        '/one_megabyte_of_a': one_megabyte_of_a,
+        '/wrong_cl_buffered': wrong_cl_buffered,
+        '/wrong_cl_unbuffered': wrong_cl_unbuffered,
+    }
+
+
 class ConnectionCloseTests(helper.CherootWebCase):
 
     @classmethod
     def setup_server(cls):
-
-        class Root(helper.Controller):
-
-            def pov(self, req, resp):
-                return pov
-            page1 = pov
-            page2 = pov
-            page3 = pov
-
-            def hello(self, req, resp):
-                return 'Hello, world!'
-
-            def timeout(self, req, resp):
-                return str(cls.httpserver.timeout)
-
-            def stream(self, req, resp):
-                if 'set_cl' in req.environ['QUERY_STRING']:
-                    resp.headers['Content-Length'] = str(10)
-
-                def content():
-                    for x in range(10):
-                        yield str(x)
-
-                return content()
-
-            def upload(self, req, resp):
-                if not req.environ['REQUEST_METHOD'] == 'POST':
-                    raise AssertionError("'POST' != request.method %r" %
-                                         req.environ['REQUEST_METHOD'])
-                return "thanks for '%s'" % req.environ['wsgi.input'].read()
-
-            def custom_204(self, req, resp):
-                resp.status = '204'
-                return 'Code = 204'
-
-            def custom_304(self, req, resp):
-                resp.status = '304'
-                return 'Code = 304'
-
-            def err_before_read(self, req, resp):
-                resp.status = '500 Internal Server Error'
-                return 'ok'
-
-            def one_megabyte_of_a(self, req, resp):
-                return ['a' * 1024] * 1024
-
-            def wrong_cl_buffered(self, req, resp):
-                resp.headers['Content-Length'] = '5'
-                return 'I have too many bytes'
-
-            def wrong_cl_unbuffered(self, req, resp):
-                resp.headers['Content-Length'] = '5'
-                return ['I too', ' have too many bytes']
-
-        cls.httpserver.wsgi_app = Root()
+        app = Controller()
+        app.handlers['/timeout'] = lambda req, resp: str(cls.httpserver.timeout)
+        cls.httpserver.wsgi_app = app
         cls.httpserver.max_request_body_size = 1001
         cls.httpserver.timeout = timeout
 

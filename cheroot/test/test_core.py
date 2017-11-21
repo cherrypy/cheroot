@@ -20,39 +20,50 @@ HTTP_OK = 200
 HTTP_VERSION_NOT_SUPPORTED = 505
 
 
+class HelloController(helper.Controller):
+    def hello(req, resp):
+        return 'Hello world!'
+
+    def body_required(req, resp):
+        if req.environ.get('Content-Lingth', None) is None:
+            resp.status = '411 Length Required'
+            return
+        return 'Hello world!'
+
+    def query_string(req, resp):
+        return req.environ.get('QUERY_STRING', '')
+
+    def asterisk(req, resp):
+        method = req.environ.get('REQUEST_METHOD', 'NO METHOD FOUND')
+        tmpl = 'Got asterisk URI path with {method} method'
+        return tmpl.format(**locals())
+
+    def _munge(string):
+        """
+        WSGI 1.0 is a mess around unicode. Create endpoints
+        that match the PATH_INFO that it produces.
+        """
+        if six.PY3:
+            return string.encode('utf-8').decode('latin-1')
+        return string
+
+    handlers = {
+        '/hello': hello,
+        '/no_body': hello,
+        '/body_required': body_required,
+        '/query_string': query_string,
+        _munge('/привіт'): hello,
+        _munge('/Юххууу'): hello,
+        '/\xa0Ðblah key 0 900 4 data': hello,
+        '/*': asterisk,
+    }
+
+
 class HTTPTests(helper.CherootWebCase):
 
     @classmethod
     def setup_server(cls):
-        class Root(helper.Controller):
-
-            def hello(self, req, resp):
-                return 'Hello world!'
-
-            def no_body(self, req, resp):
-                return 'Hello world!'
-
-            def body_required(self, req, resp):
-                if req.environ.get('Content-Length', None) is None:
-                    resp.status = '411 Length Required'
-                    return
-                return 'Hello world!'
-
-            def query_string(self, req, resp):
-                return req.environ.get('QUERY_STRING', '')
-
-        setattr(Root, 'привіт', Root.hello)
-        setattr(Root, 'Юххууу', Root.hello)
-        setattr(Root, '\xa0Ðblah key 0 900 4 data', Root.hello)
-
-        def _asterisk(self, req, resp):
-            method = req.environ.get('REQUEST_METHOD', 'NO METHOD FOUND')
-            tmpl = 'Got asterisk URI path with {method} method'
-            return tmpl.format(**locals())
-
-        setattr(Root, '*', _asterisk)
-
-        cls.httpserver.wsgi_app = Root()
+        cls.httpserver.wsgi_app = HelloController()
         cls.httpserver.max_request_body_size = 30000000
 
     def _get_http_connection(self):
