@@ -1,3 +1,8 @@
+v5.9.2
+======
+
+- #61: Re-release without spurious files in the distribution.
+
 v5.9.1
 ======
 
