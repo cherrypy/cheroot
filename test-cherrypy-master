@@ -1,0 +1,17 @@
+#!/bin/bash
+
+git clone https://github.com/cherrypy/cherrypy
+pushd cherrypy
+
+# install the dependencies
+tox --notest
+
+# override the cheroot dependency with master
+.tox/python/bin/pip install -e ..
+
+# run the tests
+tox
+
+# cleanup
+popd
+rm -rf cherrypy
