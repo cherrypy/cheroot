@@ -1,3 +1,11 @@
+v5.10.0
+======
+
+- Minor refactorings of cheroot/server.py to reduce redundancy
+  of behavior.
+- Delinting with fewer exceptions.
+- Restored license to BSD.
+
 v5.9.2
 ======
 
@@ -19,6 +27,8 @@ v5.9.0
   in CherryPy, now superseding the implementation there.
 
 - Substantial cleanup around compatibility functions (_compat module).
+
+- License unintentionally changed to MIT. BSD still declared and intended.
 
 v5.8.3
 ======
