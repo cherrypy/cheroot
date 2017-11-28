@@ -25,7 +25,7 @@ import json
 import unittest
 from imp import reload
 
-from six.moves import range, http_client, map
+from six.moves import range, http_client, map, urllib_parse
 import six
 
 
@@ -584,6 +584,36 @@ def openURL(url, headers=None, method='GET', body=None,
                 time.sleep(0.5)
                 if trial == 9:
                     raise
+
+
+def openAbsoluteURI(url, **kwargs):
+    """Open the given HTTP URL provided in the form of Absolute-URI.
+
+    Ref: https://tools.ietf.org/html/rfc3986#section-4.3
+    """
+    INVALID_ARGS = ('host', 'port')
+    for arg in INVALID_ARGS:
+        if arg in kwargs:
+            raise TypeError(
+                "openAbsoluteURI() got an unexpected keyword argument '{arg}'".
+                format(**locals())
+            )
+
+    parsed_url = urllib_parse.urlparse(url)
+    scheme, netloc, path, params, query, fragment = parsed_url
+    host = parsed_url.hostname
+    port = parsed_url.port or 80
+
+    stripped_url = urllib_parse.urlunparse(
+        (None, None, path, params, query, None)
+    )
+
+    if not (host and scheme):
+        raise TypeError(
+            'url must be in form of Absolute-URI (RFC3986, section 4.3)'
+        )
+
+    return openURL(url=stripped_url, **kwargs)
 
 
 # Add any exceptions which your web framework handles
