@@ -23,6 +23,8 @@ _base_envs:
   stage: &stage_test_osx_name test under OS X (last chance to fail before deploy available)
 - &stage_deploy
   stage: &stage_deploy_name upload new version of python package to PYPI (only for tagged commits)
+- &manual_run_or_cron  # run the job only if it's a cron run or it's triggered manually
+  if: type IN (api, cron)
 - &pyenv_base
   <<: *stage_test
   language: generic
@@ -87,30 +89,35 @@ jobs:
   - <<: *pure_python_base_priority
     python: nightly
   - <<: *osx_python_base
+    <<: *manual_run_or_cron
     python: 2.6
     env:
     - PYTHON_VERSION=2.6.9
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
+    <<: *manual_run_or_cron
     python: 2.7
     env:
     - PYTHON_VERSION=2.7.13
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
+    <<: *manual_run_or_cron
     python: 3.3
     env:
     - PYTHON_VERSION=3.3.6
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
+    <<: *manual_run_or_cron
     python: 3.4
     env:
     - PYTHON_VERSION=3.4.6
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
+    <<: *manual_run_or_cron
     python: 3.5
     env:
     - PYTHON_VERSION=3.5.3
@@ -123,12 +130,14 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
+    <<: *manual_run_or_cron
     python: nightly
     env:
     - PYTHON_VERSION=3.7-dev
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
+    <<: *manual_run_or_cron
     python: *pypy2
     env:
     - *env_pypy2
