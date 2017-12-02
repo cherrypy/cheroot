@@ -249,6 +249,7 @@ class Gateway_10(Gateway):
             'SERVER_SOFTWARE': req.server.software,
             'wsgi.errors': sys.stderr,
             'wsgi.input': req.rfile,
+            'wsgi.input_terminated': bool(req.chunked_read),
             'wsgi.multiprocess': False,
             'wsgi.multithread': True,
             'wsgi.run_once': False,
