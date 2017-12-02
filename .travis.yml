@@ -3,9 +3,7 @@ sudo: false
 language: python
 
 python:
-- 2.6
 - 2.7
-- 3.3
 - 3.4
 - 3.5
 - &pypy2 pypy2.7-5.8.0
@@ -90,23 +88,9 @@ jobs:
     python: nightly
   - <<: *osx_python_base
     <<: *manual_run_or_cron
-    python: 2.6
-    env:
-    - PYTHON_VERSION=2.6.9
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    <<: *manual_run_or_cron
     python: 2.7
     env:
     - PYTHON_VERSION=2.7.13
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    <<: *manual_run_or_cron
-    python: 3.3
-    env:
-    - PYTHON_VERSION=3.3.6
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base

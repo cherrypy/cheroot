@@ -28,6 +28,8 @@ from imp import reload
 from six.moves import range, http_client, map, urllib_parse
 import six
 
+from more_itertools.more import always_iterable
+
 
 def interface(host):
     """Return an IP address for a client connection given the server host.
@@ -647,22 +649,3 @@ def server_error(exc=None):
         print('')
         print(''.join(traceback.format_exception(*exc)))
         return True
-
-
-def always_iterable(obj, base_type=(six.text_type, six.binary_type)):
-    """
-    Copy of always_iterable from more_itertools.more.
-
-    Replace with dependency when Python 2.6 compatibility is
-    no longer required.
-    """
-    if obj is None:
-        return iter(())
-
-    if (base_type is not None) and isinstance(obj, base_type):
-        return iter((obj,))
-
-    try:
-        return iter(obj)
-    except TypeError:
-        return iter((obj,))
