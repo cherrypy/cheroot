@@ -620,7 +620,7 @@ def strip_netloc(url):
     """
     parsed = urllib_parse.urlparse(url)
     scheme, netloc, path, params, query, fragment = parsed
-    stripped = None, None, path, params, query, None
+    stripped = '', '', path, params, query, ''
     return urllib_parse.urlunparse(stripped)
 
 
