@@ -224,10 +224,10 @@ class WebCase(unittest.TestCase):
         """Make our HTTP_CONN persistent (or not).
 
         If the 'on' argument is True (the default), then self.HTTP_CONN
-        will be set to an instance of HTTPConnection (or HTTPS
-        if self.scheme is "https"). This will then persist across requests.
-        We only allow for a single open connection, so if you call this
-        and we currently have an open connection, it will be closed.
+        will be set to an instance of HTTP(S)?Connection
+        to persist across requests.
+        As this class only allows for a single open connection, if
+        self already has an open connection, it will be closed.
         """
         try:
             self.HTTP_CONN.close()
