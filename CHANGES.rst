@@ -5,6 +5,14 @@ v6.0.0
 - Also drop built-in SSL support for Python 2.7 earlier
   than 2.7.9.
 
+v5.11.0
+======
+
+- CherryPy #1621: To support webtest applications that feed
+  absolute URIs to getPage but expect the scheme/host/port to
+  be ignored (as cheroot 5.8 and earlier did), provide a
+  ``strip_netloc`` helper and recipe for calling it in a subclass.
+
 v5.10.0
 ======
 

@@ -260,6 +260,21 @@ class WebCase(unittest.TestCase):
                 protocol=None, raise_subcls=None):
         """Open the url with debugging support. Return status, headers, body.
 
+        url should be the identifier passed to the server, typically a
+        server-absolute path and query string (sent between method and
+        protocol), and should only be an absolute URI if proxy support is
+        enabled in the server.
+
+        If the application under test generates absolute URIs, be sure
+        to wrap them first with strip_netloc::
+
+            class MyAppWebCase(WebCase):
+                def getPage(url, *args, **kwargs):
+                    super(MyAppWebCase, self).getPage(
+                        cheroot.test.webtest.strip_netloc(url),
+                        *args, **kwargs
+                    )
+
         `raise_subcls` must be a tuple with the exceptions classes
         or a single exception class that are not going to be considered
         a socket.error regardless that they were are subclass of a
@@ -588,34 +603,27 @@ def openURL(url, headers=None, method='GET', body=None,
                     raise
 
 
-def openAbsoluteURI(url, **kwargs):
-    """Open the given HTTP URL provided in the form of Absolute-URI.
-
-    Ref: https://tools.ietf.org/html/rfc3986#section-4.3
+def strip_netloc(url):
     """
-    INVALID_ARGS = ('host', 'port')
-    for arg in INVALID_ARGS:
-        if arg in kwargs:
-            raise TypeError(
-                "openAbsoluteURI() got an unexpected keyword argument '{arg}'".
-                format(**locals())
-            )
+    Strip the scheme and host from the URL, returning the
+    server-absolute portion.
 
-    parsed_url = urllib_parse.urlparse(url)
-    scheme, netloc, path, params, query, fragment = parsed_url
-    host = parsed_url.hostname
-    port = parsed_url.port or 80
+    Useful for wrapping an absolute-URI for which only the
+    path is expected (such as in calls to getPage).
 
-    stripped_url = urllib_parse.urlunparse(
-        (None, None, path, params, query, None)
-    )
+    >>> strip_netloc('https://google.com/foo/bar?bing#baz')
+    '/foo/bar?bing'
 
-    if not (host and scheme):
-        raise TypeError(
-            'url must be in form of Absolute-URI (RFC3986, section 4.3)'
-        )
+    >>> strip_netloc('//google.com/foo/bar?bing#baz')
+    '/foo/bar?bing'
 
-    return openURL(url=stripped_url, **kwargs)
+    >>> strip_netloc('/foo/bar?bing#baz')
+    '/foo/bar?bing'
+    """
+    parsed = urllib_parse.urlparse(url)
+    scheme, netloc, path, params, query, fragment = parsed
+    stripped = '', '', path, params, query, ''
+    return urllib_parse.urlunparse(stripped)
 
 
 # Add any exceptions which your web framework handles
