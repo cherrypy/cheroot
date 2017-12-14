@@ -1,10 +1,8 @@
 """A library of helper functions for the Cheroot test suite."""
 
 import datetime
-import io
 import logging
 import os
-import subprocess
 import sys
 import time
 import threading
@@ -12,7 +10,6 @@ import types
 
 from six.moves import http_client
 
-import portend
 import six
 
 import cheroot.server
@@ -158,123 +155,3 @@ class Controller(object):
                         raise
         start_response(resp.status, resp.headers.items())
         return resp.output()
-
-
-# --------------------------- Spawning helpers --------------------------- #
-
-
-class CherootProcess(object):
-
-    pid_file = os.path.join(thisdir, 'test.pid')
-    config_file = os.path.join(thisdir, 'test.conf')
-    config_template = """[global]
-server.socket_host: '%(host)s'
-server.socket_port: %(port)s
-checker.on: False
-log.screen: False
-log.error_file: r'%(error_log)s'
-log.access_file: r'%(access_log)s'
-%(ssl)s
-%(extra)s
-"""
-    error_log = os.path.join(thisdir, 'test.error.log')
-    access_log = os.path.join(thisdir, 'test.access.log')
-
-    def __init__(self, wait=False, daemonize=False, ssl=False,
-                 socket_host=None, socket_port=None):
-        self.wait = wait
-        self.daemonize = daemonize
-        self.ssl = ssl
-        self.host = socket_host
-        self.port = socket_port
-
-    def write_conf(self, extra=''):
-        if self.ssl:
-            serverpem = os.path.join(thisdir, 'test.pem')
-            ssl = """
-server.ssl_certificate: r'%s'
-server.ssl_private_key: r'%s'
-""" % (serverpem, serverpem)
-        else:
-            ssl = ''
-
-        conf = self.config_template % {
-            'host': self.host,
-            'port': self.port,
-            'error_log': self.error_log,
-            'access_log': self.access_log,
-            'ssl': ssl,
-            'extra': extra,
-        }
-        with io.open(self.config_file, 'w', encoding='utf-8') as f:
-            f.write(six.text_type(conf))
-
-    def start(self, imports=None):
-        """Start cherryd in a subprocess."""
-        portend.free(self.host, self.port, timeout=1)
-
-        args = [
-            os.path.join(thisdir, '..', 'cherryd'),
-            '-c', self.config_file,
-            '-p', self.pid_file,
-        ]
-
-        if not isinstance(imports, (list, tuple)):
-            imports = [imports]
-        for i in imports:
-            if i:
-                args.append('-i')
-                args.append(i)
-
-        if self.daemonize:
-            args.append('-d')
-
-        env = os.environ.copy()
-        # Make sure we import the cheroot package in which this module is
-        # defined.
-        grandparentdir = os.path.abspath(os.path.join(thisdir, '..', '..'))
-        if env.get('PYTHONPATH', ''):
-            env['PYTHONPATH'] = os.pathsep.join(
-                (grandparentdir, env['PYTHONPATH']))
-        else:
-            env['PYTHONPATH'] = grandparentdir
-        self._proc = subprocess.Popen([sys.executable] + args, env=env)
-        if self.wait:
-            self.exit_code = self._proc.wait()
-        else:
-            portend.occupied(self.host, self.port, timeout=5)
-
-        # Give the engine a wee bit more time to finish STARTING
-        if self.daemonize:
-            time.sleep(2)
-        else:
-            time.sleep(1)
-
-    def get_pid(self):
-        if self.daemonize:
-            return int(open(self.pid_file, 'rb').read())
-        return self._proc.pid
-
-    def join(self):
-        """Wait for the process to exit."""
-        if self.daemonize:
-            return self._join_daemon()
-        self._proc.wait()
-
-    def _join_daemon(self):
-        try:
-            try:
-                # Mac, UNIX
-                os.wait()
-            except AttributeError:
-                # Windows
-                try:
-                    pid = self.get_pid()
-                except IOError:
-                    # Assume the subprocess deleted the pidfile on shutdown.
-                    pass
-                else:
-                    os.waitpid(pid, 0)
-        except OSError as ex:
-            if ex.args != (10, 'No child processes'):
-                raise

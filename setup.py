@@ -59,7 +59,6 @@ params = dict(
 
             'pytest-cov',
             'backports.unittest_mock',
-            'portend',
         ],
     },
     setup_requires=[
