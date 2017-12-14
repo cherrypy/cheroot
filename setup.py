@@ -45,11 +45,12 @@ params = dict(
 
             'docutils',
             'alabaster',
+
+            'collective.checkdocs',
         ],
         'testing': [
             'pytest>=2.8',
             'pytest-sugar',
-            'collective.checkdocs',
 
             # measure test coverage
             'coverage',
