@@ -96,9 +96,6 @@ class CherootWebCase(webtest.WebCase):
         if td:
             td()
 
-    def exit(self):
-        sys.exit()
-
     def skip(self, msg='skipped '):
         pytest.skip(msg)
 

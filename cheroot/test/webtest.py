@@ -258,12 +258,9 @@ class WebCase(unittest.TestCase):
             elif i == 'R':
                 raise self.failureException(msg)
             elif i == 'X':
-                self.exit()
+                sys.exit()
             sys.stdout.write(p)
             sys.stdout.flush()
-
-    def exit(self):
-        sys.exit()
 
     @property
     def status_code(self):
