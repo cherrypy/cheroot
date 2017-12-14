@@ -13,7 +13,6 @@ import types
 from six.moves import http_client
 
 import portend
-import pytest
 import six
 
 import cheroot.server
@@ -95,9 +94,6 @@ class CherootWebCase(webtest.WebCase):
         td = getattr(cls, 'teardown', None)
         if td:
             td()
-
-    def skip(self, msg='skipped '):
-        pytest.skip(msg)
 
     date_tolerance = 2
 

@@ -11,9 +11,6 @@ import pytest
 from cheroot.test import helper, webtest
 
 
-# avpytestmark = pytest.mark.skip(reason="incomplete")
-
-
 timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 

@@ -61,7 +61,7 @@ class ServerConfigTests(helper.CherootWebCase):
 
     def testAdditionalServers(self):
         if self.scheme == 'https':
-            return self.skip('not available under ssl')
+            return pytest.skip('not available under ssl')
         self.PORT = 9877
         self.getPage('/')
         self.assertBody(str(self.PORT))
@@ -71,7 +71,7 @@ class ServerConfigTests(helper.CherootWebCase):
 
     def testMaxRequestSizePerHandler(self):
         if getattr(cherrypy.server, 'using_apache', False):
-            return self.skip('skipped due to known Apache differences... ')
+            return pytest.skip('skipped due to known Apache differences... ')
 
         self.getPage('/tinyupload', method='POST',
                      headers=[('Content-Type', 'text/plain'),
@@ -88,7 +88,7 @@ class ServerConfigTests(helper.CherootWebCase):
 
     def testMaxRequestSize(self):
         if getattr(cherrypy.server, 'using_apache', False):
-            return self.skip('skipped due to known Apache differences... ')
+            return pytest.skip('skipped due to known Apache differences... ')
 
         for size in (500, 5000, 50000):
             self.getPage('/', headers=[('From', 'x' * 500)])
