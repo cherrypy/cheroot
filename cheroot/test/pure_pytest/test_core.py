@@ -58,15 +58,6 @@ class HelloController(helper.Controller):
     }
 
 
-def _get_http_connection(testing_server):
-    host, port = testing_server.bind_addr
-    name = '{interface}:{port}'.format(
-        interface=webtest.interface(host),
-        port=port,
-    )
-    return http_client.HTTPConnection(name)
-
-
 def _get_http_response(connection, method='GET'):
     c = connection
     kwargs = {'strict': c.strict} if hasattr(c, 'strict') else {}
@@ -92,7 +83,11 @@ def server_client(testing_server):
             self._port = port
 
         def get_connection(self):
-            return _get_http_connection(testing_server)
+            name = '{interface}:{port}'.format(
+                interface=webtest.interface(self._host),
+                port=self._port,
+            )
+            return http_client.HTTPConnection(name)
 
         def request(self, uri, method='GET'):
             return webtest.openURL(
