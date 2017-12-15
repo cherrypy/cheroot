@@ -28,9 +28,11 @@ def cheroot_server(server_factory):
 
 @pytest.fixture(scope='module')
 def wsgi_server():
-    yield from cheroot_server(cheroot.wsgi.Server)
+    for srv in cheroot_server(cheroot.wsgi.Server):
+        yield srv
 
 
 @pytest.fixture(scope='module')
 def native_server():
-    yield from cheroot_server(cheroot.server.HTTPServer)
+    for srv in cheroot_server(cheroot.server.HTTPServer):
+        yield srv
