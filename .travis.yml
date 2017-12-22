@@ -6,8 +6,9 @@ python:
 - 2.7
 - 3.4
 - 3.5
+# There's no pypy2.7-5.9.0 available in Travis CI
 - &pypy2 pypy2.7-5.8.0
-- &pypy3 pypy3.5-5.8.0
+- &pypy3 pypy3.5-5.9.0
 
 group: edge
 _base_envs:
@@ -122,9 +123,9 @@ jobs:
     - *env_path
   - <<: *osx_python_base
     <<: *manual_run_or_cron
-    python: *pypy2
+    python: pypy2.7-5.9.0
     env:
-    - *env_pypy2
+    - PYTHON_VERSION=pypy2.7-5.9.0
     - *env_pyenv
     - *env_path
   # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
