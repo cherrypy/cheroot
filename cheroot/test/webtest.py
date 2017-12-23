@@ -22,6 +22,7 @@ import traceback
 import os
 import json
 import unittest
+import warnings
 
 from six.moves import range, http_client, map, urllib_parse
 import six
@@ -212,7 +213,16 @@ class WebCase(unittest.TestCase):
         False or 1 or 0.
         """
         env_str = os.environ.get('WEBTEST_INTERACTIVE', 'True')
-        return bool(json.loads(env_str.lower()))
+        is_interactive = bool(json.loads(env_str.lower()))
+        if is_interactive:
+            warnings.warn(
+                'We are moving to pytest-based testing and thus deprecating '
+                'WEBTEST_INTERACTIVE environment variable support. '
+                'Interactive test failure interceptor is going to be removed '
+                'in Cheroot v7.0.0',  # TODO: decide whether it's v7 or v8
+                DeprecationWarning
+            )
+        return is_interactive
 
     console_height = 30
 
