@@ -158,6 +158,7 @@ script:
 - tox
 
 after_failure:
+- ip a
 - echo "Here's a list of installed Python packages:"
 - pip list --format=columns
 - echo Dumping logs, because tests failed to succeed
