@@ -1,3 +1,4 @@
+import socket
 import threading
 import time
 
@@ -7,16 +8,31 @@ import cheroot.server
 import cheroot.wsgi
 
 EPHEMERAL_PORT = 0
+NO_INTERFACE = None  # Using this or '' will cause an exception
+ANY_INTERFACE_IPV4 = '0.0.0.0'
+ANY_INTERFACE_IPV6 = '::'
 
 config = {
-    'bind_addr': ('127.0.0.1', EPHEMERAL_PORT),
+    'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
     'wsgi_app': None,
 }
 
 
 def cheroot_server(server_factory):
     conf = config.copy()
-    httpserver = server_factory(**conf)  # create it
+    bind_port = conf.pop('bind_addr')[-1]
+
+    for interface in ANY_INTERFACE_IPV6, ANY_INTERFACE_IPV4:
+        try:
+            actual_bind_addr = (interface, bind_port)
+            httpserver = server_factory(  # create it
+                bind_addr=actual_bind_addr,
+                **conf
+            )
+        except socket.error:
+            pass
+        else:
+            break
 
     threading.Thread(target=httpserver.safe_start).start()  # spawn it
     while not httpserver.ready:  # wait until fully initialized and bound
