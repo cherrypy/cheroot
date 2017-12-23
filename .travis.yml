@@ -159,6 +159,7 @@ script:
 
 after_failure:
 - ip a
+- sysctl -a
 - echo "Here's a list of installed Python packages:"
 - pip list --format=columns
 - echo Dumping logs, because tests failed to succeed
