@@ -1407,10 +1407,27 @@ class HTTPServer(object):
         return '%s.%s(%r)' % (self.__module__, self.__class__.__name__,
                               self.bind_addr)
 
-    def _get_bind_addr(self):
+    @property
+    def bind_addr(self):
+        """Return the interface on which to listen for connections.
+
+        For TCP sockets, a (host, port) tuple. Host values may be any IPv4
+        or IPv6 address, or any valid hostname. The string 'localhost' is a
+        synonym for '127.0.0.1' (or '::1', if your hosts file prefers IPv6).
+        The string '0.0.0.0' is a special IPv4 entry meaning "any active
+        interface" (INADDR_ANY), and '::' is the similar IN6ADDR_ANY for
+        IPv6. The empty string or None are not allowed.
+
+        For UNIX sockets, supply the filename as a string.
+
+        Systemd socket activation is automatic and doesn't require tempering
+        with this variable.
+        """
         return self._bind_addr
 
-    def _set_bind_addr(self, value):
+    @bind_addr.setter
+    def bind_addr(self, value):
+        """Set the interface on which to listen for connections."""
         if isinstance(value, tuple) and value[0] in ('', None):
             # Despite the socket module docs, using '' does not
             # allow AI_PASSIVE to work. Passing None instead
@@ -1426,22 +1443,6 @@ class HTTPServer(object):
                              "Use '0.0.0.0' (IPv4) or '::' (IPv6) instead "
                              'to listen on all active interfaces.')
         self._bind_addr = value
-    bind_addr = property(
-        _get_bind_addr,
-        _set_bind_addr,
-        doc="""The interface on which to listen for connections.
-
-        For TCP sockets, a (host, port) tuple. Host values may be any IPv4
-        or IPv6 address, or any valid hostname. The string 'localhost' is a
-        synonym for '127.0.0.1' (or '::1', if your hosts file prefers IPv6).
-        The string '0.0.0.0' is a special IPv4 entry meaning "any active
-        interface" (INADDR_ANY), and '::' is the similar IN6ADDR_ANY for
-        IPv6. The empty string or None are not allowed.
-
-        For UNIX sockets, supply the filename as a string.
-
-        Systemd socket activation is automatic and doesn't require tempering
-        with this variable""")
 
     def safe_start(self):
         """Run the server forever, and stop it cleanly on exit."""
