@@ -1694,16 +1694,17 @@ class HTTPServer(object):
                 return
             raise
 
-    def _get_interrupt(self):
+    @property
+    def interrupt(self):
+        """Return interrupt Exception instance."""
         return self._interrupt
 
-    def _set_interrupt(self, interrupt):
+    @interrupt.setter
+    def interrupt(self, interrupt):
+        """Set this to an Exception instance to interrupt the server."""
         self._interrupt = True
         self.stop()
         self._interrupt = interrupt
-    interrupt = property(_get_interrupt, _set_interrupt,
-                         doc='Set this to an Exception instance to '
-                             'interrupt the server.')
 
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
