@@ -1,4 +1,3 @@
-import socket
 import threading
 import time
 
@@ -29,7 +28,7 @@ def cheroot_server(server_factory):
                 bind_addr=actual_bind_addr,
                 **conf
             )
-        except socket.error:
+        except OSError:
             pass
         else:
             break
