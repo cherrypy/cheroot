@@ -6,9 +6,10 @@ import pytest
 import cheroot.server
 import cheroot.wsgi
 
+EPHEMERAL_PORT = 0
 
 config = {
-    'bind_addr': ('127.0.0.1', 54583),
+    'bind_addr': ('127.0.0.1', EPHEMERAL_PORT),
     'wsgi_app': None,
 }
 
