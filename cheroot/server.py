@@ -1501,12 +1501,14 @@ class HTTPServer(object):
                     host, port, socket.AF_UNSPEC,
                     socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
             except socket.gaierror:
-                if ':' in self.bind_addr[0]:
-                    info = [(socket.AF_INET6, socket.SOCK_STREAM,
-                             0, '', self.bind_addr + (0, 0))]
-                else:
-                    info = [(socket.AF_INET, socket.SOCK_STREAM,
-                             0, '', self.bind_addr)]
+                sock_type = socket.AF_INET
+                bind_addr = self.bind_addr
+
+                if ':' in host:
+                    sock_type = socket.AF_INET6
+                    bind_addr = bind_addr + (0, 0)
+
+                info = [(sock_type, socket.SOCK_STREAM, 0, '', bind_addr)]
 
         if not self.socket:
             msg = 'No socket could be created'
