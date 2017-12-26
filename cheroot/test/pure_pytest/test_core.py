@@ -81,6 +81,8 @@ def server_client(testing_server):
     interface = webtest.interface(host)
 
     def probe_ipv6_sock(interface):
+        # Alternate way is to check IPs on interfaces using glibc, like:
+        # github.com/Gautier/minifail/blob/master/minifail/getifaddrs.py
         try:
             with closing(socket.socket(family=socket.AF_INET6)) as sock:
                 sock.bind((interface, 0))
