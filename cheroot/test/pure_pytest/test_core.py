@@ -97,8 +97,8 @@ def server_client(testing_server):
 
     if ':' in interface and not probe_ipv6_sock(interface):
         interface = '127.0.0.1'
-        if ':' in port:
-            port = interface
+        if ':' in host:
+            host = interface
 
     class _TestClient(object):
         def __init__(self, host, port):
