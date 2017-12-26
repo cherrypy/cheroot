@@ -86,7 +86,9 @@ def server_client(testing_server):
         try:
             with closing(socket.socket(family=socket.AF_INET6)) as sock:
                 sock.bind((interface, 0))
-        except OSError as sock_err:
+        except (OSError, socket.error) as sock_err:
+            # In Python 3 socket.error is an alias for OSError
+            # In Python 2 socket.error is a subclass of IOError
             if sock_err.errno != errno.EADDRNOTAVAIL:
                 raise
         else:
