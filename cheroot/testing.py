@@ -1,11 +1,16 @@
 """Pytest fixtures and other helpers for doing testing by end-users."""
 
+from contextlib import closing
+import errno
+import socket
 import threading
 import time
 
 import pytest
+from six.moves import http_client
 
 import cheroot.server
+from cheroot.test import webtest
 import cheroot.wsgi
 
 EPHEMERAL_PORT = 0
@@ -57,3 +62,75 @@ def native_server():
     """Set up and tear down a Cheroot HTTP server instance."""
     for srv in cheroot_server(cheroot.server.HTTPServer):
         yield srv
+
+
+@pytest.fixture(scope='module')
+def server_client(wsgi_server):
+    """Create a test client out of given server."""
+    host, port = wsgi_server.bind_addr
+
+    interface = webtest.interface(host)
+
+    def probe_ipv6_sock(interface):
+        # Alternate way is to check IPs on interfaces using glibc, like:
+        # github.com/Gautier/minifail/blob/master/minifail/getifaddrs.py
+        try:
+            with closing(socket.socket(family=socket.AF_INET6)) as sock:
+                sock.bind((interface, 0))
+        except (OSError, socket.error) as sock_err:
+            # In Python 3 socket.error is an alias for OSError
+            # In Python 2 socket.error is a subclass of IOError
+            if sock_err.errno != errno.EADDRNOTAVAIL:
+                raise
+        else:
+            return True
+
+        return False
+
+    if ':' in interface and not probe_ipv6_sock(interface):
+        interface = '127.0.0.1'
+        if ':' in host:
+            host = interface
+
+    class _TestClient(object):
+        def __init__(self, server, host, port):
+            self._host = host
+            self._port = port
+            self.server_instance = server
+
+        def get_connection(self):
+            name = '{interface}:{port}'.format(
+                interface=interface,
+                port=self._port,
+            )
+            return http_client.HTTPConnection(name)
+
+        def request(self, uri, method='GET'):
+            return webtest.openURL(
+                uri, method=method,
+                host=self._host, port=self._port,
+            )
+
+        def get(self, uri):
+            return self.request(uri, method='GET')
+
+        def post(self, uri):
+            return self.request(uri, method='POST')
+
+        def put(self, uri):
+            return self.request(uri, method='PUT')
+
+        def patch(self, uri):
+            return self.request(uri, method='PATCH')
+
+        def delete(self, uri):
+            return self.request(uri, method='DELETE')
+
+        def connect(self, uri):
+            return self.request(uri, method='CONNECT')
+
+        def options(self, uri):
+            return self.request(uri, method='OPTIONS')
+
+    test_client = _TestClient(wsgi_server, host, port)
+    return test_client
