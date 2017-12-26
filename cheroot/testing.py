@@ -1,3 +1,5 @@
+"""Pytest fixtures and other helpers for doing testing by end-users."""
+
 import threading
 import time
 
@@ -18,6 +20,7 @@ config = {
 
 
 def cheroot_server(server_factory):
+    """Set up and tear down a Cheroot server instance."""
     conf = config.copy()
     bind_port = conf.pop('bind_addr')[-1]
 
@@ -44,11 +47,13 @@ def cheroot_server(server_factory):
 
 @pytest.fixture(scope='module')
 def wsgi_server():
+    """Set up and tear down a Cheroot WSGI server instance."""
     for srv in cheroot_server(cheroot.wsgi.Server):
         yield srv
 
 
 @pytest.fixture(scope='module')
 def native_server():
+    """Set up and tear down a Cheroot HTTP server instance."""
     for srv in cheroot_server(cheroot.server.HTTPServer):
         yield srv

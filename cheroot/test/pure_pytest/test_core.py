@@ -21,25 +21,32 @@ HTTP_VERSION_NOT_SUPPORTED = 505
 
 
 class HelloController(helper.Controller):
+    """Controller for serving WSGI apps."""
+
     def hello(req, resp):
+        """Render Hello world."""
         return 'Hello world!'
 
     def body_required(req, resp):
+        """Render Hello world or set 411."""
         if req.environ.get('Content-Length', None) is None:
             resp.status = '411 Length Required'
             return
         return 'Hello world!'
 
     def query_string(req, resp):
+        """Render QUERY_STRING value."""
         return req.environ.get('QUERY_STRING', '')
 
     def asterisk(req, resp):
+        """Render request method value."""
         method = req.environ.get('REQUEST_METHOD', 'NO METHOD FOUND')
         tmpl = 'Got asterisk URI path with {method} method'
         return tmpl.format(**locals())
 
     def _munge(string):
-        """
+        """Encode PATH_INFO correctly depending on Python version.
+
         WSGI 1.0 is a mess around unicode. Create endpoints
         that match the PATH_INFO that it produces.
         """
@@ -69,6 +76,7 @@ def _get_http_response(connection, method='GET'):
 
 @pytest.fixture(scope='module')
 def testing_server(wsgi_server):
+    """Attach a WSGI app to the given server and pre-configure it."""
     wsgi_server.wsgi_app = HelloController()
     wsgi_server.max_request_body_size = 30000000
     return wsgi_server
@@ -76,6 +84,7 @@ def testing_server(wsgi_server):
 
 @pytest.fixture
 def server_client(testing_server):
+    """Create a test client out of given server."""
     host, port = testing_server.bind_addr
 
     interface = webtest.interface(host)
@@ -145,12 +154,14 @@ def server_client(testing_server):
 
 
 def test_http_connect_request(server_client):
+    """Check that CONNECT query results in Method Not Allowed status."""
     status_line = server_client.connect('/anything')[0]
     actual_status = int(status_line[:3])
     assert actual_status == 405
 
 
 def test_normal_request(server_client):
+    """Check that normal GET query succeeds."""
     status_line, _, actual_resp_body = server_client.get('/hello')
     actual_status = int(status_line[:3])
     assert actual_status == HTTP_OK
@@ -158,6 +169,7 @@ def test_normal_request(server_client):
 
 
 def test_query_string_request(server_client):
+    """Check that GET param is parsed well."""
     status_line, _, actual_resp_body = server_client.get(
         '/query_string?test=True'
     )
@@ -177,6 +189,7 @@ def test_query_string_request(server_client):
     )
 )
 def test_parse_acceptable_uri(server_client, uri):
+    """Check that server responds with OK to valid GET queries."""
     status_line = server_client.get(uri)[0]
     actual_status = int(status_line[:3])
     assert actual_status == HTTP_OK
@@ -213,6 +226,10 @@ def test_parse_uri_unsafe_uri(server_client):
 
 
 def test_parse_uri_invalid_uri(server_client):
+    """Check that server responds with Bad Request to invalid GET queries.
+
+    Invalid request line test case: it should only contain US-ASCII.
+    """
     c = server_client.get_connection()
     c._output(u'GET /йопта! HTTP/1.1'.encode('utf-8'))
     c._send_output()
@@ -231,8 +248,9 @@ def test_parse_uri_invalid_uri(server_client):
     )
 )
 def test_parse_no_leading_slash_invalid(server_client, uri):
-    """
-    URIs with no leading slash produce a 400
+    """Check that server responds with Bad Request to invalid GET queries.
+
+    Invalid request line test case: it should have leading slash (be absolute).
     """
     status_line, _, actual_resp_body = server_client.get(
         urllib.parse.quote(uri)
@@ -243,6 +261,10 @@ def test_parse_no_leading_slash_invalid(server_client, uri):
 
 
 def test_parse_uri_absolute_uri(server_client):
+    """Check that server responds with Bad Request to Absolute URI.
+
+    Only proxy servers should allow this.
+    """
     status_line, _, actual_resp_body = server_client.get('http://google.com/')
     actual_status = int(status_line[:3])
     assert actual_status == HTTP_BAD_REQUEST
@@ -251,6 +273,7 @@ def test_parse_uri_absolute_uri(server_client):
 
 
 def test_parse_uri_asterisk_uri(server_client):
+    """Check that server responds with OK to OPTIONS with "*" Absolute URI."""
     status_line, _, actual_resp_body = server_client.options('*')
     actual_status = int(status_line[:3])
     assert actual_status == HTTP_OK
@@ -259,6 +282,7 @@ def test_parse_uri_asterisk_uri(server_client):
 
 
 def test_parse_uri_fragment_uri(server_client):
+    """Check that server responds with Bad Request to URI with fragment."""
     status_line, _, actual_resp_body = server_client.get(
         '/hello?test=something#fake',
     )
@@ -269,6 +293,7 @@ def test_parse_uri_fragment_uri(server_client):
 
 
 def test_no_content_length(server_client):
+    """Test POST query with an empty body being successful."""
     # "The presence of a message-body in a request is signaled by the
     # inclusion of a Content-Length or Transfer-Encoding header field in
     # the request's message-headers."
@@ -284,6 +309,7 @@ def test_no_content_length(server_client):
 
 
 def test_content_length_required(server_client):
+    """Test POST query with body failing because of missing Content-Length."""
     # Now send a message that has no Content-Length, but does send a body.
     # Verify that CP times out the socket and responds
     # with 411 Length Required.
@@ -324,6 +350,7 @@ def test_malformed_request_line(
 
 
 def test_malformed_http_method(server_client):
+    """Test non-uppercase HTTP method."""
     c = server_client.get_connection()
     c.putrequest('GeT', '/malformed_method_case')
     c.putheader('Content-Type', 'text/plain')
@@ -337,6 +364,7 @@ def test_malformed_http_method(server_client):
 
 
 def test_malformed_header(server_client):
+    """Check that broken HTTP header results in Bad Request."""
     c = server_client.get_connection()
     c.putrequest('GET', '/')
     c.putheader('Content-Type', 'text/plain')
@@ -352,6 +380,7 @@ def test_malformed_header(server_client):
 
 
 def test_request_line_split_issue_1220(server_client):
+    """Check that HTTP request line of exactly 256 chars length is OK."""
     Request_URI = (
         '/hello?'
         'intervenant-entreprise-evenement_classaction='
@@ -368,6 +397,7 @@ def test_request_line_split_issue_1220(server_client):
 
 
 def test_garbage_in(server_client):
+    """Test that server sends an error for garbage received over TCP."""
     # Connect without SSL regardless of server.scheme
 
     c = server_client.get_connection()
