@@ -87,9 +87,8 @@ def server_client(testing_server):
             with closing(socket.socket(family=socket.AF_INET6)) as sock:
                 sock.bind((interface, 0))
         except OSError as sock_err:
-            if sock_err.errno == errno.EADDRNOTAVAIL:
-                pass
-            raise
+            if sock_err.errno != errno.EADDRNOTAVAIL:
+                raise
         else:
             return True
 
