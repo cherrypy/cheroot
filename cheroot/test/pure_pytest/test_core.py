@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim: set fileencoding=utf-8 :
 
+from contextlib import closing
 import errno
 import socket
 
@@ -80,9 +81,6 @@ def server_client(testing_server):
     interface = webtest.interface(host)
 
     def probe_ipv6_sock(interface):
-        import errno
-        import socket
-        from contextlib import closing
         try:
             with closing(socket.socket(family=socket.AF_INET6)) as sock:
                 sock.bind((interface, 0))
