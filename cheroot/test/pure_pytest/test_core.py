@@ -77,27 +77,10 @@ def testing_server(wsgi_server):
 def server_client(testing_server):
     host, port = testing_server.bind_addr
 
-    interface = webtest.interface(host)
-
-    def probe_ipv6_sock(interface):
-        import errno
-        import socket
-        from contextlib import closing
-        try:
-            with closing(socket.socket(family=socket.AF_INET6)) as sock:
-                sock.bind((interface, 0))
-        except OSError as sock_err:
-            if sock_err.errno != errno.EADDRNOTAVAIL:
-                raise
-        else:
-            return True
-
-        return False
-
-    if ':' in interface and not probe_ipv6_sock(interface):
-        interface = '127.0.0.1'
-        if ':' in host:
-            host = interface
+    interface = webtest.interface(host)  # :: -> ::1; 0.0.0.0 -> 127.0.0.1
+    host = socket.getfqdn(interface)  # {::1|127.0.0.1} -> localhost
+    # localhost -> {::1|127.0.0.1} :
+    interface = socket.gethostbyaddr(host)[-1].pop(0)
 
     class _TestClient(object):
         def __init__(self, host, port):
