@@ -96,6 +96,7 @@ def server_client(wsgi_server):
         def __init__(self, server, host, port):
             self._host = host
             self._port = port
+            self._http_connection = self.get_connection()
             self.server_instance = server
 
         def get_connection(self):
@@ -105,32 +106,34 @@ def server_client(wsgi_server):
             )
             return http_client.HTTPConnection(name)
 
-        def request(self, uri, method='GET'):
+        def request(self, uri, method='GET', headers=None, http_conn=None):
             return webtest.openURL(
                 uri, method=method,
+                headers=headers,
                 host=self._host, port=self._port,
+                http_conn=http_conn or self._http_connection,
             )
 
-        def get(self, uri):
-            return self.request(uri, method='GET')
+        def get(self, uri, **kwargs):
+            return self.request(uri, method='GET', **kwargs)
 
-        def post(self, uri):
-            return self.request(uri, method='POST')
+        def post(self, uri, **kwargs):
+            return self.request(uri, method='POST', **kwargs)
 
-        def put(self, uri):
-            return self.request(uri, method='PUT')
+        def put(self, uri, **kwargs):
+            return self.request(uri, method='PUT', **kwargs)
 
-        def patch(self, uri):
-            return self.request(uri, method='PATCH')
+        def patch(self, uri, **kwargs):
+            return self.request(uri, method='PATCH', **kwargs)
 
-        def delete(self, uri):
-            return self.request(uri, method='DELETE')
+        def delete(self, uri, **kwargs):
+            return self.request(uri, method='DELETE', **kwargs)
 
-        def connect(self, uri):
-            return self.request(uri, method='CONNECT')
+        def connect(self, uri, **kwargs):
+            return self.request(uri, method='CONNECT', **kwargs)
 
-        def options(self, uri):
-            return self.request(uri, method='OPTIONS')
+        def options(self, uri, **kwargs):
+            return self.request(uri, method='OPTIONS', **kwargs)
 
     test_client = _TestClient(wsgi_server, host, port)
     return test_client
