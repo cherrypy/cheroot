@@ -121,6 +121,9 @@ def server_client(wsgi_server):
         def get(self, uri, **kwargs):
             return self.request(uri, method='GET', **kwargs)
 
+        def head(self, uri, **kwargs):
+            return self.request(uri, method='HEAD', **kwargs)
+
         def post(self, uri, **kwargs):
             return self.request(uri, method='POST', **kwargs)
 
