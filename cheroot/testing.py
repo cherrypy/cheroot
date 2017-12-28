@@ -106,12 +106,16 @@ def server_client(wsgi_server):
             )
             return http_client.HTTPConnection(name)
 
-        def request(self, uri, method='GET', headers=None, http_conn=None):
+        def request(
+            self, uri, method='GET', headers=None, http_conn=None,
+            protocol='HTTP/1.1',
+        ):
             return webtest.openURL(
                 uri, method=method,
                 headers=headers,
                 host=self._host, port=self._port,
                 http_conn=http_conn or self._http_connection,
+                protocol=protocol,
             )
 
         def get(self, uri, **kwargs):
