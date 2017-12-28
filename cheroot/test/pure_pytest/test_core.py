@@ -73,7 +73,7 @@ def _get_http_response(connection, method='GET'):
     return c.response_class(c.sock, method=method, **kwargs)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def testing_server(server_client):
     """Attach a WSGI app to the given server and pre-configure it."""
     wsgi_server = server_client.server_instance

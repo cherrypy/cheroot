@@ -64,7 +64,7 @@ def native_server():
         yield srv
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def server_client(wsgi_server):
     """Create a test client out of given server."""
     host, port = wsgi_server.bind_addr
