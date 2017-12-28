@@ -386,36 +386,32 @@ def test_keepalive(test_client, http_server_protocol):
     test_client.server_instance.protocol = original_server_protocol
 
 
-def test_HTTP11_Timeout(test_client):
+@pytest.mark.parametrize(
+    'timeout_before_headers',
+    (
+        True,
+        False,
+    )
+)
+def test_HTTP11_Timeout(test_client, timeout_before_headers):
     """Check timeout without sending any data.
 
     The server will close the conn with a 408.
     """
-    # Connect but send nothing.
     conn = test_client.get_connection()
     conn.auto_open = False
     conn.connect()
+
+    if not timeout_before_headers:
+        # Connect but send half the headers only.
+        conn.send(b'GET /hello HTTP/1.1')
+        conn.send(('Host: %s' % conn.host).encode('ascii'))
+    # else: Connect but send nothing.
 
     # Wait for our socket timeout
     time.sleep(timeout * 2)
 
     # The request should have returned 408 already.
-    response = conn.response_class(conn.sock, method='GET')
-    response.begin()
-    assert response.status == 408
-    conn.close()
-
-    # Connect but send half the headers only.
-    conn = test_client.get_connection()
-    conn.auto_open = False
-    conn.connect()
-    conn.send(b'GET /hello HTTP/1.1')
-    conn.send(('Host: %s' % conn.host).encode('ascii'))
-
-    # Wait for our socket timeout
-    time.sleep(timeout * 2)
-
-    # The conn should have already sent 408.
     response = conn.response_class(conn.sock, method='GET')
     response.begin()
     assert response.status == 408
