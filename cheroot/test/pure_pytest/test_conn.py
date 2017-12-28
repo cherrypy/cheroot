@@ -613,69 +613,78 @@ def test_100_Continue(test_client):
     conn.close()
 
 
-def test_readall_or_close(test_client):
+@pytest.mark.parametrize(
+    'max_request_body_size',
+    (
+        0,
+        1001,
+    )
+)
+def test_readall_or_close(test_client, max_request_body_size):
     """Test a max_request_body_size of 0 (the default) and 1001."""
     old_max = test_client.server_instance.max_request_body_size
-    for new_max in (0, old_max):
-        test_client.server_instance.max_request_body_size = new_max
 
-        conn = test_client.get_connection()
+    test_client.server_instance.max_request_body_size = max_request_body_size
 
-        # Get a POST page with an error
-        conn.putrequest('POST', '/err_before_read', skip_host=True)
-        conn.putheader('Host', conn.host)
-        conn.putheader('Content-Type', 'text/plain')
-        conn.putheader('Content-Length', '1000')
-        conn.putheader('Expect', '100-continue')
-        conn.endheaders()
-        response = conn.response_class(conn.sock, method='POST')
+    conn = test_client.get_connection()
 
-        # ...assert and then skip the 100 response
-        version, status, reason = response._read_status()
-        assert status == 100
-        while True:
-            skip = response.fp.readline().strip()
-            if not skip:
-                break
+    # Get a POST page with an error
+    conn.putrequest('POST', '/err_before_read', skip_host=True)
+    conn.putheader('Host', conn.host)
+    conn.putheader('Content-Type', 'text/plain')
+    conn.putheader('Content-Length', '1000')
+    conn.putheader('Expect', '100-continue')
+    conn.endheaders()
+    response = conn.response_class(conn.sock, method='POST')
 
-        # ...send the body
-        conn.send(b'x' * 1000)
+    # ...assert and then skip the 100 response
+    version, status, reason = response._read_status()
+    assert status == 100
+    while True:
+        skip = response.fp.readline().strip()
+        if not skip:
+            break
 
-        # ...get the final response
-        response.begin()
-        status_line, actual_headers, actual_resp_body = webtest.shb(response)
-        actual_status = int(status_line[:3])
-        assert actual_status == 500
+    # ...send the body
+    conn.send(b'x' * 1000)
 
-        # Now try a working page with an Expect header...
-        conn._output(b'POST /upload HTTP/1.1')
-        conn._output(('Host: %s' % conn.host).encode('ascii'))
-        conn._output(b'Content-Type: text/plain')
-        conn._output(b'Content-Length: 17')
-        conn._output(b'Expect: 100-continue')
-        conn._send_output()
-        response = conn.response_class(conn.sock, method='POST')
+    # ...get the final response
+    response.begin()
+    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    actual_status = int(status_line[:3])
+    assert actual_status == 500
 
-        # ...assert and then skip the 100 response
-        version, status, reason = response._read_status()
-        assert status == 100
-        while True:
-            skip = response.fp.readline().strip()
-            if not skip:
-                break
+    # Now try a working page with an Expect header...
+    conn._output(b'POST /upload HTTP/1.1')
+    conn._output(('Host: %s' % conn.host).encode('ascii'))
+    conn._output(b'Content-Type: text/plain')
+    conn._output(b'Content-Length: 17')
+    conn._output(b'Expect: 100-continue')
+    conn._send_output()
+    response = conn.response_class(conn.sock, method='POST')
 
-        # ...send the body
-        body = b'I am a small file'
-        conn.send(body)
+    # ...assert and then skip the 100 response
+    version, status, reason = response._read_status()
+    assert status == 100
+    while True:
+        skip = response.fp.readline().strip()
+        if not skip:
+            break
 
-        # ...get the final response
-        response.begin()
-        status_line, actual_headers, actual_resp_body = webtest.shb(response)
-        actual_status = int(status_line[:3])
-        assert actual_status == 200
-        expected_resp_body = ("thanks for '%s'" % body).encode()
-        assert actual_resp_body == expected_resp_body
-        conn.close()
+    # ...send the body
+    body = b'I am a small file'
+    conn.send(body)
+
+    # ...get the final response
+    response.begin()
+    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    actual_status = int(status_line[:3])
+    assert actual_status == 200
+    expected_resp_body = ("thanks for '%s'" % body).encode()
+    assert actual_resp_body == expected_resp_body
+    conn.close()
+
+    test_client.server_instance.max_request_body_size = old_max
 
 
 def test_No_Message_Body(test_client):
