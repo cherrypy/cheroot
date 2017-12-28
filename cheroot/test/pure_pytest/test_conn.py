@@ -795,46 +795,35 @@ def test_Content_Length_in(test_client):
     conn.close()
 
 
-def test_Content_Length_out_preheaders(test_client):
-    """Test response with Content-Length less than the response body.
-
-    (non-chunked response)
-    """
-    # Initialize a persistent HTTP connection
-    conn = test_client.get_connection()
-
-    conn.putrequest('GET', '/wrong_cl_buffered', skip_host=True)
-    conn.putheader('Host', conn.host)
-    conn.endheaders()
-    response = conn.getresponse()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
-    actual_status = int(status_line[:3])
-    assert actual_status == 500
-    expected_resp_body = (
-        b'The requested resource returned more bytes than the '
-        b'declared Content-Length.'
+@pytest.mark.parametrize(
+    'uri,expected_resp_status,expected_resp_body',
+    (
+        ('/wrong_cl_buffered', 500,
+         (b'The requested resource returned more bytes than the '
+          b'declared Content-Length.')),
+        ('/wrong_cl_unbuffered', 200, b'I too'),
     )
-    assert actual_resp_body == expected_resp_body
-    conn.close()
-
-
-def test_Content_Length_out_postheaders(test_client):
+)
+def test_Content_Length_out(
+    test_client,
+    uri, expected_resp_status, expected_resp_body
+):
     """Test response with Content-Length less than the response body.
 
     (non-chunked response)
     """
-    # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
-
-    conn.putrequest('GET', '/wrong_cl_unbuffered', skip_host=True)
+    conn.putrequest('GET', uri, skip_host=True)
     conn.putheader('Host', conn.host)
     conn.endheaders()
+
     response = conn.getresponse()
     status_line, actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
-    assert actual_status == 200
-    expected_resp_body = b'I too'
+
+    assert actual_status == expected_resp_status
     assert actual_resp_body == expected_resp_body
+
     conn.close()
 
 
