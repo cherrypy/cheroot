@@ -867,21 +867,19 @@ def test_598(test_client):
     remote_data_conn.close()
 
 
-def test_No_CRLF(test_client):
+@pytest.mark.parametrize(
+    'invalid_terminator',
+    (
+        b'\n\n',
+        b'\r\n\n',
+    )
+)
+def test_No_CRLF(test_client, invalid_terminator):
     """Test HTTP queries with no valid CRLF terminators."""
     # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
 
-    conn.send(b'GET /hello HTTP/1.1\n\n')
-    response = conn.response_class(conn.sock, method='GET')
-    response.begin()
-    actual_resp_body = response.read()
-    expected_resp_body = b'HTTP requires CRLF terminators'
-    assert actual_resp_body == expected_resp_body
-    conn.close()
-
-    conn.connect()
-    conn.send(b'GET /hello HTTP/1.1\r\n\n')
+    conn.send(b'GET /hello HTTP/1.1%s' % invalid_terminator)
     response = conn.response_class(conn.sock, method='GET')
     response.begin()
     actual_resp_body = response.read()
