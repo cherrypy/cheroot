@@ -77,12 +77,14 @@ class Server(server.HTTPServer):
             accepted_queue_size=accepted_queue_size,
             accepted_queue_timeout=accepted_queue_timeout)
 
-    def _get_numthreads(self):
+    @property
+    def numthreads(self):
+        """Set minimum number of threads."""
         return self.requests.min
 
-    def _set_numthreads(self, value):
+    @numthreads.setter
+    def numthreads(self, value):
         self.requests.min = value
-    numthreads = property(_get_numthreads, _set_numthreads)
 
 
 class Gateway(server.Gateway):
