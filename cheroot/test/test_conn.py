@@ -634,10 +634,9 @@ def test_readall_or_close(test_client, max_request_body_size):
     # ...assert and then skip the 100 response
     version, status, reason = response._read_status()
     assert status == 100
-    while True:
+    skip = True
+    while skip:
         skip = response.fp.readline().strip()
-        if not skip:
-            break
 
     # ...send the body
     conn.send(b'x' * 1000)
@@ -660,10 +659,9 @@ def test_readall_or_close(test_client, max_request_body_size):
     # ...assert and then skip the 100 response
     version, status, reason = response._read_status()
     assert status == 100
-    while True:
+    skip = True
+    while skip:
         skip = response.fp.readline().strip()
-        if not skip:
-            break
 
     # ...send the body
     body = b'I am a small file'
@@ -849,8 +847,7 @@ def test_598(test_client):
         data = remote_data_conn.read(remaining)
         if not data:
             break
-        else:
-            buf += data
+        buf += data
         remaining -= len(data)
 
     assert len(buf) == 1024 * 1024
