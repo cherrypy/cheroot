@@ -130,8 +130,16 @@ def _get_conn_data(server):
 
 
 @pytest.fixture
-def server_client(wsgi_server):
+def wsgi_server_client(wsgi_server):
     """Create a test client out of given server."""
     interface, host, port = _get_conn_data(wsgi_server)
 
     return _TestClient(wsgi_server, interface, host, port)
+
+
+@pytest.fixture
+def native_server_client(native_server):
+    """Create a test client out of given server."""
+    interface, host, port = _get_conn_data(native_server)
+
+    return _TestClient(native_server, interface, host, port)
