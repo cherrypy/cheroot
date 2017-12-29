@@ -100,8 +100,6 @@ class Controller(helper.Controller):
     }
 
 
-#########
-
 @pytest.fixture
 def testing_server(server_client):
     """Attach a WSGI app to the given server and pre-configure it."""
