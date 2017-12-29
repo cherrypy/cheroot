@@ -118,29 +118,12 @@ def server_client(wsgi_server):
                 protocol=protocol,
             )
 
-        def get(self, uri, **kwargs):
-            return self.request(uri, method='GET', **kwargs)
+        def __getattr__(self, attr_name):
+            def _wrapper(uri, **kwargs):
+                http_method = attr_name.upper()
+                return self.request(uri, method=http_method, **kwargs)
 
-        def head(self, uri, **kwargs):
-            return self.request(uri, method='HEAD', **kwargs)
-
-        def post(self, uri, **kwargs):
-            return self.request(uri, method='POST', **kwargs)
-
-        def put(self, uri, **kwargs):
-            return self.request(uri, method='PUT', **kwargs)
-
-        def patch(self, uri, **kwargs):
-            return self.request(uri, method='PATCH', **kwargs)
-
-        def delete(self, uri, **kwargs):
-            return self.request(uri, method='DELETE', **kwargs)
-
-        def connect(self, uri, **kwargs):
-            return self.request(uri, method='CONNECT', **kwargs)
-
-        def options(self, uri, **kwargs):
-            return self.request(uri, method='OPTIONS', **kwargs)
+            return _wrapper
 
     test_client = _TestClient(wsgi_server, host, port)
     return test_client
