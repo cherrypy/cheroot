@@ -722,6 +722,7 @@ def test_No_Message_Body(test_client):
            'HTTP request, thus the second request fails as the server tries '
            r"to parse b'Content-Type: application/json\r\n' as a "
            'Request-Line. This results in HTTP status code 400, instead of 413'
+           'Ref: https://github.com/cherrypy/cheroot/issues/69'
 )
 def test_Chunked_Encoding(test_client):
     """Test HTTP uploads with chunked transfer-encoding."""
