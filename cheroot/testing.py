@@ -64,6 +64,41 @@ def native_server():
         yield srv
 
 
+class _TestClient(object):
+    def __init__(self, server, interface, host, port):
+        self._interface = interface
+        self._host = host
+        self._port = port
+        self._http_connection = self.get_connection()
+        self.server_instance = server
+
+    def get_connection(self):
+        name = '{interface}:{port}'.format(
+            interface=self._interface,
+            port=self._port,
+        )
+        return http_client.HTTPConnection(name)
+
+    def request(
+        self, uri, method='GET', headers=None, http_conn=None,
+        protocol='HTTP/1.1',
+    ):
+        return webtest.openURL(
+            uri, method=method,
+            headers=headers,
+            host=self._host, port=self._port,
+            http_conn=http_conn or self._http_connection,
+            protocol=protocol,
+        )
+
+    def __getattr__(self, attr_name):
+        def _wrapper(uri, **kwargs):
+            http_method = attr_name.upper()
+            return self.request(uri, method=http_method, **kwargs)
+
+        return _wrapper
+
+
 @pytest.fixture
 def server_client(wsgi_server):
     """Create a test client out of given server."""
@@ -92,38 +127,5 @@ def server_client(wsgi_server):
         if ':' in host:
             host = interface
 
-    class _TestClient(object):
-        def __init__(self, server, host, port):
-            self._host = host
-            self._port = port
-            self._http_connection = self.get_connection()
-            self.server_instance = server
-
-        def get_connection(self):
-            name = '{interface}:{port}'.format(
-                interface=interface,
-                port=self._port,
-            )
-            return http_client.HTTPConnection(name)
-
-        def request(
-            self, uri, method='GET', headers=None, http_conn=None,
-            protocol='HTTP/1.1',
-        ):
-            return webtest.openURL(
-                uri, method=method,
-                headers=headers,
-                host=self._host, port=self._port,
-                http_conn=http_conn or self._http_connection,
-                protocol=protocol,
-            )
-
-        def __getattr__(self, attr_name):
-            def _wrapper(uri, **kwargs):
-                http_method = attr_name.upper()
-                return self.request(uri, method=http_method, **kwargs)
-
-            return _wrapper
-
-    test_client = _TestClient(wsgi_server, host, port)
+    test_client = _TestClient(wsgi_server, interface, host, port)
     return test_client
