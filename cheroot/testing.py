@@ -65,10 +65,8 @@ def native_server():
 
 
 class _TestClient(object):
-    def __init__(self, server, interface, host, port):
-        self._interface = interface
-        self._host = host
-        self._port = port
+    def __init__(self, server):
+        self._interface, self._host, self._port = _get_conn_data(server)
         self._http_connection = self.get_connection()
         self.server_instance = server
 
@@ -131,15 +129,11 @@ def _get_conn_data(server):
 
 @pytest.fixture
 def wsgi_server_client(wsgi_server):
-    """Create a test client out of given server."""
-    interface, host, port = _get_conn_data(wsgi_server)
-
-    return _TestClient(wsgi_server, interface, host, port)
+    """Create a test client out of given WSGI server."""
+    return _TestClient(wsgi_server)
 
 
 @pytest.fixture
 def native_server_client(native_server):
-    """Create a test client out of given server."""
-    interface, host, port = _get_conn_data(native_server)
-
-    return _TestClient(native_server, interface, host, port)
+    """Create a test client out of given HTTP server."""
+    return _TestClient(native_server)
