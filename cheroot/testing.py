@@ -99,33 +99,39 @@ class _TestClient(object):
         return _wrapper
 
 
-@pytest.fixture
-def server_client(wsgi_server):
-    """Create a test client out of given server."""
-    host, port = wsgi_server.bind_addr
+def _probe_ipv6_sock(interface):
+    # Alternate way is to check IPs on interfaces using glibc, like:
+    # github.com/Gautier/minifail/blob/master/minifail/getifaddrs.py
+    try:
+        with closing(socket.socket(family=socket.AF_INET6)) as sock:
+            sock.bind((interface, 0))
+    except (OSError, socket.error) as sock_err:
+        # In Python 3 socket.error is an alias for OSError
+        # In Python 2 socket.error is a subclass of IOError
+        if sock_err.errno != errno.EADDRNOTAVAIL:
+            raise
+    else:
+        return True
+
+    return False
+
+
+def _get_conn_data(server):
+    host, port = server.bind_addr
 
     interface = webtest.interface(host)
 
-    def probe_ipv6_sock(interface):
-        # Alternate way is to check IPs on interfaces using glibc, like:
-        # github.com/Gautier/minifail/blob/master/minifail/getifaddrs.py
-        try:
-            with closing(socket.socket(family=socket.AF_INET6)) as sock:
-                sock.bind((interface, 0))
-        except (OSError, socket.error) as sock_err:
-            # In Python 3 socket.error is an alias for OSError
-            # In Python 2 socket.error is a subclass of IOError
-            if sock_err.errno != errno.EADDRNOTAVAIL:
-                raise
-        else:
-            return True
-
-        return False
-
-    if ':' in interface and not probe_ipv6_sock(interface):
+    if ':' in interface and not _probe_ipv6_sock(interface):
         interface = '127.0.0.1'
         if ':' in host:
             host = interface
 
-    test_client = _TestClient(wsgi_server, interface, host, port)
-    return test_client
+    return interface, host, port
+
+
+@pytest.fixture
+def server_client(wsgi_server):
+    """Create a test client out of given server."""
+    interface, host, port = _get_conn_data(wsgi_server)
+
+    return _TestClient(wsgi_server, interface, host, port)
