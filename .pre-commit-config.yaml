@@ -36,7 +36,7 @@ repos:
     sha: f464d46
     hooks:
     -   id: pep257
-        exclude: cheroot/test/(helper|test_(config_server|conn|core|wsgiapps)|webtest).py
+        exclude: cheroot/test/(helper|webtest).py
 
 -   repo: git://github.com/Lucas-C/pre-commit-hooks
     sha: v1.1.1
