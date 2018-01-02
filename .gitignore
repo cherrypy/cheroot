@@ -167,3 +167,6 @@ ENV/
 /.coverage
 /coverage.xml
 /graph_Request_*.png
+
+# pytest-mon
+.testmondata
