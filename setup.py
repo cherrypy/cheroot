@@ -51,6 +51,8 @@ params = dict(
         'testing': [
             'pytest>=2.8',
             'pytest-sugar',
+            'pytest-testmon>=0.9.7',
+            'pytest-watch',
 
             # measure test coverage
             'coverage',
@@ -59,7 +61,6 @@ params = dict(
 
             'pytest-cov',
             'backports.unittest_mock',
-            'portend',
         ],
     },
     setup_requires=[

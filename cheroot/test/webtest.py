@@ -19,11 +19,10 @@ import socket
 import sys
 import time
 import traceback
-import types
 import os
 import json
 import unittest
-from imp import reload
+import warnings
 
 from six.moves import range, http_client, map, urllib_parse
 import six
@@ -44,105 +43,6 @@ def interface(host):
         # IN6ADDR_ANY, which should respond on localhost.
         return '::1'
     return host
-
-
-class TerseTestResult(unittest._TextTestResult):
-
-    def printErrors(self):
-        # Overridden to avoid unnecessary empty line
-        if self.errors or self.failures:
-            if self.dots or self.showAll:
-                self.stream.writeln()
-            self.printErrorList('ERROR', self.errors)
-            self.printErrorList('FAIL', self.failures)
-
-
-class TerseTestRunner(unittest.TextTestRunner):
-    """A test runner class that displays results in textual form."""
-
-    def _makeResult(self):
-        return TerseTestResult(self.stream, self.descriptions, self.verbosity)
-
-    def run(self, test):
-        """Run the given test case or test suite."""
-        # Overridden to remove unnecessary empty lines and separators
-        result = self._makeResult()
-        test(result)
-        result.printErrors()
-        if not result.wasSuccessful():
-            self.stream.write('FAILED (')
-            failed, errored = list(map(len, (result.failures, result.errors)))
-            if failed:
-                self.stream.write('failures=%d' % failed)
-            if errored:
-                if failed:
-                    self.stream.write(', ')
-                self.stream.write('errors=%d' % errored)
-            self.stream.writeln(')')
-        return result
-
-
-class ReloadingTestLoader(unittest.TestLoader):
-
-    def loadTestsFromName(self, name, module=None):
-        """Return a suite of all tests cases given a string specifier.
-
-        The name may resolve either to a module, a test case class, a
-        test method within a test case class, or a callable object which
-        returns a TestCase or TestSuite instance.
-        The method optionally resolves the names relative to a given module.
-        """
-        parts = name.split('.')
-        unused_parts = []
-        if module is None:
-            if not parts:
-                raise ValueError('incomplete test name: %s' % name)
-            else:
-                parts_copy = parts[:]
-                while parts_copy:
-                    target = '.'.join(parts_copy)
-                    if target in sys.modules:
-                        module = reload(sys.modules[target])
-                        parts = unused_parts
-                        break
-                    else:
-                        try:
-                            module = __import__(target)
-                            parts = unused_parts
-                            break
-                        except ImportError:
-                            unused_parts.insert(0, parts_copy[-1])
-                            del parts_copy[-1]
-                            if not parts_copy:
-                                raise
-                parts = parts[1:]
-        obj = module
-        for part in parts:
-            obj = getattr(obj, part)
-
-        if isinstance(obj, types.ModuleType):
-            return self.loadTestsFromModule(obj)
-        elif (
-                (
-                    (six.PY3 and isinstance(obj, type)) or
-                    isinstance(obj, (type, types.ClassType))
-                ) and
-                issubclass(obj, unittest.TestCase)):
-            return self.loadTestsFromTestCase(obj)
-        elif isinstance(obj, types.UnboundMethodType):
-            if six.PY3:
-                return obj.__self__.__class__(obj.__name__)
-            else:
-                return obj.im_class(obj.__name__)
-        elif hasattr(obj, '__call__'):
-            test = obj()
-            if not isinstance(test, unittest.TestCase) and \
-               not isinstance(test, unittest.TestSuite):
-                raise ValueError('calling %s returned %s, '
-                                 'not a test' % (obj, test))
-            return test
-        else:
-            raise ValueError('do not know how to make test from: %s' % obj)
 
 
 try:
@@ -313,7 +213,14 @@ class WebCase(unittest.TestCase):
         False or 1 or 0.
         """
         env_str = os.environ.get('WEBTEST_INTERACTIVE', 'True')
-        return bool(json.loads(env_str.lower()))
+        is_interactive = bool(json.loads(env_str.lower()))
+        if is_interactive:
+            warnings.warn(
+                'Interactive test failure interceptor support via '
+                'WEBTEST_INTERACTIVE environment variable is deprecated.',
+                DeprecationWarning
+            )
+        return is_interactive
 
     console_height = 30
 
@@ -359,12 +266,9 @@ class WebCase(unittest.TestCase):
             elif i == 'R':
                 raise self.failureException(msg)
             elif i == 'X':
-                self.exit()
+                sys.exit()
             sys.stdout.write(p)
             sys.stdout.flush()
-
-    def exit(self):
-        sys.exit()
 
     @property
     def status_code(self):

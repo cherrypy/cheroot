@@ -1502,12 +1502,14 @@ class HTTPServer(object):
                     host, port, socket.AF_UNSPEC,
                     socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
             except socket.gaierror:
-                if ':' in self.bind_addr[0]:
-                    info = [(socket.AF_INET6, socket.SOCK_STREAM,
-                             0, '', self.bind_addr + (0, 0))]
-                else:
-                    info = [(socket.AF_INET, socket.SOCK_STREAM,
-                             0, '', self.bind_addr)]
+                sock_type = socket.AF_INET
+                bind_addr = self.bind_addr
+
+                if ':' in host:
+                    sock_type = socket.AF_INET6
+                    bind_addr = bind_addr + (0, 0)
+
+                info = [(sock_type, socket.SOCK_STREAM, 0, '', bind_addr)]
 
         if not self.socket:
             msg = 'No socket could be created'
@@ -1601,6 +1603,7 @@ class HTTPServer(object):
                 pass
 
         self.socket.bind(self.bind_addr)
+        self.bind_addr = self.socket.getsockname()[:2]  # TODO: keep separate
 
     def tick(self):
         """Accept a new connection and put it on the Queue."""
@@ -1696,12 +1699,12 @@ class HTTPServer(object):
 
     @property
     def interrupt(self):
-        """Return interrupt Exception instance."""
+        """Flag interrupt of the server."""
         return self._interrupt
 
     @interrupt.setter
     def interrupt(self, interrupt):
-        """Set this to an Exception instance to interrupt the server."""
+        """Perform the shutdown of this server and save the exception."""
         self._interrupt = True
         self.stop()
         self._interrupt = interrupt
