@@ -51,7 +51,7 @@ params = dict(
         'testing': [
             'pytest>=2.8',
             'pytest-sugar',
-            'pytest-testmon',
+            'pytest-testmon>=0.9.7',
             'pytest-watch',
 
             # measure test coverage
