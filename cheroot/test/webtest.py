@@ -216,10 +216,8 @@ class WebCase(unittest.TestCase):
         is_interactive = bool(json.loads(env_str.lower()))
         if is_interactive:
             warnings.warn(
-                'We are moving to pytest-based testing and thus deprecating '
-                'WEBTEST_INTERACTIVE environment variable support. '
-                'Interactive test failure interceptor is going to be removed '
-                'in Cheroot v7.0.0',  # TODO: decide whether it's v7 or v8
+                'Interactive test failure interceptor support via '
+                'WEBTEST_INTERACTIVE environment variable is deprecated.',
                 DeprecationWarning
             )
         return is_interactive
