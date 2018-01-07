@@ -208,11 +208,11 @@ v5.2.0
 v5.1.0
 ======
 
-Removed the WSGI prefix from classes in :module:`cheroot.wsgi`.
+Removed the WSGI prefix from classes in :py:mod:`cheroot.wsgi`.
 Kept aliases for compatibility.
 
-#1: Corrected docstrings in :module:`cheroot.server`
-and :module:`cheroot.wsgi`.
+#1: Corrected docstrings in :py:mod:`cheroot.server`
+and :py:mod:`cheroot.wsgi`.
 
 #2: Fixed ImportError when pkg_resources cannot find the
     cheroot distribution.
