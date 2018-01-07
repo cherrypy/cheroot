@@ -80,7 +80,7 @@ v5.8.0
 
 - CI improvements:
   * Switch to native PyPy support in Travis CI
-  * Take into account PEP 257 compliant modules
+  * Take into account :pep:`257` compliant modules
   * Build wheel in Appveyor and store it as an artifact
 - Improve urllib support in ``_compat`` module
 - #38 via #39: Improve URI parsing:
@@ -119,7 +119,7 @@ v5.7.0
 v5.6.0
 ======
 
-- Fix all PEP 257 related errors in all non-test modules.
+- Fix all :pep:`257` related errors in all non-test modules.
 
   ``cheroot/test/*`` folder is only one left allowed to fail with this linter.
 
@@ -186,7 +186,7 @@ v5.4.0
 v5.3.0
 ======
 
-#8: Updated style to better conform to PEP 8.
+#8: Updated style to better conform to :pep:`8`.
 
 Refreshed project with `jaraco skeleton
 <https://github.com/jaraco/skeleton>`_.

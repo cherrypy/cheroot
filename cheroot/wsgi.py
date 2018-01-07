@@ -121,7 +121,7 @@ class Gateway(server.Gateway):
     def respond(self):
         """Process the current request.
 
-        From PEP 333:
+        From :pep:`333`:
 
             The start_response callable must not actually transmit
             the response headers. Instead, it must store them for the
@@ -178,7 +178,7 @@ class Gateway(server.Gateway):
     def _encode_status(status):
         """Cast status to bytes representation of current Python version.
 
-        According to PEP 3333, when using Python 3, the response status
+        According to :pep:`3333`, when using Python 3, the response status
         and headers must be bytes masquerading as unicode; that is, they
         must be of type "str" but are restricted to code points in the
         "latin-1" set.
@@ -361,7 +361,7 @@ class PathInfoDispatcher(object):
     def __call__(self, environ, start_response):
         """Process incoming WSGI request.
 
-        Ref: PEP 3333
+        Ref: :pep:`3333`
 
         Args:
             environ (Mapping): a dict containing WSGI environment variables
