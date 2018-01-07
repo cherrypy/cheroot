@@ -26,17 +26,17 @@ link_files = {
 github_url = 'https://github.com'
 github_repo_org = 'cherrypy'
 github_repo_name = 'cheroot'
-github_repo_slug = '{}/{}'.format(github_repo_org, github_repo_name)
-github_repo_url = '{}/{}'.format(github_url, github_repo_slug)
-cp_github_repo_url = '{}/{}/cherrypy'.format(github_url, github_repo_org)
+github_repo_slug = f'{github_repo_org}/{github_repo_name}'
+github_repo_url = f'{github_url}/{github_repo_slug}'
+cp_github_repo_url = f'{github_url}/{github_repo_org}/cherrypy'
 
 extlinks = {
-    'issue': ('{}/issues/%s'.format(github_repo_url), '#'),
-    'pr': ('{}/pulls/%s'.format(github_repo_url), 'PR #'),
-    'commit': ('{}/commit/%s'.format(github_repo_url), ''),
-    'cp-issue': ('{}/issues/%s'.format(cp_github_repo_url), 'CherryPy #'),
-    'cp-pr': ('{}/pulls/%s'.format(cp_github_repo_url), 'CherryPy PR #'),
-    'gh': ('{}/%s'.format(github_url), 'GitHub: '),
+    'issue': (f'{github_repo_url}/issues/%s', '#'),
+    'pr': (f'{github_repo_url}/pulls/%s', 'PR #'),
+    'commit': (f'{github_repo_url}/commit/%s', ''),
+    'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #'),
+    'cp-pr': (f'{cp_github_repo_url}/pulls/%s', 'CherryPy PR #'),
+    'gh': (f'{github_url}/%s', 'GitHub: '),
 }
 
 intersphinx_mapping = {
