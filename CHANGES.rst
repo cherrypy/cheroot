@@ -6,7 +6,7 @@ v6.0.0
   than 2.7.9.
 
 v5.11.0
-======
+=======
 
 - CherryPy #1621: To support webtest applications that feed
   absolute URIs to getPage but expect the scheme/host/port to
@@ -14,7 +14,7 @@ v5.11.0
   ``strip_netloc`` helper and recipe for calling it in a subclass.
 
 v5.10.0
-======
+=======
 
 - Minor refactorings of cheroot/server.py to reduce redundancy
   of behavior.
