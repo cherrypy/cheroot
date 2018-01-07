@@ -65,6 +65,7 @@ params = dict(
     },
     setup_requires=[
         'setuptools_scm>=1.15.0',
+        'setuptools_scm_git_archive>=1.0',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
