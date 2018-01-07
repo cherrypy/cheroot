@@ -186,13 +186,15 @@ v5.5.0
 ======
 
 - :issue:`17` via :pr:`25`: Instead of a read_headers function, cheroot now
-  supplies a HeaderReader class to perform the same function.
+  supplies a :py:class:`HeaderReader <cheroot.server.HeaderReader>` class to
+  perform the same function.
 
-  Any HTTPRequest object may override the header_reader attribute
-  to customize the handling of incoming headers.
+  Any :py:class:`HTTPRequest <cheroot.server.HTTPRequest>` object may override
+  the header_reader attribute to customize the handling of incoming headers.
 
   The server module also presents a provisional implementation of
-  a DropUnderscoreHeaderReader that will exclude any headers
+  a :py:class:`DropUnderscoreHeaderReader
+  <cheroot.server.DropUnderscoreHeaderReader>` that will exclude any headers
   containing an underscore. It remains an exercise for the
   implementer to demonstrate how this functionality might be
   employed in a server such as CherryPy.
@@ -235,8 +237,8 @@ v5.1.0
 - :issue:`1`: Corrected docstrings in :py:mod:`cheroot.server` and
   :py:mod:`cheroot.wsgi`.
 
-- :pr:`2`: Fixed ImportError when pkg_resources cannot find the cheroot
-  distribution.
+- :pr:`2`: Fixed :py:exc:`ImportError` when pkg_resources cannot find the
+  cheroot distribution.
 
 v5.0.1
 ======
