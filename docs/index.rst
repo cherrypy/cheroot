@@ -1,16 +1,16 @@
-Welcome to skeleton documentation!
+Welcome to Cheroot documentation!
 ========================================
 
 .. toctree::
    :maxdepth: 1
+   :glob:
 
    history
+   pkg/*
 
 
-.. automodule:: skeleton
-    :members:
-    :undoc-members:
-    :show-inheritance:
+`Cheroot <https://github.com/cherrypy/cheroot>`_ is the high-performance,
+pure-Python HTTP server used by `CherryPy <http://www.cherrypy.org>`_.
 
 
 Indices and tables
