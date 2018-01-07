@@ -220,7 +220,7 @@ v5.3.0
 v5.2.0
 ======
 
-- :issue:`5`: Set `Server.version` to Cheroot version instead of CherryPy
+- :issue:`5`: Set ``Server.version`` to Cheroot version instead of CherryPy
   version.
 
 - :pr:`4`: Prevent tracebacks and drop bad HTTPS connections in the
