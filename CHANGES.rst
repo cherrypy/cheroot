@@ -84,7 +84,7 @@ v5.8.0
   * Build wheel in Appveyor and store it as an artifact
 - Improve urllib support in ``_compat`` module
 - #38 via #39: Improve URI parsing:
-  * Make it compliant with RFC 7230, RFC 7231 and RFC 2616
+  * Make it compliant with :rfc:`7230`, :rfc:`7231` and :rfc:`2616`
   * Fix setting of ``environ['QUERY_STRING']`` in WSGI
   * Introduce ``proxy_mode`` and ``strict_mode`` argument in ``server.HTTPRequest``
   * Fix decoding of unicode URIs in WSGI 1.0 gateway
