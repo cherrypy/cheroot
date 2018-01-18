@@ -11,6 +11,7 @@
    :target: https://ci.appveyor.com/project/cherrypy/cheroot/branch/master
 
 .. image:: https://img.shields.io/pypi/pyversions/cheroot.svg
+   :target: https://pypi.org/project/cheroot
 
 .. image:: https://codecov.io/gh/cherrypy/cheroot/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/cherrypy/cheroot
