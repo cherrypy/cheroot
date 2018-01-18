@@ -33,7 +33,7 @@ jobs:
 
     - run: pip install tox tox-pyenv
     - checkout
-    - run: tox -e py27,py34,py35,py36,pypy,pypy3 -- -p no:sugar
+    - run: tox -e py27,py34,py35,py36,pypy3 -- -p no:sugar
 
   linux-build:
     docker:
