@@ -4,6 +4,9 @@
 .. image:: https://img.shields.io/travis/cherrypy/cheroot/master.svg?label=Linux%20build%20%40%20Travis%20CI
    :target: http://travis-ci.org/cherrypy/cheroot
 
+.. image:: https://circleci.com/gh/cherrypy/cheroot/tree/master.svg?style=svg
+   :target: https://circleci.com/gh/cherrypy/cheroot/tree/master
+
 .. image:: https://img.shields.io/appveyor/ci/cherrypy/cheroot/master.svg?label=Windows%20build%20%40%20Appveyor
    :target: https://ci.appveyor.com/project/cherrypy/cheroot/branch/master
 
