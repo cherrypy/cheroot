@@ -49,3 +49,10 @@ jobs:
     - checkout
     - run: pip install tox
     - run: tox -e py27,py34,py35,py36
+
+workflows:
+  version: 2
+  test-linux-and-macos:
+    jobs:
+    - macos-build
+    - linux-build
