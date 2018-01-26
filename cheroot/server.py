@@ -738,11 +738,14 @@ class HTTPRequest(object):
             self.simple_response('400 Bad Request', 'Malformed Request-URI')
             return False
 
+        uri_is_absolute_form = (scheme or authority)
+
         if self.method == b'OPTIONS':
             # TODO: cover this branch with tests
             path = (uri
                     # https://tools.ietf.org/html/rfc7230#section-5.3.4
-                    if self.proxy_mode or uri == ASTERISK
+                    if (self.proxy_mode and uri_is_absolute_form)
+                    or uri == ASTERISK
                     else path)
         elif self.method == b'CONNECT':
             # TODO: cover this branch with tests
@@ -778,8 +781,6 @@ class HTTPRequest(object):
             authority = path = _authority
             scheme = qs = fragment = EMPTY
         else:
-            uri_is_absolute_form = (scheme or authority)
-
             disallowed_absolute = (
                 self.strict_mode
                 and not self.proxy_mode
