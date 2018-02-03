@@ -32,10 +32,10 @@ cp_github_repo_url = f'{github_url}/{github_repo_org}/cherrypy'
 
 extlinks = {
     'issue': (f'{github_repo_url}/issues/%s', '#'),
-    'pr': (f'{github_repo_url}/pulls/%s', 'PR #'),
+    'pr': (f'{github_repo_url}/pull/%s', 'PR #'),
     'commit': (f'{github_repo_url}/commit/%s', ''),
     'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #'),
-    'cp-pr': (f'{cp_github_repo_url}/pulls/%s', 'CherryPy PR #'),
+    'cp-pr': (f'{cp_github_repo_url}/pull/%s', 'CherryPy PR #'),
     'gh': (f'{github_url}/%s', 'GitHub: '),
 }
 
