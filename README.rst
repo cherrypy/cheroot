@@ -31,5 +31,4 @@ Cheroot is the high-performance, pure-Python HTTP server used by CherryPy.
 Status
 ======
 
-The test suite is currently disabled. Currently, the only way to validate the test
-suite is to run it against CherryPy.
+The test suite is currently relies on pytest. It's being run via Travis CI.
