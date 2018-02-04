@@ -25,6 +25,17 @@ from .. import errors
 from ..makefile import MakeFile
 
 
+def _assert_ssl_exc_contains(exc, *msgs):
+    """Check whether SSL exception contains either of messages provided."""
+    if len(msgs) < 1:
+        raise TypeError(
+            '_assert_ssl_exc_contains() requires '
+            'at least one message to be passed.'
+        )
+    err_msg_lower = exc.args[1].lower()
+    return any(m.lower() in err_msg_lower for m in msgs)
+
+
 class BuiltinSSLAdapter(Adapter):
     """A wrapper for integrating Python's builtin ssl module with Cheroot."""
 
@@ -72,13 +83,14 @@ class BuiltinSSLAdapter(Adapter):
                 sock, do_handshake_on_connect=True, server_side=True,
             )
         except ssl.SSLError as ex:
+            EMPTY_RESULT = None, {}
             if ex.errno == ssl.SSL_ERROR_EOF:
                 # This is almost certainly due to the cherrypy engine
                 # 'pinging' the socket to assert it's connectable;
                 # the 'ping' isn't SSL.
-                return None, {}
+                return EMPTY_RESULT
             elif ex.errno == ssl.SSL_ERROR_SSL:
-                if 'http request' in ex.args[1]:
+                if _assert_ssl_exc_contains(ex, 'http request'):
                     # The client is speaking HTTP to an HTTPS server.
                     raise errors.NoSSLError
 
@@ -93,15 +105,14 @@ class BuiltinSSLAdapter(Adapter):
                     'no shared cipher', 'certificate unknown',
                     'ccs received early',
                 )
-                for error_text in _block_errors:
-                    if error_text in ex.args[1].lower():
-                        # Accepted error, let's pass
-                        return None, {}
-            elif 'handshake operation timed out' in ex.args[0]:
+                if _assert_ssl_exc_contains(ex, *_block_errors):
+                    # Accepted error, let's pass
+                    return EMPTY_RESULT
+            elif _assert_ssl_exc_contains(ex, 'handshake operation timed out'):
                 # This error is thrown by builtin SSL after a timeout
                 # when client is speaking HTTP to an HTTPS server.
                 # The connection can safely be dropped.
-                return None, {}
+                return EMPTY_RESULT
             raise
         return s, self.get_environ(s)
 
