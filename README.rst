@@ -26,6 +26,9 @@
 .. image:: https://img.shields.io/badge/StackOverflow-Cheroot-blue.svg
    :target: https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
 
+.. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
+   :target: https://gitter.im/cherrypy/cherrypy
+
 Cheroot is the high-performance, pure-Python HTTP server used by CherryPy.
 
 Status
