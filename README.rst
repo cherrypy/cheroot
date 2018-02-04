@@ -10,6 +10,9 @@
 .. image:: https://img.shields.io/appveyor/ci/cherrypy/cheroot/master.svg?label=Windows%20build%20%40%20Appveyor
    :target: https://ci.appveyor.com/project/cherrypy/cheroot/branch/master
 
+.. image:: https://img.shields.io/badge/license-BSD-blue.svg?maxAge=3600
+   :target: https://pypi.org/project/cheroot
+
 .. image:: https://img.shields.io/pypi/pyversions/cheroot.svg
    :target: https://pypi.org/project/cheroot
 
