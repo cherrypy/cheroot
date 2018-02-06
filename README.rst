@@ -29,9 +29,25 @@
 .. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
    :target: https://gitter.im/cherrypy/cherrypy
 
+.. image:: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
+   :target: http://makeapullrequest.com/
+
 Cheroot is the high-performance, pure-Python HTTP server used by CherryPy.
 
 Status
 ======
 
 The test suite is currently relies on pytest. It's being run via Travis CI.
+
+Contribute Cheroot
+==================
+**Want to add smth to upstream?** Feel free to submit a PR or file an issue
+if unsure. Please follow `CherryPy's common conribution guidelines
+<https://github.com/cherrypy/cherrypy/blob/master/.github/CONTRIBUTING.rst>`_.
+Note that PR is more likely to be accepted if it includes tests and detailed
+description helping maintainers to understand it better :tada:
+
+Oh, an be pythonic, please :snake:
+
+**Don't know how?** Check out `How to Contribute to Open Source
+<https://opensource.guide/how-to-contribute/>`_ article by GitHub :rocket:
