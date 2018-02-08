@@ -973,9 +973,6 @@ class HTTPRequest(object):
 
         self.server.gateway(self).respond()
 
-        if (self.ready and not self.sent_headers):
-            self.sent_headers = True
-            self.send_headers()
         if self.chunked_write:
             self.conn.wfile.write(b'0\r\n\r\n')
 
@@ -1015,6 +1012,11 @@ class HTTPRequest(object):
         except socket.error as ex:
             if ex.args[0] not in errors.socket_errors_to_ignore:
                 raise
+
+    def write_headers(self):
+        """Write headers to the client if not already sent."""
+        self.sent_headers = True
+        self.send_headers()
 
     def write(self, chunk):
         """Write unbuffered data to the client."""

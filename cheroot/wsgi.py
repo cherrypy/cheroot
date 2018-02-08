@@ -137,6 +137,9 @@ class Gateway(server.Gateway):
                     raise ValueError('WSGI Applications must yield bytes')
                 self.write(chunk)
         finally:
+            # Send headers if not already sent
+            if not self.req.sent_headers:
+                self.req.write_headers()
             if hasattr(response, 'close'):
                 response.close()
 
@@ -213,8 +216,7 @@ class Gateway(server.Gateway):
                 chunk = chunk[:rbo]
 
         if not self.req.sent_headers:
-            self.req.sent_headers = True
-            self.req.send_headers()
+            self.req.write_headers()
 
         self.req.write(chunk)
 
