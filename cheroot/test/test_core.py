@@ -356,11 +356,6 @@ def test_garbage_in(test_client):
 class CloseController(object):
     """Controller for testing the close callback."""
 
-    def __init__(self):
-        """Set the default values."""
-        self.sent_headers_before_closing = None
-        self.req = None
-
     def __call__(self, environ, start_response):
         """Get the req to know header sent status."""
         self.req = start_response.__self__.req
@@ -369,9 +364,8 @@ class CloseController(object):
         return resp
 
     def close(self):
-        """Hook for close, tests if headers already sent."""
-        self.sent_headers_before_closing = \
-            self.req is not None and self.req.sent_headers
+        """Hook for close, write hello."""
+        self.req.write('hello'.encode('utf-8'))
 
 
 class CloseResponse(object):
@@ -403,6 +397,6 @@ def testing_server_close(wsgi_server_client):
 
 
 def test_send_header_before_closing(testing_server_close):
-    """Test we are actually sending the headers before closing the response."""
-    testing_server_close.server_client.get('/')
-    assert testing_server_close.wsgi_app.sent_headers_before_closing is True
+    """Test we are actually sending the headers before calling 'close'."""
+    _, _, resp_body = testing_server_close.server_client.get('/')
+    assert resp_body == 'hello'.encode('utf-8')
