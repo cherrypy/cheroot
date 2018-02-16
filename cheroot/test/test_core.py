@@ -357,12 +357,12 @@ class CloseController(object):
     """Controller for testing the close callback."""
 
     def __init__(self):
-        """Sets the default values."""
+        """Set the default values."""
         self.sent_headers_before_closing = None
         self.req = None
 
     def __call__(self, environ, start_response):
-        """Gets the req to know header sent status."""
+        """Get the req to know header sent status."""
         self.req = start_response.__self__.req
         resp = CloseResponse(self.close)
         start_response(resp.status, resp.headers.items())
@@ -376,6 +376,7 @@ class CloseController(object):
 
 class CloseResponse(object):
     """Dummy empty response to trigger the no body status."""
+
     def __init__(self, close):
         """Use some defaults to ensure we have a header."""
         self.status = '200 OK'
@@ -383,16 +384,17 @@ class CloseResponse(object):
         self.close = close
 
     def __getitem__(self, index):
-        """Ensures we don't have a body."""
+        """Ensure we don't have a body."""
         raise IndexError()
 
     def output(self):
-        """Returns self to hook the close method."""
+        """Return self to hook the close method."""
         return self
 
 
 @pytest.fixture
 def testing_server_close(wsgi_server_client):
+    """Attach a WSGI app to the given server and pre-configure it."""
     wsgi_server = wsgi_server_client.server_instance
     wsgi_server.wsgi_app = CloseController()
     wsgi_server.max_request_body_size = 30000000
@@ -401,6 +403,6 @@ def testing_server_close(wsgi_server_client):
 
 
 def test_send_header_before_closing(testing_server_close):
-    """Tests we are actually sending the headers before closing the response."""
+    """Test we are actually sending the headers before closing the response."""
     testing_server_close.server_client.get('/')
     assert testing_server_close.wsgi_app.sent_headers_before_closing is True
