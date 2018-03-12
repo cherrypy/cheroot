@@ -1202,7 +1202,7 @@ class HTTPConnection(object):
             return
 
         try:
-            req.simple_response('408 Request Timeout')
+            req.simple_response(response)
         except errors.FatalSSLAlert:
             pass
         except errors.NoSSLError:
