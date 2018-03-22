@@ -365,7 +365,7 @@ class CloseController(object):
 
     def close(self):
         """Hook for close, write hello."""
-        self.req.write('hello'.encode('utf-8'))
+        self.req.write(b'hello')
 
 
 class CloseResponse(object):
@@ -399,4 +399,4 @@ def testing_server_close(wsgi_server_client):
 def test_send_header_before_closing(testing_server_close):
     """Test we are actually sending the headers before calling 'close'."""
     _, _, resp_body = testing_server_close.server_client.get('/')
-    assert resp_body == 'hello'.encode('utf-8')
+    assert resp_body == b'hello'

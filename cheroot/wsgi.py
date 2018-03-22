@@ -138,8 +138,7 @@ class Gateway(server.Gateway):
                 self.write(chunk)
         finally:
             # Send headers if not already sent
-            if not self.req.sent_headers:
-                self.req.write_headers()
+            self.req.ensure_headers_sent()
             if hasattr(response, 'close'):
                 response.close()
 
@@ -215,8 +214,7 @@ class Gateway(server.Gateway):
                 # to fit (so the client doesn't hang) and raise an error later.
                 chunk = chunk[:rbo]
 
-        if not self.req.sent_headers:
-            self.req.write_headers()
+        self.req.ensure_headers_sent()
 
         self.req.write(chunk)
 
