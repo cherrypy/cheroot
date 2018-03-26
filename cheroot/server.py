@@ -1148,7 +1148,9 @@ class HTTPConnection(object):
         self.requests_seen = 0
 
         self.peercreds_enabled = self.server.peercreds_enabled
-        self.get_peer_creds = lru_cache(maxsize=1)(self.get_peer_creds)  # https://stackoverflow.com/a/14946506/595220
+        self.get_peer_creds = (  # https://stackoverflow.com/a/14946506/595220
+            lru_cache(maxsize=1)(self.get_peer_creds)
+        )
 
     def communicate(self):
         """Read each request and respond appropriately."""
@@ -1248,10 +1250,11 @@ class HTTPConnection(object):
             pass
 
     def get_peer_creds(self):  # LRU cached on per-instance basis, see __init__
-        """Return the PID, UID, GID tuple of the peer socket in the case of UNIX domain sockets.
+        """Return the PID/UID/GID tuple of the peer socket for UNIX sockets.
 
-        This function uses SO_PEERCRED to query the UNIX PID, UID, GID of the
-        peer, which is only available if the bind address is a UNIX domain socket.
+        This function uses SO_PEERCRED to query the UNIX PID, UID, GID
+        of the peer, which is only available if the bind address is
+        a UNIX domain socket.
 
         Raises:
             NotImplementedError: in case of unsupported socket type
@@ -1264,7 +1267,9 @@ class HTTPConnection(object):
                 'SO_PEERCRED is only supported in Linux kernel and WSL'
             )
         elif not self.peercreds_enabled:
-            raise RuntimeError('Peer creds lookup is disabled within this server')
+            raise RuntimeError(
+                'Peer creds lookup is disabled within this server'
+            )
 
         try:
             peer_creds = self.socket.getsockopt(
@@ -1274,11 +1279,15 @@ class HTTPConnection(object):
         except socket.error as socket_err:
             """Non-Linux kernels don't support SO_PEERCRED.
 
-            Ref: http://welz.org.za/notes/on-peer-cred.html
-            Ref: https://github.com/daveti/tcpSockHack
-            Ref: https://msdn.microsoft.com/en-us/commandline/wsl/release_notes#build-15025
+            Refs:
+            http://welz.org.za/notes/on-peer-cred.html
+            https://github.com/daveti/tcpSockHack
+            msdn.microsoft.com/en-us/commandline/wsl/release_notes#build-15025
             """
-            six.raise_from(RuntimeError, socket_err)  # 3.6+: raise RuntimeError from socket_err
+            six.raise_from(  # 3.6+: raise RuntimeError from socket_err
+                RuntimeError,
+                socket_err,
+            )
         else:
             pid, uid, gid = struct.unpack(PEERCRED_STRUCT_DEF, peer_creds)
             return pid, uid, gid
