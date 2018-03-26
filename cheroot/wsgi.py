@@ -40,9 +40,12 @@ class Server(server.HTTPServer):
     wsgi_version = (1, 0)
     """The version of WSGI to produce."""
 
-    def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-                 max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
-                 accepted_queue_size=-1, accepted_queue_timeout=10, peercreds_enabled=False):
+    def __init__(
+        self, bind_addr, wsgi_app, numthreads=10, server_name=None,
+        max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
+        accepted_queue_size=-1, accepted_queue_timeout=10,
+        peercreds_enabled=False,
+    ):
         """Initialize WSGI Server instance.
 
         Args:
@@ -269,7 +272,11 @@ class Gateway_10(Gateway):
                 env['X_REMOTE_UID'] = str(req_conn.peer_uid)
                 env['X_REMOTE_GID'] = str(req_conn.peer_gid)
             except RuntimeError:
-                """Unsupported by current kernel or socket error happened, or unsupported socket type."""
+                """Unable to retriev peer creds data.
+
+                Unsupported by current kernel or socket error happened, or
+                unsupported socket type, or disabled.
+                """
         else:
             env['SERVER_PORT'] = str(req.server.bind_addr[1])
 
