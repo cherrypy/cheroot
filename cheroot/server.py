@@ -1130,6 +1130,7 @@ class HTTPConnection(object):
     rbufsize = io.DEFAULT_BUFFER_SIZE
     wbufsize = io.DEFAULT_BUFFER_SIZE
     RequestHandlerClass = HTTPRequest
+    peercreds_enabled = False
 
     def __init__(self, server, sock, makefile=MakeFile):
         """Initialize HTTPConnection instance.
@@ -1146,6 +1147,7 @@ class HTTPConnection(object):
         self.wfile = makefile(sock, 'wb', self.wbufsize)
         self.requests_seen = 0
 
+        self.peercreds_enabled = self.server.peercreds_enabled
         self.get_peer_creds = lru_cache(maxsize=1)(self.get_peer_creds)  # https://stackoverflow.com/a/14946506/595220
 
     def communicate(self):
@@ -1253,7 +1255,7 @@ class HTTPConnection(object):
 
         Raises:
             NotImplementedError: in case of unsupported socket type
-            RuntimeError: in case of SO_PEERCRED lookup unsupported
+            RuntimeError: in case of SO_PEERCRED lookup unsupported or disabled
         """
         PEERCRED_STRUCT_DEF = '3i'
 
@@ -1261,6 +1263,8 @@ class HTTPConnection(object):
             raise NotImplementedError(
                 'SO_PEERCRED is only supported in Linux kernel and WSL'
             )
+        elif not self.peercreds_enabled:
+            raise RuntimeError('Peer creds lookup is disabled within this server')
 
         try:
             peer_creds = self.socket.getsockopt(
@@ -1411,9 +1415,12 @@ class HTTPServer(object):
     You must have the corresponding SSL driver library installed.
     """
 
+    peercreds_enabled = False
+    """If True, peer cred lookup can be performed via UNIX domain socket."""
+
     def __init__(
             self, bind_addr, gateway, minthreads=10, maxthreads=-1,
-            server_name=None):
+            server_name=None, peercreds_enabled=False):
         """Initialize HTTPServer instance.
 
         Args:
@@ -1433,6 +1440,7 @@ class HTTPServer(object):
         if not server_name:
             server_name = self.version
         self.server_name = server_name
+        self.peercreds_enabled = peercreds_enabled
         self.clear_stats()
 
     def clear_stats(self):
