@@ -972,7 +972,7 @@ class HTTPRequest(object):
             self.rfile = KnownLengthRFile(self.conn.rfile, cl)
 
         self.server.gateway(self).respond()
-        self.ensure_headers_sent()
+        self.ready and self.ensure_headers_sent()
 
         if self.chunked_write:
             self.conn.wfile.write(b'0\r\n\r\n')
