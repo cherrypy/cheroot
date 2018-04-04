@@ -351,3 +351,52 @@ def test_garbage_in(test_client):
         # "Connection reset by peer" is also acceptable.
         if ex.errno != errno.ECONNRESET:
             raise
+
+
+class CloseController(object):
+    """Controller for testing the close callback."""
+
+    def __call__(self, environ, start_response):
+        """Get the req to know header sent status."""
+        self.req = start_response.__self__.req
+        resp = CloseResponse(self.close)
+        start_response(resp.status, resp.headers.items())
+        return resp
+
+    def close(self):
+        """Hook for close, write hello."""
+        self.req.write(b'hello')
+
+
+class CloseResponse(object):
+    """Dummy empty response to trigger the no body status."""
+
+    def __init__(self, close):
+        """Use some defaults to ensure we have a header."""
+        self.status = '200 OK'
+        self.headers = {'Content-Type': 'text/html'}
+        self.close = close
+
+    def __getitem__(self, index):
+        """Ensure we don't have a body."""
+        raise IndexError()
+
+    def output(self):
+        """Return self to hook the close method."""
+        return self
+
+
+@pytest.fixture
+def testing_server_close(wsgi_server_client):
+    """Attach a WSGI app to the given server and pre-configure it."""
+    wsgi_server = wsgi_server_client.server_instance
+    wsgi_server.wsgi_app = CloseController()
+    wsgi_server.max_request_body_size = 30000000
+    wsgi_server.server_client = wsgi_server_client
+    return wsgi_server
+
+
+def test_send_header_before_closing(testing_server_close):
+    """Test we are actually sending the headers before calling 'close'."""
+    _, _, resp_body = testing_server_close.server_client.get('/')
+    assert resp_body == b'hello'
