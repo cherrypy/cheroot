@@ -79,10 +79,13 @@ v5.8.3
 ======
 
 - Improve HTTP request line validation:
+
   * Improve HTTP version parsing
 
 - Fix HTTP CONNECT method processing:
+
   * Respond with ``405 Method Not Allowed`` if ``proxy_mode is False``
+
   * Validate that request-target is in authority-form
 
 - Improve tests in ``test.test_core``
