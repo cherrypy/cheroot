@@ -153,7 +153,7 @@ cache:
   - $HOME/Library/Caches/Homebrew
 
 install:
-- pip install tox "setuptools>=28.2"
+- python -m pip install tox "setuptools>=28.2"
 
 script:
 - tox
