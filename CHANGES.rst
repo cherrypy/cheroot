@@ -1,3 +1,30 @@
+v6.1.0
+======
+
+- :pr:`67`: Refactor testsuite to completely rely on pytest.
+
+  * Integrate pytest-testmon and pytest-watch
+
+  * Stabilise testing
+
+- :cp-issue:`1664` via :pr:`66`: Implement input termination flag support as
+  suggested by `@mitsuhiko <https://github.com/mitsuhiko>`_ in his
+  `wsgi.input_terminated Proposal
+  <https://gist.github.com/mitsuhiko/5721547>`_.
+
+- :issue:`73`: Fix SSL error bypassing.
+
+- :issue:`77` via :pr:`78`: Fix WSGI documentation example to support Python 3.
+
+- :pr:`76`: Send correct conditional HTTP error in helper function.
+
+- :cp-issue:`1404` via :pr:`75`: Fix headers being unsent before request
+  closed. Now we double check that they've been sent.
+
+- Minor docs improvements.
+
+- Minor refactoring.
+
 v6.0.0
 ======
 
