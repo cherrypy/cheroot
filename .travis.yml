@@ -124,12 +124,12 @@ jobs:
     - *env_path
   - <<: *osx_python_base
     <<: *manual_run_or_cron
-    python: pypy2.7-5.10.0
+    python: pypy3.5-5.10.0
     env:
-    - PYTHON_VERSION=pypy2.7-5.10.0
+    - PYTHON_VERSION=pypy3.5-5.10.0
     - *env_pyenv
     - *env_path
-  # pypy3.5-5.10.0 fails under OS X because it's unsupported (PR #26)
+  # pypy2.7-5.10.0 fails under OS X because it's unsupported
   - <<: *stage_deploy
     if: tag IS present
     python: *mainstream_python
