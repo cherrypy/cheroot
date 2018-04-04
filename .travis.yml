@@ -77,8 +77,6 @@ jobs:
   fast_finish: true
   allow_failures:
   - env: &pep257_env TOXENV=pre-commit-pep257
-  - python: nightly
-    os: osx
   include:
   - <<: *lint_python_base
     env: TOXENV=pre-commit
