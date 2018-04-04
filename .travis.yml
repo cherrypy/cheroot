@@ -53,7 +53,7 @@ _base_envs:
   language: generic
   before_install:
   - brew update
-  - brew install readline xz pyenv || brew upgrade readline xz pyenv
+  - brew install pyenv || brew upgrade pyenv
   - &ensure_pyenv_preloaded |
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
