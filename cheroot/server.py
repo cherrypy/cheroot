@@ -1607,7 +1607,11 @@ class HTTPServer(object):
                 pass
 
         self.socket.bind(self.bind_addr)
-        self.bind_addr = self.socket.getsockname()[:2]  # TODO: keep separate
+        # TODO: keep separate
+        if family == socket.AF_UNIX:
+            self.bind_addr = self.socket.getsockname()
+        else:
+            self.bind_addr = self.socket.getsockname()[:2]
 
     def tick(self):
         """Accept a new connection and put it on the Queue."""
