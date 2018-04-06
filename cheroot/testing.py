@@ -19,14 +19,20 @@ ANY_INTERFACE_IPV4 = '0.0.0.0'
 ANY_INTERFACE_IPV6 = '::'
 
 config = {
-    'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
-    'wsgi_app': None,
+    cheroot.wsgi.Server: {
+        'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
+        'wsgi_app': None,
+    },
+    cheroot.server.HTTPServer: {
+        'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
+        'gateway': cheroot.server.Gateway,
+    },
 }
 
 
 def cheroot_server(server_factory):
     """Set up and tear down a Cheroot server instance."""
-    conf = config.copy()
+    conf = config[server_factory].copy()
     bind_port = conf.pop('bind_addr')[-1]
 
     for interface in ANY_INTERFACE_IPV6, ANY_INTERFACE_IPV4:
