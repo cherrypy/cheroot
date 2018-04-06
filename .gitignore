@@ -170,3 +170,6 @@ ENV/
 
 # pytest-mon
 .testmondata
+
+# pytest
+.pytest_cache
