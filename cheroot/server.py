@@ -72,7 +72,7 @@ __all__ = ('HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'Gateway', 'get_ssl_adapter_class')
 
 
-if 'win' in sys.platform and hasattr(socket, 'AF_INET6'):
+if platform.system() == 'Windows' and hasattr(socket, 'AF_INET6'):
     if not hasattr(socket, 'IPPROTO_IPV6'):
         socket.IPPROTO_IPV6 = 41
     if not hasattr(socket, 'IPV6_V6ONLY'):
@@ -1610,7 +1610,11 @@ class HTTPServer(object):
         # TODO: keep requested bind_addr separate real bound_addr (port is
         # different in case of ephemeral port 0)
         self.bind_addr = self.socket.getsockname()
-        if family != socket.AF_UNIX:
+        if family in (
+            # Windows doesn't have socket.AF_UNIX, so not using it in check
+            socket.AF_INET,
+            socket.AF_INET6,
+        ):
             """UNIX domain sockets are strings or bytes.
 
             In case of bytes with a leading null-byte it's an abstract socket.
