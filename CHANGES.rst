@@ -1,3 +1,11 @@
+v6.1.1
+======
+
+- :pr:`80`: Fix regression introduced by :commit:`68a5769`.
+
+  * Get back support for :py:obj:`socket.AF_UNIX` in stored bound address in
+    :py:attr:`cheroot.server.HTTPServer.bind_addr`
+
 v6.1.0
 ======
 
