@@ -26,6 +26,7 @@ as you want in one instance by using a PathInfoDispatcher::
 """
 
 import sys
+
 import six
 from six.moves import filter
 
