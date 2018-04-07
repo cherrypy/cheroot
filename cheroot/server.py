@@ -1607,11 +1607,15 @@ class HTTPServer(object):
                 pass
 
         self.socket.bind(self.bind_addr)
-        # TODO: keep separate
-        if family == socket.AF_UNIX:
-            self.bind_addr = self.socket.getsockname()
-        else:
-            self.bind_addr = self.socket.getsockname()[:2]
+        # TODO: keep requested bind_addr separate real bound_addr (port is
+        # different in case of ephemeral port 0)
+        self.bind_addr = self.socket.getsockname()
+        if family != socket.AF_UNIX:
+            """UNIX domain sockets are strings or bytes.
+
+            In case of bytes with a leading null-byte it's an abstract socket.
+            """
+            self.bind_addr = self.bind_addr[:2]
 
     def tick(self):
         """Accept a new connection and put it on the Queue."""
