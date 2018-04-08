@@ -78,7 +78,10 @@ __all__ = ('HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'Gateway', 'get_ssl_adapter_class')
 
 
-if platform.system() == 'Windows' and hasattr(socket, 'AF_INET6'):
+IS_WINDOWS = platform.system() == 'Windows'
+
+
+if IS_WINDOWS and hasattr(socket, 'AF_INET6'):
     if not hasattr(socket, 'IPPROTO_IPV6'):
         socket.IPPROTO_IPV6 = 41
     if not hasattr(socket, 'IPV6_V6ONLY'):
@@ -1262,7 +1265,7 @@ class HTTPConnection(object):
         """
         PEERCRED_STRUCT_DEF = '3i'
 
-        if self.socket.family != socket.AF_UNIX:
+        if IS_WINDOWS or self.socket.family != socket.AF_UNIX:
             raise NotImplementedError(
                 'SO_PEERCRED is only supported in Linux kernel and WSL'
             )
@@ -1662,7 +1665,7 @@ class HTTPServer(object):
         """Create (or recreate) the actual socket object."""
         self.socket = socket.socket(family, type, proto)
         prevent_socket_inheritance(self.socket)
-        if platform.system() != 'Windows':
+        if IS_WINDOWS:
             # Windows has different semantics for SO_REUSEADDR,
             # so don't set it.
             # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
