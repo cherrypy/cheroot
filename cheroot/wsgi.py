@@ -272,6 +272,14 @@ class Gateway_10(Gateway):
                 env['X_REMOTE_PID'] = str(req_conn.peer_pid)
                 env['X_REMOTE_UID'] = str(req_conn.peer_uid)
                 env['X_REMOTE_GID'] = str(req_conn.peer_gid)
+                import grp
+                import pwd
+                env['REMOTE_USER'] = env['X_REMOTE_USER'] = pwd.getpwuid(
+                    req_conn.peer_uid
+                ).pw_name  # [0]
+                env['X_REMOTE_GROUP'] = grp.getgrgid(
+                    req_conn.peer_gid
+                ).gr_name  # [0]
             except RuntimeError:
                 """Unable to retrieve peer creds data.
 
