@@ -273,7 +273,7 @@ class Gateway_10(Gateway):
                 env['X_REMOTE_UID'] = str(req_conn.peer_uid)
                 env['X_REMOTE_GID'] = str(req_conn.peer_gid)
             except RuntimeError:
-                """Unable to retriev peer creds data.
+                """Unable to retrieve peer creds data.
 
                 Unsupported by current kernel or socket error happened, or
                 unsupported socket type, or disabled.
