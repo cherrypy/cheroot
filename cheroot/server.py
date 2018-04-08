@@ -56,9 +56,6 @@ import time
 import traceback as traceback_
 import logging
 import platform
-import grp
-import pwd
-import struct
 
 try:
     from functools import lru_cache
@@ -81,6 +78,12 @@ __all__ = ('HTTPRequest', 'HTTPConnection', 'HTTPServer',
 
 
 IS_WINDOWS = platform.system() == 'Windows'
+
+
+if not IS_WINDOWS:
+    import grp
+    import pwd
+    import struct
 
 
 if IS_WINDOWS and hasattr(socket, 'AF_INET6'):
