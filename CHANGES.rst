@@ -1,3 +1,12 @@
+v6.1.2
+======
+
+- :issue:`81`: Fix regression introduced by :pr:`80`.
+
+  * Restore :py:attr:`storing bound socket
+    <cheroot.server.HTTPServer.bind_addr>` in Windows broken by use of
+    :py:obj:`socket.AF_UNIX`
+
 v6.1.1
 ======
 

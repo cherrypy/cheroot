@@ -121,7 +121,10 @@ def _probe_ipv6_sock(interface):
 
 
 def _get_conn_data(server):
-    host, port = server.bind_addr
+    if isinstance(server.bind_addr, tuple):
+        host, port = server.bind_addr
+    else:
+        host, port = server.bind_addr, 0
 
     interface = webtest.interface(host)
 

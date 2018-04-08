@@ -3,6 +3,7 @@
 # vim: set fileencoding=utf-8 :
 
 import os
+import socket
 import tempfile
 import threading
 import time
@@ -31,6 +32,12 @@ def make_http_server(bind_addr):
         time.sleep(0.1)
 
     return httpserver
+
+
+non_windows_sock_test = pytest.mark.skipif(
+    not hasattr(socket, 'AF_UNIX'),
+    reason='UNIX domain sockets are only available under UNIX-based OS',
+)
 
 
 @pytest.fixture
@@ -80,6 +87,7 @@ def test_bind_addr_inet(http_server, ip_addr):
     assert httpserver.bind_addr[1] != EPHEMERAL_PORT
 
 
+@non_windows_sock_test
 def test_bind_addr_unix(http_server, unix_sock_file):
     """Check that bound UNIX socket address is stored in server."""
     httpserver = http_server.send(unix_sock_file)
@@ -87,7 +95,8 @@ def test_bind_addr_unix(http_server, unix_sock_file):
     assert httpserver.bind_addr == unix_sock_file
 
 
-@pytest.mark.skip  # FIXME: investigate binding to abstract sockets issue
+@pytest.mark.skip(reason="Abstract sockets don't work currently")
+@non_windows_sock_test
 def test_bind_addr_unix_abstract(http_server):
     """Check that bound UNIX socket address is stored in server."""
     unix_abstract_sock = b'\x00cheroot/test/socket/here.sock'
