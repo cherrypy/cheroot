@@ -3,6 +3,7 @@
 # vim: set fileencoding=utf-8 :
 
 import os
+import socket
 import tempfile
 import threading
 import time
@@ -80,6 +81,10 @@ def test_bind_addr_inet(http_server, ip_addr):
     assert httpserver.bind_addr[1] != EPHEMERAL_PORT
 
 
+@pytest.mark.skipif(
+    not hasattr(socket, 'AF_UNIX'),
+    'UNIX domain sockets are only available under UNIX-based OS.',
+)
 def test_bind_addr_unix(http_server, unix_sock_file):
     """Check that bound UNIX socket address is stored in server."""
     httpserver = http_server.send(unix_sock_file)
