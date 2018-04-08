@@ -56,6 +56,8 @@ import time
 import traceback as traceback_
 import logging
 import platform
+import grp
+import pwd
 import struct
 
 try:
@@ -1134,6 +1136,7 @@ class HTTPConnection(object):
     wbufsize = io.DEFAULT_BUFFER_SIZE
     RequestHandlerClass = HTTPRequest
     peercreds_enabled = False
+    peercreds_resolve_enabled = False
 
     def __init__(self, server, sock, makefile=MakeFile):
         """Initialize HTTPConnection instance.
@@ -1151,7 +1154,14 @@ class HTTPConnection(object):
         self.requests_seen = 0
 
         self.peercreds_enabled = self.server.peercreds_enabled
-        self.get_peer_creds = (  # https://stackoverflow.com/a/14946506/595220
+        self.peercreds_resolve_enabled = self.server.peercreds_resolve_enabled
+
+        # LRU cached methods:
+        # Ref: https://stackoverflow.com/a/14946506/595220
+        self.resolve_peer_creds = (
+            lru_cache(maxsize=1)(self.resolve_peer_creds)
+        )
+        self.get_peer_creds = (
             lru_cache(maxsize=1)(self.get_peer_creds)
         )
 
@@ -1313,6 +1323,39 @@ class HTTPConnection(object):
         _, _, gid = self.get_peer_creds()
         return gid
 
+    def resolve_peer_creds(self):  # LRU cached on per-instance basis
+        """Return the username and group tuple of the peercreds if available.
+
+        Raises:
+            NotImplementedError: in case of unsupported OS
+            RuntimeError: in case of UID/GID lookup unsupported or disabled
+        """
+        if IS_WINDOWS:
+            raise NotImplementedError(
+                'UID/GID lookup can only be done under UNIX-like OS'
+            )
+        elif not self.peercreds_resolve_enabled:
+            raise RuntimeError(
+                'UID/GID lookup is disabled within this server'
+            )
+
+        user = pwd.getpwuid(self.peer_uid).pw_name  # [0]
+        group = grp.getgrgid(self.peer_gid).gr_name  # [0]
+
+        return user, group
+
+    @property
+    def peer_user(self):
+        """Return the username of the connected peer process."""
+        user, _ = self.resolve_peer_creds()
+        return user
+
+    @property
+    def peer_group(self):
+        """Return the group of the connected peer process."""
+        _, group = self.resolve_peer_creds()
+        return group
+
     def _close_kernel_socket(self):
         """Close kernel socket in outdated Python versions.
 
@@ -1430,9 +1473,14 @@ class HTTPServer(object):
     peercreds_enabled = False
     """If True, peer cred lookup can be performed via UNIX domain socket."""
 
+    peercreds_resolve_enabled = False
+    """If True, username/group will be looked up in the OS from peercreds."""
+
     def __init__(
-            self, bind_addr, gateway, minthreads=10, maxthreads=-1,
-            server_name=None, peercreds_enabled=False):
+        self, bind_addr, gateway,
+        minthreads=10, maxthreads=-1, server_name=None,
+        peercreds_enabled=False, peercreds_resolve_enabled=False,
+    ):
         """Initialize HTTPServer instance.
 
         Args:
@@ -1453,6 +1501,9 @@ class HTTPServer(object):
             server_name = self.version
         self.server_name = server_name
         self.peercreds_enabled = peercreds_enabled
+        self.peercreds_resolve_enabled = (
+            peercreds_resolve_enabled and peercreds_enabled
+        )
         self.clear_stats()
 
     def clear_stats(self):
