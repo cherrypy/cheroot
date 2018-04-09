@@ -10,20 +10,21 @@ import time
 
 import pytest
 
-import cheroot.server
-
-from cheroot.testing import (
+from .._compat import bton
+from ..server import Gateway, HTTPServer
+from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
     EPHEMERAL_PORT,
+    get_server_client,
 )
 
 
 def make_http_server(bind_addr):
     """Create and start an HTTP server bound to bind_addr."""
-    httpserver = cheroot.server.HTTPServer(
+    httpserver = HTTPServer(
         bind_addr=bind_addr,
-        gateway=cheroot.server.Gateway,
+        gateway=Gateway,
     )
 
     threading.Thread(target=httpserver.safe_start).start()
@@ -103,3 +104,44 @@ def test_bind_addr_unix_abstract(http_server):
     httpserver = http_server.send(unix_abstract_sock)
 
     assert httpserver.bind_addr == unix_abstract_sock
+
+
+PEERCRED_IDS_URI = '/peer_creds/ids'
+PEERCRED_TEXTS_URI = '/peer_creds/texts'
+
+
+class _TestGateway(Gateway):
+    def respond(self):
+        req = self.req
+        conn = req.conn
+        req_uri = bton(req.uri)
+        if req_uri == PEERCRED_IDS_URI:
+            peer_creds = conn.peer_pid, conn.peer_uid, conn.peer_gid
+            return ['|'.join(map(str, peer_creds))]
+        elif req_uri == PEERCRED_TEXTS_URI:
+            return ['!'.join((conn.peer_user, conn.peer_group))]
+        return super(_TestGateway, self).respond()
+
+
+@pytest.mark.skip(
+    reason='Test HTTP client is not able to work through UNIX socket currently'
+)
+@non_windows_sock_test
+def test_peercreds_unix_sock(http_server, unix_sock_file):
+    """Check that peercred lookup and resolution work when enabled."""
+    httpserver = http_server.send(unix_sock_file)
+    httpserver.gateway = _TestGateway
+    httpserver.peercreds_enabled = True
+
+    testclient = get_server_client(httpserver)
+
+    expected_peercreds = os.getpid(), os.getuid(), os.getgid()
+    expected_peercreds = '|'.join(map(str, expected_peercreds))
+    assert testclient.get(PEERCRED_IDS_URI) == expected_peercreds
+    assert 'RuntimeError' in testclient.get(PEERCRED_TEXTS_URI)
+
+    httpserver.peercreds_resolve_enabled = True
+    import grp
+    expected_textcreds = os.getlogin(), grp.getgrgid(os.getgid()).gr_name
+    expected_textcreds = '!'.join(map(str, expected_textcreds))
+    assert testclient.get(PEERCRED_TEXTS_URI) == expected_textcreds
