@@ -18,6 +18,9 @@ Does this package use "native" namespace packages or
 pkg_resources "managed" namespace packages?
 """
 
+repo_slug = 'cherrypy/{}'.format(name)
+repo_url = 'https://github.com/{}'.format(repo_slug)
+
 params = dict(
     name=name,
     use_scm_version=True,
@@ -25,7 +28,13 @@ params = dict(
     author_email='team@cherrypy.org',
     description=description or name,
     long_description=long_description,
-    url='https://github.com/cherrypy/' + name,
+    url=repo_url,
+    project_urls={
+        'Bug Tracker': '{}/issues'.format(repo_url),
+        'Documentation': 'http://{}.rtfd.io'.format(name),
+        'Source Code': repo_url,
+        'Continuous Integration': 'https://travis-ci.org/{}'.format(repo_slug),
+    },
     packages=setuptools.find_packages(),
     include_package_data=True,
     namespace_packages=(
