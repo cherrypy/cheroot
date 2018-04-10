@@ -31,9 +31,11 @@ params = dict(
     url=repo_url,
     project_urls={
         'Bug Tracker': '{}/issues'.format(repo_url),
+        'CI: AppVeyor': 'https://ci.appveyor.com/project/{}'.format(repo_slug),
+        'CI: Travis': 'https://travis-ci.org/{}'.format(repo_slug),
+        'CI: Circle': 'https://circleci.com/gh/{}'.format(repo_slug),
         'Documentation': 'http://{}.rtfd.io'.format(name),
         'Source Code': repo_url,
-        'Continuous Integration': 'https://travis-ci.org/{}'.format(repo_slug),
     },
     packages=setuptools.find_packages(),
     include_package_data=True,
