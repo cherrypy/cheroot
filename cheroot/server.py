@@ -1719,7 +1719,7 @@ class HTTPServer(object):
         """Create (or recreate) the actual socket object."""
         self.socket = socket.socket(family, type, proto)
         prevent_socket_inheritance(self.socket)
-        if IS_WINDOWS:
+        if not IS_WINDOWS:
             # Windows has different semantics for SO_REUSEADDR,
             # so don't set it.
             # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
