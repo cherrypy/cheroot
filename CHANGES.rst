@@ -1,3 +1,24 @@
+v6.2.0
+======
+
+- :pr:`37`: Implement PEERCRED lookup over UNIX-socket HTTP connection.
+
+  * Discover connected process' PID/UID/GID
+
+  * Respect server switches: ``peercreds_enabled`` and
+    ``peercreds_resolve_enabled``
+
+  * ``get_peer_creds`` and ``resolve_peer_creds``  methods on connection
+
+  * ``peer_pid``, ``peer_uid``, ``peer_gid``, ``peer_user`` and ``peer_group``
+    properties on connection
+
+  * ``X_REMOTE_PID``, ``X_REMOTE_UID``, ``X_REMOTE_GID``, ``X_REMOTE_USER``
+    (``REMOTE_USER``) and ``X_REMOTE_GROUP`` WSGI environment variables when
+    enabled and supported
+
+  * Per-connection caching to reduce lookup cost
+
 v6.1.2
 ======
 

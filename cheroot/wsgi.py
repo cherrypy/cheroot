@@ -41,9 +41,12 @@ class Server(server.HTTPServer):
     wsgi_version = (1, 0)
     """The version of WSGI to produce."""
 
-    def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-                 max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
-                 accepted_queue_size=-1, accepted_queue_timeout=10):
+    def __init__(
+        self, bind_addr, wsgi_app, numthreads=10, server_name=None,
+        max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
+        accepted_queue_size=-1, accepted_queue_timeout=10,
+        peercreds_enabled=False,
+    ):
         """Initialize WSGI Server instance.
 
         Args:
@@ -67,6 +70,7 @@ class Server(server.HTTPServer):
             bind_addr,
             gateway=wsgi_gateways[self.wsgi_version],
             server_name=server_name,
+            peercreds_enabled=peercreds_enabled,
         )
         self.wsgi_app = wsgi_app
         self.request_queue_size = request_queue_size
@@ -233,6 +237,7 @@ class Gateway_10(Gateway):
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
         req = self.req
+        req_conn = req.conn
         env = {
             # set a non-standard environ entry so the WSGI app can know what
             # the *real* server protocol is (and what features to support).
@@ -240,8 +245,8 @@ class Gateway_10(Gateway):
             'ACTUAL_SERVER_PROTOCOL': req.server.protocol,
             'PATH_INFO': bton(req.path),
             'QUERY_STRING': bton(req.qs),
-            'REMOTE_ADDR': req.conn.remote_addr or '',
-            'REMOTE_PORT': str(req.conn.remote_port or ''),
+            'REMOTE_ADDR': req_conn.remote_addr or '',
+            'REMOTE_PORT': str(req_conn.remote_port or ''),
             'REQUEST_METHOD': bton(req.method),
             'REQUEST_URI': bton(req.uri),
             'SCRIPT_NAME': '',
@@ -263,6 +268,21 @@ class Gateway_10(Gateway):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
             env['SERVER_PORT'] = ''
+            try:
+                env['X_REMOTE_PID'] = str(req_conn.peer_pid)
+                env['X_REMOTE_UID'] = str(req_conn.peer_uid)
+                env['X_REMOTE_GID'] = str(req_conn.peer_gid)
+
+                env['X_REMOTE_USER'] = str(req_conn.peer_user)
+                env['X_REMOTE_GROUP'] = str(req_conn.peer_group)
+
+                env['REMOTE_USER'] = env['X_REMOTE_USER']
+            except RuntimeError:
+                """Unable to retrieve peer creds data.
+
+                Unsupported by current kernel or socket error happened, or
+                unsupported socket type, or disabled.
+                """
         else:
             env['SERVER_PORT'] = str(req.server.bind_addr[1])
 

@@ -57,6 +57,11 @@ import traceback as traceback_
 import logging
 import platform
 
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
+
 import six
 from six.moves import queue
 from six.moves import urllib
@@ -72,11 +77,29 @@ __all__ = ('HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'Gateway', 'get_ssl_adapter_class')
 
 
-if platform.system() == 'Windows' and hasattr(socket, 'AF_INET6'):
+IS_WINDOWS = platform.system() == 'Windows'
+
+
+if not IS_WINDOWS:
+    import grp
+    import pwd
+    import struct
+
+
+if IS_WINDOWS and hasattr(socket, 'AF_INET6'):
     if not hasattr(socket, 'IPPROTO_IPV6'):
         socket.IPPROTO_IPV6 = 41
     if not hasattr(socket, 'IPV6_V6ONLY'):
         socket.IPV6_V6ONLY = 27
+
+
+if not hasattr(socket, 'SO_PEERCRED'):
+    """
+    NOTE: the value for SO_PEERCRED can be architecture specific, in
+    which case the getsockopt() will hopefully fail. The arch
+    specific value could be derived from platform.processor()
+    """
+    socket.SO_PEERCRED = 17
 
 
 LF = b'\n'
@@ -1115,6 +1138,8 @@ class HTTPConnection(object):
     rbufsize = io.DEFAULT_BUFFER_SIZE
     wbufsize = io.DEFAULT_BUFFER_SIZE
     RequestHandlerClass = HTTPRequest
+    peercreds_enabled = False
+    peercreds_resolve_enabled = False
 
     def __init__(self, server, sock, makefile=MakeFile):
         """Initialize HTTPConnection instance.
@@ -1130,6 +1155,18 @@ class HTTPConnection(object):
         self.rfile = makefile(sock, 'rb', self.rbufsize)
         self.wfile = makefile(sock, 'wb', self.wbufsize)
         self.requests_seen = 0
+
+        self.peercreds_enabled = self.server.peercreds_enabled
+        self.peercreds_resolve_enabled = self.server.peercreds_resolve_enabled
+
+        # LRU cached methods:
+        # Ref: https://stackoverflow.com/a/14946506/595220
+        self.resolve_peer_creds = (
+            lru_cache(maxsize=1)(self.resolve_peer_creds)
+        )
+        self.get_peer_creds = (
+            lru_cache(maxsize=1)(self.get_peer_creds)
+        )
 
     def communicate(self):
         """Read each request and respond appropriately."""
@@ -1227,6 +1264,100 @@ class HTTPConnection(object):
             # Someday, perhaps, we'll do the full lingering_close that
             # Apache does, but not today.
             pass
+
+    def get_peer_creds(self):  # LRU cached on per-instance basis, see __init__
+        """Return the PID/UID/GID tuple of the peer socket for UNIX sockets.
+
+        This function uses SO_PEERCRED to query the UNIX PID, UID, GID
+        of the peer, which is only available if the bind address is
+        a UNIX domain socket.
+
+        Raises:
+            NotImplementedError: in case of unsupported socket type
+            RuntimeError: in case of SO_PEERCRED lookup unsupported or disabled
+        """
+        PEERCRED_STRUCT_DEF = '3i'
+
+        if IS_WINDOWS or self.socket.family != socket.AF_UNIX:
+            raise NotImplementedError(
+                'SO_PEERCRED is only supported in Linux kernel and WSL'
+            )
+        elif not self.peercreds_enabled:
+            raise RuntimeError(
+                'Peer creds lookup is disabled within this server'
+            )
+
+        try:
+            peer_creds = self.socket.getsockopt(
+                socket.SOL_SOCKET, socket.SO_PEERCRED,
+                struct.calcsize(PEERCRED_STRUCT_DEF)
+            )
+        except socket.error as socket_err:
+            """Non-Linux kernels don't support SO_PEERCRED.
+
+            Refs:
+            http://welz.org.za/notes/on-peer-cred.html
+            https://github.com/daveti/tcpSockHack
+            msdn.microsoft.com/en-us/commandline/wsl/release_notes#build-15025
+            """
+            six.raise_from(  # 3.6+: raise RuntimeError from socket_err
+                RuntimeError,
+                socket_err,
+            )
+        else:
+            pid, uid, gid = struct.unpack(PEERCRED_STRUCT_DEF, peer_creds)
+            return pid, uid, gid
+
+    @property
+    def peer_pid(self):
+        """Return the id of the connected peer process."""
+        pid, _, _ = self.get_peer_creds()
+        return pid
+
+    @property
+    def peer_uid(self):
+        """Return the user id of the connected peer process."""
+        _, uid, _ = self.get_peer_creds()
+        return uid
+
+    @property
+    def peer_gid(self):
+        """Return the group id of the connected peer process."""
+        _, _, gid = self.get_peer_creds()
+        return gid
+
+    def resolve_peer_creds(self):  # LRU cached on per-instance basis
+        """Return the username and group tuple of the peercreds if available.
+
+        Raises:
+            NotImplementedError: in case of unsupported OS
+            RuntimeError: in case of UID/GID lookup unsupported or disabled
+        """
+        if IS_WINDOWS:
+            raise NotImplementedError(
+                'UID/GID lookup can only be done under UNIX-like OS'
+            )
+        elif not self.peercreds_resolve_enabled:
+            raise RuntimeError(
+                'UID/GID lookup is disabled within this server'
+            )
+
+        user = pwd.getpwuid(self.peer_uid).pw_name  # [0]
+        group = grp.getgrgid(self.peer_gid).gr_name  # [0]
+
+        return user, group
+
+    @property
+    def peer_user(self):
+        """Return the username of the connected peer process."""
+        user, _ = self.resolve_peer_creds()
+        return user
+
+    @property
+    def peer_group(self):
+        """Return the group of the connected peer process."""
+        _, group = self.resolve_peer_creds()
+        return group
 
     def _close_kernel_socket(self):
         """Close kernel socket in outdated Python versions.
@@ -1342,9 +1473,17 @@ class HTTPServer(object):
     You must have the corresponding SSL driver library installed.
     """
 
+    peercreds_enabled = False
+    """If True, peer cred lookup can be performed via UNIX domain socket."""
+
+    peercreds_resolve_enabled = False
+    """If True, username/group will be looked up in the OS from peercreds."""
+
     def __init__(
-            self, bind_addr, gateway, minthreads=10, maxthreads=-1,
-            server_name=None):
+        self, bind_addr, gateway,
+        minthreads=10, maxthreads=-1, server_name=None,
+        peercreds_enabled=False, peercreds_resolve_enabled=False,
+    ):
         """Initialize HTTPServer instance.
 
         Args:
@@ -1364,6 +1503,10 @@ class HTTPServer(object):
         if not server_name:
             server_name = self.version
         self.server_name = server_name
+        self.peercreds_enabled = peercreds_enabled
+        self.peercreds_resolve_enabled = (
+            peercreds_resolve_enabled and peercreds_enabled
+        )
         self.clear_stats()
 
     def clear_stats(self):
@@ -1576,7 +1719,7 @@ class HTTPServer(object):
         """Create (or recreate) the actual socket object."""
         self.socket = socket.socket(family, type, proto)
         prevent_socket_inheritance(self.socket)
-        if platform.system() != 'Windows':
+        if IS_WINDOWS:
             # Windows has different semantics for SO_REUSEADDR,
             # so don't set it.
             # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
