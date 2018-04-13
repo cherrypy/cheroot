@@ -1,3 +1,9 @@
+v6.2.2
+======
+
+- :issue:`84` (:cp-issue:`1704`): Fix regression, causing
+  :py:exc:`ModuleNotFoundError` under cygwin.
+
 v6.2.1
 ======
 
