@@ -1,7 +1,7 @@
 v6.2.1
 ======
 
-- :pr:`83: Fix regression, caused by inverted check for Windows OS.
+- :pr:`83`: Fix regression, caused by inverted check for Windows OS.
 
 - Add more URLs to distribution metadata
 
