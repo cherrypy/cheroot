@@ -10,7 +10,7 @@ Welcome to Cheroot documentation!
 
 
 `Cheroot <https://github.com/cherrypy/cheroot>`_ is the high-performance,
-pure-Python HTTP server used by `CherryPy <http://www.cherrypy.org>`_.
+pure-Python HTTP server used by `CherryPy <https://www.cherrypy.org>`_.
 
 
 Indices and tables

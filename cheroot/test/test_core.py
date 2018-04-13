@@ -304,7 +304,7 @@ def test_malformed_header(test_client):
     c = test_client.get_connection()
     c.putrequest('GET', '/')
     c.putheader('Content-Type', 'text/plain')
-    # See http://www.bitbucket.org/cherrypy/cherrypy/issue/941
+    # See https://www.bitbucket.org/cherrypy/cherrypy/issue/941
     c._output(b'Re, 1.2.3.4#015#012')
     c.endheaders()
 

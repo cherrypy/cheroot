@@ -198,7 +198,7 @@ class pyOpenSSLAdapter(Adapter):
 
     def get_context(self):
         """Return an SSL.Context from self attributes."""
-        # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
+        # See https://code.activestate.com/recipes/442473/
         c = SSL.Context(SSL.SSLv23_METHOD)
         c.use_privatekey_file(self.private_key)
         if self.certificate_chain:

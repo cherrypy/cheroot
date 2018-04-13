@@ -847,11 +847,11 @@ class HTTPRequest(object):
                 return False
 
             # Unquote the path+params (e.g. "/this%20path" -> "/this path").
-            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
+            # https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
             #
             # But note that "...a URI must be separated into its components
             # before the escaped characters within those components can be
-            # safely decoded." http://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
+            # safely decoded." https://www.ietf.org/rfc/rfc2396.txt, sec 2.4.2
             # Therefore, "/this%2Fpath" becomes "/this%2Fpath", not
             # "/this/path".
             try:
@@ -1899,7 +1899,7 @@ class HTTPServer(object):
                         try:
                             s = socket.socket(af, socktype, proto)
                             # See
-                            # http://groups.google.com/group/cherrypy-users/
+                            # https://groups.google.com/group/cherrypy-users/
                             #     browse_frm/thread/bbfe5eb39c904fe0
                             s.settimeout(1.0)
                             s.connect((host, port))

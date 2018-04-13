@@ -296,7 +296,7 @@ v5.3.0
   <https://github.com/jaraco/skeleton>`_.
 
   Docs now built and `deployed at RTD
-  <http://cheroot.readthedocs.io/en/latest/history.html>`_.
+  <https://cheroot.cherrypy.org/en/latest/history.html>`_.
 
 v5.2.0
 ======

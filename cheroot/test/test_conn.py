@@ -243,7 +243,7 @@ def test_streaming_11(test_client, set_cl):
                 test_client.get('/pov', http_conn=http_connection)
 
         # Try HEAD.
-        # See http://www.bitbucket.org/cherrypy/cherrypy/issue/864.
+        # See https://www.bitbucket.org/cherrypy/cherrypy/issue/864.
         # TODO: figure out how can this be possible on an closed connection
         # (chunked_response case)
         status_line, actual_headers, actual_resp_body = test_client.head(
