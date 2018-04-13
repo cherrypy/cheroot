@@ -2,7 +2,12 @@
 
 import socket
 
-import _pyio as io
+try:
+    # prefer slower Python-based io module
+    import _pyio as io
+except ImportError:
+    # Python 2.6
+    import io
 
 import six
 
