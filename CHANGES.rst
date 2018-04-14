@@ -1,3 +1,9 @@
+v6.2.3
+======
+
+- :pr:`85`: Skip installing dependencies from backports namespace under
+  Python 3.
+
 v6.2.2
 ======
 
