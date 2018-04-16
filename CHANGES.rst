@@ -1,3 +1,10 @@
+v6.2.4
+======
+
+- :pr:`85`: Revert conditional dependencies. System packagers should
+  honor the dependencies as declared by cheroot, which are defined
+  intentionally.
+
 v6.2.3
 ======
 
