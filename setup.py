@@ -45,6 +45,7 @@ params = dict(
     ),
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
     install_requires=[
+        'backports.functools_lru_cache',
         'six>=1.11.0',
         'more_itertools>=2.6',
     ],
@@ -71,13 +72,6 @@ params = dict(
             'codecov',
 
             'pytest-cov',
-        ],
-        ':python_version<"3.3"': [
-            # functools_lru_cache has been added to stdlib in Python 3.2
-            # however it's only got support for ``typed`` arg in Python 3.3
-            'backports.functools_lru_cache',
-        ],
-        'testing:python_version<"3.3"': [
             'backports.unittest_mock',
         ],
     },
