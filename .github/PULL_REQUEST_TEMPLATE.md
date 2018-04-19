@@ -2,6 +2,8 @@
   - [ ] bug fix
   - [ ] feature
   - [ ] docs update
+  - [ ] tests/coverage improvement
+  - [ ] refactoring
   - [ ] other
 
 
