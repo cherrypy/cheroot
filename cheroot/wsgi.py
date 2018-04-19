@@ -45,7 +45,7 @@ class Server(server.HTTPServer):
         self, bind_addr, wsgi_app, numthreads=10, server_name=None,
         max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
         accepted_queue_size=-1, accepted_queue_timeout=10,
-        peercreds_enabled=False,
+        peercreds_enabled=False, peercreds_resolve_enabled=False,
     ):
         """Initialize WSGI Server instance.
 
@@ -71,6 +71,7 @@ class Server(server.HTTPServer):
             gateway=wsgi_gateways[self.wsgi_version],
             server_name=server_name,
             peercreds_enabled=peercreds_enabled,
+            peercreds_resolve_enabled=peercreds_resolve_enabled,
         )
         self.wsgi_app = wsgi_app
         self.request_queue_size = request_queue_size
