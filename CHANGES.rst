@@ -1,6 +1,10 @@
 v6.2.4
 ======
 
+- Fix missing ``resolve_peer_creds`` argument in
+  :py:class:`cheroot.wsgi.Server` being bypassed into
+  :py:class:`cheroot.server.HTTPServer`.
+
 - :pr:`85`: Revert conditional dependencies. System packagers should
   honor the dependencies as declared by cheroot, which are defined
   intentionally.
