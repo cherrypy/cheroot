@@ -1,8 +1,8 @@
 * **What kind of change does this PR introduce?**
-  * [ ] bug fix
-  * [ ] feature
-  * [ ] docs update
-  * [ ] other
+  - [ ] bug fix
+  - [ ] feature
+  - [ ] docs update
+  - [ ] other
 
 
 
@@ -23,6 +23,6 @@
 
 * **Checklist**:
 
-- [ ] I think the code is well written
-- [ ] Unit tests for the changes exist
-- [ ] Documentation reflects the changes
+  - [ ] I think the code is well written
+  - [ ] Unit tests for the changes exist
+  - [ ] Documentation reflects the changes
