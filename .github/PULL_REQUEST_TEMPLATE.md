@@ -1,4 +1,8 @@
-* **What kind of change does this PR introduce?** (Bug fix, feature, docs update, ...)
+* **What kind of change does this PR introduce?**
+  * [ ] bug fix
+  * [ ] feature
+  * [ ] docs update
+  * [ ] other
 
 
 
@@ -15,3 +19,10 @@
 
 
 * **Other information**:
+
+
+* **Checklist**:
+
+- [ ] I think the code is well written
+- [ ] Unit tests for the changes exist
+- [ ] Documentation reflects the changes
