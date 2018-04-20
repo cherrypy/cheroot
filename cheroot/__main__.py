@@ -19,7 +19,7 @@ import sys
 
 from .wsgi import Server
 
-RE_ADDRESS = r'^(\S+)(?::)([0-9]+)$'
+RE_HOST_PORT = r'^(\S+)(?::)([0-9]+)$'
 
 
 def wsgi_app_path(string):
@@ -29,13 +29,22 @@ def wsgi_app_path(string):
     else:
         mod_path, app_path = string, 'application'
 
-    return mod_path, app_path
+    module = import_module(mod_path)
+    app = eval(app_path, vars(module))
+
+    if app is None:
+        raise NameError(
+            'Failed to find application object: {}'.format(app_path))
+    elif not callable(app):
+        raise TypeError('Application must be a callable object')
+
+    return app
 
 
 def wsgi_bind_addr(string):
     """Convert bind address string to a format accepted by Server()."""
     # try and match for an IP/hostname and port
-    match = re.match(RE_ADDRESS, string)
+    match = re.match(RE_HOST_PORT, string)
     if match:
         addr, port = match.groups()
         port = int(port)
@@ -52,7 +61,7 @@ def main(args=None):
         description='Start an instance of the Cheroot WSGI server.')
     parser.add_argument(
         '_wsgi_app', metavar='APP_MODULE',
-        type=wsgi_app_path,
+        type=str,
         help='WSGI application callable to use')
     parser.add_argument(
         '--bind', metavar='ADDRESS',
@@ -105,23 +114,12 @@ def main(args=None):
     if chdir not in sys.path:
         sys.path.insert(0, chdir)
 
-    # import the module and grab the application object
-    mod_path, app_path = raw_args._wsgi_app
-    module = import_module(mod_path)
-    app = eval(app_path, vars(module))
-
-    if app is None:
-        raise NameError(
-            'Failed to find application object: {}'.format(app_path))
-    elif not callable(app):
-        raise TypeError('Application must be a callable object')
-
     # create a Server object based on the arguments provided
     server_args = {
         k: v for k, v in vars(raw_args).items()
         if (not k.startswith('_')) and v is not None
     }
-    server_args['wsgi_app'] = app
+    server_args['wsgi_app'] = wsgi_app_path(raw_args._wsgi_app)
     server = Server(**server_args)
 
     try:
