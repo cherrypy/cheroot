@@ -41,13 +41,13 @@ The test suite currently relies on pytest. It's being run via Travis CI.
 
 Contribute Cheroot
 ==================
-**Want to add smth to upstream?** Feel free to submit a PR or file an issue
-if unsure. Please follow `CherryPy's common conribution guidelines
+**Want to add something to upstream?** Feel free to submit a PR or file an issue
+if unsure. Please follow `CherryPy's common contribution guidelines
 <https://github.com/cherrypy/cherrypy/blob/master/.github/CONTRIBUTING.rst>`_.
 Note that PR is more likely to be accepted if it includes tests and detailed
 description helping maintainers to understand it better :tada:
 
-Oh, an be pythonic, please :snake:
+Oh, and be pythonic, please :snake:
 
 **Don't know how?** Check out `How to Contribute to Open Source
 <https://opensource.guide/how-to-contribute/>`_ article by GitHub :rocket:
