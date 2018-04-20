@@ -14,9 +14,12 @@ Basic usage::
 import argparse
 from importlib import import_module
 import os
+import re
 import sys
 
 from .wsgi import Server
+
+RE_ADDRESS = r'^(\S+)(?::)([0-9]+)$'
 
 
 def wsgi_app_path(string):
@@ -30,13 +33,16 @@ def wsgi_app_path(string):
 
 
 def wsgi_bind_addr(string):
-    """Convert bind address string to a tuple."""
-    if ':' in string:
-        addr, port = string.split(':', 1)
+    """Convert bind address string to a format accepted by Server()."""
+    # try and match for an IP/hostname and port
+    match = re.match(RE_ADDRESS, string)
+    if match:
+        addr, port = match.groups()
         port = int(port)
-    else:
-        addr, port = string, 8000
-    return addr, port
+        return addr, port
+
+    # else, assume a UNIX socket path
+    return string
 
 
 def main(args=None):
