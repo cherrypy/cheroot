@@ -10,9 +10,9 @@ https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
 -->
 
 * **I'm submitting a ...**
-[ ] bug report
-[ ] feature request
-[ ] question about the decisions made in the repository
+- [ ] bug report
+- [ ] feature request
+- [ ] question about the decisions made in the repository
 
 * **Do you want to request a *feature* or report a *bug*?**
 
@@ -39,6 +39,7 @@ https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
 - Python version: 3.6.X
 - Cheroot version: X.X.X
 - CherryPy version: X.X.X (if applicable)
+- Python version: 3.6.X
 - OS: XXX
 - Browser: [all | Chrome XX | Firefox XX | IE XX | Safari XX | Mobile Chrome XX | Android X.X Web Browser | iOS XX Safari | iOS XX UIWebView | iOS XX WKWebView ]
 
