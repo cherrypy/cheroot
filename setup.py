@@ -104,8 +104,8 @@ params = dict(
     ],
     entry_points={
         'console_scripts': [
-            'cheroot = cheroot.__main__:main'
-        ]
+            'cheroot = cheroot.__main__:main',
+        ],
     },
 )
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-"""Command line tool for starting a Cheroot instance.
+"""Command line tool for starting a Cheroot WSGI instance.
 
 Basic usage::
 
@@ -9,54 +9,76 @@ Basic usage::
     # Start a server on 0.0.0.0:9000 with 8 threads
     # for the WSGI app myapp/wsgi.py:main_app()
     cheroot myapp.wsgi:main_app --bind 0.0.0.0:9000 --threads 8
+
+    # Start a server on the UNIX socket /var/spool/myapp.sock
+    cheroot myapp.wsgi --bind /var/spool/myapp.sock
+
+    # Start a server on the abstract UNIX socket CherootServer
+    cheroot myapp.wsgi --bind @CherootServer
 """
 
 import argparse
 from importlib import import_module
 import os
-import re
 import sys
+
+import six
 
 from .wsgi import Server
 
-RE_HOST_PORT = r'^(\S+)(?::)([0-9]+)$'
 
-
-def wsgi_app_path(string):
-    """Convert WSGI app string to a tuple."""
-    if ':' in string:
-        mod_path, app_path = string.split(':', 1)
+def get_wsgi_app(wsgi_app_path):
+    """Read WSGI app path string and import application module."""
+    if ':' in wsgi_app_path:
+        mod_path, app_path = wsgi_app_path.split(':', 1)
+        if ':' in app_path:
+            raise ValueError(
+                'Application object name is invalid: it should not contain '
+                'colon (:) character.'
+            )
     else:
-        mod_path, app_path = string, 'application'
+        mod_path, app_path = wsgi_app_path, 'application'
 
-    module = import_module(mod_path)
-    app = eval(app_path, vars(module))
+    try:
+        wsgi_app = getattr(import_module(mod_path), app_path)
+        if not callable(wsgi_app):
+            raise TypeError
+    except ImportError as imp_err:
+        six.raise_from(NameError('Failed to find a module: {}'.format(
+            mod_path)), imp_err)
+    except AttributeError as attr_err:
+        six.raise_from(NameError(
+            'Failed to find application object: {}'.format(app_path)), attr_err
+        )
+    except TypeError as type_err:
+        six.raise_from(TypeError(
+            'Application must be a callable object'), type_err
+        )
 
-    if app is None:
-        raise NameError(
-            'Failed to find application object: {}'.format(app_path))
-    elif not callable(app):
-        raise TypeError('Application must be a callable object')
-
-    return app
+    return wsgi_app
 
 
-def wsgi_bind_addr(string):
-    """Convert bind address string to a format accepted by Server()."""
+def parse_wsgi_bind_addr(bind_addr_string):
+    """Convert bind address string to a tuple."""
     # try and match for an IP/hostname and port
-    match = re.match(RE_HOST_PORT, string)
-    if match:
-        addr, port = match.groups()
-        port = int(port)
-        return addr, port
+    match = six.moves.urllib.parse.urlparse('//{}'.format(bind_addr_string))
+    try:
+        addr = match.hostname
+        port = match.port
+        if (addr is not None) and (port is not None):
+            return addr, port
+    except ValueError:
+        pass
 
     # else, assume a UNIX socket path
-    return string
+    # if the string begins with an @ symbol, use an abstract socket
+    if bind_addr_string.startswith('@'):
+        return '\0{}'.format(bind_addr_string[1:]), None
+    return bind_addr_string, None
 
 
-def main(args=None):
-    """Run cheroot from the CLI."""
-    # read arguments
+def main():
+    """Create a new Cheroot instance with arguments from the command line."""
     parser = argparse.ArgumentParser(
         description='Start an instance of the Cheroot WSGI server.')
     parser.add_argument(
@@ -65,7 +87,7 @@ def main(args=None):
         help='WSGI application callable to use')
     parser.add_argument(
         '--bind', metavar='ADDRESS',
-        dest='bind_addr', type=wsgi_bind_addr,
+        dest='_bind_addr', type=str,
         default='127.0.0.1:8000',
         help='Network interface to listen on (default: 127.0.0.1:8000)')
     parser.add_argument(
@@ -104,7 +126,7 @@ def main(args=None):
         '--accepted-queue-timeout', metavar='INT',
         dest='accepted_queue_timeout', type=int,
         help='Timeout in seconds for putting requests into queue')
-    raw_args = parser.parse_args(args)
+    raw_args = parser.parse_args()
 
     # change directory if required
     chdir = os.path.abspath(raw_args._chdir)
@@ -114,20 +136,25 @@ def main(args=None):
     if chdir not in sys.path:
         sys.path.insert(0, chdir)
 
+    # validate arguments
+    wsgi_app = get_wsgi_app(raw_args._wsgi_app)
+    addr, port = parse_wsgi_bind_addr(raw_args._bind_addr)
+    if port is None:
+        bind_addr = addr
+    else:
+        bind_addr = addr, port
+
     # create a Server object based on the arguments provided
     server_args = {
-        k: v for k, v in vars(raw_args).items()
-        if (not k.startswith('_')) and v is not None
+        'wsgi_app': wsgi_app,
+        'bind_addr': bind_addr,
     }
-    server_args['wsgi_app'] = wsgi_app_path(raw_args._wsgi_app)
+    for arg, value in vars(raw_args).items():
+        if (not arg.startswith('_')) and (value is not None):
+            server_args[arg] = value
     server = Server(**server_args)
 
-    try:
-        server.start()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.stop()
+    server.safe_start()
 
 
 if __name__ == '__main__':
