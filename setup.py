@@ -104,7 +104,7 @@ params = dict(
     ],
     entry_points={
         'console_scripts': [
-            'cheroot = cheroot.__main__:main',
+            'cheroot = cheroot.cli:main',
         ],
     },
 )
