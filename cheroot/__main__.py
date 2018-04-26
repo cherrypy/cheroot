@@ -29,13 +29,14 @@ from .wsgi import Server
 
 def get_wsgi_app(wsgi_app_path):
     """Read WSGI app path string and import application module."""
-    if ':' in wsgi_app_path:
-        mod_path, app_path = wsgi_app_path.split(':', 1)
-        if ':' in app_path:
-            raise ValueError(
-                'Application object name is invalid: it should not contain '
-                'colon (:) character.'
-            )
+    components = wsgi_app_path.split(':')
+    if len(components) > 2:
+        raise ValueError(
+            'Application object name is invalid: it should not contain '
+            'colon (:) character.'
+        )
+    elif len(components) == 2:
+        mod_path, app_path = components[0], components[1]
     else:
         mod_path, app_path = wsgi_app_path, 'application'
 
@@ -65,7 +66,7 @@ def parse_wsgi_bind_addr(bind_addr_string):
     try:
         addr = match.hostname
         port = match.port
-        if (addr is not None) and (port is not None):
+        if addr is not None or port is not None:
             return addr, port
     except ValueError:
         pass
@@ -150,7 +151,7 @@ def main():
         'bind_addr': bind_addr,
     }
     for arg, value in vars(raw_args).items():
-        if (not arg.startswith('_')) and (value is not None):
+        if not arg.startswith('_') and value is not None:
             server_args[arg] = value
     server = Server(**server_args)
 
