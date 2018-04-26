@@ -210,7 +210,3 @@ def main():
         server = HTTPServer(**server_args)
 
     server.safe_start()
-
-
-if __name__ == '__main__':
-    main()
