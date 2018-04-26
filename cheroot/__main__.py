@@ -33,7 +33,7 @@ from .wsgi import Server
 from .server import Gateway, HTTPServer
 
 
-class BindLocation:
+class BindLocation(object):
     """A class for storing the bind location for a Cheroot instance."""
 
     def __init__(
