@@ -36,7 +36,6 @@ https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
 
 * **Please tell us about your environment:**
 
-- Python version: 3.6.X
 - Cheroot version: X.X.X
 - CherryPy version: X.X.X (if applicable)
 - Python version: 3.6.X
