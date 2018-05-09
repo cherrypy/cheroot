@@ -1,5 +1,8 @@
 """A thread-based worker pool."""
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 
 import threading
 import time
@@ -11,7 +14,7 @@ from six.moves import queue
 __all__ = ('WorkerThread', 'ThreadPool')
 
 
-class TrueyZero(object):
+class TrueyZero:
     """Object which equals and does math like the integer 0 but evals True."""
 
     def __add__(self, other):
@@ -120,7 +123,7 @@ class WorkerThread(threading.Thread):
             self.server.interrupt = ex
 
 
-class ThreadPool(object):
+class ThreadPool:
     """A Request Queue for an HTTPServer which pools threads.
 
     ThreadPool objects must provide min, get(), put(obj), start()

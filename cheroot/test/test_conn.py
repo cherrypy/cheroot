@@ -1,5 +1,8 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import socket
 import time
 

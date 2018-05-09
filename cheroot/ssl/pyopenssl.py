@@ -31,6 +31,9 @@ and .certificate are both given and valid, they will be read, and the
 context will be automatically created from them.
 """
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import socket
 import threading
 import time

@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # vim: set fileencoding=utf-8 :
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import errno
 import socket
 
@@ -353,7 +356,7 @@ def test_garbage_in(test_client):
             raise
 
 
-class CloseController(object):
+class CloseController:
     """Controller for testing the close callback."""
 
     def __call__(self, environ, start_response):
@@ -368,7 +371,7 @@ class CloseController(object):
         self.req.write(b'hello')
 
 
-class CloseResponse(object):
+class CloseResponse:
     """Dummy empty response to trigger the no body status."""
 
     def __init__(self, close):

@@ -46,6 +46,9 @@ True
 
 """
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import os
 import io
 import re
@@ -129,7 +132,7 @@ if not hasattr(logging, 'statistics'):
     logging.statistics = {}
 
 
-class HeaderReader(object):
+class HeaderReader:
     """Object for reading headers from an HTTP request.
 
     Interface and default implementation.
@@ -203,7 +206,7 @@ class DropUnderscoreHeaderReader(HeaderReader):
         return orig and '_' not in key_name
 
 
-class SizeCheckWrapper(object):
+class SizeCheckWrapper:
     """Wraps a file-like object, raising MaxSizeExceeded if too large."""
 
     def __init__(self, rfile, maxlen):
@@ -301,7 +304,7 @@ class SizeCheckWrapper(object):
     next = __next__
 
 
-class KnownLengthRFile(object):
+class KnownLengthRFile:
     """Wraps a file-like object, returning an empty string when exhausted."""
 
     def __init__(self, rfile, content_length):
@@ -392,7 +395,7 @@ class KnownLengthRFile(object):
     next = __next__
 
 
-class ChunkedRFile(object):
+class ChunkedRFile:
     """Wraps a file-like object, returning an empty string when exhausted.
 
     This class is intended to provide a conforming wsgi.input value for
@@ -581,7 +584,7 @@ class ChunkedRFile(object):
         self.rfile.close()
 
 
-class HTTPRequest(object):
+class HTTPRequest:
     """An HTTP Request (and response).
 
     A single HTTP connection may consist of multiple request/response pairs.
@@ -1126,7 +1129,7 @@ class HTTPRequest(object):
         self.conn.wfile.write(EMPTY.join(buf))
 
 
-class HTTPConnection(object):
+class HTTPConnection:
     """An HTTP connection (active socket)."""
 
     remote_addr = None
@@ -1401,7 +1404,7 @@ else:
         fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
 
 
-class HTTPServer(object):
+class HTTPServer:
     """An HTTP server."""
 
     _bind_addr = '127.0.0.1'
@@ -1911,7 +1914,7 @@ class HTTPServer(object):
         self.requests.stop(self.shutdown_timeout)
 
 
-class Gateway(object):
+class Gateway:
     """Base class to interface HTTPServer with other systems, such as WSGI."""
 
     def __init__(self, req):

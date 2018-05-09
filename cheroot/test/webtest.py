@@ -13,6 +13,9 @@ the traceback to stdout, and keep any assertions you have from running
 be of further significance to your tests).
 """
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import pprint
 import re
 import socket
@@ -74,7 +77,7 @@ except ImportError:
 
 
 # from jaraco.properties
-class NonDataProperty(object):
+class NonDataProperty:
     def __init__(self, fget):
         assert fget is not None, 'fget cannot be none'
         assert callable(fget), 'fget must be callable'

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Test suite for cross-python compatibility helpers."""
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import pytest
 import six
 

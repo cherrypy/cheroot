@@ -1,5 +1,8 @@
 """A library of helper functions for the Cheroot test suite."""
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import datetime
 import logging
 import os
@@ -108,13 +111,13 @@ class CherootWebCase(webtest.WebCase):
                                  (dt1, dt2, seconds))
 
 
-class Request(object):
+class Request:
 
     def __init__(self, environ):
         self.environ = environ
 
 
-class Response(object):
+class Response:
 
     def __init__(self):
         self.status = '200 OK'
@@ -132,7 +135,7 @@ class Response(object):
             return [x.encode('iso-8859-1') for x in self.body]
 
 
-class Controller(object):
+class Controller:
 
     def __call__(self, environ, start_response):
         req, resp = Request(environ), Response()

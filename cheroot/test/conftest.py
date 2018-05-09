@@ -3,6 +3,10 @@
 Contains fixtures, which are tightly bound to the Cheroot framework
 itself, useless for end-users' app testing.
 """
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import pytest
 
 from ..testing import (  # noqa: F401

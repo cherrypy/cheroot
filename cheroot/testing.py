@@ -1,5 +1,8 @@
 """Pytest fixtures and other helpers for doing testing by end-users."""
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 from contextlib import closing
 import errno
 import socket
@@ -70,7 +73,7 @@ def native_server():
         yield srv
 
 
-class _TestClient(object):
+class _TestClient:
     def __init__(self, server):
         self._interface, self._host, self._port = _get_conn_data(server)
         self._http_connection = self.get_connection()

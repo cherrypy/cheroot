@@ -1,5 +1,8 @@
 """Socket file object."""
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import socket
 
 try:
@@ -95,7 +98,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 if what:
                     raise
 
-    class FauxSocket(object):
+    class FauxSocket:
         """Faux socket with the minimal interface required by pypy."""
 
         def _reuse(self):

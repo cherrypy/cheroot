@@ -25,6 +25,9 @@ as you want in one instance by using a PathInfoDispatcher::
     server = wsgi.Server(addr, d)
 """
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import sys
 
 import six
@@ -356,7 +359,7 @@ class Gateway_u0(Gateway_10):
 wsgi_gateways = Gateway.gateway_map()
 
 
-class PathInfoDispatcher(object):
+class PathInfoDispatcher:
     """A WSGI dispatcher for dispatch based on the PATH_INFO."""
 
     def __init__(self, apps):
