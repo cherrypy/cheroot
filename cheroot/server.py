@@ -298,12 +298,7 @@ class SizeCheckWrapper(object):
         self._check_length()
         return data
 
-    def next(self):
-        """Generate next file chunk."""
-        data = self.rfile.next()
-        self.bytes_read += len(data)
-        self._check_length()
-        return data
+    next = __next__
 
 
 class KnownLengthRFile(object):
@@ -393,6 +388,8 @@ class KnownLengthRFile(object):
         data = next(self.rfile)
         self.remaining -= len(data)
         return data
+
+    next = __next__
 
 
 class ChunkedRFile(object):
