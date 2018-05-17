@@ -55,13 +55,16 @@ class BindLocation(object):
     @property
     def bind_addr(self):
         """Return the bind location as expected by cheroot.wsgi.Server."""
-        if self.address is not None and self.port is not None:
-            return self.address, self.port
-        elif self.file_socket is not None:
-            return self.file_socket
-        elif self.abstract_socket is not None:
-            return '\0{}'.format(self.abstract_socket)
-        return None
+        return self._bind_addr() or self.file_socket or self._abstract_socket()
+
+    def _bind_addr(self):
+        if self.address is None or self.port is None:
+            return
+
+        return self.address, self.port
+
+    def _abstract_socket(self):
+        return self.abstract_socket and '\0{}'.format(self.abstract_socket)
 
 
 ApplicationObject = namedtuple(
