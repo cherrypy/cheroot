@@ -179,9 +179,8 @@ def main():
         help='Timeout in seconds for putting requests into queue')
     raw_args = parser.parse_args()
 
-    # ensure current directory is at front of sys.path
-    if '' not in sys.path:
-        sys.path.insert(0, '')
+    # ensure cwd in sys.path
+    '' in sys.path or sys.path.insert(0, '')
 
     # validate arguments
     server_args = {}
