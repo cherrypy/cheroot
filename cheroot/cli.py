@@ -143,7 +143,7 @@ def main():
         help='Network interface to listen on (default: 127.0.0.1:8000)')
     parser.add_argument(
         '--chdir', metavar='PATH',
-        dest='_chdir', default='.',
+        type=os.chdir,
         help='Set the working directory')
     parser.add_argument(
         '--server-name',
@@ -179,13 +179,9 @@ def main():
         help='Timeout in seconds for putting requests into queue')
     raw_args = parser.parse_args()
 
-    # change directory if required
-    chdir = os.path.abspath(raw_args._chdir)
-    os.chdir(chdir)
-
-    # add working directory to the path so module importing will resolve
-    if chdir not in sys.path:
-        sys.path.insert(0, chdir)
+    # ensure current directory is at front of sys.path
+    if '' not in sys.path:
+        sys.path.insert(0, '')
 
     # validate arguments
     server_args = {}
