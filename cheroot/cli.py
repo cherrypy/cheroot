@@ -102,8 +102,8 @@ class Application:
 
 
 class Gateway:
-    def __init__(self, gateway):
-        self.gateway = gateway
+    def __init__(self, gateway_yo):
+        self.gateway = gateway_yo
 
     def server(self, parsed_args):
         server_args = vars(self)
