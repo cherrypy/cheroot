@@ -33,7 +33,10 @@ from . import server
 from . import wsgi
 
 
-class BindLocation(object):
+__metaclass__ = type
+
+
+class BindLocation:
     """A class for storing the bind location for a Cheroot instance."""
 
     def __init__(
@@ -144,8 +147,8 @@ _arg_spec = {
         metavar='ADDRESS',
         dest='bind_addr',
         type=parse_wsgi_bind_addr,
-        default='127.0.0.1:8000',
-        help='Network interface to listen on (default: 127.0.0.1:8000)',
+        default='[::1]:8000',
+        help='Network interface to listen on (default: [::1]:8000)',
     ),
     '--chdir': dict(
         metavar='PATH',
