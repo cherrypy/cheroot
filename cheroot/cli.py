@@ -22,15 +22,15 @@ Basic usage::
 """
 
 import argparse
-from collections import namedtuple
 from importlib import import_module
 import os
 import sys
+import contextlib
 
 import six
 
-from .wsgi import Server
-from .server import Gateway, HTTPServer
+from . import server
+from . import wsgi
 
 
 class BindLocation(object):
@@ -67,48 +67,52 @@ class BindLocation(object):
         return self.abstract_socket and '\0{}'.format(self.abstract_socket)
 
 
-ApplicationObject = namedtuple(
-    'ApplicationObject',
-    ['wsgi_app', 'gateway']
-)
+class Application:
+    @classmethod
+    def resolve(cls, full_path):
+        """Read WSGI app/Gateway path string and import application module."""
+        mod_path, app_path = full_path.partition(':')
+        app = getattr(import_module(mod_path), app_path or 'application')
+
+        with contextlib.suppress(TypeError):
+            if issubclass(app, server.Gateway):
+                return Gateway(app)
+
+        return cls(app)
+
+    def __init__(self, wsgi_app):
+        if not callable(wsgi_app):
+            raise TypeError(
+                'Application must be a callable object or '
+                'cheroot.server.Gateway subclass'
+            )
+        self.wsgi_app = wsgi_app
+
+    def server_args(self, parsed_args):
+        args = {
+            arg: value
+            for arg, value in vars(parsed_args).items()
+            if not arg.startswith('_') and value is not None
+        }
+        args.update(vars(self))
+        return args
+
+    def server(self, parsed_args):
+        return wsgi.Server(**self.server_args())
 
 
-def get_application_object(full_path):
-    """Read WSGI app/Gateway path string and import application module."""
-    components = full_path.split(':')
-    if len(components) > 2:
-        raise ValueError(
-            'Application object name is invalid: it should not contain '
-            'colon (:) character.'
-        )
-    elif len(components) == 2:
-        mod_path, app_path = components[0], components[1]
-    else:
-        mod_path, app_path = full_path, 'application'
+class Gateway(Application):
+    def __init__(self, gateway):
+        self.gateway = gateway
 
-    try:
-        app = getattr(import_module(mod_path), app_path)
-    except ImportError as imp_err:
-        six.raise_from(NameError('Failed to find a module: {}'.format(
-            mod_path)), imp_err)
-    except AttributeError as attr_err:
-        six.raise_from(NameError(
-            'Failed to find application object: {}'.format(app_path)), attr_err
-        )
-
-    try:
-        if issubclass(app, Gateway):
-            return ApplicationObject(wsgi_app=None, gateway=app)
-    except TypeError:
-        pass
-
-    if not callable(app):
-        raise TypeError(
-            'Application must be a callable object or '
-            'cheroot.server.Gateway subclass'
-        )
-
-    return ApplicationObject(wsgi_app=app, gateway=None)
+    def server(self, parsed_args):
+        server_args = vars(self)
+        server_args['bind_addr'] = parsed_args['bind_addr']
+        if parsed_args.max is not None:
+            server_args['maxthreads'] = parsed_args.max
+        if parsed_args.numthreads is not None:
+            server_args['minthreads'] = parsed_args.numthreads
+        return server.HTTPServer(**server_args)
 
 
 def parse_wsgi_bind_addr(bind_addr_string):
@@ -133,16 +137,13 @@ def parse_wsgi_bind_addr(bind_addr_string):
 _arg_spec = {
     '_wsgi_app': dict(
         metavar='APP_MODULE',
-        type=str,
-        help=(
-            'WSGI application callable or cheroot.server.Gateway subclass to '
-            'use'
-        ),
+        type=Application.resolve,
+        help='WSGI application callable or cheroot.server.Gateway subclass',
     ),
     '--bind': dict(
         metavar='ADDRESS',
-        dest='_bind_addr',
-        type=str,
+        dest='bind_addr',
+        type=parse_wsgi_bind_addr,
         default='127.0.0.1:8000',
         help='Network interface to listen on (default: 127.0.0.1:8000)',
     ),
@@ -212,26 +213,5 @@ def main():
     # ensure cwd in sys.path
     '' in sys.path or sys.path.insert(0, '')
 
-    # validate arguments
-    server_args = {}
-
-    bind_location = parse_wsgi_bind_addr(raw_args._bind_addr)
-    server_args['bind_addr'] = bind_location.bind_addr
-
     # create a server based on the arguments provided
-    application_object = get_application_object(raw_args._wsgi_app)
-    if application_object.wsgi_app is not None:
-        server_args['wsgi_app'] = application_object.wsgi_app
-        for arg, value in vars(raw_args).items():
-            if not arg.startswith('_') and value is not None:
-                server_args[arg] = value
-        server = Server(**server_args)
-    else:
-        server_args['gateway'] = application_object.gateway
-        if raw_args.max is not None:
-            server_args['maxthreads'] = raw_args.max
-        if raw_args.numthreads is not None:
-            server_args['minthreads'] = raw_args.numthreads
-        server = HTTPServer(**server_args)
-
-    server.safe_start()
+    raw_args._wsgi_app.server(raw_args).safe_start()
