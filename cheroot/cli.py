@@ -109,7 +109,7 @@ class GatewayYo:
         return server.HTTPServer(**server_args)
 
 
-def parse_wsgi_bind_addr(bind_addr_string):
+def parse_wsgi_bind_location(bind_addr_string):
     """Convert bind address string to a BindLocation."""
     # try and match for an IP/hostname and port
     match = six.moves.urllib.parse.urlparse('//{}'.format(bind_addr_string))
@@ -126,6 +126,11 @@ def parse_wsgi_bind_addr(bind_addr_string):
     if bind_addr_string.startswith('@'):
         return AbstractSocket(bind_addr_string[1:])
     return UnixSocket(path=bind_addr_string)
+
+
+def parse_wsgi_bind_addr(bind_addr_string):
+    """Convert bind address string to bind address parameter."""
+    return parse_wsgi_bind_location(bind_addr_string).bind_addr
 
 
 _arg_spec = {
