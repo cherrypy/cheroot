@@ -76,7 +76,7 @@ class Application:
 
         with contextlib.suppress(TypeError):
             if issubclass(app, server.Gateway):
-                return Gateway(app)
+                return GatewayYo(app)
 
         return cls(app)
 
@@ -101,9 +101,9 @@ class Application:
         return wsgi.Server(**self.server_args())
 
 
-class Gateway:
-    def __init__(self, gateway_yo):
-        self.gateway = gateway_yo
+class GatewayYo:
+    def __init__(self, gateway):
+        self.gateway = gateway
 
     def server(self, parsed_args):
         server_args = vars(self)
