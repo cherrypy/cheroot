@@ -39,35 +39,26 @@ __metaclass__ = type
 class BindLocation:
     """A class for storing the bind location for a Cheroot instance."""
 
-    def __init__(
-        self, address=None, port=None, file_socket=None, abstract_socket=None
-    ):
-        """Initialize BindLocation instance.
+
+class TCPSocket(BindLocation):
+    def __init__(self, address, port):
+        """Initialize.
 
         Args:
             address (str): Host name or IP address
             port (int): TCP port number
-            file_socket (str): UNIX socket file path
-            abstract_socket (str): Abstract UNIX socket name
         """
-        self.address = address
-        self.port = port
-        self.file_socket = file_socket
-        self.abstract_socket = abstract_socket
+        self.bind_addr = address, port
 
-    @property
-    def bind_addr(self):
-        """Return the bind location as expected by cheroot.wsgi.Server."""
-        return self._bind_addr() or self.file_socket or self._abstract_socket()
 
-    def _bind_addr(self):
-        if self.address is None or self.port is None:
-            return
+class UnixSocket(BindLocation):
+    def __init__(self, path):
+        self.bind_addr = path
 
-        return self.address, self.port
 
-    def _abstract_socket(self):
-        return self.abstract_socket and '\0{}'.format(self.abstract_socket)
+class AbstractSocket(BindLocation):
+    def __init__(self, addr):
+        self.bind_addr = '\0{}'.format(self.abstract_socket)
 
 
 class Application:
@@ -126,15 +117,15 @@ def parse_wsgi_bind_addr(bind_addr_string):
         addr = match.hostname
         port = match.port
         if addr is not None or port is not None:
-            return BindLocation(address=addr, port=port)
+            return TCPSocket(addr, port)
     except ValueError:
         pass
 
     # else, assume a UNIX socket path
     # if the string begins with an @ symbol, use an abstract socket
     if bind_addr_string.startswith('@'):
-        return BindLocation(abstract_socket=bind_addr_string[1:])
-    return BindLocation(file_socket=bind_addr_string)
+        return AbstractSocket(bind_addr_string[1:])
+    return UnixSocket(path=bind_addr_string)
 
 
 _arg_spec = {
