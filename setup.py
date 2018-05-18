@@ -103,6 +103,9 @@ params = dict(
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
     ],
     entry_points={
+        'console_scripts': [
+            'cheroot = cheroot.cli:main',
+        ],
     },
 )
 if __name__ == '__main__':
