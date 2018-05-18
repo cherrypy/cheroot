@@ -65,7 +65,7 @@ class Application:
     @classmethod
     def resolve(cls, full_path):
         """Read WSGI app/Gateway path string and import application module."""
-        mod_path, app_path = full_path.partition(':')
+        mod_path, _, app_path = full_path.partition(':')
         app = getattr(import_module(mod_path), app_path or 'application')
 
         with contextlib.suppress(TypeError):
