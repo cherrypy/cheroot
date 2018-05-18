@@ -101,7 +101,7 @@ class Application:
         return wsgi.Server(**self.server_args())
 
 
-class Gateway(Application):
+class Gateway:
     def __init__(self, gateway):
         self.gateway = gateway
 
