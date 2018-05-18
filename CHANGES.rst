@@ -1,3 +1,9 @@
+v6.3.0
+======
+
+- :pr:`87`: Add ``cheroot`` command and runpy launcher to
+  launch a WSGI app from the command-line.
+
 v6.2.4
 ======
 
