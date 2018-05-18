@@ -41,6 +41,8 @@ class BindLocation:
 
 
 class TCPSocket(BindLocation):
+    """TCPSocket."""
+
     def __init__(self, address, port):
         """Initialize.
 
@@ -52,16 +54,24 @@ class TCPSocket(BindLocation):
 
 
 class UnixSocket(BindLocation):
+    """UnixSocket."""
+
     def __init__(self, path):
+        """Initialize."""
         self.bind_addr = path
 
 
 class AbstractSocket(BindLocation):
+    """AbstractSocket."""
+
     def __init__(self, addr):
+        """Initialize."""
         self.bind_addr = '\0{}'.format(self.abstract_socket)
 
 
 class Application:
+    """Application."""
+
     @classmethod
     def resolve(cls, full_path):
         """Read WSGI app/Gateway path string and import application module."""
@@ -75,6 +85,7 @@ class Application:
         return cls(app)
 
     def __init__(self, wsgi_app):
+        """Initialize."""
         if not callable(wsgi_app):
             raise TypeError(
                 'Application must be a callable object or '
@@ -83,6 +94,7 @@ class Application:
         self.wsgi_app = wsgi_app
 
     def server_args(self, parsed_args):
+        """Return keyword args for Server class."""
         args = {
             arg: value
             for arg, value in vars(parsed_args).items()
@@ -92,14 +104,19 @@ class Application:
         return args
 
     def server(self, parsed_args):
+        """Server."""
         return wsgi.Server(**self.server_args(parsed_args))
 
 
 class GatewayYo:
+    """Gateway."""
+
     def __init__(self, gateway):
+        """Init."""
         self.gateway = gateway
 
     def server(self, parsed_args):
+        """Server."""
         server_args = vars(self)
         server_args['bind_addr'] = parsed_args['bind_addr']
         if parsed_args.max is not None:
