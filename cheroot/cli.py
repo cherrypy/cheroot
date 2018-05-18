@@ -92,7 +92,7 @@ class Application:
         return args
 
     def server(self, parsed_args):
-        return wsgi.Server(**self.server_args())
+        return wsgi.Server(**self.server_args(parsed_args))
 
 
 class GatewayYo:
