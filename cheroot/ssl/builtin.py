@@ -23,9 +23,19 @@ except ImportError:
     except ImportError:
         DEFAULT_BUFFER_SIZE = -1
 
+import six
+
 from . import Adapter
 from .. import errors
 from ..makefile import MakeFile
+
+
+if six.PY3:
+    generic_socket_error = OSError
+else:
+    import socket
+    generic_socket_error = socket.error
+    del socket
 
 
 def _assert_ssl_exc_contains(exc, *msgs):
@@ -115,6 +125,20 @@ class BuiltinSSLAdapter(Adapter):
                 # This error is thrown by builtin SSL after a timeout
                 # when client is speaking HTTP to an HTTPS server.
                 # The connection can safely be dropped.
+                return EMPTY_RESULT
+            raise
+        except generic_socket_error as exc:
+            """It is unclear why exactly this happens.
+
+            It's reproducible only under Python 2 with openssl>1.0 and stdlib
+            ``ssl`` wrapper, and only with CherryPy.
+            So it looks like some healthcheck tries to connect to this socket
+            during startup (from the same process).
+
+
+            Ref: https://github.com/cherrypy/cherrypy/issues/1618
+            """
+            if six.PY2 and exc.args == (0, 'Error'):
                 return EMPTY_RESULT
             raise
         return s, self.get_environ(s)
