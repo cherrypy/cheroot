@@ -158,7 +158,7 @@ install:
 - python -m tox --notest  # Pre-populate a virtualenv with dependencies
 
 script:
-- tox
+- python -m tox
 
 after_failure:
 - ip a
