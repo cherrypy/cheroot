@@ -26,7 +26,7 @@ build_script:
   - python -m setup bdist_wheel
 
 test_script:
-  - tox
+  - python -m tox
 
 version: '{build}'
 
