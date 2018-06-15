@@ -817,7 +817,7 @@ def test_Content_Length_Non_Int(test_client):
     actual_status = int(status_line[:3])
 
     assert actual_status == 400
-    assert actual_resp_body == 'Malformed Content-Length Header.'
+    assert actual_resp_body == b'Malformed Content-Length Header.'
 
     conn.close()
 
