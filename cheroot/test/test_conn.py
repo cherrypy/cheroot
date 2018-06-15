@@ -800,10 +800,8 @@ def test_Content_Length_in(test_client):
     conn.close()
 
 
-def test_Content_Length_Non_Int(test_client):
-    """ Try a request where Content-Length header is non-compatible
-    """
-
+def test_Content_Length_not_int(test_client):
+    """Test that malicious Content-Length header returns 400."""
     status_line, actual_headers, actual_resp_body = test_client.post(
         '/upload',
         headers=[
