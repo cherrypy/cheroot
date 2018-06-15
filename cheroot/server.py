@@ -915,7 +915,9 @@ class HTTPRequest:
         try:
             cl = int(self.inheaders.get(b'Content-Length', 0))
         except ValueError:
-            self.simple_response('400 Bad Request', 'Malformed Content-Length Header.')
+            self.simple_response(
+                '400 Bad Request',
+                'Malformed Content-Length Header.')
             return False
 
         if mrbs and cl > mrbs:
