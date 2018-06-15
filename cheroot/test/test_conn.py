@@ -800,6 +800,21 @@ def test_Content_Length_in(test_client):
     conn.close()
 
 
+def test_Content_Length_not_int(test_client):
+    """Test that malicious Content-Length header returns 400."""
+    status_line, actual_headers, actual_resp_body = test_client.post(
+        '/upload',
+        headers=[
+            ('Content-Type', 'text/plain'),
+            ('Content-Length', 'not-an-integer'),
+        ],
+    )
+    actual_status = int(status_line[:3])
+
+    assert actual_status == 400
+    assert actual_resp_body == b'Malformed Content-Length Header.'
+
+
 @pytest.mark.parametrize(
     'uri,expected_resp_status,expected_resp_body',
     (

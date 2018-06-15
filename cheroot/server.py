@@ -911,7 +911,16 @@ class HTTPRequest:
             return False
 
         mrbs = self.server.max_request_body_size
-        if mrbs and int(self.inheaders.get(b'Content-Length', 0)) > mrbs:
+
+        try:
+            cl = int(self.inheaders.get(b'Content-Length', 0))
+        except ValueError:
+            self.simple_response(
+                '400 Bad Request',
+                'Malformed Content-Length Header.')
+            return False
+
+        if mrbs and cl > mrbs:
             self.simple_response(
                 '413 Request Entity Too Large',
                 'The entity sent with the request exceeds the maximum '
