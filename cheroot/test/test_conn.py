@@ -804,22 +804,17 @@ def test_Content_Length_Non_Int(test_client):
     """ Try a request where Content-Length header is non-compatible
     """
 
-    conn = test_client.get_connection()
-
-    conn.putrequest('POST', '/upload', skip_host=True)
-    conn.putheader('Host', conn.host)
-    conn.putheader('Content-Type', 'text/plain')
-    conn.putheader('Content-Length', 'not-an-integer')
-    conn.endheaders()
-
-    response = conn.getresponse()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    status_line, actual_headers, actual_resp_body = test_client.post(
+        '/upload',
+        headers=[
+            ('Content-Type', 'text/plain'),
+            ('Content-Length', 'not-an-integer'),
+        ],
+    )
     actual_status = int(status_line[:3])
 
     assert actual_status == 400
     assert actual_resp_body == b'Malformed Content-Length Header.'
-
-    conn.close()
 
 
 @pytest.mark.parametrize(
