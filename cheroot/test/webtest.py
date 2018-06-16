@@ -52,6 +52,7 @@ try:
     # Jython support
     if sys.platform[:4] == 'java':
         def getchar():
+            """Get a key press."""
             # Hopefully this is enough
             return sys.stdin.read(1)
     else:
@@ -59,6 +60,7 @@ try:
         import msvcrt
 
         def getchar():
+            """Get a key press."""
             return msvcrt.getch()
 except ImportError:
     # Unix getchr
@@ -66,6 +68,7 @@ except ImportError:
     import termios
 
     def getchar():
+        """Get a key press."""
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
         try:
@@ -78,18 +81,24 @@ except ImportError:
 
 # from jaraco.properties
 class NonDataProperty:
+    """Non-data property decorator."""
+
     def __init__(self, fget):
+        """Initialize a non-data property."""
         assert fget is not None, 'fget cannot be none'
         assert callable(fget), 'fget must be callable'
         self.fget = fget
 
     def __get__(self, obj, objtype=None):
+        """Return a class property."""
         if obj is None:
             return self
         return self.fget(obj)
 
 
 class WebCase(unittest.TestCase):
+    """Helper web test suite base."""
+
     HOST = '127.0.0.1'
     PORT = 8000
     HTTP_CONN = http_client.HTTPConnection
@@ -108,9 +117,9 @@ class WebCase(unittest.TestCase):
 
     @property
     def _Conn(self):
-        """
-        Return http.client.HTTPConnection or HTTPSConnection
-        based on self.scheme.
+        """Return HTTPConnection or HTTPSConnection based on self.scheme.
+
+        * from http.client.
         """
         cls_name = '{scheme}Connection'.format(scheme=self.scheme.upper())
         return getattr(http_client, cls_name)
@@ -144,7 +153,8 @@ class WebCase(unittest.TestCase):
         )
 
     @property
-    def persistent(self):
+    def persistent(self):  # noqa: D401; irrelevant for properties
+        """Presense of the persistent HTTP connection."""
         return hasattr(self.HTTP_CONN, '__class__')
 
     @persistent.setter
@@ -274,10 +284,12 @@ class WebCase(unittest.TestCase):
             sys.stdout.flush()
 
     @property
-    def status_code(self):
+    def status_code(self):  # noqa: D401; irrelevant for properties
+        """Integer HTTP status code."""
         return int(self.status[:3])
 
     def status_matches(self, expected):
+        """Check whether actual status matches expected."""
         actual = (
             self.status_code
             if isinstance(expected, int) else
@@ -511,7 +523,8 @@ def openURL(url, headers=None, method='GET', body=None,
 
 
 def strip_netloc(url):
-    """
+    """Return absolute-URI path from URL.
+
     Strip the scheme and host from the URL, returning the
     server-absolute portion.
 
@@ -544,6 +557,8 @@ ignore_all = False
 
 
 class ServerError(Exception):
+    """Exception for signalling server error."""
+
     on = False
 
 
