@@ -1,3 +1,9 @@
+v6.3.1
+======
+
+- :cp-issue:`1618`: Ignore OpenSSL's 1.0+ Error 0 under Python 2 while
+  wrapping a socket.
+
 v6.3.0
 ======
 
