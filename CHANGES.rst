@@ -1,3 +1,9 @@
+v6.3.2
+======
+
+- :issue:`100` via :pr:`101`: Respond with HTTP 400 to malicious
+  ``Content-Length`` in request headers.
+
 v6.3.1
 ======
 
