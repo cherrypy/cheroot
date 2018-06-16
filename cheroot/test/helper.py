@@ -33,6 +33,7 @@ config = {
 
 
 class CherootWebCase(webtest.WebCase):
+    """Helper class for a web app test suite."""
 
     script_name = ''
     scheme = 'http'
@@ -77,7 +78,7 @@ class CherootWebCase(webtest.WebCase):
 
     @classmethod
     def teardown_class(cls):
-        ''
+        """Cleanup HTTP server."""
         if hasattr(cls, 'setup_server'):
             cls.stop()
 
@@ -90,6 +91,7 @@ class CherootWebCase(webtest.WebCase):
 
     @classmethod
     def stop(cls):
+        """Terminate HTTP server."""
         cls.httpserver.stop()
         td = getattr(cls, 'teardown', None)
         if td:
@@ -112,19 +114,24 @@ class CherootWebCase(webtest.WebCase):
 
 
 class Request:
+    """HTTP request container."""
 
     def __init__(self, environ):
+        """Initialize HTTP request."""
         self.environ = environ
 
 
 class Response:
+    """HTTP response container."""
 
     def __init__(self):
+        """Initialize HTTP response."""
         self.status = '200 OK'
         self.headers = {'Content-Type': 'text/html'}
         self.body = None
 
     def output(self):
+        """Generate iterable response body object."""
         if self.body is None:
             return []
         elif isinstance(self.body, six.text_type):
@@ -136,8 +143,10 @@ class Response:
 
 
 class Controller:
+    """WSGI app for tests."""
 
     def __call__(self, environ, start_response):
+        """WSGI request handler."""
         req, resp = Request(environ), Response()
         try:
             # Python 3 supports unicode attribute names
