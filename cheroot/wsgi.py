@@ -116,6 +116,7 @@ class Gateway(server.Gateway):
         Returns:
             dict[tuple[int,int],class]: map of gateway version and
                 corresponding class
+
         """
         return dict(
             (gw.version, gw)
@@ -396,6 +397,7 @@ class PathInfoDispatcher:
         Returns:
             list[bytes]: iterable containing bytes to be returned in
                 HTTP response body
+
         """
         path = environ['PATH_INFO'] or '/'
         for p, app in self.apps:

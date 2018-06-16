@@ -60,6 +60,7 @@ def assert_native(n):
 
     Raises:
         TypeError: in case of failed check
+
     """
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)

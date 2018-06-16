@@ -165,7 +165,7 @@ class ThreadPool:
                 time.sleep(.1)
 
     @property
-    def idle(self):
+    def idle(self):  # noqa: D401; irrelevant for properties
         """Number of worker threads which are idle. Read-only."""
         return len([t for t in self._threads if t.conn is None])
 

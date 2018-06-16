@@ -232,6 +232,7 @@ class SizeCheckWrapper:
 
         Returns:
             bytes: Chunk from rfile, limited by size if specified.
+
         """
         data = self.rfile.read(size)
         self.bytes_read += len(data)
@@ -246,6 +247,7 @@ class SizeCheckWrapper:
 
         Returns:
             bytes: One line from rfile.
+
         """
         if size is not None:
             data = self.rfile.readline(size)
@@ -273,6 +275,7 @@ class SizeCheckWrapper:
 
         Returns:
             list[bytes]: Lines of bytes read from rfile.
+
         """
         # Shamelessly stolen from StringIO
         total = 0
@@ -313,6 +316,7 @@ class KnownLengthRFile:
         Args:
             rfile (file): file of a known size
             content_length (int): length of the file being read
+
         """
         self.rfile = rfile
         self.remaining = content_length
@@ -325,6 +329,7 @@ class KnownLengthRFile:
 
         Returns:
             bytes: Chunk from rfile, limited by size if specified.
+
         """
         if self.remaining == 0:
             return b''
@@ -345,6 +350,7 @@ class KnownLengthRFile:
 
         Returns:
             bytes: One line from rfile.
+
         """
         if self.remaining == 0:
             return b''
@@ -365,6 +371,7 @@ class KnownLengthRFile:
 
         Returns:
             list[bytes]: Lines of bytes read from rfile.
+
         """
         # Shamelessly stolen from StringIO
         total = 0
@@ -464,6 +471,7 @@ class ChunkedRFile:
 
         Returns:
             bytes: Chunk from rfile, limited by size if specified.
+
         """
         data = EMPTY
 
@@ -496,6 +504,7 @@ class ChunkedRFile:
 
         Returns:
             bytes: One line from rfile.
+
         """
         data = EMPTY
 
@@ -538,6 +547,7 @@ class ChunkedRFile:
 
         Returns:
             list[bytes]: Lines of bytes read from rfile.
+
         """
         # Shamelessly stolen from StringIO
         total = 0
@@ -556,6 +566,7 @@ class ChunkedRFile:
 
         Returns:
             Generator: yields CRLF separated lines.
+
         """
         if not self.closed:
             raise ValueError(
@@ -690,6 +701,7 @@ class HTTPRequest:
 
         Returns:
             bool: True if the request line is valid or False if it's malformed.
+
         """
         # HTTP/1.1 connections are persistent by default. If a client
         # requests a page, then idles (leaves the connection open),
@@ -1284,6 +1296,7 @@ class HTTPConnection:
         Raises:
             NotImplementedError: in case of unsupported socket type
             RuntimeError: in case of SO_PEERCRED lookup unsupported or disabled
+
         """
         PEERCRED_STRUCT_DEF = '3i'
 
@@ -1341,6 +1354,7 @@ class HTTPConnection:
         Raises:
             NotImplementedError: in case of unsupported OS
             RuntimeError: in case of UID/GID lookup unsupported or disabled
+
         """
         if IS_WINDOWS:
             raise NotImplementedError(
@@ -1398,7 +1412,10 @@ except ImportError:
         _SetHandleInformation.restype = ctypes.wintypes.BOOL
     except ImportError:
         def prevent_socket_inheritance(sock):
-            """Dummy function, since neither fcntl nor ctypes are available."""
+            """Stub inheritance prevention.
+
+            Dummy function, since neither fcntl nor ctypes are available.
+            """
             pass
     else:
         def prevent_socket_inheritance(sock):

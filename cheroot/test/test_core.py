@@ -367,7 +367,7 @@ class CloseController:
         return resp
 
     def close(self):
-        """Hook for close, write hello."""
+        """Close, writing hello."""
         self.req.write(b'hello')
 
 
