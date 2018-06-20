@@ -1,6 +1,7 @@
 """Pytest fixtures and other helpers for doing testing by end-users."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 from contextlib import closing
@@ -42,8 +43,7 @@ def cheroot_server(server_factory):
         try:
             actual_bind_addr = (interface, bind_port)
             httpserver = server_factory(  # create it
-                bind_addr=actual_bind_addr,
-                **conf
+                bind_addr=actual_bind_addr, **conf
             )
         except OSError:
             pass
@@ -81,19 +81,24 @@ class _TestClient:
 
     def get_connection(self):
         name = '{interface}:{port}'.format(
-            interface=self._interface,
-            port=self._port,
+            interface=self._interface, port=self._port
         )
         return http_client.HTTPConnection(name)
 
     def request(
-        self, uri, method='GET', headers=None, http_conn=None,
+        self,
+        uri,
+        method='GET',
+        headers=None,
+        http_conn=None,
         protocol='HTTP/1.1',
     ):
         return webtest.openURL(
-            uri, method=method,
+            uri,
+            method=method,
             headers=headers,
-            host=self._host, port=self._port,
+            host=self._host,
+            port=self._port,
             http_conn=http_conn or self._http_connection,
             protocol=protocol,
         )

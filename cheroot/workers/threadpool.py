@@ -1,6 +1,7 @@
 """A thread-based worker pool."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
@@ -65,30 +66,34 @@ class WorkerThread(threading.Thread):
         self.start_time = None
         self.work_time = 0
         self.stats = {
-            'Requests': lambda s: self.requests_seen + (
-                (self.start_time is None) and
-                trueyzero or
-                self.conn.requests_seen
+            'Requests': lambda s: self.requests_seen
+            + (
+                (self.start_time is None)
+                and trueyzero
+                or self.conn.requests_seen
             ),
-            'Bytes Read': lambda s: self.bytes_read + (
-                (self.start_time is None) and
-                trueyzero or
-                self.conn.rfile.bytes_read
+            'Bytes Read': lambda s: self.bytes_read
+            + (
+                (self.start_time is None)
+                and trueyzero
+                or self.conn.rfile.bytes_read
             ),
-            'Bytes Written': lambda s: self.bytes_written + (
-                (self.start_time is None) and
-                trueyzero or
-                self.conn.wfile.bytes_written
+            'Bytes Written': lambda s: self.bytes_written
+            + (
+                (self.start_time is None)
+                and trueyzero
+                or self.conn.wfile.bytes_written
             ),
-            'Work Time': lambda s: self.work_time + (
-                (self.start_time is None) and
-                trueyzero or
-                time.time() - self.start_time
+            'Work Time': lambda s: self.work_time
+            + (
+                (self.start_time is None)
+                and trueyzero
+                or time.time() - self.start_time
             ),
-            'Read Throughput': lambda s: s['Bytes Read'](s) / (
-                s['Work Time'](s) or 1e-6),
-            'Write Throughput': lambda s: s['Bytes Written'](s) / (
-                s['Work Time'](s) or 1e-6),
+            'Read Throughput': lambda s: s['Bytes Read'](s)
+            / (s['Work Time'](s) or 1e-6),
+            'Write Throughput': lambda s: s['Bytes Written'](s)
+            / (s['Work Time'](s) or 1e-6),
         }
         threading.Thread.__init__(self)
 
@@ -131,8 +136,13 @@ class ThreadPool:
     """
 
     def __init__(
-            self, server, min=10, max=-1, accepted_queue_size=-1,
-            accepted_queue_timeout=10):
+        self,
+        server,
+        min=10,
+        max=-1,
+        accepted_queue_size=-1,
+        accepted_queue_timeout=10,
+    ):
         """Initialize HTTP requests queue instance.
 
         Args:
@@ -258,11 +268,13 @@ class ThreadPool:
                                     # pyOpenSSL sockets don't take an arg
                                     c.socket.shutdown()
                             worker.join()
-                except (AssertionError,
-                        # Ignore repeated Ctrl-C.
-                        # See
-                        # https://github.com/cherrypy/cherrypy/issues/691.
-                        KeyboardInterrupt):
+                except (
+                    AssertionError,
+                    # Ignore repeated Ctrl-C.
+                    # See
+                    # https://github.com/cherrypy/cherrypy/issues/691.
+                    KeyboardInterrupt,
+                ):
                     pass
 
     @property

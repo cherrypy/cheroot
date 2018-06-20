@@ -1,6 +1,7 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import socket
@@ -43,8 +44,9 @@ class Controller(helper.Controller):
     def upload(req, resp):
         """Process file upload and render thank."""
         if not req.environ['REQUEST_METHOD'] == 'POST':
-            raise AssertionError("'POST' != request.method %r" %
-                                 req.environ['REQUEST_METHOD'])
+            raise AssertionError(
+                "'POST' != request.method %r" % req.environ['REQUEST_METHOD']
+            )
         return "thanks for '%s'" % req.environ['wsgi.input'].read()
 
     def custom_204(req, resp):
@@ -110,6 +112,7 @@ def testing_server(wsgi_server_client):
 
     def _timeout(req, resp):
         return str(wsgi_server.timeout)
+
     app.handlers['/timeout'] = _timeout
     wsgi_server = wsgi_server_client.server_instance
     wsgi_server.wsgi_app = app
@@ -132,8 +135,9 @@ def header_exists(header_name, headers):
 
 def header_has_value(header_name, header_value, headers):
     """Check that a header with a given value is present."""
-    return header_name.lower() in (k.lower() for (k, v) in headers
-                                   if v == header_value)
+    return header_name.lower() in (
+        k.lower() for (k, v) in headers if v == header_value
+    )
 
 
 def test_HTTP11_persistent_connections(test_client):
@@ -165,8 +169,7 @@ def test_HTTP11_persistent_connections(test_client):
 
     # Test client-side close.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/page2', http_conn=http_connection,
-        headers=[('Connection', 'close')]
+        '/page2', http_conn=http_connection, headers=[('Connection', 'close')]
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -180,11 +183,7 @@ def test_HTTP11_persistent_connections(test_client):
 
 
 @pytest.mark.parametrize(
-    'set_cl',
-    (
-        False,  # Without Content-Length
-        True,  # With Content-Length
-    )
+    'set_cl', (False, True)  # Without Content-Length  # With Content-Length
 )
 def test_streaming_11(test_client, set_cl):
     """Test serving of streaming responses with HTTP/1.1 protocol."""
@@ -259,11 +258,7 @@ def test_streaming_11(test_client, set_cl):
 
 
 @pytest.mark.parametrize(
-    'set_cl',
-    (
-        False,  # Without Content-Length
-        True,  # With Content-Length
-    )
+    'set_cl', (False, True)  # Without Content-Length  # With Content-Length
 )
 def test_streaming_10(test_client, set_cl):
     """Test serving of streaming responses with HTTP/1.0 protocol."""
@@ -277,7 +272,8 @@ def test_streaming_10(test_client, set_cl):
 
     # Make the first request and assert Keep-Alive.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/pov', http_conn=http_connection,
+        '/pov',
+        http_conn=http_connection,
         headers=[('Connection', 'Keep-Alive')],
         protocol='HTTP/1.0',
     )
@@ -292,7 +288,8 @@ def test_streaming_10(test_client, set_cl):
         # When a Content-Length is provided, the content should
         # stream without closing the connection.
         status_line, actual_headers, actual_resp_body = test_client.get(
-            '/stream?set_cl=Yes', http_conn=http_connection,
+            '/stream?set_cl=Yes',
+            http_conn=http_connection,
             headers=[('Connection', 'Keep-Alive')],
             protocol='HTTP/1.0',
         )
@@ -308,7 +305,8 @@ def test_streaming_10(test_client, set_cl):
         # When a Content-Length is not provided,
         # the server should close the connection.
         status_line, actual_headers, actual_resp_body = test_client.get(
-            '/stream', http_conn=http_connection,
+            '/stream',
+            http_conn=http_connection,
             headers=[('Connection', 'Keep-Alive')],
             protocol='HTTP/1.0',
         )
@@ -324,20 +322,13 @@ def test_streaming_10(test_client, set_cl):
         # Make another request on the same connection, which should error.
         with pytest.raises(http_client.NotConnected):
             test_client.get(
-                '/pov', http_conn=http_connection,
-                protocol='HTTP/1.0',
+                '/pov', http_conn=http_connection, protocol='HTTP/1.0'
             )
 
     test_client.server_instance.protocol = original_server_protocol
 
 
-@pytest.mark.parametrize(
-    'http_server_protocol',
-    (
-        'HTTP/1.0',
-        'HTTP/1.1',
-    )
-)
+@pytest.mark.parametrize('http_server_protocol', ('HTTP/1.0', 'HTTP/1.1'))
 def test_keepalive(test_client, http_server_protocol):
     """Test Keep-Alive enabled connections."""
     original_server_protocol = test_client.server_instance.protocol
@@ -352,8 +343,7 @@ def test_keepalive(test_client, http_server_protocol):
 
     # Test a normal HTTP/1.0 request.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/page2',
-        protocol=http_client_protocol,
+        '/page2', protocol=http_client_protocol
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -364,8 +354,10 @@ def test_keepalive(test_client, http_server_protocol):
     # Test a keep-alive HTTP/1.0 request.
 
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/page3', headers=[('Connection', 'Keep-Alive')],
-        http_conn=http_connection, protocol=http_client_protocol,
+        '/page3',
+        headers=[('Connection', 'Keep-Alive')],
+        http_conn=http_connection,
+        protocol=http_client_protocol,
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -375,8 +367,7 @@ def test_keepalive(test_client, http_server_protocol):
 
     # Remove the keep-alive header again.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/page3', http_conn=http_connection,
-        protocol=http_client_protocol,
+        '/page3', http_conn=http_connection, protocol=http_client_protocol
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -387,13 +378,7 @@ def test_keepalive(test_client, http_server_protocol):
     test_client.server_instance.protocol = original_server_protocol
 
 
-@pytest.mark.parametrize(
-    'timeout_before_headers',
-    (
-        True,
-        False,
-    )
-)
+@pytest.mark.parametrize('timeout_before_headers', (True, False))
 def test_HTTP11_Timeout(test_client, timeout_before_headers):
     """Check timeout without sending any data.
 
@@ -527,9 +512,7 @@ def test_HTTP11_pipelining(test_client):
 
     for trial in range(5):
         # Put next request
-        conn._output(
-            ('GET /hello?%s HTTP/1.1' % trial).encode('iso-8859-1')
-        )
+        conn._output(('GET /hello?%s HTTP/1.1' % trial).encode('iso-8859-1'))
         conn._output(('Host: %s' % conn.host).encode('ascii'))
         conn._send_output()
 
@@ -591,8 +574,8 @@ def test_100_Continue(test_client):
         line = response.fp.readline().strip()
         if line:
             pytest.fail(
-                '100 Continue should not output any headers. Got %r' %
-                line)
+                '100 Continue should not output any headers. Got %r' % line
+            )
         else:
             break
 
@@ -610,13 +593,7 @@ def test_100_Continue(test_client):
     conn.close()
 
 
-@pytest.mark.parametrize(
-    'max_request_body_size',
-    (
-        0,
-        1001,
-    )
-)
+@pytest.mark.parametrize('max_request_body_size', (0, 1001))
 def test_readall_or_close(test_client, max_request_body_size):
     """Test a max_request_body_size of 0 (the default) and 1001."""
     old_max = test_client.server_instance.max_request_body_size
@@ -722,10 +699,10 @@ def test_No_Message_Body(test_client):
 
 @pytest.mark.xfail(
     reason='Server does not correctly read trailers/ending of the previous '
-           'HTTP request, thus the second request fails as the server tries '
-           r"to parse b'Content-Type: application/json\r\n' as a "
-           'Request-Line. This results in HTTP status code 400, instead of 413'
-           'Ref: https://github.com/cherrypy/cheroot/issues/69'
+    'HTTP request, thus the second request fails as the server tries '
+    r"to parse b'Content-Type: application/json\r\n' as a "
+    'Request-Line. This results in HTTP status code 400, instead of 413'
+    'Ref: https://github.com/cherrypy/cheroot/issues/69'
 )
 def test_Chunked_Encoding(test_client):
     """Test HTTP uploads with chunked transfer-encoding."""
@@ -818,15 +795,19 @@ def test_Content_Length_not_int(test_client):
 @pytest.mark.parametrize(
     'uri,expected_resp_status,expected_resp_body',
     (
-        ('/wrong_cl_buffered', 500,
-         (b'The requested resource returned more bytes than the '
-          b'declared Content-Length.')),
+        (
+            '/wrong_cl_buffered',
+            500,
+            (
+                b'The requested resource returned more bytes than the '
+                b'declared Content-Length.'
+            ),
+        ),
         ('/wrong_cl_unbuffered', 200, b'I too'),
-    )
+    ),
 )
 def test_Content_Length_out(
-    test_client,
-    uri, expected_resp_status, expected_resp_body
+    test_client, uri, expected_resp_status, expected_resp_body
 ):
     """Test response with Content-Length less than the response body.
 
@@ -849,15 +830,14 @@ def test_Content_Length_out(
 
 @pytest.mark.xfail(
     reason='Sometimes this test fails due to low timeout. '
-           'Ref: https://github.com/cherrypy/cherrypy/issues/598'
+    'Ref: https://github.com/cherrypy/cherrypy/issues/598'
 )
 def test_598(test_client):
     """Test serving large file with a read timeout in place."""
     # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
     remote_data_conn = urllib.request.urlopen(
-        '%s://%s:%s/one_megabyte_of_a'
-        % ('http', conn.host, conn.port)
+        '%s://%s:%s/one_megabyte_of_a' % ('http', conn.host, conn.port)
     )
     buf = remote_data_conn.read(512)
     time.sleep(timeout * 0.6)
@@ -875,13 +855,7 @@ def test_598(test_client):
     remote_data_conn.close()
 
 
-@pytest.mark.parametrize(
-    'invalid_terminator',
-    (
-        b'\n\n',
-        b'\r\n\n',
-    )
-)
+@pytest.mark.parametrize('invalid_terminator', (b'\n\n', b'\r\n\n'))
 def test_No_CRLF(test_client, invalid_terminator):
     """Test HTTP queries with no valid CRLF terminators."""
     # Initialize a persistent HTTP connection

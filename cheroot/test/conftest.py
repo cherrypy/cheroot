@@ -5,13 +5,12 @@ itself, useless for end-users' app testing.
 """
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import pytest
 
-from ..testing import (  # noqa: F401
-    native_server, wsgi_server,
-)
+from ..testing import native_server, wsgi_server  # noqa: F401
 from ..testing import get_server_client
 
 

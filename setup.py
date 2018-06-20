@@ -40,8 +40,7 @@ params = dict(
     packages=setuptools.find_packages(),
     include_package_data=True,
     namespace_packages=(
-        name.split('.')[:-1] if nspkg_technique == 'managed'
-        else []
+        name.split('.')[:-1] if nspkg_technique == 'managed' else []
     ),
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
     install_requires=[
@@ -54,10 +53,8 @@ params = dict(
             'sphinx',
             'rst.linker>=1.9',
             'jaraco.packaging>=3.2',
-
             'docutils',
             'alabaster',
-
             'collective.checkdocs',
         ],
         'testing': [
@@ -65,12 +62,10 @@ params = dict(
             'pytest-sugar',
             'pytest-testmon>=0.9.7',
             'pytest-watch',
-
             # measure test coverage
             'coverage',
             # send test coverage to codecov.io
             'codecov',
-
             'pytest-cov',
             'backports.unittest_mock',
         ],
@@ -102,11 +97,7 @@ params = dict(
         'Topic :: Internet :: WWW/HTTP :: WSGI',
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
     ],
-    entry_points={
-        'console_scripts': [
-            'cheroot = cheroot.cli:main',
-        ],
-    },
+    entry_points={'console_scripts': ['cheroot = cheroot.cli:main']},
 )
 if __name__ == '__main__':
     setuptools.setup(**params)

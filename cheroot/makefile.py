@@ -1,6 +1,7 @@
 """Socket file object."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import socket
@@ -105,12 +106,14 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
             pass
 
     _fileobject_uses_str_type = six.PY2 and isinstance(
-        socket._fileobject(FauxSocket())._rbuf, six.string_types)
+        socket._fileobject(FauxSocket())._rbuf, six.string_types
+    )
 
     # FauxSocket is no longer needed
     del FauxSocket
 
     if not _fileobject_uses_str_type:
+
         def read(self, size=-1):
             """Read data from the socket to buffer."""
             # Use max, disallow tiny reads in a loop as they are very
@@ -267,7 +270,9 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                     buf_len += n
                     # assert buf_len == buf.tell()
                 return buf.getvalue()
+
     else:
+
         def read(self, size=-1):
             """Read data from the socket to buffer."""
             if size < 0:

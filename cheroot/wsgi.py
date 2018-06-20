@@ -26,6 +26,7 @@ as you want in one instance by using a PathInfoDispatcher::
 """
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import sys
@@ -45,10 +46,19 @@ class Server(server.HTTPServer):
     """The version of WSGI to produce."""
 
     def __init__(
-        self, bind_addr, wsgi_app, numthreads=10, server_name=None,
-        max=-1, request_queue_size=5, timeout=10, shutdown_timeout=5,
-        accepted_queue_size=-1, accepted_queue_timeout=10,
-        peercreds_enabled=False, peercreds_resolve_enabled=False,
+        self,
+        bind_addr,
+        wsgi_app,
+        numthreads=10,
+        server_name=None,
+        max=-1,
+        request_queue_size=5,
+        timeout=10,
+        shutdown_timeout=5,
+        accepted_queue_size=-1,
+        accepted_queue_timeout=10,
+        peercreds_enabled=False,
+        peercreds_resolve_enabled=False,
     ):
         """Initialize WSGI Server instance.
 
@@ -81,9 +91,12 @@ class Server(server.HTTPServer):
         self.timeout = timeout
         self.shutdown_timeout = shutdown_timeout
         self.requests = threadpool.ThreadPool(
-            self, min=numthreads or 1, max=max,
+            self,
+            min=numthreads or 1,
+            max=max,
             accepted_queue_size=accepted_queue_size,
-            accepted_queue_timeout=accepted_queue_timeout)
+            accepted_queue_timeout=accepted_queue_timeout,
+        )
 
     @property
     def numthreads(self):
@@ -118,10 +131,7 @@ class Gateway(server.Gateway):
                 corresponding class
 
         """
-        return dict(
-            (gw.version, gw)
-            for gw in cls.__subclasses__()
-        )
+        return dict((gw.version, gw) for gw in cls.__subclasses__())
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
@@ -156,8 +166,9 @@ class Gateway(server.Gateway):
         # "The application may call start_response more than once,
         # if and only if the exc_info argument is provided."
         if self.started_response and not exc_info:
-            raise AssertionError('WSGI start_response called a second '
-                                 'time with no exc_info.')
+            raise AssertionError(
+                'WSGI start_response called a second ' 'time with no exc_info.'
+            )
         self.started_response = True
 
         # "if exc_info is provided, and the HTTP headers have already been
@@ -174,10 +185,12 @@ class Gateway(server.Gateway):
         for k, v in headers:
             if not isinstance(k, str):
                 raise TypeError(
-                    'WSGI response header key %r is not of type str.' % k)
+                    'WSGI response header key %r is not of type str.' % k
+                )
             if not isinstance(v, str):
                 raise TypeError(
-                    'WSGI response header value %r is not of type str.' % v)
+                    'WSGI response header value %r is not of type str.' % v
+                )
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
             out_header = ntob(k), ntob(v)
@@ -217,7 +230,8 @@ class Gateway(server.Gateway):
                 self.req.simple_response(
                     '500 Internal Server Error',
                     'The requested resource returned more bytes than the '
-                    'declared Content-Length.')
+                    'declared Content-Length.',
+                )
             else:
                 # Dang. We have probably already sent data. Truncate the chunk
                 # to fit (so the client doesn't hang) and raise an error later.
@@ -231,7 +245,8 @@ class Gateway(server.Gateway):
             rbo -= chunklen
             if rbo < 0:
                 raise ValueError(
-                    'Response body exceeds the declared Content-Length.')
+                    'Response body exceeds the declared Content-Length.'
+                )
 
 
 class Gateway_10(Gateway):
@@ -378,6 +393,7 @@ class PathInfoDispatcher:
         # Sort the apps by len(path), descending
         def by_path_len(app):
             return len(app[0])
+
         apps.sort(key=by_path_len, reverse=True)
 
         # The path_prefix strings must start, but not end, with a slash.
@@ -405,11 +421,14 @@ class PathInfoDispatcher:
             if path.startswith(p + '/') or path == p:
                 environ = environ.copy()
                 environ['SCRIPT_NAME'] = environ['SCRIPT_NAME'] + p
-                environ['PATH_INFO'] = path[len(p):]
+                environ['PATH_INFO'] = path[len(p) :]  # noqa: E203
+                # is not PEP8 compliant
                 return app(environ, start_response)
 
-        start_response('404 Not Found', [('Content-Type', 'text/plain'),
-                                         ('Content-Length', '0')])
+        start_response(
+            '404 Not Found',
+            [('Content-Type', 'text/plain'), ('Content-Length', '0')],
+        )
         return ['']
 
 

@@ -3,6 +3,7 @@
 # vim: set fileencoding=utf-8 :
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import errno
@@ -125,7 +126,7 @@ def test_query_string_request(test_client):
         '/{0}?{1}={2}'.format(  # quoted unicode
             *map(urllib.parse.quote, ('Юххууу', 'ї', 'йо'))
         ),
-    )
+    ),
 )
 def test_parse_acceptable_uri(test_client, uri):
     """Check that server responds with OK to valid GET queries."""
@@ -179,21 +180,13 @@ def test_parse_uri_invalid_uri(test_client):
     c.close()
 
 
-@pytest.mark.parametrize(
-    'uri',
-    (
-        'hello',  # ascii
-        'привіт',  # non-ascii
-    )
-)
+@pytest.mark.parametrize('uri', ('hello', 'привіт'))  # ascii  # non-ascii
 def test_parse_no_leading_slash_invalid(test_client, uri):
     """Check that server responds with Bad Request to invalid GET queries.
 
     Invalid request line test case: it should have leading slash (be absolute).
     """
-    status_line, _, actual_resp_body = test_client.get(
-        urllib.parse.quote(uri)
-    )
+    status_line, _, actual_resp_body = test_client.get(urllib.parse.quote(uri))
     actual_status = int(status_line[:3])
     assert actual_status == HTTP_BAD_REQUEST
     assert b'starting with a slash' in actual_resp_body
@@ -223,7 +216,7 @@ def test_parse_uri_asterisk_uri(test_client):
 def test_parse_uri_fragment_uri(test_client):
     """Check that server responds with Bad Request to URI with fragment."""
     status_line, _, actual_resp_body = test_client.get(
-        '/hello?test=something#fake',
+        '/hello?test=something#fake'
     )
     actual_status = int(status_line[:3])
     assert actual_status == HTTP_BAD_REQUEST
@@ -265,17 +258,25 @@ def test_content_length_required(test_client):
 @pytest.mark.parametrize(
     'request_line,status_code,expected_body',
     (
-        (b'GET /',  # missing proto
-         HTTP_BAD_REQUEST, b'Malformed Request-Line'),
-        (b'GET / HTTPS/1.1',  # invalid proto
-         HTTP_BAD_REQUEST, b'Malformed Request-Line: bad protocol'),
-        (b'GET / HTTP/2.15',  # invalid ver
-         HTTP_VERSION_NOT_SUPPORTED, b'Cannot fulfill request'),
-    )
+        (
+            b'GET /',  # missing proto
+            HTTP_BAD_REQUEST,
+            b'Malformed Request-Line',
+        ),
+        (
+            b'GET / HTTPS/1.1',  # invalid proto
+            HTTP_BAD_REQUEST,
+            b'Malformed Request-Line: bad protocol',
+        ),
+        (
+            b'GET / HTTP/2.15',  # invalid ver
+            HTTP_VERSION_NOT_SUPPORTED,
+            b'Cannot fulfill request',
+        ),
+    ),
 )
 def test_malformed_request_line(
-    test_client, request_line,
-    status_code, expected_body
+    test_client, request_line, status_code, expected_body
 ):
     """Test missing or invalid HTTP version in Request-Line."""
     c = test_client.get_connection()

@@ -164,9 +164,7 @@ _arg_spec = {
         help='Network interface to listen on (default: [::1]:8000)',
     ),
     '--chdir': dict(
-        metavar='PATH',
-        type=os.chdir,
-        help='Set the working directory',
+        metavar='PATH', type=os.chdir, help='Set the working directory'
     ),
     '--server-name': dict(
         dest='server_name',
@@ -221,7 +219,8 @@ _arg_spec = {
 def main():
     """Create a new Cheroot instance with arguments from the command line."""
     parser = argparse.ArgumentParser(
-        description='Start an instance of the Cheroot WSGI/HTTP server.')
+        description='Start an instance of the Cheroot WSGI/HTTP server.'
+    )
     for arg, spec in _arg_spec.items():
         parser.add_argument(arg, **spec)
     raw_args = parser.parse_args()

@@ -8,6 +8,7 @@ To use this module, set ``HTTPServer.ssl_adapter`` to an instance of
 """
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 try:
@@ -34,6 +35,7 @@ if six.PY3:
     generic_socket_error = OSError
 else:
     import socket
+
     generic_socket_error = socket.error
     del socket
 
@@ -68,18 +70,18 @@ class BuiltinSSLAdapter(Adapter):
     """The ciphers list of SSL."""
 
     def __init__(
-            self, certificate, private_key, certificate_chain=None,
-            ciphers=None):
+        self, certificate, private_key, certificate_chain=None, ciphers=None
+    ):
         """Set up context in addition to base class properties if available."""
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
 
         super(BuiltinSSLAdapter, self).__init__(
-            certificate, private_key, certificate_chain, ciphers)
+            certificate, private_key, certificate_chain, ciphers
+        )
 
         self.context = ssl.create_default_context(
-            purpose=ssl.Purpose.CLIENT_AUTH,
-            cafile=certificate_chain
+            purpose=ssl.Purpose.CLIENT_AUTH, cafile=certificate_chain
         )
         self.context.load_cert_chain(certificate, private_key)
         if self.ciphers is not None:
@@ -93,7 +95,7 @@ class BuiltinSSLAdapter(Adapter):
         """Wrap and return the given socket, plus WSGI environ entries."""
         try:
             s = self.context.wrap_socket(
-                sock, do_handshake_on_connect=True, server_side=True,
+                sock, do_handshake_on_connect=True, server_side=True
             )
         except ssl.SSLError as ex:
             EMPTY_RESULT = None, {}
@@ -111,11 +113,15 @@ class BuiltinSSLAdapter(Adapter):
                 # Errors that are caught by PyOpenSSL, but thrown by
                 # built-in ssl
                 _block_errors = (
-                    'unknown protocol', 'unknown ca', 'unknown_ca',
+                    'unknown protocol',
+                    'unknown ca',
+                    'unknown_ca',
                     'unknown error',
-                    'https proxy request', 'inappropriate fallback',
+                    'https proxy request',
+                    'inappropriate fallback',
                     'wrong version number',
-                    'no shared cipher', 'certificate unknown',
+                    'no shared cipher',
+                    'certificate unknown',
                     'ccs received early',
                 )
                 if _assert_ssl_exc_contains(ex, *_block_errors):

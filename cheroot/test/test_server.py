@@ -3,6 +3,7 @@
 # vim: set fileencoding=utf-8 :
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import os
@@ -25,10 +26,7 @@ from ..testing import (
 
 def make_http_server(bind_addr):
     """Create and start an HTTP server bound to bind_addr."""
-    httpserver = HTTPServer(
-        bind_addr=bind_addr,
-        gateway=Gateway,
-    )
+    httpserver = HTTPServer(bind_addr=bind_addr, gateway=Gateway)
 
     threading.Thread(target=httpserver.safe_start).start()
 
@@ -45,8 +43,9 @@ non_windows_sock_test = pytest.mark.skipif(
 
 
 @pytest.fixture
-def http_server():
+def http_server():  # noqa: D202, a blank line is required before the function
     """Provision a server creator as a fixture."""
+
     def start_srv():
         bind_addr = yield
         httpserver = make_http_server(bind_addr)
@@ -76,13 +75,7 @@ def unix_sock_file():
     os.unlink(tmp_sock_fname)
 
 
-@pytest.mark.parametrize(
-    'ip_addr',
-    (
-        ANY_INTERFACE_IPV4,
-        ANY_INTERFACE_IPV6,
-    )
-)
+@pytest.mark.parametrize('ip_addr', (ANY_INTERFACE_IPV4, ANY_INTERFACE_IPV6))
 def test_bind_addr_inet(http_server, ip_addr):
     """Check that bound IP address is stored in server."""
     httpserver = http_server.send((ip_addr, EPHEMERAL_PORT))
@@ -145,6 +138,7 @@ def test_peercreds_unix_sock(http_server, unix_sock_file):
 
     httpserver.peercreds_resolve_enabled = True
     import grp
+
     expected_textcreds = os.getlogin(), grp.getgrgid(os.getgid()).gr_name
     expected_textcreds = '!'.join(map(str, expected_textcreds))
     assert testclient.get(PEERCRED_TEXTS_URI) == expected_textcreds

@@ -32,6 +32,7 @@ context will be automatically created from them.
 """
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import socket
@@ -106,13 +107,15 @@ class SSL_fileobject(MakeFile):
 
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
-        return self._safe_call(False, super(SSL_fileobject, self).sendall,
-                               *args, **kwargs)
+        return self._safe_call(
+            False, super(SSL_fileobject, self).sendall, *args, **kwargs
+        )
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""
-        return self._safe_call(False, super(SSL_fileobject, self).send,
-                               *args, **kwargs)
+        return self._safe_call(
+            False, super(SSL_fileobject, self).send, *args, **kwargs
+        )
 
 
 class SSLConnection:
@@ -126,21 +129,51 @@ class SSLConnection:
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
 
-    for f in ('get_context', 'pending', 'send', 'write', 'recv', 'read',
-              'renegotiate', 'bind', 'listen', 'connect', 'accept',
-              'setblocking', 'fileno', 'close', 'get_cipher_list',
-              'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
-              'makefile', 'get_app_data', 'set_app_data', 'state_string',
-              'sock_shutdown', 'get_peer_certificate', 'want_read',
-              'want_write', 'set_connect_state', 'set_accept_state',
-              'connect_ex', 'sendall', 'settimeout', 'gettimeout'):
-        exec("""def %s(self, *args):
+    for f in (
+        'get_context',
+        'pending',
+        'send',
+        'write',
+        'recv',
+        'read',
+        'renegotiate',
+        'bind',
+        'listen',
+        'connect',
+        'accept',
+        'setblocking',
+        'fileno',
+        'close',
+        'get_cipher_list',
+        'getpeername',
+        'getsockname',
+        'getsockopt',
+        'setsockopt',
+        'makefile',
+        'get_app_data',
+        'set_app_data',
+        'state_string',
+        'sock_shutdown',
+        'get_peer_certificate',
+        'want_read',
+        'want_write',
+        'set_connect_state',
+        'set_accept_state',
+        'connect_ex',
+        'sendall',
+        'settimeout',
+        'gettimeout',
+    ):
+        exec(
+            """def %s(self, *args):
         self._lock.acquire()
         try:
             return self._ssl_conn.%s(*args)
         finally:
             self._lock.release()
-""" % (f, f))
+"""
+            % (f, f)
+        )
 
     def shutdown(self, *args):
         """Shutdown the SSL connection.
@@ -176,14 +209,15 @@ class pyOpenSSLAdapter(Adapter):
     """The ciphers list of SSL."""
 
     def __init__(
-            self, certificate, private_key, certificate_chain=None,
-            ciphers=None):
+        self, certificate, private_key, certificate_chain=None, ciphers=None
+    ):
         """Initialize OpenSSL Adapter instance."""
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
         super(pyOpenSSLAdapter, self).__init__(
-            certificate, private_key, certificate_chain, ciphers)
+            certificate, private_key, certificate_chain, ciphers
+        )
 
         self._environ = None
 
@@ -224,17 +258,21 @@ class pyOpenSSLAdapter(Adapter):
             # Server certificate attributes
             cert = open(self.certificate, 'rb').read()
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
-            ssl_environ.update({
-                'SSL_SERVER_M_VERSION': cert.get_version(),
-                'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
-                # 'SSL_SERVER_V_START':
-                #   Validity of server's certificate (start time),
-                # 'SSL_SERVER_V_END':
-                #   Validity of server's certificate (end time),
-            })
+            ssl_environ.update(
+                {
+                    'SSL_SERVER_M_VERSION': cert.get_version(),
+                    'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
+                    # 'SSL_SERVER_V_START':
+                    #   Validity of server's certificate (start time),
+                    # 'SSL_SERVER_V_END':
+                    #   Validity of server's certificate (end time),
+                }
+            )
 
-            for prefix, dn in [('I', cert.get_issuer()),
-                               ('S', cert.get_subject())]:
+            for prefix, dn in [
+                ('I', cert.get_issuer()),
+                ('S', cert.get_subject()),
+            ]:
                 # X509Name objects don't seem to have a way to get the
                 # complete DN string. Use str() and slice it instead,
                 # because str(dn) == "<X509Name object '/C=US/ST=...'>"
@@ -247,9 +285,14 @@ class pyOpenSSLAdapter(Adapter):
                 # for any value to contain slashes itself (in a URL).
                 while dnstr:
                     pos = dnstr.rfind('=')
-                    dnstr, value = dnstr[:pos], dnstr[pos + 1:]
+                    dnstr, value = dnstr[:pos], dnstr[pos + 1 :]  # noqa: E203
+                    # is not
+                    # PEP8
+                    # compliant
                     pos = dnstr.rfind('/')
-                    dnstr, key = dnstr[:pos], dnstr[pos + 1:]
+                    dnstr, key = dnstr[:pos], dnstr[pos + 1 :]  # noqa: E203
+                    # is not PEP8
+                    # compliant
                     if key and value:
                         wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
                         ssl_environ[wsgikey] = value
