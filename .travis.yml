@@ -75,11 +75,15 @@ _base_envs:
 
 jobs:
   fast_finish: true
+  allow_failures:
+  - env: TOXENV=pre-commit-failing
   include:
   - <<: *lint_python_base
     env: TOXENV=pre-commit
   - <<: *lint_python_base
     env: TOXENV=setup-check
+  - <<: *lint_python_base
+    env: TOXENV=pre-commit-failing
   - <<: *pure_python_base_priority
     # mainstream here (3.6)
   - <<: *pure_python_base_priority
