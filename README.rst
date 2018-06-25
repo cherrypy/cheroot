@@ -1,5 +1,3 @@
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot?ref=badge_shield)
-
 .. image:: https://img.shields.io/pypi/v/cheroot.svg
    :target: https://pypi.org/project/cheroot
 
@@ -34,6 +32,10 @@
 .. image:: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
    :target: http://makeapullrequest.com/
 
+.. image:: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot.svg?type=shield
+   :target: https://app.fossa.io/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot?ref=badge_shield
+   :alt: FOSSA Status
+
 Cheroot is the high-performance, pure-Python HTTP server used by CherryPy.
 
 Status
@@ -55,5 +57,8 @@ Oh, and be pythonic, please :snake:
 <https://opensource.guide/how-to-contribute/>`_ article by GitHub :rocket:
 
 
-## License
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot?ref=badge_large)
+License
+=======
+.. image:: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot.svg?type=large
+   :target: https://app.fossa.io/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot?ref=badge_large
+   :alt: FOSSA Status
