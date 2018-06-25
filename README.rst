@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot?ref=badge_shield)
+
 .. image:: https://img.shields.io/pypi/v/cheroot.svg
    :target: https://pypi.org/project/cheroot
 
@@ -51,3 +53,7 @@ Oh, and be pythonic, please :snake:
 
 **Don't know how?** Check out `How to Contribute to Open Source
 <https://opensource.guide/how-to-contribute/>`_ article by GitHub :rocket:
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcherrypy%2Fcheroot?ref=badge_large)
