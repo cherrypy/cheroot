@@ -146,7 +146,7 @@ jobs:
   # pypy2.7-5.10.0 fails under OS X because it's unsupported
   - <<: *stage_deploy
     if: tag IS present
-    python: *mainstream_python
+    <<: *python_3_7_mixture
     install: skip
     script: skip
     deploy:
