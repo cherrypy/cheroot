@@ -1,3 +1,5 @@
+conditions: v1
+
 dist: trusty
 sudo: false
 language: python
