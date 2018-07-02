@@ -50,8 +50,8 @@ _base_envs:
   os: osx
   language: generic
   before_install:
-  - brew update
-  - brew install pyenv || brew upgrade pyenv
+  - brew install zlib readline
+  - brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/cac0ae5/Formula/pyenv.rb || brew upgrade pyenv
   - &ensure_pyenv_preloaded |
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
