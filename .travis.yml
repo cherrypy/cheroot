@@ -8,7 +8,7 @@ python:
 - 3.5
 - 3.6
 - &pypy2 pypy2.7-5.10.0
-- &pypy3 pypy3.5-5.10.0
+- &pypy3 pypy3.5-5.10.1
 
 group: edge
 _base_envs:
@@ -83,10 +83,6 @@ jobs:
   allow_failures:
   - env: TOXENV=pre-commit-failing
   include:
-  - dist: xenial
-    group:
-    sudo: true
-    python: 3.7
   - <<: *lint_python_base
     env: TOXENV=pre-commit
   - <<: *lint_python_base
@@ -140,9 +136,9 @@ jobs:
     - *env_path
   - <<: *osx_python_base
     <<: *manual_run_or_cron
-    python: pypy3.5-5.10.0
+    python: pypy3.5-5.10.1
     env:
-    - PYTHON_VERSION=pypy3.5-5.10.0
+    - PYTHON_VERSION=pypy3.5-5.10.1
     - *env_pyenv
     - *env_path
   # pypy2.7-5.10.0 fails under OS X because it's unsupported
