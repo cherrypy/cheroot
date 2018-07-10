@@ -91,12 +91,12 @@ class BuiltinSSLAdapter(Adapter):
 
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
+        EMPTY_RESULT = None, {}
         try:
             s = self.context.wrap_socket(
                 sock, do_handshake_on_connect=True, server_side=True,
             )
         except ssl.SSLError as ex:
-            EMPTY_RESULT = None, {}
             if ex.errno == ssl.SSL_ERROR_EOF:
                 # This is almost certainly due to the cherrypy engine
                 # 'pinging' the socket to assert it's connectable;
