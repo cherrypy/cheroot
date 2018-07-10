@@ -1,3 +1,9 @@
+v6.3.3
+======
+
+- Fix bug with returning empty result in
+  :py:meth:`cheroot.ssl.builtin.BuiltinSSLAdapter.wrap`
+
 v6.3.2
 ======
 
