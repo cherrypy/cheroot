@@ -138,6 +138,7 @@ jobs:
     - *env_path
   - <<: *osx_python_base
     <<: *manual_run_or_cron
+    osx_image: xcode9.4
     python: pypy3.5-5.10.1
     env:
     - PYTHON_VERSION=pypy3.5-5.10.1
