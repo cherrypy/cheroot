@@ -76,6 +76,10 @@ params = dict(
 
             'pytest-cov',
             'backports.unittest_mock',
+
+            # TLS
+            'trustme>=0.4.0',
+            'pyopenssl',
         ],
     },
     setup_requires=[
