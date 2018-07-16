@@ -1704,7 +1704,7 @@ class HTTPServer:
     def start(self):
         """Run the server forever."""
         # We don't have to trap KeyboardInterrupt or SystemExit here,
-        # because cherrpy.server already does so, calling self.stop() for us.
+        # because cherrypy.server already does so, calling self.stop() for us.
         # If you're using this server with another framework, you should
         # trap those exceptions in whatever code block calls start().
         self.prepare()
