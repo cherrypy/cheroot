@@ -1610,7 +1610,8 @@ class HTTPServer:
         """Prepare server to serving requests.
 
         It binds a socket's port, setups the socket to listen() and does
-        other preparing things."""
+        other preparing things.
+        """
         self._interrupt = None
 
         if self.software is None:
