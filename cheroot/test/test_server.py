@@ -76,6 +76,49 @@ def unix_sock_file():
     os.unlink(tmp_sock_fname)
 
 
+def test_prepare_makes_server_ready():
+    """Check that prepare() makes the server ready, and stop() clears it."""
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+
+    assert not httpserver.ready
+    assert not httpserver.requests._threads
+
+    httpserver.prepare()
+
+    assert httpserver.ready
+    assert httpserver.requests._threads
+    for thr in httpserver.requests._threads:
+        assert thr.ready
+
+    httpserver.stop()
+
+    assert not httpserver.requests._threads
+    assert not httpserver.ready
+
+
+def test_stop_interrupts_serve():
+    """Check that stop() interrupts running of serve()."""
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+
+    httpserver.prepare()
+    serve_thread = threading.Thread(target=httpserver.serve)
+    serve_thread.start()
+
+    serve_thread.join(0.5)
+    assert serve_thread.is_alive()
+
+    httpserver.stop()
+
+    serve_thread.join(0.5)
+    assert not serve_thread.is_alive()
+
+
 @pytest.mark.parametrize(
     'ip_addr',
     (
