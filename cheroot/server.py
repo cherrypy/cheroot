@@ -39,6 +39,21 @@ number of requests and their responses, so we run a nested loop::
                 if req.close_connection:
                     return
 
+For running a server you can invoke :func:`start() <HTTPServer.start()>` (it
+will run the server forever) or use invoking :func:`prepare()
+<HTTPServer.prepare()>` and :func:`serve() <HTTPServer.serve()>` like this::
+
+    server = HTTPServer(...)
+    server.prepare()
+    try:
+        threading.Thread(target=server.serve).start()
+
+        # waiting/detecting some appropriate stop condition here
+        ...
+
+    finally:
+        server.stop()
+
 And now for a trivial doctest to exercise the test suite
 
 >>> 'HTTPServer' in globals()
@@ -1609,7 +1624,7 @@ class HTTPServer:
     def prepare(self):
         """Prepare server to serving requests.
 
-        It binds a socket's port, setups the socket to listen() and does
+        It binds a socket's port, setups the socket to ``listen()`` and does
         other preparing things.
         """
         self._interrupt = None
@@ -1685,7 +1700,7 @@ class HTTPServer:
         self._start_time = time.time()
 
     def serve(self):
-        """Serve requests, after invoking prepare()."""
+        """Serve requests, after invoking :func:`prepare()`."""
         while self.ready:
             try:
                 self.tick()
@@ -1703,7 +1718,10 @@ class HTTPServer:
                     raise self.interrupt
 
     def start(self):
-        """Run the server forever."""
+        """Run the server forever.
+
+        It is shortcut for invoking :func:`prepare()` then :func:`serve()`.
+        """
         # We don't have to trap KeyboardInterrupt or SystemExit here,
         # because cherrypy.server already does so, calling self.stop() for us.
         # If you're using this server with another framework, you should
