@@ -7,12 +7,12 @@ sticking incoming connections onto a Queue::
 
     server = HTTPServer(...)
     server.start()
-    while True:
-        tick()
-        # This blocks until a request comes in:
-        child = socket.accept()
-        conn = HTTPConnection(child, ...)
-        server.requests.put(conn)
+    ->  while True:
+            tick()
+            # This blocks until a request comes in:
+            child = socket.accept()
+            conn = HTTPConnection(child, ...)
+            server.requests.put(conn)
 
 Worker threads are kept in a pool and poll the Queue, popping off and then
 handling each connection in turn. Each connection can consist of an arbitrary
