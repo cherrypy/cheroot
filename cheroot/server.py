@@ -7,12 +7,12 @@ sticking incoming connections onto a Queue::
 
     server = HTTPServer(...)
     server.start()
-    while True:
-        tick()
-        # This blocks until a request comes in:
-        child = socket.accept()
-        conn = HTTPConnection(child, ...)
-        server.requests.put(conn)
+    ->  while True:
+            tick()
+            # This blocks until a request comes in:
+            child = socket.accept()
+            conn = HTTPConnection(child, ...)
+            server.requests.put(conn)
 
 Worker threads are kept in a pool and poll the Queue, popping off and then
 handling each connection in turn. Each connection can consist of an arbitrary
@@ -38,6 +38,21 @@ number of requests and their responses, so we run a nested loop::
                             response.close()
                 if req.close_connection:
                     return
+
+For running a server you can invoke :func:`start() <HTTPServer.start()>` (it
+will run the server forever) or use invoking :func:`prepare()
+<HTTPServer.prepare()>` and :func:`serve() <HTTPServer.serve()>` like this::
+
+    server = HTTPServer(...)
+    server.prepare()
+    try:
+        threading.Thread(target=server.serve).start()
+
+        # waiting/detecting some appropriate stop condition here
+        ...
+
+    finally:
+        server.stop()
 
 And now for a trivial doctest to exercise the test suite
 
@@ -1632,12 +1647,12 @@ class HTTPServer:
             self.stop()
             raise
 
-    def start(self):
-        """Run the server forever."""
-        # We don't have to trap KeyboardInterrupt or SystemExit here,
-        # because cherrpy.server already does so, calling self.stop() for us.
-        # If you're using this server with another framework, you should
-        # trap those exceptions in whatever code block calls start().
+    def prepare(self):
+        """Prepare server to serving requests.
+
+        It binds a socket's port, setups the socket to ``listen()`` and does
+        other preparing things.
+        """
         self._interrupt = None
 
         if self.software is None:
@@ -1709,6 +1724,9 @@ class HTTPServer:
 
         self.ready = True
         self._start_time = time.time()
+
+    def serve(self):
+        """Serve requests, after invoking :func:`prepare()`."""
         while self.ready:
             try:
                 self.tick()
@@ -1724,6 +1742,18 @@ class HTTPServer:
                     time.sleep(0.1)
                 if self.interrupt:
                     raise self.interrupt
+
+    def start(self):
+        """Run the server forever.
+
+        It is shortcut for invoking :func:`prepare()` then :func:`serve()`.
+        """
+        # We don't have to trap KeyboardInterrupt or SystemExit here,
+        # because cherrypy.server already does so, calling self.stop() for us.
+        # If you're using this server with another framework, you should
+        # trap those exceptions in whatever code block calls start().
+        self.prepare()
+        self.serve()
 
     def error_log(self, msg='', level=20, traceback=False):
         """Write error message to log.
