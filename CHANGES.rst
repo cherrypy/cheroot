@@ -1,3 +1,11 @@
+v6.4.0
+======
+
+- :issue:`68` via :pr:`98`: Factor out parts of
+  :py:meth:`cheroot.server.HTTPServer.start` into
+  :py:meth:`prepare() <cheroot.server.HTTPServer.prepare>` and
+  :py:meth:`serve() <cheroot.server.HTTPServer.serve>`
+
 v6.3.3
 ======
 
