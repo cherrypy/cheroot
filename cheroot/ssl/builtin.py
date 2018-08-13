@@ -58,6 +58,9 @@ class BuiltinSSLAdapter(Adapter):
     private_key = None
     """The filename of the server's private key file."""
 
+    private_key_passphrase = None
+    """The passphrase of the server's private key file."""
+
     certificate_chain = None
     """The filename of the certificate chain file."""
 
@@ -68,20 +71,22 @@ class BuiltinSSLAdapter(Adapter):
     """The ciphers list of SSL."""
 
     def __init__(
-            self, certificate, private_key, certificate_chain=None,
-            ciphers=None):
+            self, certificate, private_key, private_key_passphrase=None,
+            certificate_chain=None, ciphers=None):
         """Set up context in addition to base class properties if available."""
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
 
         super(BuiltinSSLAdapter, self).__init__(
-            certificate, private_key, certificate_chain, ciphers)
+            certificate, private_key, private_key_passphrase,
+            certificate_chain, ciphers)
 
         self.context = ssl.create_default_context(
             purpose=ssl.Purpose.CLIENT_AUTH,
             cafile=certificate_chain
         )
-        self.context.load_cert_chain(certificate, private_key)
+        self.context.load_cert_chain(certificate, private_key,
+            private_key_passphrase)
         if self.ciphers is not None:
             self.context.set_ciphers(ciphers)
 

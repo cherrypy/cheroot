@@ -21,11 +21,12 @@ class Adapter:
 
     @abstractmethod
     def __init__(
-            self, certificate, private_key, certificate_chain=None,
-            ciphers=None):
+            self, certificate, private_key, private_key_passphrase=None,
+            certificate_chain=None, ciphers=None):
         """Set up certificates, private key ciphers and reset context."""
         self.certificate = certificate
         self.private_key = private_key
+        self.private_key_passphrase = private_key_passphrase
         self.certificate_chain = certificate_chain
         self.ciphers = ciphers
         self.context = None
