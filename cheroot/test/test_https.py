@@ -55,15 +55,16 @@ class HTTPSTestBase(object):
 
     def setUp(self):
         """Set up."""
-        super().setUp()
+        super(HTTPSTestBase, self).setUp()
         self.ssl_context = ssl.create_default_context(
             cafile='cheroot/test/ssl/ca.cert')
         self.ssl_context.check_hostname = False
 
     def getPage(self, *args, **kw):
         """Fetch the page."""
-        return super().getPage(self.script_name, *args,
-                               raise_subcls=ssl.SSLError, **kw)
+        return super(HTTPSTestBase, self).getPage(
+            self.script_name, *args,
+            raise_subcls=ssl.SSLError, **kw)
 
     def set_client_cert(self, name):
         """Set client cert."""
@@ -95,7 +96,7 @@ class ClientCertRequiredTests(HTTPSTestBase, helper.CherootWebCase):
     def setup_class(cls):
         """Set up for tests."""
         cls.config.update({'verify_mode': ssl.CERT_REQUIRED})
-        super().setup_class()
+        super(ClientCertRequiredTests, cls).setup_class()
 
     @ddt.data('client', 'client_ip', 'client_wildcard', 'client_wrong_host')
     def test_allow(self, client_cert):
@@ -116,7 +117,7 @@ class ClientCertOptionalTests(HTTPSTestBase, helper.CherootWebCase):
     def setup_class(cls):
         """Set up for tests."""
         cls.config.update({'verify_mode': ssl.CERT_OPTIONAL})
-        super().setup_class()
+        super(ClientCertOptionalTests, cls).setup_class()
 
     @ddt.data('client', 'client_ip', 'client_wildcard', 'client_wrong_host')
     def test_allow(self, client_cert):
@@ -137,7 +138,7 @@ class ClientCertIgnoredTests(HTTPSTestBase, helper.CherootWebCase):
     def setup_class(cls):
         """Set up for tests."""
         cls.config.update({'verify_mode': ssl.CERT_NONE})
-        super().setup_class()
+        super(ClientCertIgnoredTests, cls).setup_class()
 
     @ddt.data('client', 'client_ip', 'client_wildcard', 'client_wrong_host',
               'client_wrong_ca')
