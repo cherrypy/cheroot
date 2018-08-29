@@ -45,6 +45,7 @@ class BufferedWriter(io.BufferedWriter):
 
 def MakeFile_PY3(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
     """File object attached to a socket object."""
+    # TODO: wrap these natively w/o selector func
     if 'r' in mode:
         return io.BufferedReader(socket.SocketIO(sock, mode), bufsize)
     else:
