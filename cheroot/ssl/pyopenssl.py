@@ -46,11 +46,11 @@ except ImportError:
 
 from . import Adapter
 from .. import errors, server as cheroot_server
-from ..makefile import MakeFile
+from ..makefile import StreamReader, StreamWriter
 
 
-class SSL_fileobject(MakeFile):
-    """SSL file object attached to a socket object."""
+class SSLFileobjectMixin:
+    """Base mixin for an SSL socket stream."""
 
     ssl_timeout = 3
     ssl_retry = .01
@@ -102,17 +102,35 @@ class SSL_fileobject(MakeFile):
 
     def recv(self, size):
         """Receive message of a size from the socket."""
-        return self._safe_call(True, super(SSL_fileobject, self).recv, size)
+        return self._safe_call(
+            True,
+            super(SSLFileobjectMixin, self).recv,
+            size,
+        )
 
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
-        return self._safe_call(False, super(SSL_fileobject, self).sendall,
-                               *args, **kwargs)
+        return self._safe_call(
+            False,
+            super(SSLFileobjectMixin, self).sendall,
+            *args, **kwargs
+        )
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""
-        return self._safe_call(False, super(SSL_fileobject, self).send,
-                               *args, **kwargs)
+        return self._safe_call(
+            False,
+            super(SSLFileobjectMixin, self).send,
+            *args, **kwargs
+        )
+
+
+class SSLFileobjectStreamReader(SSLFileobjectMixin, StreamReader):
+    """SSL file object attached to a socket object."""
+
+
+class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
+    """SSL file object attached to a socket object."""
 
 
 class SSLConnection:
@@ -258,10 +276,16 @@ class pyOpenSSLAdapter(Adapter):
 
     def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
+        cls = (
+            SSLFileobjectStreamReader
+            if 'r' in mode else
+            SSLFileobjectStreamWriter
+        )
         if SSL and isinstance(sock, SSL.ConnectionType):
-            timeout = sock.gettimeout()
-            f = SSL_fileobject(sock, mode, bufsize)
-            f.ssl_timeout = timeout
-            return f
+            wrapped_socket = cls(sock, mode, bufsize)
+            wrapped_socket.ssl_timeout = sock.gettimeout()
+            return wrapped_socket
+        # This is from past:
+        # TODO: figure out what it's meant for
         else:
             return cheroot_server.CP_fileobject(sock, mode, bufsize)

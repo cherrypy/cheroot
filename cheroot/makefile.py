@@ -43,14 +43,6 @@ class BufferedWriter(io.BufferedWriter):
             del self._write_buf[:n]
 
 
-def MakeFile_PY3(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
-    """File object attached to a socket object."""
-    if 'r' in mode:
-        return io.BufferedReader(socket.SocketIO(sock, mode), bufsize)
-    else:
-        return BufferedWriter(socket.SocketIO(sock, mode), bufsize)
-
-
 class MakeFile_PY2(getattr(socket, '_fileobject', object)):
     """Faux file object attached to a socket object."""
 
@@ -384,4 +376,24 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return ''.join(buffers)
 
 
-MakeFile = MakeFile_PY2 if six.PY2 else MakeFile_PY3
+if six.PY3:
+    class StreamReader(io.BufferedReader):
+        """Socket stream reader."""
+
+        def __init__(self, sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
+            """Initialize socket stream reader."""
+            super().__init__(socket.SocketIO(sock, mode), bufsize)
+
+    class StreamWriter(BufferedWriter):
+        """Socket stream writer."""
+
+        def __init__(self, sock, mode='w', bufsize=io.DEFAULT_BUFFER_SIZE):
+            """Initialize socket stream writer."""
+            super().__init__(socket.SocketIO(sock, mode), bufsize)
+
+    def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
+        """File object attached to a socket object."""
+        cls = StreamReader if 'r' in mode else StreamWriter
+        return cls(sock, mode, bufsize)
+else:
+    StreamReader = StreamWriter = MakeFile = MakeFile_PY2

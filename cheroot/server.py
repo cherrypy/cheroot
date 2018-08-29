@@ -87,7 +87,7 @@ from six.moves import urllib
 from . import errors, __version__
 from ._compat import bton, ntou
 from .workers import threadpool
-from .makefile import MakeFile
+from .makefile import MakeFile, StreamWriter
 
 
 __all__ = ('HTTPRequest', 'HTTPConnection', 'HTTPServer',
@@ -1261,7 +1261,7 @@ class HTTPConnection:
         if not req or req.sent_headers:
             return
         # Unwrap wfile
-        self.wfile = MakeFile(self.socket._sock, 'wb', self.wbufsize)
+        self.wfile = StreamWriter(self.socket._sock, 'wb', self.wbufsize)
         msg = (
             'The client sent a plain HTTP request, but '
             'this server only speaks HTTPS on this port.'
