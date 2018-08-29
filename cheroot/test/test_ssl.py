@@ -82,34 +82,43 @@ def ca():
     del ca
 
 
-def test_smth(tls_http_server, ca):
+@pytest.mark.parametrize(
+    'adapter_type',
+    (
+        'pyopenssl',
+        'builtin',
+    ),
+)
+def test_smth(tls_http_server, ca, adapter_type):
     """Test ability to connect to server via HTTPS."""
     cert = ca.issue_server_cert(ntou(ANY_INTERFACE_IPV4))
     with ca.cert_pem.tempfile() as ca_temp_path:
-        tls_adapter = (
-            get_ssl_adapter_class
-            (name='pyopenssl')  # or builtin
-            (ca_temp_path, ca_temp_path)
-        )
-        # tls_adapter.context = tls_adapter.get_context()
-        from OpenSSL import SSL
-        ctx = SSL.Context(SSL.SSLv23_METHOD)
-        tls_adapter.context = ctx
-        cert.configure_cert(tls_adapter.context)
-        tlshttpserver = tls_http_server.send(
-            (
-                (ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
-                tls_adapter,
+        with cert.cert_chain_pems[0].tempfile() as cert_temp_path:
+            tls_adapter = (
+                get_ssl_adapter_class
+                (name=adapter_type)
+                (cert_temp_path, ca_temp_path)
             )
-        )
+            # tls_adapter.context = tls_adapter.get_context()
+            if adapter_type == 'pyopenssl':
+                from OpenSSL import SSL
+                ctx = SSL.Context(SSL.SSLv23_METHOD)
+                tls_adapter.context = ctx
+            cert.configure_cert(tls_adapter.context)
+            tlshttpserver = tls_http_server.send(
+                (
+                    (ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+                    tls_adapter,
+                )
+            )
 
-        # testclient = get_server_client(tlshttpserver)
-        # testclient.get('/')
+            # testclient = get_server_client(tlshttpserver)
+            # testclient.get('/')
 
-        import requests
-        resp = requests.get(
-            'https://' + ':'.join(map(str, tlshttpserver.bind_addr)) + '/',
-            verify=ca_temp_path
-        )
-        assert resp.status_code == 200
-        assert resp.text == 'Hello world!'
+            import requests
+            resp = requests.get(
+                'https://' + ':'.join(map(str, tlshttpserver.bind_addr)) + '/',
+                verify=ca_temp_path
+            )
+            assert resp.status_code == 200
+            assert resp.text == 'Hello world!'
