@@ -27,8 +27,7 @@ import six
 
 from . import Adapter
 from .. import errors
-from ..makefile import MakeFile
-
+from ..makefile import StreamReader, StreamWriter
 
 if six.PY3:
     generic_socket_error = OSError
@@ -200,4 +199,5 @@ class BuiltinSSLAdapter(Adapter):
 
     def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
         """Return socket file object."""
-        return MakeFile(sock, mode, bufsize)
+        cls = StreamReader if 'r' in mode else StreamWriter
+        return cls(sock, mode, bufsize)
