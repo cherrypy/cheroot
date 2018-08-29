@@ -29,9 +29,9 @@ class HelloWorldGateway(Gateway):
         req = self.req
         req_uri = bton(req.uri)
         if req_uri == '/':
-            req.status = '200 OK'
+            req.status = b'200 OK'
             req.ensure_headers_sent()
-            req.write('Hello world!')
+            req.write(b'Hello world!')
             return
         return super(HelloWorldGateway, self).respond()
 
