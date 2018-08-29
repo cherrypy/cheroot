@@ -43,7 +43,7 @@ class HTTPSTestBase(object):
 
     @classmethod
     def setup_server(cls):
-        """Setup the test server."""
+        """Set up the test server."""
         class Root(helper.Controller):
 
             def hello(req, resp):
@@ -54,7 +54,7 @@ class HTTPSTestBase(object):
         cls.httpserver.wsgi_app = Root()
 
     def setUp(self):
-        """TestCase setup."""
+        """Set up."""
         super().setUp()
         self.ssl_context = ssl.create_default_context(
             cafile='cheroot/test/ssl/ca.cert')
