@@ -1,3 +1,9 @@
+v6.5.0
+======
+
+- :cp-issue:`1001` via :pr:`52` and :pr:`108`: Add support for
+  validating client certificates.
+
 v6.4.0
 ======
 
