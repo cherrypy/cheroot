@@ -67,6 +67,21 @@ class BuiltinSSLAdapter(Adapter):
     ciphers = None
     """The ciphers list of SSL."""
 
+    CERT_KEY_TO_ENV = {
+        'subject': 'SSL_CLIENT_S_DN',
+        'issuer': 'SSL_CLIENT_I_DN'
+    }
+
+    CERT_KEY_TO_LDAP_CODE = {
+        'countryName': 'C',
+        'stateOrProvinceName': 'ST',
+        'localityName': 'L',
+        'organizationName': 'O',
+        'organizationalUnitName': 'OU',
+        'commonName': 'CN',
+        'emailAddress': 'Email',
+    }
+
     def __init__(
             self, certificate, private_key, certificate_chain=None,
             ciphers=None):
@@ -155,7 +170,33 @@ class BuiltinSSLAdapter(Adapter):
             # SSL_VERSION_INTERFACE     string  The mod_ssl program version
             # SSL_VERSION_LIBRARY   string  The OpenSSL program version
         }
+
+        if self.context and self.context.verify_mode != ssl.CERT_NONE:
+            client_cert = sock.getpeercert()
+            if client_cert:
+                for cert_key, env_var in self.CERT_KEY_TO_ENV.items():
+                    ssl_environ.update(
+                        self.env_dn_dict(env_var, client_cert.get(cert_key)))
+
         return ssl_environ
+
+    def env_dn_dict(self, env_prefix, cert_value):
+        """Return a dict of WSGI environment variables for a client cert DN.
+
+        E.g. SSL_CLIENT_S_DN_CN, SSL_CLIENT_S_DN_C, etc.
+        See SSL_CLIENT_S_DN_x509 at
+        https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#envvars.
+        """
+        if not cert_value:
+            return {}
+
+        env = {}
+        for rdn in cert_value:
+            for attr_name, val in rdn:
+                attr_code = self.CERT_KEY_TO_LDAP_CODE.get(attr_name)
+                if attr_code:
+                    env['%s_%s' % (env_prefix, attr_code)] = val
+        return env
 
     def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
         """Return socket file object."""

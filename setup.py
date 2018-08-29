@@ -61,6 +61,7 @@ params = dict(
             'collective.checkdocs',
         ],
         'testing': [
+            'ddt',
             'pytest>=2.8',
             'pytest-sugar',
             'pytest-testmon>=0.9.7',
