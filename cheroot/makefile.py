@@ -51,6 +51,16 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
         self.bytes_read = 0
         self.bytes_written = 0
         socket._fileobject.__init__(self, *args, **kwargs)
+        self._refcount = 0
+
+    def _reuse(self):
+        self._refcount += 1
+
+    def _drop(self):
+        if self._refcount < 0:
+            self.close()
+        else:
+            self._refcount -= 1
 
     def write(self, data):
         """Sendall for non-blocking sockets."""
