@@ -75,7 +75,9 @@ def native_server():
 
 class _TestClient:
     def __init__(self, server):
-        self._interface, self._host, self._port = _get_conn_data(server)
+        self._interface, self._host, self._port = _get_conn_data(
+            server.bind_addr
+        )
         self.server_instance = server
         self._http_connection = self.get_connection()
 
@@ -128,11 +130,11 @@ def _probe_ipv6_sock(interface):
     return False
 
 
-def _get_conn_data(server):
-    if isinstance(server.bind_addr, tuple):
-        host, port = server.bind_addr
+def _get_conn_data(bind_addr):
+    if isinstance(bind_addr, tuple):
+        host, port = bind_addr
     else:
-        host, port = server.bind_addr, 0
+        host, port = bind_addr, 0
 
     interface = webtest.interface(host)
 
