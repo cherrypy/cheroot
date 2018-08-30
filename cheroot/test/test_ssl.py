@@ -96,8 +96,8 @@ def ca():
         pytest.param('pyopenssl', marks=fails_under_py3),
     ),
 )
-def test_smth(tls_http_server, ca, adapter_type):
-    """Test ability to connect to server via HTTPS."""
+def test_ssl_adapters(tls_http_server, ca, adapter_type):
+    """Test ability to connect to server via HTTPS using adapters."""
     cert = ca.issue_server_cert(ntou(ANY_INTERFACE_IPV4))
     with ca.cert_pem.tempfile() as ca_temp_path:
         with cert.cert_chain_pems[0].tempfile() as cert_temp_path:
