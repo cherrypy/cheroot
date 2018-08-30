@@ -20,8 +20,8 @@ from ..server import Gateway, HTTPServer, get_ssl_adapter_class
 # from ..ssl import builtin, pyopenssl
 from ..testing import (
     ANY_INTERFACE_IPV4,
-    EPHEMERAL_PORT,
     # get_server_client,
+    _get_conn_data,
 )
 
 
@@ -101,7 +101,8 @@ def ca():
 )
 def test_ssl_adapters(tls_http_server, ca, adapter_type):
     """Test ability to connect to server via HTTPS using adapters."""
-    cert = ca.issue_server_cert(ntou(ANY_INTERFACE_IPV4))
+    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+    cert = ca.issue_server_cert(ntou(interface), )
     with ca.cert_pem.tempfile() as ca_temp_path:
         with cert.cert_chain_pems[0].tempfile() as cert_temp_path:
             tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
@@ -124,7 +125,7 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
             cert.configure_cert(tls_adapter.context)
             tlshttpserver = tls_http_server.send(
                 (
-                    (ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+                    (interface, port),
                     tls_adapter,
                 )
             )
@@ -132,9 +133,13 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
             # testclient = get_server_client(tlshttpserver)
             # testclient.get('/')
 
+            interface, host, port = _get_conn_data(
+                tlshttpserver.bind_addr
+            )
+
             import requests
             resp = requests.get(
-                'https://' + ':'.join(map(str, tlshttpserver.bind_addr)) + '/',
+                'https://' + interface + ':' + str(port) + '/',
                 verify=ca_temp_path
             )
             assert resp.status_code == 200
