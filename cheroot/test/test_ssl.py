@@ -7,6 +7,9 @@ __metaclass__ = type
 
 import threading
 import time
+from unittest.mock import (  # FIXME: replace it with pytest-mock
+    patch, MagicMock
+)
 
 import pytest
 import six
@@ -102,7 +105,6 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
     with ca.cert_pem.tempfile() as ca_temp_path:
         with cert.cert_chain_pems[0].tempfile() as cert_temp_path:
             tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-            from mock import patch, MagicMock
             if adapter_type == 'builtin':
                 # Temporary patch chain loading
                 # as it fails for some reason:
