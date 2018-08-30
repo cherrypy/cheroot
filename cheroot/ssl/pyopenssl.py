@@ -113,7 +113,7 @@ class SSLFileobjectStreamReader(StreamReader):
         return self._safe_call(
             False,
             super(SSLFileobjectStreamReader, self).sendall,
-            *args, **kwargs,
+            *args, **kwargs
         )
 
     def send(self, *args, **kwargs):
@@ -121,7 +121,7 @@ class SSLFileobjectStreamReader(StreamReader):
         return self._safe_call(
             False,
             super(SSLFileobjectStreamReader, self).send,
-            *args, **kwargs,
+            *args, **kwargs
         )
 
 
@@ -189,7 +189,7 @@ class SSLFileobjectStreamWriter(StreamWriter):
         return self._safe_call(
             False,
             super(SSLFileobjectStreamWriter, self).sendall,
-            *args, **kwargs,
+            *args, **kwargs
         )
 
     def send(self, *args, **kwargs):
@@ -197,7 +197,7 @@ class SSLFileobjectStreamWriter(StreamWriter):
         return self._safe_call(
             False,
             super(SSLFileobjectStreamWriter, self).send,
-            *args, **kwargs,
+            *args, **kwargs
         )
 
 
