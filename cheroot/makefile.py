@@ -393,7 +393,6 @@ if six.PY3:
 
     def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
         """File object attached to a socket object."""
-        # TODO: wrap these natively w/o selector func
         if 'r' in mode:
             return StreamReader(socket.SocketIO(sock, mode), bufsize)
         else:
