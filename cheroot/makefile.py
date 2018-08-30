@@ -393,9 +393,7 @@ if six.PY3:
 
     def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
         """File object attached to a socket object."""
-        if 'r' in mode:
-            return StreamReader(socket.SocketIO(sock, mode), bufsize)
-        else:
-            return StreamWriter(socket.SocketIO(sock, mode), bufsize)
+        cls = StreamReader if 'r' in mode else StreamWriter
+        return cls(sock, mode, bufsize)
 else:
     StreamReader = StreamWriter = MakeFile = MakeFile_PY2
