@@ -1660,26 +1660,46 @@ class HTTPServer:
 
         # Select the appropriate socket
         self.socket = None
+        msg = 'No socket could be created'
         if os.getenv('LISTEN_PID', None):
             # systemd socket activation
             self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
         elif isinstance(self.bind_addr, six.string_types):
             # AF_UNIX socket
 
+            if IS_WINDOWS:
+                # Trying to access socket.AF_UNIX under Windows
+                # causes an AttributeError
+                raise ValueError(  # or RuntimeError?
+                    'AF_UNIX sockets are not supported under Windows.'
+                )
+
             # So we can reuse the socket...
             try:
                 os.unlink(self.bind_addr)
-            except Exception:
-                pass
+            except OSError:
+                """
+                File does not exist, which is the primary goal anyway.
+                """
+
+            # TODO: call bind here
+            af, socktype, proto, sa = (
+                socket.AF_UNIX, socket.SOCK_STREAM, 0, self.bind_addr
+            )
+            try:
+                self.bind(af, socktype, proto)
+            except socket.error as serr:
+                msg = '%s -- (%s: %s)' % (msg, sa, serr)
+                if self.socket:
+                    self.socket.close()
+                self.socket = None
+                six.raise_from(socket.error(msg), serr)
 
             # So everyone can access the socket...
             try:
-                os.chmod(self.bind_addr, 0o777)
-            except Exception:
+                os.chmod(self.bind_addr, 0o777)  # TODO: allow changing mode
+            except OSError:
                 pass
-
-            info = [
-                (socket.AF_UNIX, socket.SOCK_STREAM, 0, '', self.bind_addr)]
         else:
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6
@@ -1699,8 +1719,6 @@ class HTTPServer:
 
                 info = [(sock_type, socket.SOCK_STREAM, 0, '', bind_addr)]
 
-        if not self.socket:
-            msg = 'No socket could be created'
             for res in info:
                 af, socktype, proto, canonname, sa = res
                 try:
@@ -1712,8 +1730,8 @@ class HTTPServer:
                         self.socket.close()
                     self.socket = None
 
-            if not self.socket:
-                raise socket.error(msg)
+        if not self.socket:
+            raise socket.error(msg)
 
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
@@ -1806,6 +1824,7 @@ class HTTPServer:
                 pass
 
         self.socket.bind(self.bind_addr)
+
         # TODO: keep requested bind_addr separate real bound_addr (port is
         # different in case of ephemeral port 0)
         self.bind_addr = self.socket.getsockname()
