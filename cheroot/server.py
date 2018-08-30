@@ -1666,18 +1666,6 @@ class HTTPServer:
         elif isinstance(self.bind_addr, six.string_types):
             # AF_UNIX socket
 
-            # So we can reuse the socket...
-            try:
-                os.unlink(self.bind_addr)
-            except Exception:
-                pass
-
-            # So everyone can access the socket...
-            try:
-                os.chmod(self.bind_addr, 0o777)
-            except Exception:
-                pass
-
             info = [
                 (socket.AF_UNIX, socket.SOCK_STREAM, 0, '', self.bind_addr)]
         else:
@@ -1805,7 +1793,22 @@ class HTTPServer:
                 # this machine's TCP stack
                 pass
 
+        # So we can reuse the socket...
+        try:
+            if not IS_WINDOWS and family == socket.AF_UNIX:
+                os.unlink(self.bind_addr)
+        except Exception:
+            pass
+
         self.socket.bind(self.bind_addr)
+
+        # So everyone can access the socket...
+        try:
+            if not IS_WINDOWS and family == socket.AF_UNIX:
+                os.chmod(self.bind_addr, 0o777)
+        except Exception:
+            pass
+
         # TODO: keep requested bind_addr separate real bound_addr (port is
         # different in case of ephemeral port 0)
         self.bind_addr = self.socket.getsockname()
