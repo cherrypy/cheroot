@@ -395,8 +395,8 @@ if six.PY3:
         """File object attached to a socket object."""
         # TODO: wrap these natively w/o selector func
         if 'r' in mode:
-            return io.BufferedReader(socket.SocketIO(sock, mode), bufsize)
+            return StreamReader(socket.SocketIO(sock, mode), bufsize)
         else:
-            return BufferedWriter(socket.SocketIO(sock, mode), bufsize)
+            return StreamWriter(socket.SocketIO(sock, mode), bufsize)
 else:
     StreamReader = StreamWriter = MakeFile = MakeFile_PY2
