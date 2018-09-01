@@ -1785,6 +1785,8 @@ class HTTPServer:
                 'AF_UNIX sockets are not supported under Windows.'
             )
 
+        fs_permissions = 0o777
+
         try:
             # Make possible reusing the socket...
             os.unlink(self.bind_addr)
@@ -1802,7 +1804,8 @@ class HTTPServer:
 
         try:
             # Allow everyone access the socket...
-            os.chmod(self.bind_addr, 0o777)  # TODO: allow changing mode
+            # TODO: allow changing mode
+            os.chmod(self.bind_addr, fs_permissions)
         except OSError:
             pass
 
