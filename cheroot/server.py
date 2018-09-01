@@ -1800,7 +1800,7 @@ class HTTPServer:
             family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
             nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
         )
-        sock = self.socket = self.bind_socket(sock, bind_addr)
+        sock = self.bind_socket(sock, bind_addr)
 
         try:
             # Allow everyone access the socket...
@@ -1810,6 +1810,7 @@ class HTTPServer:
             pass
 
         self.bind_addr = self.resolve_real_bind_addr(sock)
+        self.socket = sock
         return sock
 
     @staticmethod
