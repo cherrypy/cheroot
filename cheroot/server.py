@@ -1782,7 +1782,7 @@ class HTTPServer:
                 'AF_UNIX sockets are not supported under Windows.'
             )
 
-        fs_permissions = 0o777
+        fs_permissions = 0o777  # TODO: allow changing mode
 
         try:
             # Make possible reusing the socket...
@@ -1799,9 +1799,12 @@ class HTTPServer:
         )
 
         try:
+            """Linux way of pre-populating fs mode permissions."""
+            # Allow everyone access the socket...
             os.fchmod(sock.fileno(), fs_permissions)
+            FS_PERMS_SET = True
         except OSError:
-            pass
+            FS_PERMS_SET = False
 
         try:
             sock = self.bind_socket(sock, bind_addr)
@@ -1812,9 +1815,13 @@ class HTTPServer:
         bind_addr = self.resolve_real_bind_addr(sock)
 
         try:
-            # Allow everyone access the socket...
-            # TODO: allow changing mode
-            os.chmod(bind_addr, fs_permissions)
+            """FreeBSD/macOS pre-populating fs mode permissions."""
+            if not FS_PERMS_SET:
+                os.chmod(
+                    bind_addr, fs_permissions,
+                    follow_symlinks=False,
+                )
+                FS_PERMS_SET = True
         except OSError:
             pass
 
