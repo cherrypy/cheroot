@@ -154,16 +154,22 @@ class SSLConnectionProxyMeta:
         proxy_no_args = (
             'shutdown',
         )
-        for m in proxy_methods:
+
+        def lock_decorator(method):
+            """Create a proxy method for a new class."""
             def proxy_wrapper(self, *args):
                 self._lock.acquire()
                 try:
-                    new_args = args[:] if m not in proxy_no_args else []
-                    return getattr(self._ssl_conn, m)(*new_args)
+                    new_args = (
+                        args[:] if method not in proxy_no_args else []
+                    )
+                    return getattr(self._ssl_conn, method)(*new_args)
                 finally:
                     self._lock.release()
-            proxy_wrapper.__name__ = m
-            nmspc[m] = proxy_wrapper
+            return proxy_wrapper
+        for m in proxy_methods:
+            nmspc[m] = lock_decorator(m)
+            nmspc[m].__name__ = m
 
         # Doesn't work via super() for some reason.
         # Falling back to type() instead:
