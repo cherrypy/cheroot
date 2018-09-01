@@ -1809,14 +1809,16 @@ class HTTPServer:
             sock.close()
             raise
 
+        bind_addr = self.resolve_real_bind_addr(sock)
+
         try:
             # Allow everyone access the socket...
             # TODO: allow changing mode
-            os.chmod(self.bind_addr, fs_permissions)
+            os.chmod(bind_addr, fs_permissions)
         except OSError:
             pass
 
-        self.bind_addr = self.resolve_real_bind_addr(sock)
+        self.bind_addr = bind_addr
         self.socket = sock
         return sock
 
