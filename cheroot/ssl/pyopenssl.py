@@ -49,8 +49,8 @@ from .. import errors, server as cheroot_server
 from ..makefile import StreamReader, StreamWriter
 
 
-class SSLFileobjectStreamReader(StreamReader):
-    """SSL file object attached to a socket object."""
+class SSLFileobjectMixin:
+    """Base mixin for an SSL socket stream."""
 
     ssl_timeout = 3
     ssl_retry = .01
@@ -104,7 +104,7 @@ class SSLFileobjectStreamReader(StreamReader):
         """Receive message of a size from the socket."""
         return self._safe_call(
             True,
-            super(SSLFileobjectStreamReader, self).recv,
+            super(SSLFileobjectMixin, self).recv,
             size,
         )
 
@@ -112,7 +112,7 @@ class SSLFileobjectStreamReader(StreamReader):
         """Send whole message to the socket."""
         return self._safe_call(
             False,
-            super(SSLFileobjectStreamReader, self).sendall,
+            super(SSLFileobjectMixin, self).sendall,
             *args, **kwargs
         )
 
@@ -120,85 +120,17 @@ class SSLFileobjectStreamReader(StreamReader):
         """Send some part of message to the socket."""
         return self._safe_call(
             False,
-            super(SSLFileobjectStreamReader, self).send,
+            super(SSLFileobjectMixin, self).send,
             *args, **kwargs
         )
 
 
-class SSLFileobjectStreamWriter(StreamWriter):
+class SSLFileobjectStreamReader(SSLFileobjectMixin, StreamReader):
     """SSL file object attached to a socket object."""
 
-    ssl_timeout = 3
-    ssl_retry = .01
 
-    def _safe_call(self, is_reader, call, *args, **kwargs):
-        """Wrap the given call with SSL error-trapping.
-
-        is_reader: if False EOF errors will be raised. If True, EOF errors
-        will return "" (to emulate normal sockets).
-        """
-        start = time.time()
-        while True:
-            try:
-                return call(*args, **kwargs)
-            except SSL.WantReadError:
-                # Sleep and try again. This is dangerous, because it means
-                # the rest of the stack has no way of differentiating
-                # between a "new handshake" error and "client dropped".
-                # Note this isn't an endless loop: there's a timeout below.
-                time.sleep(self.ssl_retry)
-            except SSL.WantWriteError:
-                time.sleep(self.ssl_retry)
-            except SSL.SysCallError as e:
-                if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ''
-
-                errnum = e.args[0]
-                if is_reader and errnum in errors.socket_errors_to_ignore:
-                    return ''
-                raise socket.error(errnum)
-            except SSL.Error as e:
-                if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ''
-
-                thirdarg = None
-                try:
-                    thirdarg = e.args[0][0][2]
-                except IndexError:
-                    pass
-
-                if thirdarg == 'http request':
-                    # The client is talking HTTP to an HTTPS server.
-                    raise errors.NoSSLError()
-
-                raise errors.FatalSSLAlert(*e.args)
-
-            if time.time() - start > self.ssl_timeout:
-                raise socket.timeout('timed out')
-
-    def recv(self, size):
-        """Receive message of a size from the socket."""
-        return self._safe_call(
-            True,
-            super(SSLFileobjectStreamWriter, self).recv,
-            size,
-        )
-
-    def sendall(self, *args, **kwargs):
-        """Send whole message to the socket."""
-        return self._safe_call(
-            False,
-            super(SSLFileobjectStreamWriter, self).sendall,
-            *args, **kwargs
-        )
-
-    def send(self, *args, **kwargs):
-        """Send some part of message to the socket."""
-        return self._safe_call(
-            False,
-            super(SSLFileobjectStreamWriter, self).send,
-            *args, **kwargs
-        )
+class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
+    """SSL file object attached to a socket object."""
 
 
 class SSLConnection:
