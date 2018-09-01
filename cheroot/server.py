@@ -1666,40 +1666,11 @@ class HTTPServer:
             self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
         elif isinstance(self.bind_addr, six.string_types):
             # AF_UNIX socket
-
-            if IS_WINDOWS:
-                # Trying to access socket.AF_UNIX under Windows
-                # causes an AttributeError
-                raise ValueError(  # or RuntimeError?
-                    'AF_UNIX sockets are not supported under Windows.'
-                )
-
-            # So we can reuse the socket...
             try:
-                os.unlink(self.bind_addr)
-            except OSError:
-                """
-                File does not exist, which is the primary goal anyway.
-                """
-
-            # TODO: call bind here
-            af, socktype, proto, sa = (
-                socket.AF_UNIX, socket.SOCK_STREAM, 0, self.bind_addr
-            )
-            try:
-                self.bind(af, socktype, proto)
+                self.bind_unix_socket(self.bind_addr)
             except socket.error as serr:
-                msg = '%s -- (%s: %s)' % (msg, sa, serr)
-                if self.socket:
-                    self.socket.close()
-                self.socket = None
+                msg = '%s -- (%s: %s)' % (msg, self.bind_addr, serr)
                 six.raise_from(socket.error(msg), serr)
-
-            # So everyone can access the socket...
-            try:
-                os.chmod(self.bind_addr, 0o777)  # TODO: allow changing mode
-            except OSError:
-                pass
         else:
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6
@@ -1798,6 +1769,46 @@ class HTTPServer:
         )
         sock = self.socket = self.bind_socket(sock, self.bind_addr)
         self.bind_addr = self.resolve_real_bind_addr(sock)
+        return sock
+
+    def bind_unix_socket(self, bind_addr):
+        """Create (or recreate) a UNIX socket object."""
+        if IS_WINDOWS:
+            """
+            Trying to access socket.AF_UNIX under Windows
+            causes an AttributeError.
+            """
+            raise ValueError(  # or RuntimeError?
+                'AF_UNIX sockets are not supported under Windows.'
+            )
+
+        try:
+            # Make possible reusing the socket...
+            os.unlink(self.bind_addr)
+        except OSError:
+            """
+            File does not exist, which is the primary goal anyway.
+            """
+
+        sock = self.prepare_socket(
+            bind_addr=bind_addr,
+            family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
+            nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
+        )
+        try:
+            sock = self.bind_socket(sock, bind_addr)
+        except socket.error:
+            sock.close()
+            raise
+
+        try:
+            # Allow everyone access the socket...
+            os.chmod(self.bind_addr, 0o777)  # TODO: allow changing mode
+        except OSError:
+            pass
+
+        self.bind_addr = self.resolve_real_bind_addr(sock)
+        self.socket = sock
         return sock
 
     @staticmethod
