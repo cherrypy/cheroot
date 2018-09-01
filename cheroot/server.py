@@ -1846,8 +1846,8 @@ class HTTPServer:
     @staticmethod
     def resolve_real_bind_addr(socket_):
         """Retrieve actual bind addr from bound socket."""
-        # TODO: keep requested bind_addr separate real bound_addr (port is
-        # different in case of ephemeral port 0)
+        # FIXME: keep requested bind_addr separate real bound_addr (port
+        # is different in case of ephemeral port 0)
         bind_addr = socket_.getsockname()
         if socket_.family in (
             # Windows doesn't have socket.AF_UNIX, so not using it in check
