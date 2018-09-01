@@ -1792,18 +1792,16 @@ class HTTPServer:
             File does not exist, which is the primary goal anyway.
             """
 
+        sock = self.prepare_socket(
+            bind_addr=bind_addr,
+            family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
+            nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
+        )
         try:
-            sock = self.prepare_socket(
-                bind_addr=bind_addr,
-                family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
-                nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
-            )
             sock = self.bind_socket(sock, bind_addr)
         except socket.error:
-            try:
-                sock.close()
-            except NameError:
-                """Socket didn't get initialized."""
+            sock.close()
+            raise
 
         try:
             # Allow everyone access the socket...
