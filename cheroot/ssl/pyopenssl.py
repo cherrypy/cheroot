@@ -38,6 +38,8 @@ import socket
 import threading
 import time
 
+import six
+
 try:
     from OpenSSL import SSL
     from OpenSSL import crypto
@@ -133,6 +135,38 @@ class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
     """SSL file object attached to a socket object."""
 
 
+class SSLConnectionProxyMeta:
+    """Metaclass for generating a bunch of proxy methods."""
+
+    def __new__(mcl, name, bases, nmspc):
+        """Attach a list of proxy methods to a new class."""
+        proxy_methods = (
+            'get_context', 'pending', 'send', 'write', 'recv', 'read',
+            'renegotiate', 'bind', 'listen', 'connect', 'accept',
+            'setblocking', 'fileno', 'close', 'get_cipher_list',
+            'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
+            'makefile', 'get_app_data', 'set_app_data', 'state_string',
+            'sock_shutdown', 'get_peer_certificate', 'want_read',
+            'want_write', 'set_connect_state', 'set_accept_state',
+            'connect_ex', 'sendall', 'settimeout', 'gettimeout',
+            'shutdown',
+        )
+        for m in proxy_methods:
+            def proxy_wrapper(self, *args):
+                self._lock.acquire()
+                try:
+                    return getattr(self._ssl_conn, m)(*args)
+                finally:
+                    self._lock.release()
+            proxy_wrapper.__name__ = m
+            nmspc[m] = proxy_wrapper
+
+        # Doesn't work via super() for some reason.
+        # Falling back to type() instead:
+        return type(name, bases, nmspc)
+
+
+@six.add_metaclass(SSLConnectionProxyMeta)
 class SSLConnection:
     """A thread-safe wrapper for an SSL.Connection.
 
@@ -143,33 +177,6 @@ class SSLConnection:
         """Initialize SSLConnection instance."""
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
-
-    for f in ('get_context', 'pending', 'send', 'write', 'recv', 'read',
-              'renegotiate', 'bind', 'listen', 'connect', 'accept',
-              'setblocking', 'fileno', 'close', 'get_cipher_list',
-              'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
-              'makefile', 'get_app_data', 'set_app_data', 'state_string',
-              'sock_shutdown', 'get_peer_certificate', 'want_read',
-              'want_write', 'set_connect_state', 'set_accept_state',
-              'connect_ex', 'sendall', 'settimeout', 'gettimeout'):
-        exec("""def %s(self, *args):
-        self._lock.acquire()
-        try:
-            return self._ssl_conn.%s(*args)
-        finally:
-            self._lock.release()
-""" % (f, f))
-
-    def shutdown(self, *args):
-        """Shutdown the SSL connection.
-
-        Ignore all incoming args since pyOpenSSL.socket.shutdown takes no args.
-        """
-        self._lock.acquire()
-        try:
-            return self._ssl_conn.shutdown()
-        finally:
-            self._lock.release()
 
 
 class pyOpenSSLAdapter(Adapter):
