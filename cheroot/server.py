@@ -1682,14 +1682,10 @@ class HTTPServer:
                 File does not exist, which is the primary goal anyway.
                 """
 
-            # TODO: call bind here
-            af, socktype, proto, sa = (
-                socket.AF_UNIX, socket.SOCK_STREAM, 0, self.bind_addr
-            )
             try:
-                self.bind(af, socktype, proto)
+                self.bind_unix_socket(self.bind_addr)
             except socket.error as serr:
-                msg = '%s -- (%s: %s)' % (msg, sa, serr)
+                msg = '%s -- (%s: %s)' % (msg, self.bind_addr, serr)
                 if self.socket:
                     self.socket.close()
                 self.socket = None
@@ -1797,6 +1793,17 @@ class HTTPServer:
             self.nodelay, self.ssl_adapter,
         )
         sock = self.socket = self.bind_socket(sock, self.bind_addr)
+        self.bind_addr = self.resolve_real_bind_addr(sock)
+        return sock
+
+    def bind_unix_socket(self, bind_addr):
+        """Create (or recreate) a UNIX socket object."""
+        sock = self.prepare_socket(
+            bind_addr=bind_addr,
+            family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
+            nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
+        )
+        sock = self.socket = self.bind_socket(sock, bind_addr)
         self.bind_addr = self.resolve_real_bind_addr(sock)
         return sock
 
