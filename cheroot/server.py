@@ -1670,9 +1670,6 @@ class HTTPServer:
                 self.bind_unix_socket(self.bind_addr)
             except socket.error as serr:
                 msg = '%s -- (%s: %s)' % (msg, self.bind_addr, serr)
-                if self.socket:
-                    self.socket.close()
-                self.socket = None
                 six.raise_from(socket.error(msg), serr)
         else:
             # AF_INET or AF_INET6 socket
@@ -1795,12 +1792,18 @@ class HTTPServer:
             File does not exist, which is the primary goal anyway.
             """
 
-        sock = self.prepare_socket(
-            bind_addr=bind_addr,
-            family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
-            nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
-        )
-        sock = self.bind_socket(sock, bind_addr)
+        try:
+            sock = self.prepare_socket(
+                bind_addr=bind_addr,
+                family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
+                nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
+            )
+            sock = self.bind_socket(sock, bind_addr)
+        except socket.error:
+            try:
+                sock.close()
+            except NameError:
+                """Socket didn't get initialized."""
 
         try:
             # Allow everyone access the socket...
