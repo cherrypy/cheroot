@@ -151,11 +151,15 @@ class SSLConnectionProxyMeta:
             'connect_ex', 'sendall', 'settimeout', 'gettimeout',
             'shutdown',
         )
+        proxy_no_args = (
+            'shutdown',
+        )
         for m in proxy_methods:
             def proxy_wrapper(self, *args):
                 self._lock.acquire()
                 try:
-                    return getattr(self._ssl_conn, m)(*args)
+                    new_args = args[:] if m not in proxy_no_args else []
+                    return getattr(self._ssl_conn, m)(*new_args)
                 finally:
                     self._lock.release()
             proxy_wrapper.__name__ = m
