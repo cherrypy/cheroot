@@ -1797,6 +1797,12 @@ class HTTPServer:
             family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
             nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
         )
+
+        try:
+            os.fchmod(sock.fileno(), fs_permissions)
+        except OSError:
+            pass
+
         try:
             sock = self.bind_socket(sock, bind_addr)
         except socket.error:
