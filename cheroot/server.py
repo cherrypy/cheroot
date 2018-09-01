@@ -1791,20 +1791,32 @@ class HTTPServer:
 
     def bind(self, family, type, proto=0):
         """Create (or recreate) the actual socket object."""
-        self.socket = socket.socket(family, type, proto)
-        prevent_socket_inheritance(self.socket)
+        sock = self.prepare_socket(
+            self.bind_addr,
+            family, type, proto,
+            self.nodelay, self.ssl_adapter,
+        )
+        sock = self.socket = self.bind_socket(sock, self.bind_addr)
+        self.bind_addr = self.resolve_real_bind_addr(sock)
+        return sock
+
+    @staticmethod
+    def prepare_socket(bind_addr, family, type, proto, nodelay, ssl_adapter):
+        """Create and prepare the socket object."""
+        sock = socket.socket(family, type, proto)
+        prevent_socket_inheritance(sock)
         if not IS_WINDOWS:
             # Windows has different semantics for SO_REUSEADDR,
             # so don't set it.
             # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if self.nodelay and not isinstance(self.bind_addr, str):
-            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if nodelay and not isinstance(bind_addr, str):
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
-        if self.ssl_adapter is not None:
-            self.socket = self.ssl_adapter.bind(self.socket)
+        if ssl_adapter is not None:
+            sock = ssl_adapter.bind(sock)
 
-        host, port = self.bind_addr[:2]
+        host, port = bind_addr[:2]
 
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See
@@ -1816,19 +1828,28 @@ class HTTPServer:
         )
         if listening_ipv6:
             try:
-                self.socket.setsockopt(
+                sock.setsockopt(
                     socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             except (AttributeError, socket.error):
                 # Apparently, the socket option is not available in
                 # this machine's TCP stack
                 pass
 
-        self.socket.bind(self.bind_addr)
+        return sock
 
+    @staticmethod
+    def bind_socket(socket_, bind_addr):
+        """Bind the socket to given interface."""
+        socket_.bind(bind_addr)
+        return socket_
+
+    @staticmethod
+    def resolve_real_bind_addr(socket_):
+        """Retrieve actual bind addr from bound socket."""
         # TODO: keep requested bind_addr separate real bound_addr (port is
         # different in case of ephemeral port 0)
-        self.bind_addr = self.socket.getsockname()
-        if family in (
+        bind_addr = socket_.getsockname()
+        if socket_.family in (
             # Windows doesn't have socket.AF_UNIX, so not using it in check
             socket.AF_INET,
             socket.AF_INET6,
@@ -1837,7 +1858,8 @@ class HTTPServer:
 
             In case of bytes with a leading null-byte it's an abstract socket.
             """
-            self.bind_addr = self.bind_addr[:2]
+            return bind_addr[:2]
+        return bind_addr
 
     def tick(self):
         """Accept a new connection and put it on the Queue."""
