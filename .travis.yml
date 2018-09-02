@@ -1,6 +1,6 @@
 conditions: v1
 
-dist: xenial
+dist: trusty
 sudo: false
 language: python
 
@@ -9,7 +9,6 @@ python:
 - 3.4
 - 3.5
 - 3.6
-- &latest_py3 3.7
 - &pypy2 pypy2.7-5.10.0
 - &pypy3 pypy3.5-5.10.1
 
