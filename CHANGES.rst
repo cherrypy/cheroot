@@ -1,3 +1,10 @@
+v6.5.1
+======
+- :issue:`93` via :pr:`110`: Improve UNIX socket fs access mode
+  in :py:meth:`cheroot.server.HTTPServer.prepare` on a file socket
+  when starting to listen to it.
+
+
 v6.5.0
 ======
 
