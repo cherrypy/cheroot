@@ -3,12 +3,7 @@
 
 # Project skeleton maintained at https://github.com/jaraco/skeleton
 
-import io
-
 import setuptools
-
-with io.open('README.rst', encoding='utf-8') as readme:
-    long_description = readme.read()
 
 name = 'cheroot'
 description = 'Highly-optimized, pure-python HTTP server'
@@ -27,7 +22,6 @@ params = dict(
     author='CherryPy Team',
     author_email='team@cherrypy.org',
     description=description or name,
-    long_description=long_description,
     url=repo_url,
     project_urls={
         'CI: AppVeyor': 'https://ci.appveyor.com/project/{}'.format(repo_slug),
@@ -50,20 +44,15 @@ params = dict(
         'more_itertools>=2.6',
     ],
     extras_require={
-        'docs': [
-            'sphinx',
-            'rst.linker>=1.9',
-            'jaraco.packaging>=3.2',
-
-            'docutils',
-            'alabaster',
-
-            'collective.checkdocs',
-        ],
         'testing': [
+            # upstream
+            'pytest>=3.5,!=3.7.3',
+            'pytest-sugar>=0.9.1',
+            'collective.checkdocs',
+            'pytest-flake8',
+
+            # local
             'ddt',
-            'pytest>=2.8',
-            'pytest-sugar',
             'pytest-testmon>=0.9.7',
             'pytest-watch',
 
@@ -74,6 +63,16 @@ params = dict(
 
             'pytest-cov',
             'backports.unittest_mock',
+        ],
+        'docs': [
+            # upstream
+            'sphinx',
+            'jaraco.packaging>=3.2',
+            'rst.linker>=1.9',
+
+            # local
+            'docutils',
+            'alabaster',
         ],
     },
     setup_requires=[
