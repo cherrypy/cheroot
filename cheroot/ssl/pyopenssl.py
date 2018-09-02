@@ -155,6 +155,10 @@ class SSLConnectionProxyMeta:
             'shutdown',
         )
 
+        proxy_props = (
+            'family',
+        )
+
         def lock_decorator(method):
             """Create a proxy method for a new class."""
             def proxy_wrapper(self, *args):
@@ -170,6 +174,15 @@ class SSLConnectionProxyMeta:
         for m in proxy_methods:
             nmspc[m] = lock_decorator(m)
             nmspc[m].__name__ = m
+
+        def make_property(property_):
+            """Create a proxy method for a new class."""
+            def proxy_prop_wrapper(self):
+                return getattr(self._ssl_conn, property_)
+            proxy_prop_wrapper.__name__ = property_
+            return property(proxy_prop_wrapper)
+        for p in proxy_props:
+            nmspc[p] = make_property(p)
 
         # Doesn't work via super() for some reason.
         # Falling back to type() instead:
