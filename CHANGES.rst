@@ -13,7 +13,6 @@ v6.5.1
   in :py:meth:`cheroot.server.HTTPServer.prepare` on a file socket
   when starting to listen to it.
 
-
 v6.5.0
 ======
 
