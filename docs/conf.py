@@ -41,6 +41,7 @@ extlinks = {
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
+    'python2': ('https://docs.python.org/2', None),
     'cherrypy': ('https://docs.cherrypy.org/en/latest/', None),
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
 }
