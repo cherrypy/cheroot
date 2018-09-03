@@ -1,3 +1,12 @@
+v6.5.2
+======
+- :issue:`6` via :pr:`109`: Fix import of
+  :py:mod:`cheroot.ssl.pyopenssl` by refactoring and separating
+  :py:mod:`cheroot.makefile`'s stream wrappers.
+
+- :issue:`95` via :pr:`109`: Add initial tests for SSL layer with use
+  of :py:mod:`trustme`
+
 v6.5.1
 ======
 - :issue:`93` via :pr:`110`: Improve UNIX socket fs access mode
