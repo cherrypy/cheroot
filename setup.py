@@ -51,18 +51,21 @@ params = dict(
     ],
     extras_require={
         'docs': [
+            # upstream
             'sphinx',
             'rst.linker>=1.9',
             'jaraco.packaging>=3.2',
 
+            # local
             'docutils',
             'alabaster',
 
-            'collective.checkdocs',
+            'collective.checkdocs',  # needed for setup-check tox env
         ],
         'testing': [
+            'ddt',
             'pytest>=2.8',
-            'pytest-sugar',
+            'pytest-sugar>=0.9.1',
             'pytest-testmon>=0.9.7',
             'pytest-watch',
 
@@ -73,6 +76,10 @@ params = dict(
 
             'pytest-cov',
             'backports.unittest_mock',
+
+            # TLS
+            'trustme>=0.4.0',
+            'pyopenssl',
         ],
     },
     setup_requires=[

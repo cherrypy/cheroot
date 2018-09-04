@@ -162,7 +162,6 @@ jobs:
         secure: RAfz06AINvz7bfij/YhfkAreRqamgxS8a6jSRNxntYhtJke3ZszUbIDag8+n1I+G5XT2LnMhHqPNR7Plc+AeMz7VXTuy+b81Li5kse20NYlPhd7mBVmTUpXtqYQashV5J39F4qkATBLznCOrMEomM07VTXjO/o2hmQuXniab2Uo=
       distributions: dists
       skip_cleanup: true
-      skip_upload_docs: true
 
 cache:
   pip: true
@@ -173,7 +172,7 @@ cache:
   - $HOME/Library/Caches/Homebrew
 
 install:
-- python -m pip install tox "setuptools>=28.2"
+- python -m pip install tox tox-venv
 - python -m tox --notest  # Pre-populate a virtualenv with dependencies
 
 script:
