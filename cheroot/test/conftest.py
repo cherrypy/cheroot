@@ -8,6 +8,8 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import pytest
+import pyriform
+from webtest import TestApp
 
 from ..testing import (  # noqa: F401
     native_server, wsgi_server,
@@ -25,3 +27,9 @@ def wsgi_server_client(wsgi_server):
 def native_server_client(native_server):
     """Create a test client out of given HTTP server."""
     return get_server_client(native_server)
+
+
+@pytest.fixture
+def wsgi_adapter(wsgi_server):
+    app = TestApp("http://{}:{}".format(*wsgi_server.bind_addr))
+    return pyriform.WSGIAdapter(app)
