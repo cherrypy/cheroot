@@ -21,10 +21,17 @@ NO_INTERFACE = None  # Using this or '' will cause an exception
 ANY_INTERFACE_IPV4 = '0.0.0.0'
 ANY_INTERFACE_IPV6 = '::'
 
+
+def my_crazy_app(environ, start_response):
+    status = '200 OK'
+    response_headers = [('Content-type', 'text/plain')]
+    start_response(status, response_headers)
+    return [b'Hello crazy world!']
+
 config = {
     cheroot.wsgi.Server: {
         'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
-        'wsgi_app': None,
+        'wsgi_app': my_crazy_app,
     },
     cheroot.server.HTTPServer: {
         'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
@@ -42,7 +49,8 @@ def cheroot_server(server_factory):
         try:
             actual_bind_addr = (interface, bind_port)
             httpserver = server_factory(  # create it
-                bind_addr=actual_bind_addr,
+                actual_bind_addr,
+                conf.pop('wsgi_app', None),
                 **conf
             )
         except OSError:
