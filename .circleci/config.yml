@@ -36,6 +36,8 @@ jobs:
     - run: tox -e py27,py34,py35,py36,py37,pypy3 -- -p no:sugar
 
   linux-build:
+    parallelism: 4
+
     docker:
     - image: randomknowledge/docker-pyenv-tox
 
