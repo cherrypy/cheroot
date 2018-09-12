@@ -145,3 +145,8 @@ class ClientCertIgnoredTests(HTTPSTestBase, helper.CherootWebCase):
     def test_allow(self, client_cert):
         """Test that the given client cert is allowed to connect."""
         self.assert_allowed(client_cert)
+
+class TestClientCertOptional(object):
+
+    def test_one(self, crazy_wsgi_session):
+        assert 1 == 1
