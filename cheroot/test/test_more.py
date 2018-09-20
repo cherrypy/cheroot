@@ -6,8 +6,8 @@ from cheroot.ssl.builtin import BuiltinSSLAdapter
 
 def ssl_file(filename):
     """Return path to given ssl file."""
-    return os.path.join('test', 'ssl', filename)
-    #return os.path.join('cheroot', 'test', 'ssl', filename)
+    #return os.path.join('test', 'ssl', filename)
+    return os.path.join('cheroot', 'test', 'ssl', filename)
 
 @pytest.fixture
 def SSLAdapter(request):
@@ -53,4 +53,5 @@ def test_cheroot_wsgi_https(SSLAdapter, client_cert_file, make_session_for_chero
     if allowed is True:
         assert resp.status_code == 200
     else:
+        # pyriform eats the exception raised by WebTest.TestApp
         assert resp.status_code == 502

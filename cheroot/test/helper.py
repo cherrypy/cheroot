@@ -31,6 +31,7 @@ config = {
     'wsgi_app': None,
 }
 
+
 class CherootWebCase(webtest.WebCase):
     """Helper class for a web app test suite."""
 

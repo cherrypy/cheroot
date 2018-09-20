@@ -34,19 +34,6 @@ def native_server_client(native_server):
 
 
 @pytest.fixture
-def wsgi_adapter(wsgi_server):
-    # instruct TestApp to configure the WSGIProxy to use requests instead of httplib
-    app = TestApp("http://localhost:{}#requests".format(wsgi_server.bind_addr[1]))
-    return pyriform.WSGIAdapter(app)
-
-@pytest.fixture
-def wsgi_adapter_session(wsgi_adapter):
-    session = requests.Session()
-    session.mount('http://', adapter)
-    return session
-
-
-@pytest.fixture
 def make_session_for_cheroot(wsgi_server):
     '''
     Get a factory function to create a pyriform adapter that links a
