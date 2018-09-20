@@ -7,7 +7,6 @@ itself, useless for end-users' app testing.
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-import ssl
 import pytest
 import pyriform
 from webtest import TestApp
@@ -90,6 +89,7 @@ def make_session_for_cheroot(wsgi_server):
             # Note, in order for this to work, wsgiproxy's httplib wrapper needs some work to split the
             # client args into HTTPSConnection args and HTTPSConnection request args.
             from wsgiproxy import HostProxy
+            import ssl
             client_ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=ssl_adapter.certificate_chain)
             if client_cert is not None and client_key is not None:
                 client_ctx.load_cert_chain(certfile=client_cert, keyfile=client_key)
