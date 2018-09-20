@@ -53,21 +53,29 @@ def make_session_for_cheroot(wsgi_server):
     requests session to a wsgi_server fixture.  This is done by
     having a WebTest TestApp use WSGIProxy2 to use an http library
     to proxy directly to the given URL (for the web server -- in this
-    case the wsgi_server is the web server).  The httplib client doesn't
-    seem to handle a wsgi_server with an ssl_adapter other than None or a
-    webserver that is accessible via https.
+    case the wsgi_server is the web server).
 
     :param wsgi_server:
-    :return: yields a function to create a pyriform session that directly
-             is proxied to the wsgi_server.  Depending on the args to the
-             yielded function, https can be enabled for the wsgi_server,
+    :return: yields a function to create a pyriform session that is proxied to the wsgi_server.
+             Depending on the args to the yielded function, https can be enabled for the wsgi_server,
              the wsgi_server can be mounted at a location other than 'http://',
              and the http client used by the proxy object can be changed.
     '''
 
     saved_ssl_adapter = wsgi_server.ssl_adapter
 
-    def _make_session(prefix="http://", ssl_adapter=None, test_app_client="requests"):
+    def _make_session(prefix="http://", ssl_adapter=None, test_app_client="requests", client_cert=None, client_key=None):
+        '''
+
+        :param prefix: URL prefix (or protocol or scheme);
+        :param ssl_adapter: replace, for the life of the current test, the wsgi_server's ssl_adapter
+        :param test_app_client: the client module used by the wsgiproxy.HostProxy for TestApp to proxy to a real URL.
+              The supported clients are ['requests', 'httplib', 'urllib3']
+        :param client_cert: the path to the client SSL certificate or None (for mutual authentication)
+        :param client_key: the path to the client private key or None
+        :return: pyriform session linked to a TestApp object that proxies requests (for the given prefix)
+            to the wsgi_server using the URL prefix, localhost, and the bound port of the wsgi_server
+        '''
         scheme = "http"
         assert prefix.startswith("http")
         if prefix.startswith("https"):
@@ -77,46 +85,34 @@ def make_session_for_cheroot(wsgi_server):
         wsgi_server.ssl_adapter = ssl_adapter
 
         app = TestApp("{}://localhost:{}#{}".format(scheme, wsgi_server.bind_addr[1], test_app_client))
-        return pyriform.make_session(app, prefix)
+
+        my_session = requests.Session()
+        my_session.verify = ssl_adapter.certificate_chain
+        if client_cert is not None and client_key is not None:
+            my_session.cert = (client_cert, client_key)
+
+        # A couple of issues:
+        # The constructor for WebTest.TestApp doesn't have a way to pass args to the wsgiproxy.HostProxy constructor
+        # The pyriform requests adaptor eats the request verify and cert args as it isn't trivial to pass
+        # such args to an instant of WebTest.TestApp
+        if scheme == "https" and test_app_client == "requests":
+            from wsgiproxy import HostProxy
+            url = "{}://localhost:{}".format(scheme, wsgi_server.bind_addr[1])
+            app.app = HostProxy(url, client="requests", verify=my_session.verify, cert=my_session.cert)
+        elif scheme == "https" and test_app_client == "httplib":
+            # Note, in order for this to work, wsgiproxy's httplib wrapper needs some work to split the
+            # client args into HTTPSConnection args and HTTPSConnection request args.
+            from wsgiproxy import HostProxy
+            client_ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=ssl_adapter.certificate_chain)
+            if client_cert is not None and client_key is not None:
+                client_ctx.load_cert_chain(certfile=client_cert, keyfile=client_key)
+            client_ctx.check_hostname = True
+            url = "{}://localhost:{}".format(scheme, wsgi_server.bind_addr[1])
+            app.app = HostProxy(url, client="httplib", context=client_ctx)
+
+        my_session.mount(prefix, pyriform.WSGIAdapter(app))
+        return my_session
 
     yield _make_session
 
     wsgi_server.ssl_adapter = saved_ssl_adapter
-
-
-@pytest.fixture
-def crazy_wsgi_session(wsgi_server):
-    my_test_app = TestApp("http://127.0.0.1:{}".format(wsgi_server.bind_addr[1]))
-    adapter = pyriform.WSGIAdapter(my_test_app)
-
-    # helpful to debug .....
-#    my_test_app.get("http://127.0.0.1:{}/".format(wsgi_server.bind_addr[1]))
-
-    session = requests.Session()
-    session.mount('http://crazy_app/', adapter)
-    resp = session.get('http://crazy_app/')
-    print(resp.text)
-    return session
-
-@pytest.fixture
-def crazy_wsgi_https_session(wsgi_server):
-    ssl_adapter = BuiltinSSLAdapter(
-        certificate='test/ssl/server.cert',
-        private_key='test/ssl/server.key',
-        certificate_chain='test/ssl/ca.cert'
-    )
-    ssl_adapter.context.verify_mode = ssl.CERT_NONE
-    wsgi_server.ssl_adapter = ssl_adapter
-    # instruct TestApp to configure the WSGIProxy to use requests instead of httplib
-    my_test_app = TestApp("https://localhost:{}#requests".format(wsgi_server.bind_addr[1]))
-    adapter = pyriform.WSGIAdapter(my_test_app)
-    print ("adapter:", dir(adapter))
-
-    # helpful to debug .....
-    my_test_app.get("https://127.0.0.1:{}/".format(wsgi_server.bind_addr[1]))
-
-    session = requests.Session()
-    session.mount('https://crazy_app2/', adapter)
-    resp = session.get('https://crazy_app2/')
-    print(resp.text)
-    return session
