@@ -69,6 +69,7 @@ params = dict(
             'pytest-testmon>=0.9.7',
             'pytest-watch',
             'pyriform',
+            'WSGIProxy2',
 
             # measure test coverage
             'coverage',
