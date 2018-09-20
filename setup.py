@@ -68,6 +68,7 @@ params = dict(
             'pytest-sugar>=0.9.1',
             'pytest-testmon>=0.9.7',
             'pytest-watch',
+            'pyriform',
 
             # measure test coverage
             'coverage',
