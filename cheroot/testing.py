@@ -11,6 +11,7 @@ import time
 
 import pytest
 from six.moves import http_client
+import trustme
 
 import cheroot.server
 from cheroot.test import webtest
@@ -81,6 +82,15 @@ def native_server():
     """Set up and tear down a Cheroot HTTP server instance."""
     for srv in cheroot_server(cheroot.server.HTTPServer):
         yield srv
+
+
+@pytest.fixture(scope='module')
+def root_CA():
+    return trustme.CA()
+
+
+# Note: although the docs for trustme imply that there is a "create_child_ca()" function, there isn't one as far as
+# I know for trustme 0.4.0
 
 
 class _TestClient:

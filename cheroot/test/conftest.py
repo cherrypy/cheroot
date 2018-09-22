@@ -15,7 +15,7 @@ import requests
 from cheroot.ssl.builtin import BuiltinSSLAdapter
 
 from ..testing import (  # noqa: F401
-    native_server, wsgi_server,
+    native_server, wsgi_server, root_CA,
 )
 from ..testing import get_server_client
 
@@ -50,7 +50,7 @@ def make_session_for_cheroot(wsgi_server):
 
     saved_ssl_adapter = wsgi_server.ssl_adapter
 
-    def _make_session(prefix="http://", ssl_adapter=None, test_app_client="requests", client_cert=None, client_key=None):
+    def _make_session(hostname, prefix="http://", ssl_adapter=None, test_app_client="requests", client_cert=None, client_key=None):
         '''
 
         :param prefix: URL prefix (or protocol or scheme);
@@ -70,7 +70,7 @@ def make_session_for_cheroot(wsgi_server):
 
         wsgi_server.ssl_adapter = ssl_adapter
 
-        app = TestApp("{}://localhost:{}#{}".format(scheme, wsgi_server.bind_addr[1], test_app_client))
+        app = TestApp("{}://{}:{}#{}".format(scheme, hostname, wsgi_server.bind_addr[1], test_app_client))
 
         my_session = requests.Session()
         my_session.verify = ssl_adapter.certificate_chain
