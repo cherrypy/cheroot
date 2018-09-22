@@ -39,10 +39,10 @@ def client_cert_files(request, root_CA, tmpdir):
 
     cert_type = request.param
     cert_type_to_args = {
-        "client":            ["localhost", "127.0.0.1", "::1"],
-        "client_ip":         ["127.0.0.1", "::1"],
-        "client_wildcard":   ["*.localhost"],
-        "client_wrong_host": ["cherrypy.org", "github.com"],
+        "client":            [u"localhost", u"127.0.0.1", u"::1"],
+        "client_ip":         [u"127.0.0.1", u"::1"],  # as far as I know, testme doesn't respect only ips for local host
+        "client_wildcard":   [u"*.localhost"],
+        "client_wrong_host": [u"cherrypy.org", u"github.com"],
     }
 
     client_cert = None
