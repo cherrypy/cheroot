@@ -1,5 +1,6 @@
 """Test suite for ``cheroot.errors``."""
 
+import os
 import pytest
 
 from cheroot import errors
@@ -12,7 +13,7 @@ from cheroot import errors
         (
             ('EPROTOTYPE', 'EAGAIN', 'EWOULDBLOCK',
              'WSAEWOULDBLOCK', 'EPIPE'),
-            [91, 11, 32]
+            [32, 10041, 11, 10035] if os.name == 'nt' else [91, 11, 32]
         ),
     ),
 )
