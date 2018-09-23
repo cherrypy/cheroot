@@ -3,6 +3,7 @@ import itertools
 import collections
 import pytest
 import requests
+import six
 import ssl
 import trustme
 from cheroot.ssl.builtin import BuiltinSSLAdapter
@@ -39,7 +40,7 @@ def client_cert_files(request, root_CA, tmpdir):
 
     cert_type = request.param
     cert_type_to_args = {
-        "client":            [u"localhost", u"127.0.0.1", u"::1"],
+        "client":            six.text_type(["localhost", "127.0.0.1", "::1"]),
         "client_ip":         [u"127.0.0.1", u"::1"],  # as far as I know, testme doesn't respect only ips for local host
         "client_wildcard":   [u"*.localhost"],
         "client_wrong_host": [u"cherrypy.org", u"github.com"],
