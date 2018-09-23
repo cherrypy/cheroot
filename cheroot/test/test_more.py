@@ -11,7 +11,7 @@ from cheroot.ssl.builtin import BuiltinSSLAdapter
 def SSLAdapter(root_CA, tmpdir_factory):
     server_cert = root_CA.issue_server_cert(u"localhost", u"127.0.0.1", u"::1")
 
-    #server_dir = tmpdir_factory.mktemp("server")
+    server_dir = tmpdir_factory.mktemp("server")
     server_cert_file = server_dir.join("server.cert")
     server_cert_file.write(server_cert.cert_chain_pems[0].bytes())
     server_pkey_file = server_dir.join("server_pkey")
@@ -47,7 +47,8 @@ def client_cert_files(request, root_CA, tmpdir):
     client_cert = None
     if cert_type == "client_wrong_ca":
         another_CA = trustme.CA()
-        client_cert = another_CA.issue_server_cert(*cert_type_to_args["client"])
+        client_cert = \
+            another_CA.issue_server_cert(*cert_type_to_args["client"])
     elif cert_type in cert_type_to_args:
         client_cert = root_CA.issue_server_cert(*cert_type_to_args[cert_type])
 
@@ -60,35 +61,17 @@ def client_cert_files(request, root_CA, tmpdir):
     return CertKeyPair(str(client_cert_file), str(client_pkey_file), cert_type)
 
 
-#@pytest.mark.parametrize('SSLAdapter',
-#    [ssl.CERT_REQUIRED, ssl.CERT_OPTIONAL, ssl.CERT_NONE], indirect=True)
-#@pytest.mark.parametrize('client_cert_files',
-#    ['client', 'client_ip', 'client_wildcard', 'client_wrong_host',
-#    'client_wrong_ca', None], indirect=True)
-#def test_cheroot_wsgi_https(
-#        SSLAdapter, client_cert_files, make_session_for_cheroot):
-#    allowed = True
-#
-#    if SSLAdapter.context.verify_mode == ssl.CERT_OPTIONAL:
-#        if client_cert_files.type is not None \
-#                and "client_wrong_ca" in client_cert_files.type:
-#            allowed = False
-#    if SSLAdapter.context.verify_mode == ssl.CERT_REQUIRED:
-#        if client_cert_files.type is None \
-#                or "client_wrong_ca" in client_cert_files.type:
-#            allowed = False
-#
-#    resp = make_wsgi_https_request(
-#        SSLAdapter, client_cert_files, make_session_for_cheroot)
-#
-#    if allowed is True:
-#        assert resp.status_code == 200
-#    else:
-#        # pyriform eats the exception raised by WebTest.TestApp
-#        assert resp.status_code == 502
-
-
 class TestClientCertValidation:
+
+    @pytest.fixture(autouse=True)
+    def setup(self, SSLAdapter):
+        verify_save = SSLAdapter.context.verify_mode
+        SSLAdapter.context.verify_mode = self.server_verify_mode
+        self._SSLAdapter = SSLAdapter
+        print ("before yield, verify mode is ", self.server_verify_mode)
+        yield SSLAdapter
+        print ("after yield")
+        SSLAdapter.context.verify_mode = verify_save
 
     def make_wsgi_https_request(
             self, SSLAdapter, client_cert_files, make_session_for_cheroot):
@@ -97,42 +80,63 @@ class TestClientCertValidation:
             test_app_client="requests", client_cert=client_cert_files.cert,
             client_key=client_cert_files.pkey)
 
-        # The pyriform requests adaptor eats the request verify and cert args as it
-        # isn't trivial to pass such args to an instant of WebTest.TestApp.
-        # Therefore, although the verify and cert args are set here, they are
-        # effectively ignored.
+        # The pyriform requests adaptor eats the request verify and cert args
+        # as it isn't trivial to pass such args to an instant of
+        # WebTest.TestApp.  Therefore, although the verify and cert args are
+        # set here, they are effectively ignored.
         resp = my_session.get('https://localhost/',
-                              verify=SSLAdapter.certificate_chain,
-                              cert=(client_cert_files.cert, client_cert_files.pkey))
+            verify=SSLAdapter.certificate_chain,
+            cert=(client_cert_files.cert, client_cert_files.pkey))
         return resp
 
-@pytest.fixture(scope='class')
-def MySSLAdapter(request, SSLAdapter):
-    verify_save = SSLAdapter.verify_mode
-    SSLAdapter.verify_mode = getattr(request.cls, "server_verify_mode")
-    yield SSLAdapter
-    SSLAdapter.verify_mode = verify_save
 
 class TestCertRequired(TestClientCertValidation):
     server_verify_mode = ssl.CERT_REQUIRED
 
+    @pytest.mark.parametrize('client_cert_files',
+        ['client', 'client_ip', 'client_wildcard', 'client_wrong_host'],
+        indirect=True)
+    def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
+
+        resp = self.make_wsgi_https_request(
+            self._SSLAdapter, client_cert_files, make_session_for_cheroot)
+        assert resp.status_code == 200
+
+    @pytest.mark.parametrize('client_cert_files', ['client_wrong_ca', None],
+                             indirect=True)
+    def test_invalid_certs(self, client_cert_files, make_session_for_cheroot):
+        resp = self.make_wsgi_https_request(
+            self._SSLAdapter, client_cert_files, make_session_for_cheroot)
+        assert resp.status_code == 502
+
+
 class TestCertOptional(TestClientCertValidation):
     server_verify_mode = ssl.CERT_OPTIONAL
 
-@pytest.mark.usefixtures("MySSLAdapter")
+    @pytest.mark.parametrize('client_cert_files',
+        ['client', 'client_ip', 'client_wildcard', 'client_wrong_host', None],
+        indirect=True)
+    def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
+        resp = self.make_wsgi_https_request(
+            self._SSLAdapter, client_cert_files, make_session_for_cheroot)
+        assert resp.status_code == 200
+
+    @pytest.mark.parametrize('client_cert_files', ['client_wrong_ca'],
+        indirect=True)
+    def test_invalid_certs(self, client_cert_files, make_session_for_cheroot):
+        resp = self.make_wsgi_https_request(
+            self._SSLAdapter, client_cert_files, make_session_for_cheroot)
+        assert resp.status_code == 502
+
+
 class TestCertNone(TestClientCertValidation):
     server_verify_mode = ssl.CERT_NONE
-
-    #@pytest.fixture(scope="class", autouse=True)
-    #def _create_ssl_adapter(self, SSLAdapter):
 
     @pytest.mark.parametrize('client_cert_files',
         ['client', 'client_ip', 'client_wildcard', 'client_wrong_host',
         'client_wrong_ca', None], indirect=True)
-    def test_valid_certs(self, client_cert_files,
-            make_session_for_cheroot):
-
+    def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
         resp = self.make_wsgi_https_request(
-            MySSLAdapter, client_cert_files, make_session_for_cheroot)
-        assert 1 == 0
+            self._SSLAdapter, client_cert_files, make_session_for_cheroot)
+        assert resp.status_code == 200
 
