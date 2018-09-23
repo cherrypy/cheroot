@@ -89,8 +89,8 @@ def root_CA():
     return trustme.CA()
 
 
-# Note: although the docs for trustme imply that there is a "create_child_ca()" function, there isn't one as far as
-# I know for trustme 0.4.0
+# Note: although the docs for trustme imply that there is a "create_child_ca()"
+# function, there isn't one as far as I know for trustme 0.4.0
 
 
 class _TestClient:
