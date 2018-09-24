@@ -13,7 +13,7 @@ from cheroot import errors
         (
             ('EPROTOTYPE', 'EAGAIN', 'EWOULDBLOCK',
              'WSAEWOULDBLOCK', 'EPIPE'),
-            [32, 10041, 11, 10035] if os.name == 'nt' else [91, 11, 32]
+            [91, 11, 32]
         ),
     ),
 )

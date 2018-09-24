@@ -61,16 +61,14 @@ def client_cert_files(request, root_CA, tmpdir):
     return CertKeyPair(str(client_cert_file), str(client_pkey_file), cert_type)
 
 
-class TestClientCertValidation:
+class BaseTestClientCertValidation:
 
     @pytest.fixture(autouse=True)
     def setup(self, SSLAdapter):
         verify_save = SSLAdapter.context.verify_mode
         SSLAdapter.context.verify_mode = self.server_verify_mode
         self._SSLAdapter = SSLAdapter
-        print ("before yield, verify mode is ", self.server_verify_mode)
         yield SSLAdapter
-        print ("after yield")
         SSLAdapter.context.verify_mode = verify_save
 
     def make_wsgi_https_request(
@@ -89,28 +87,32 @@ class TestClientCertValidation:
             cert=(client_cert_files.cert, client_cert_files.pkey))
         return resp
 
+    def expected_ssl_failure_status_code(self):
+        if six.PY3:
+            return 502
+        else:
+            return 500
 
-class TestCertRequired(TestClientCertValidation):
+class TestCertRequired(BaseTestClientCertValidation):
     server_verify_mode = ssl.CERT_REQUIRED
 
     @pytest.mark.parametrize('client_cert_files',
         ['client', 'client_ip', 'client_wildcard', 'client_wrong_host'],
         indirect=True)
     def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
-
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
-        assert resp.status_code == 200
+        assert 200 == resp.status_code
 
     @pytest.mark.parametrize('client_cert_files', ['client_wrong_ca', None],
                              indirect=True)
     def test_invalid_certs(self, client_cert_files, make_session_for_cheroot):
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
-        assert resp.status_code == 502
+        assert self.expected_ssl_failure_status_code() == resp.status_code
 
 
-class TestCertOptional(TestClientCertValidation):
+class TestCertOptional(BaseTestClientCertValidation):
     server_verify_mode = ssl.CERT_OPTIONAL
 
     @pytest.mark.parametrize('client_cert_files',
@@ -119,17 +121,17 @@ class TestCertOptional(TestClientCertValidation):
     def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
-        assert resp.status_code == 200
+        assert 200 == resp.status_code
 
     @pytest.mark.parametrize('client_cert_files', ['client_wrong_ca'],
         indirect=True)
     def test_invalid_certs(self, client_cert_files, make_session_for_cheroot):
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
-        assert resp.status_code == 502
+        assert self.expected_ssl_failure_status_code() == resp.status_code
 
 
-class TestCertNone(TestClientCertValidation):
+class TestCertNone(BaseTestClientCertValidation):
     server_verify_mode = ssl.CERT_NONE
 
     @pytest.mark.parametrize('client_cert_files',
@@ -138,5 +140,4 @@ class TestCertNone(TestClientCertValidation):
     def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
-        assert resp.status_code == 200
-
+        assert 200 == resp.status_code
