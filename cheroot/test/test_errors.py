@@ -1,6 +1,5 @@
 """Test suite for ``cheroot.errors``."""
 
-import os
 import pytest
 
 from cheroot import errors

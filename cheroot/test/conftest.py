@@ -30,7 +30,7 @@ def native_server_client(native_server):
     return get_server_client(native_server)
 
 
-@pytest.fixture
+@pytest.fixture  # noqa: F811
 def make_session_for_cheroot(wsgi_server):
     """
     Get a factory function to create a pyriform adapter that links a
@@ -46,13 +46,12 @@ def make_session_for_cheroot(wsgi_server):
              the wsgi_server can be mounted at a location other than 'http://',
              and the http client used by the proxy object can be changed.
     """
-
     saved_ssl_adapter = wsgi_server.ssl_adapter
 
-    def _make_session(hostname, prefix='http://', ssl_adapter=None,
+    def _make_session(
+            hostname, prefix='http://', ssl_adapter=None,
             test_app_client='requests', client_cert=None, client_key=None):
         """
-
         :param prefix: URL prefix (or protocol or scheme);
         :param ssl_adapter: replace, for the life of the current test, the
                wsgi_server's ssl_adapter
@@ -91,7 +90,8 @@ def make_session_for_cheroot(wsgi_server):
         if scheme == 'https' and test_app_client == 'requests':
             from wsgiproxy import HostProxy
             url = '{}://localhost:{}'.format(scheme, wsgi_server.bind_addr[1])
-            app.app = HostProxy(url, client='requests',
+            app.app = HostProxy(
+                url, client='requests',
                 verify=my_session.verify, cert=my_session.cert)
         elif scheme == 'https' and test_app_client == 'httplib':
             # Note, in order for this to work, wsgiproxy's httplib wrapper

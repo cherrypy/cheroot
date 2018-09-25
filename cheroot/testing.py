@@ -51,7 +51,6 @@ def cheroot_server(server_factory):
         try:
             actual_bind_addr = (interface, bind_port)
             httpserver = server_factory(  # create it
-                #bind_addr=actual_bind_addr,
                 actual_bind_addr,
                 conf.pop('wsgi_app', None),
                 **conf
