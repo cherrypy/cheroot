@@ -24,6 +24,7 @@ ANY_INTERFACE_IPV6 = '::'
 
 
 def my_crazy_app(environ, start_response):
+    """Build crazy wsgi app."""
     status = '200 OK'
     response_headers = [('Content-type', 'text/plain')]
     start_response(status, response_headers)
@@ -83,13 +84,12 @@ def native_server():
         yield srv
 
 
-@pytest.fixture(scope='module')
-def root_CA(): # NOSONAR
-    return trustme.CA()
-
-
 # Note: although the docs for trustme imply that there is a "create_child_ca()"
 # function, there isn't one as far as I know for trustme 0.4.0
+@pytest.fixture(scope='module')
+def root_ca():
+    """Create module level trustme root CA."""
+    return trustme.CA()
 
 
 class _TestClient:

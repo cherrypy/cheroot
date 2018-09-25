@@ -11,9 +11,9 @@ from cheroot.ssl.builtin import BuiltinSSLAdapter
 
 
 @pytest.fixture(scope='module')
-def SSLAdapter(root_CA, tmpdir_factory):
+def SSLAdapter(root_ca, tmpdir_factory):
     """Given a testme CA, create SSL files and return a BuiltinSSLAdapter."""
-    server_cert = root_CA.issue_server_cert(u"localhost", u"127.0.0.1", u"::1")
+    server_cert = root_ca.issue_server_cert(u"localhost", u"127.0.0.1", u"::1")
 
     server_dir = tmpdir_factory.mktemp("server")
     server_cert_file = server_dir.join("server.cert")
@@ -21,7 +21,7 @@ def SSLAdapter(root_CA, tmpdir_factory):
     server_pkey_file = server_dir.join("server_pkey")
     server_pkey_file.write(server_cert.private_key_pem.bytes())
     cert_chain_file = server_dir.join("ca.cert")
-    cert_chain_file.write(root_CA.cert_pem.bytes())
+    cert_chain_file.write(root_ca.cert_pem.bytes())
 
     ssl_adapter = BuiltinSSLAdapter(
         certificate=str(server_cert_file),
@@ -33,8 +33,8 @@ def SSLAdapter(root_CA, tmpdir_factory):
 
 
 @pytest.fixture
-def client_cert_files(request, root_CA, tmpdir):
-    """Return path to the parametrized client cert or None if None"""
+def client_cert_files(request, root_ca, tmpdir):
+    """Create client cert and return file paths or None if param is None."""
     CertKeyPair = collections.namedtuple('CertKeyPair', 'cert,pkey,type')
     if request.param is None:
         return CertKeyPair(None, None, None)
@@ -54,7 +54,7 @@ def client_cert_files(request, root_CA, tmpdir):
         client_cert = \
             another_CA.issue_server_cert(*cert_type_to_args["client"])
     elif cert_type in cert_type_to_args:
-        client_cert = root_CA.issue_server_cert(*cert_type_to_args[cert_type])
+        client_cert = root_ca.issue_server_cert(*cert_type_to_args[cert_type])
 
     client_dir = tmpdir.mkdir("client")
 
@@ -65,7 +65,7 @@ def client_cert_files(request, root_CA, tmpdir):
     return CertKeyPair(str(client_cert_file), str(client_pkey_file), cert_type)
 
 
-class BaseTestClientCertValidation:
+class _TestClientCertValidation:
 
     @pytest.fixture(autouse=True)
     def setup(self, SSLAdapter):
@@ -100,7 +100,9 @@ class BaseTestClientCertValidation:
             return 500
 
 
-class TestCertRequired(BaseTestClientCertValidation):
+class TestCertRequired(_TestClientCertValidation):
+    """Test cheroot wsgi server when client cert is required."""
+
     server_verify_mode = ssl.CERT_REQUIRED
 
     @pytest.mark.parametrize(
@@ -108,6 +110,7 @@ class TestCertRequired(BaseTestClientCertValidation):
         ['client', 'client_ip', 'client_wildcard', 'client_wrong_host'],
         indirect=True)
     def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
+        """Verify that the given client certs are accepted."""
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
         assert 200 == resp.status_code
@@ -115,12 +118,15 @@ class TestCertRequired(BaseTestClientCertValidation):
     @pytest.mark.parametrize('client_cert_files', ['client_wrong_ca', None],
                              indirect=True)
     def test_invalid_certs(self, client_cert_files, make_session_for_cheroot):
+        """Verify that the given client certs are rejected."""
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
         assert self.expected_ssl_failure_status_code() == resp.status_code
 
 
-class TestCertOptional(BaseTestClientCertValidation):
+class TestCertOptional(_TestClientCertValidation):
+    """Test cheroot wsgi server when client cert is optional."""
+
     server_verify_mode = ssl.CERT_OPTIONAL
 
     @pytest.mark.parametrize(
@@ -128,6 +134,7 @@ class TestCertOptional(BaseTestClientCertValidation):
         ['client', 'client_ip', 'client_wildcard', 'client_wrong_host', None],
         indirect=True)
     def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
+        """Verify that the given client certs are accepted."""
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
         assert 200 == resp.status_code
@@ -135,12 +142,15 @@ class TestCertOptional(BaseTestClientCertValidation):
     @pytest.mark.parametrize('client_cert_files', ['client_wrong_ca'],
                              indirect=True)
     def test_invalid_certs(self, client_cert_files, make_session_for_cheroot):
+        """Verify that the given client certs are rejected."""
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
         assert self.expected_ssl_failure_status_code() == resp.status_code
 
 
-class TestCertNone(BaseTestClientCertValidation):
+class TestCertNone(_TestClientCertValidation):
+    """Test cheroot wsgi server when client cert is ignored."""
+
     server_verify_mode = ssl.CERT_NONE
 
     @pytest.mark.parametrize(
@@ -148,6 +158,7 @@ class TestCertNone(BaseTestClientCertValidation):
         ['client', 'client_ip', 'client_wildcard', 'client_wrong_host',
          'client_wrong_ca', None], indirect=True)
     def test_valid_certs(self, client_cert_files, make_session_for_cheroot):
+        """Verify that the given client certs are accepted."""
         resp = self.make_wsgi_https_request(
             self._SSLAdapter, client_cert_files, make_session_for_cheroot)
         assert 200 == resp.status_code

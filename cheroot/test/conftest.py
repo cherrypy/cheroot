@@ -33,16 +33,16 @@ def native_server_client(native_server):
 @pytest.fixture  # noqa: F811
 def make_session_for_cheroot(wsgi_server):
     """
-    Factory to create a pyriform adapter linking a session to a wsgi_server.
+    Return a factory for pyriform adapters that link sessions to wsgi_server.
 
-    Get a factory function to create a pyriform adapter that links a requests
-    session to a wsgi_server fixture.  This is done by having a WebTest TestApp
-    use HostProxy from WSGI2Proxy.  This proxy uses an http client library
-    to proxy directly to the given URL (for the web server -- in this
+    Get a factory function to create pyriform adapters that link a requests
+    sessions to the wsgi_server fixture.  This is done by having a WebTest
+    TestApps use HostProxy (from WSGI2Proxy).  This proxy uses an http client
+    library to proxy directly to the given URL (for the web server -- in this
     case the wsgi_server fixture *is* the web server).
 
-    :param wsgi_server:
-    :return: yields a function to create a pyriform session that is proxied to
+    :param wsgi_server: cheroot wsgi server fixture
+    :return: a function to create a pyriform session that is proxied to
              the wsgi_server. Depending on the args to the yielded function,
              https can be enabled for the wsgi_server,
              the wsgi_server can be mounted at a location other than 'http://',
@@ -54,6 +54,9 @@ def make_session_for_cheroot(wsgi_server):
             hostname, prefix='http://', ssl_adapter=None,
             test_app_client='requests', client_cert=None, client_key=None):
         """
+        Create a pyriform session (with HostProxy) to prefix + hostname.
+
+        :param hostname: hostname for the wsgi_server fixture
         :param prefix: URL prefix (or protocol or scheme);
         :param ssl_adapter: replace, for the life of the current test, the
                wsgi_server's ssl_adapter
