@@ -84,7 +84,7 @@ def native_server():
 
 
 @pytest.fixture(scope='module')
-def root_CA():
+def root_CA(): # NOSONAR
     return trustme.CA()
 
 

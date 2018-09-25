@@ -33,11 +33,13 @@ def native_server_client(native_server):
 @pytest.fixture  # noqa: F811
 def make_session_for_cheroot(wsgi_server):
     """
-    Get a factory function to create a pyriform adapter that links a
-    requests session to a wsgi_server fixture.  This is done by
-    having a WebTest TestApp use WSGIProxy2 to use an http library
+    Factory to create a pyriform adapter linking a session to a wsgi_server.
+
+    Get a factory function to create a pyriform adapter that links a requests
+    session to a wsgi_server fixture.  This is done by having a WebTest TestApp
+    use HostProxy from WSGI2Proxy.  This proxy uses an http client library
     to proxy directly to the given URL (for the web server -- in this
-    case the wsgi_server is the web server).
+    case the wsgi_server fixture *is* the web server).
 
     :param wsgi_server:
     :return: yields a function to create a pyriform session that is proxied to

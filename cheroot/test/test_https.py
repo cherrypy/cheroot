@@ -12,6 +12,7 @@ from cheroot.ssl.builtin import BuiltinSSLAdapter
 
 @pytest.fixture(scope='module')
 def SSLAdapter(root_CA, tmpdir_factory):
+    """Given a testme CA, create SSL files and return a BuiltinSSLAdapter."""
     server_cert = root_CA.issue_server_cert(u"localhost", u"127.0.0.1", u"::1")
 
     server_dir = tmpdir_factory.mktemp("server")
@@ -76,6 +77,7 @@ class BaseTestClientCertValidation:
 
     def make_wsgi_https_request(
             self, SSLAdapter, client_cert_files, make_session_for_cheroot):
+        """Create a pyriform session to make an https request."""
         my_session = make_session_for_cheroot(
             "localhost", prefix="https://", ssl_adapter=SSLAdapter,
             test_app_client="requests", client_cert=client_cert_files.cert,
