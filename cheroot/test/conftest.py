@@ -13,7 +13,7 @@ from webtest import TestApp
 import requests
 
 from ..testing import (  # noqa: F401
-    native_server, wsgi_server, root_CA,
+    native_server, wsgi_server, root_ca,
 )
 from ..testing import get_server_client
 
