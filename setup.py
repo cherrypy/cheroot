@@ -63,7 +63,6 @@ params = dict(
             'collective.checkdocs',  # needed for setup-check tox env
         ],
         'testing': [
-            'ddt',
             'pytest>=2.8',
             'pytest-sugar>=0.9.1',
             'pytest-testmon>=0.9.7',
