@@ -115,7 +115,7 @@ class WorkerThread(threading.Thread):
                 rlist, wlist, xlist = [], [], []
                 socks = [sock for sock in conn_socks.keys() if sock.fileno() > -1]
                 if socks:
-                    rlist, wlist, xlist = select.select(socks, socks, socks, 0)
+                    rlist, wlist, xlist = select.select(socks, [], [], 0)
                 for sock in rlist + wlist + xlist:
                     conn, conn_start_time = conn_socks[sock]
                     self.conn = conn
