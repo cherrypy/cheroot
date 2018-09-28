@@ -1223,12 +1223,13 @@ class HTTPConnection:
                     # Something went wrong in the parsing (and the server has
                     # probably already made a simple_response). Return and
                     # let the conn close.
-                    return
+                    # return False                    
+                    return True
 
                 request_seen = True
                 req.respond()
                 if req.close_connection:
-                    return
+                    return False
         except socket.error as ex:
             errnum = ex.args[0]
             # sadly SSL sockets return a different (longer) time out string
@@ -1244,6 +1245,7 @@ class HTTPConnection:
                 self.server.error_log('socket.error %s' % repr(errnum),
                                       level=logging.WARNING, traceback=True)
                 self._conditional_error(req, '500 Internal Server Error')
+            return False
         except (KeyboardInterrupt, SystemExit):
             raise
         except errors.FatalSSLAlert:
@@ -1254,6 +1256,8 @@ class HTTPConnection:
             self.server.error_log(
                 repr(ex), level=logging.ERROR, traceback=True)
             self._conditional_error(req, '500 Internal Server Error')
+            return False
+        return True
 
     linger = False
 
