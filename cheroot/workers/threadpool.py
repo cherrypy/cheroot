@@ -112,11 +112,11 @@ class WorkerThread(threading.Thread):
                         return
                     conn_socks[conn.socket] = (conn, time.time())
 
-                rlist, wlist, xlist = [], [], []
+                rlist = []
                 socks = [sock for sock in conn_socks.keys() if sock.fileno() > -1]
                 if socks:
-                    rlist, wlist, xlist = select.select(socks, [], [], 0)
-                for sock in rlist + wlist + xlist:
+                    rlist = select.select(socks, [], [], 0)[0]
+                for sock in rlist:
                     conn, conn_start_time = conn_socks[sock]
                     self.conn = conn
                     if self.server.stats['Enabled']:
