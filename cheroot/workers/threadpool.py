@@ -7,6 +7,7 @@ __metaclass__ = type
 import threading
 import time
 import socket
+import select
 
 from six.moves import queue
 
@@ -100,25 +101,46 @@ class WorkerThread(threading.Thread):
         self.server.stats['Worker Threads'][self.getName()] = self.stats
         try:
             self.ready = True
+            conn_socks = {}
             while True:
-                conn = self.server.requests.get()
-                if conn is _SHUTDOWNREQUEST:
-                    return
-
-                self.conn = conn
-                if self.server.stats['Enabled']:
-                    self.start_time = time.time()
                 try:
-                    conn.communicate()
-                finally:
-                    conn.close()
+                    conn = self.server.requests.get(block=True, timeout=0.01)
+                except queue.Empty:
+                    pass
+                else:
+                    if conn is _SHUTDOWNREQUEST:
+                        return
+                    conn_socks[conn.socket] = (conn, time.time())
+
+                rlist = []
+                socks = [sock for sock in conn_socks.keys() if sock.fileno() > -1]
+                if socks:
+                    rlist = select.select(socks, [], [], 0)[0]
+                for sock in rlist:
+                    conn, conn_start_time = conn_socks[sock]
+                    self.conn = conn
                     if self.server.stats['Enabled']:
-                        self.requests_seen += self.conn.requests_seen
-                        self.bytes_read += self.conn.rfile.bytes_read
-                        self.bytes_written += self.conn.wfile.bytes_written
-                        self.work_time += time.time() - self.start_time
-                        self.start_time = None
-                    self.conn = None
+                        self.start_time = time.time()
+                    try:
+                        err_occurred = conn.communicate() is False
+                    finally:
+                        if err_occurred:
+                            conn.close()
+                            conn_socks.pop(conn.socket)
+                        else:
+                            conn_socks[conn.socket] = (conn, time.time())
+                        if self.server.stats['Enabled']:
+                            self.requests_seen += self.conn.requests_seen
+                            self.bytes_read += self.conn.rfile.bytes_read
+                            self.bytes_written += self.conn.wfile.bytes_written
+                            self.work_time += time.time() - self.start_time
+                            self.start_time = None
+                        self.conn = None
+                cur_time = time.time()
+                for c, conn_last_active in list(conn_socks.values()):
+                    if cur_time - conn_last_active > 60:
+                        c.close()
+                        conn_socks.pop(c.socket)
         except (KeyboardInterrupt, SystemExit) as ex:
             self.server.interrupt = ex
 
