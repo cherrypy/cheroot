@@ -93,6 +93,42 @@ class WorkerThread(threading.Thread):
         }
         threading.Thread.__init__(self)
 
+    def close_expired_conns(self, conn_socks):
+        cur_time = time.time()
+        for c, last_active in list(conn_socks.values()):
+            sock = c.socket
+            srv_timeout = self.server.timeout
+            if (sock.timeout == 0.0 and cur_time - last_active > 60 or
+                sock.timeout and cur_time - last_active > srv_timeout):
+                c.close()
+                conn_socks.pop(c.socket)
+
+    def process_conns(self, conn_socks):
+        rlist = []
+        socks = [sck for sck in conn_socks.keys() if sck.fileno() > -1]
+        if socks:
+            rlist = select.select(socks, [], [], 0)[0]
+        for sock in rlist:
+            conn, conn_start_time = conn_socks[sock]
+            self.conn = conn
+            if self.server.stats['Enabled']:
+                self.start_time = time.time()
+            try:
+                err_occurred = conn.communicate() is False
+            finally:
+                if err_occurred:
+                    conn.close()
+                    conn_socks.pop(conn.socket)
+                else:
+                    conn_socks[conn.socket] = (conn, time.time())
+                if self.server.stats['Enabled']:
+                    self.requests_seen += self.conn.requests_seen
+                    self.bytes_read += self.conn.rfile.bytes_read
+                    self.bytes_written += self.conn.wfile.bytes_written
+                    self.work_time += time.time() - self.start_time
+                    self.start_time = None
+                self.conn = None
+
     def run(self):
         """Process incoming HTTP connections.
 
@@ -111,36 +147,8 @@ class WorkerThread(threading.Thread):
                     if conn is _SHUTDOWNREQUEST:
                         return
                     conn_socks[conn.socket] = (conn, time.time())
-
-                rlist = []
-                socks = [sock for sock in conn_socks.keys() if sock.fileno() > -1]
-                if socks:
-                    rlist = select.select(socks, [], [], 0)[0]
-                for sock in rlist:
-                    conn, conn_start_time = conn_socks[sock]
-                    self.conn = conn
-                    if self.server.stats['Enabled']:
-                        self.start_time = time.time()
-                    try:
-                        err_occurred = conn.communicate() is False
-                    finally:
-                        if err_occurred:
-                            conn.close()
-                            conn_socks.pop(conn.socket)
-                        else:
-                            conn_socks[conn.socket] = (conn, time.time())
-                        if self.server.stats['Enabled']:
-                            self.requests_seen += self.conn.requests_seen
-                            self.bytes_read += self.conn.rfile.bytes_read
-                            self.bytes_written += self.conn.wfile.bytes_written
-                            self.work_time += time.time() - self.start_time
-                            self.start_time = None
-                        self.conn = None
-                cur_time = time.time()
-                for c, conn_last_active in list(conn_socks.values()):
-                    if cur_time - conn_last_active > 60:
-                        c.close()
-                        conn_socks.pop(c.socket)
+                self.process_conns(conn_socks)
+                self.close_expired_conns(conn_socks)
         except (KeyboardInterrupt, SystemExit) as ex:
             self.server.interrupt = ex
 

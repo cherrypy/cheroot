@@ -1223,7 +1223,7 @@ class HTTPConnection:
                     # Something went wrong in the parsing (and the server has
                     # probably already made a simple_response). Return and
                     # let the conn close.
-                    # return False                    
+                    # return False
                     return True
 
                 request_seen = True
