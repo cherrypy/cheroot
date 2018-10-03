@@ -44,7 +44,7 @@ def _assert_ssl_exc_contains(exc, *msgs):
             '_assert_ssl_exc_contains() requires '
             'at least one message to be passed.'
         )
-    err_msg_lower = exc.args[1].lower()
+    err_msg_lower = str(exc).lower()
     return any(m.lower() in err_msg_lower for m in msgs)
 
 
