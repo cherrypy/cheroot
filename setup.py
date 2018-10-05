@@ -23,6 +23,7 @@ try:
 except ImportError:
     """This is a shim for setuptools<30.3."""
     import io
+    import json
 
     try:
         from configparser import ConfigParser, NoSectionError
@@ -30,23 +31,35 @@ except ImportError:
         from ConfigParser import ConfigParser, NoSectionError
         ConfigParser.read_file = ConfigParser.readfp
 
+    def maybe_read_files(d):
+        d = d.strip()
+        if not d.startswith('file:'):
+            return d
+        descs = []
+        for fname in map(str.strip, d[5:].split(',')):
+            with io.open(fname, encoding='utf-8') as f:
+                descs.append(f.read())
+        return ''.join(descs)
+
+    def cfg_val_to_list(v):
+        return list(filter(bool, map(str.strip, v.strip().splitlines())))
+
+    def cfg_val_to_dict(v):
+        return dict(
+            map(lambda l: list(map(str.strip, l.split('=', 1))),
+                filter(bool, map(str.strip, v.strip().splitlines())))
+        )
+
+    def cfg_val_to_primitive(v):
+        return json.loads(v.strip().lower())
+
     def read_configuration(filepath):
         """Read metadata and options from setup.cfg located at filepath."""
+
         cfg = ConfigParser()
         with io.open(filepath, encoding='utf-8') as f:
             cfg.read_file(f)
-        def maybe_read_files(d):
-            d = d.strip()
-            if not d.startswith('file:'):
-                return d
-            descs = []
-            for fname in map(str.strip, d[5:].split(',')):
-                with io.open(fname, encoding='utf-8') as f:
-                    descs.append(f.read())
-            return ''.join(descs)
-        cfg_val_to_list = lambda _: list(filter(bool, map(str.strip, _.strip().splitlines())))
-        cfg_val_to_dict = lambda _: dict(map(lambda l: list(map(str.strip, l.split('=', 1))), filter(bool, map(str.strip, _.strip().splitlines()))))
-        cfg_val_to_primitive = lambda _: json.loads(_.strip().lower())
+
         md = dict(cfg.items('metadata'))
         for list_key in 'classifiers', 'keywords':
             try:
@@ -94,7 +107,7 @@ except ImportError:
             opt['packages'] = cfg_val_to_list(opt['packages'])
         elif cur_pkgs.startswith('find:'):
             opt_packages_find = dict(cfg.items('options.packages.find'))
-            opt['packages'] = find_packages(**opt_packages_find)
+            opt['packages'] = setuptools.find_packages(**opt_packages_find)
         return {'metadata': md, 'options': opt}
 
 
