@@ -5,7 +5,21 @@ import setuptools
 
 
 try:
-    from setuptools.config import read_configuration
+    from setuptools.config import read_configuration, ConfigOptionsHandler
+    import setuptools.config
+    import setuptools.dist
+
+    # Set default value for 'use_scm_version'
+    setattr(setuptools.dist.Distribution, 'use_scm_version', False)
+
+    # Attach bool parser to 'use_scm_version' option
+    class ShimConfigOptionsHandler(ConfigOptionsHandler):
+        @property
+        def parsers(self):
+            _orig_parsers = super(ShimConfigOptionsHandler, self).parsers
+            return dict(use_scm_version=self._parse_bool, **_orig_parsers)
+
+    setuptools.config.ConfigOptionsHandler = ShimConfigOptionsHandler
 except ImportError:
     """This is a shim for setuptools<30.3."""
     import io
@@ -44,10 +58,11 @@ except ImportError:
         except KeyError:
             pass
         opt = dict(cfg.items('options'))
-        try:
-            opt['zip_safe'] = cfg_val_to_primitive(opt['zip_safe'])
-        except KeyError:
-            pass
+        for list_key in 'use_scm_version', 'zip_safe':
+            try:
+                opt[list_key] = cfg_val_to_primitive(opt[list_key])
+            except KeyError:
+                pass
         for list_key in 'scripts', 'install_requires', 'setup_requires':
             try:
                 opt[list_key] = cfg_val_to_list(opt[list_key])
@@ -82,24 +97,12 @@ except ImportError:
             opt['packages'] = find_packages(**opt_packages_find)
         return {'metadata': md, 'options': opt}
 
-def to_bool(val):
-    truthy_vals = (
-        'True', 'true',
-        'On', 'on',
-        'Yes', 'yes',
-        1, True,
-    )
-    return val in truthy_vals
-
 
 setup_params = {}
 declarative_setup_params = read_configuration('setup.cfg')
 
 setup_params = dict(setup_params, **declarative_setup_params['metadata'])
 setup_params = dict(setup_params, **declarative_setup_params['options'])
-
-# Hot fix 'use_scm_version' option type to bool
-setup_params['use_scm_version'] = to_bool(setup_params['use_scm_version'])
 
 
 __name__ == '__main__' and setuptools.setup(**setup_params)
