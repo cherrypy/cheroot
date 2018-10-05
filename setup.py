@@ -14,8 +14,11 @@ try:
 
     # Attach bool parser to 'use_scm_version' option
     class ShimConfigOptionsHandler(ConfigOptionsHandler):
+        """Extension class for ConfigOptionsHandler."""
+
         @property
         def parsers(self):
+            """Return an option mapping with default data type parsers."""
             _orig_parsers = super(ShimConfigOptionsHandler, self).parsers
             return dict(use_scm_version=self._parse_bool, **_orig_parsers)
 
@@ -32,6 +35,7 @@ except ImportError:
         ConfigParser.read_file = ConfigParser.readfp
 
     def maybe_read_files(d):
+        """Read files if the string starts with `file:` marker."""
         d = d.strip()
         if not d.startswith('file:'):
             return d
@@ -42,15 +46,18 @@ except ImportError:
         return ''.join(descs)
 
     def cfg_val_to_list(v):
+        """Turn config val to list and filter out empty lines."""
         return list(filter(bool, map(str.strip, v.strip().splitlines())))
 
     def cfg_val_to_dict(v):
+        """Turn config val to dict and filter out empty lines."""
         return dict(
             map(lambda l: list(map(str.strip, l.split('=', 1))),
                 filter(bool, map(str.strip, v.strip().splitlines())))
         )
 
     def cfg_val_to_primitive(v):
+        """Parse primitive config val to appropriate data type."""
         return json.loads(v.strip().lower())
 
     def read_configuration(filepath):
