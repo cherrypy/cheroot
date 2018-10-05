@@ -62,7 +62,6 @@ except ImportError:
 
     def read_configuration(filepath):
         """Read metadata and options from setup.cfg located at filepath."""
-
         cfg = ConfigParser()
         with io.open(filepath, encoding='utf-8') as f:
             cfg.read_file(f)
