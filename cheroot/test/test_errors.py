@@ -1,8 +1,16 @@
 """Test suite for ``cheroot.errors``."""
 
+import platform
+
 import pytest
 
 from cheroot import errors
+
+
+SYS_PLATFORM = platform.system()
+IS_WINDOWS = SYS_PLATFORM == 'Windows'
+IS_LINUX = SYS_PLATFORM == 'Linux'
+IS_MACOS = SYS_PLATFORM == 'Darwin'
 
 
 @pytest.mark.parametrize(
@@ -12,7 +20,10 @@ from cheroot import errors
         (
             ('EPROTOTYPE', 'EAGAIN', 'EWOULDBLOCK',
              'WSAEWOULDBLOCK', 'EPIPE'),
-            [91, 11, 32]
+            (91, 11, 32) if IS_LINUX else
+            (32, 35, 41) if IS_MACOS else
+            (32, 10041, 11, 10035) if IS_WINDOWS else
+            ()
         ),
     ),
 )
