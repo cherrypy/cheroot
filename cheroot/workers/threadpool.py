@@ -93,13 +93,25 @@ class WorkerThread(threading.Thread):
         }
         threading.Thread.__init__(self)
 
-    def close_expired_conns(self, conn_socks):
-        cur_time = time.time()
+    def log_start_stats(self):
+        if self.server.stats['Enabled']:
+            self.start_time = time.time()
+
+    def log_close_stats(self):
+        if self.server.stats['Enabled']:
+            self.requests_seen += self.conn.requests_seen
+            self.bytes_read += self.conn.rfile.bytes_read
+            self.bytes_written += self.conn.wfile.bytes_written
+            self.work_time += time.time() - self.start_time
+            self.start_time = None
+
+    def close_expired_conns(self, conn_socks, cur_time):
         for c, last_active in list(conn_socks.values()):
             sock = c.socket
             srv_timeout = self.server.timeout
-            if (sock.timeout == 0.0 and cur_time - last_active > 60 or
-                sock.timeout and cur_time - last_active > srv_timeout):
+            sock_timeout = sock.gettimeout()
+            if (sock_timeout == 0.0 and cur_time - last_active > 60 or
+                    sock_timeout and cur_time - last_active > srv_timeout):
                 c.close()
                 conn_socks.pop(c.socket)
 
@@ -111,8 +123,7 @@ class WorkerThread(threading.Thread):
         for sock in rlist:
             conn, conn_start_time = conn_socks[sock]
             self.conn = conn
-            if self.server.stats['Enabled']:
-                self.start_time = time.time()
+            self.log_start_stats()
             try:
                 err_occurred = conn.communicate() is False
             finally:
@@ -121,12 +132,7 @@ class WorkerThread(threading.Thread):
                     conn_socks.pop(conn.socket)
                 else:
                     conn_socks[conn.socket] = (conn, time.time())
-                if self.server.stats['Enabled']:
-                    self.requests_seen += self.conn.requests_seen
-                    self.bytes_read += self.conn.rfile.bytes_read
-                    self.bytes_written += self.conn.wfile.bytes_written
-                    self.work_time += time.time() - self.start_time
-                    self.start_time = None
+                self.log_close_stats()
                 self.conn = None
 
     def run(self):
@@ -148,7 +154,7 @@ class WorkerThread(threading.Thread):
                         return
                     conn_socks[conn.socket] = (conn, time.time())
                 self.process_conns(conn_socks)
-                self.close_expired_conns(conn_socks)
+                self.close_expired_conns(conn_socks, time.time())
         except (KeyboardInterrupt, SystemExit) as ex:
             self.server.interrupt = ex
 
