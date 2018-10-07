@@ -105,12 +105,15 @@ class WorkerThread(threading.Thread):
             self.work_time += time.time() - self.start_time
             self.start_time = None
 
+    def conn_expired(self, conn, last_active, cur_time):
+        srv_timeout = self.server.timeout
+        sock_timeout = conn.socket.gettimeout()
+        return (sock_timeout == 0.0 and cur_time - last_active > 60 or
+                sock_timeout and cur_time - last_active > srv_timeout)
+
     def get_expired_conns(self, conn_socks, cur_time):
         for conn, last_active in tuple(conn_socks.values()):
-            srv_timeout = self.server.timeout
-            sock_timeout = conn.socket.gettimeout()
-            if (sock_timeout == 0.0 and cur_time - last_active > 60 or
-                    sock_timeout and cur_time - last_active > srv_timeout):
+            if self.conn_expired(conn, last_active, cur_time):
                 yield conn
 
     def close_conns(conn_list, conn_socks):
