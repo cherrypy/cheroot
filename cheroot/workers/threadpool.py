@@ -116,7 +116,7 @@ class WorkerThread(threading.Thread):
             if self.conn_expired(conn, last_active, cur_time):
                 yield conn
 
-    def close_conns(conn_list, conn_socks):
+    def close_conns(self, conn_list, conn_socks):
         for conn in conn_list:
             conn.close()
             conn_socks.pop(conn.socket)
