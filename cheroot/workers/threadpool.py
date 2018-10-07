@@ -106,14 +106,13 @@ class WorkerThread(threading.Thread):
             self.start_time = None
 
     def close_expired_conns(self, conn_socks, cur_time):
-        for c, last_active in list(conn_socks.values()):
-            sock = c.socket
+        for conn, last_active in list(conn_socks.values()):
             srv_timeout = self.server.timeout
-            sock_timeout = sock.gettimeout()
+            sock_timeout = conn.socket.gettimeout()
             if (sock_timeout == 0.0 and cur_time - last_active > 60 or
                     sock_timeout and cur_time - last_active > srv_timeout):
-                c.close()
-                conn_socks.pop(c.socket)
+                conn.close()
+                conn_socks.pop(conn.socket)
 
     def process_conns(self, conn_socks):
         rlist = []
