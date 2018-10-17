@@ -1219,15 +1219,11 @@ class HTTPConnection:
                 req.parse_request()
                 if self.server.stats['Enabled']:
                     self.requests_seen += 1
-                if not req.ready and self.server.timeout:
-                    # Something went wrong in the parsing (and the server has
-                    # probably already made a simple_response). Return and
-                    # let the conn close.
-                    return False
-                elif not req.ready and self.server.timeout == 0.0:
+                if not req.ready:
                     # Allow conn to stay open to support non-blocking
-                    # sockets
-                    return True
+                    # sockets if timeout is 0, otherwise return and
+                    # let the conn close.
+                    return self.server.timeout == 0.0
 
                 request_seen = True
                 req.respond()
