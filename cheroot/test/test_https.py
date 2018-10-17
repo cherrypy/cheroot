@@ -3,6 +3,7 @@
 # vim: set fileencoding=utf-8 :
 
 import os
+import platform
 import ssl
 
 import ddt
@@ -11,6 +12,9 @@ import pytest
 from cheroot import wsgi
 from cheroot.ssl.builtin import BuiltinSSLAdapter
 from cheroot.test import helper
+
+
+IS_PYPY = platform.python_implementation() == 'PyPy'
 
 
 def create_wsgi_server(**conf):
@@ -107,7 +111,11 @@ class ClientCertRequiredTests(HTTPSTestBase, helper.CherootWebCase):
     def test_reject_wrong_ca(self):
         """Test that the given client cert is not allowed to connect."""
         context = self.assert_reject('client_wrong_ca')
-        assert 'tlsv1 alert unknown ca' in str(context.value)
+        expected_substring = (
+            'TLSV1_ALERT_UNKNOWN_CA' if IS_PYPY
+            else 'tlsv1 alert unknown ca'
+        )
+        assert expected_substring in str(context.value)
 
 
 @ddt.ddt
