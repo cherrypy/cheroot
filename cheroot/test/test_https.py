@@ -3,13 +3,14 @@
 # vim: set fileencoding=utf-8 :
 
 import os
-import pytest
 import ssl
 
+import ddt
+import pytest
+
+from cheroot import wsgi
 from cheroot.ssl.builtin import BuiltinSSLAdapter
 from cheroot.test import helper
-import cheroot
-import ddt
 
 
 def create_wsgi_server(**conf):
@@ -19,7 +20,7 @@ def create_wsgi_server(**conf):
         private_key=conf.pop('private_key'),
         certificate_chain=conf.pop('certificate_chain'))
     ssl_adapter.context.verify_mode = conf.pop('verify_mode', ssl.CERT_NONE)
-    server = cheroot.wsgi.Server(**conf)
+    server = wsgi.Server(**conf)
     server.ssl_adapter = ssl_adapter
     return server
 
