@@ -64,10 +64,10 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
 
     def write(self, data):
         """Sendall for non-blocking sockets."""
-        while data:
+        payload_size = len(data)
+        while self.bytes_written < payload_size:
             try:
-                bytes_sent = self.send(data)
-                data = data[bytes_sent:]
+                self.send(data[self.bytes_written:])
             except socket.error as e:
                 if e.args[0] not in errors.socket_errors_nonblocking:
                     raise
