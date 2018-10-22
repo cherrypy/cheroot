@@ -75,4 +75,4 @@ if six.PY3:
     memoryview = memoryview
 else:
     """Link memoryview to buffer under Python 2."""
-    memoryview = buffer
+    memoryview = buffer  # noqa: F821
