@@ -37,13 +37,8 @@ def test_compat_functions_negative_nonnative(func):
         func(non_native_test_str, encoding='utf-8')
 
 
-@pytest.mark.skip(reason='This test does not work now')
-@pytest.mark.skipif(
-    six.PY3,
-    reason='This code path only appears in Python 2 version.',
-)
 def test_ntou_escape():
     """Check that ntou supports escape-encoding under Python 2."""
-    expected = u''
-    actual = ntou('hi'.encode('ISO-8859-1'), encoding='escape')
+    expected = u'hišřії'
+    actual = ntou('hi\u0161\u0159\u0456\u0457', encoding='escape')
     assert actual == expected

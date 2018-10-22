@@ -42,10 +42,11 @@ else:
         # escapes, but without having to prefix it with u'' for Python 2,
         # but no prefix for Python 3.
         if encoding == 'escape':
-            return six.u(
-                re.sub(r'\\u([0-9a-zA-Z]{4})',
-                       lambda m: six.unichr(int(m.group(1), 16)),
-                       n.decode('ISO-8859-1')))
+            return re.sub(
+                r'\\u([0-9a-zA-Z]{4})',
+                lambda m: six.unichr(int(m.group(1), 16)),
+                n.decode('ISO-8859-1'),
+            )
         # Assume it's already in the given encoding, which for ISO-8859-1
         # is almost always what was intended.
         return n.decode(encoding)
