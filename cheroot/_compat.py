@@ -65,3 +65,11 @@ def assert_native(n):
     """
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
+
+
+try:
+    """Python 2.7+ has memoryview builtin."""
+    memoryview = memoryview
+except NameError:
+    """Link memoryview to bytes under Python 2.6."""
+    memoryview = bytes
