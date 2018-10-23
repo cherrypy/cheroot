@@ -65,3 +65,14 @@ def assert_native(n):
     """
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
+
+
+if six.PY3:
+    """Python 3 has memoryview builtin."""
+    # Python 2.7 has it backported, but socket.write() does
+    # str(memoryview(b'0' * 100)) -> <memory at 0x7fb6913a5588>
+    # instead of accessing it correctly.
+    memoryview = memoryview
+else:
+    """Link memoryview to buffer under Python 2."""
+    memoryview = buffer  # noqa: F821
