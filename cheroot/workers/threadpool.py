@@ -107,9 +107,7 @@ class WorkerThread(threading.Thread):
 
     def conn_expired(self, conn, last_active, cur_time):
         srv_timeout = self.server.timeout
-        sock_timeout = conn.socket.gettimeout()
-        return (sock_timeout == 0.0 and cur_time - last_active > 60 or
-                sock_timeout and cur_time - last_active > srv_timeout)
+        return cur_time - last_active > srv_timeout
 
     def get_expired_conns(self, conn_socks, cur_time):
         for conn, last_active in tuple(conn_socks.values()):
@@ -118,6 +116,7 @@ class WorkerThread(threading.Thread):
 
     def close_conns(self, conn_list, conn_socks):
         for conn in conn_list:
+            conn.communicate() # allow for 408 to be sent
             conn.close()
             conn_socks.pop(conn.socket)
 

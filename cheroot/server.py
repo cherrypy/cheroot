@@ -696,7 +696,6 @@ class HTTPRequest:
         else:
             if not success:
                 return
-
         try:
             success = self.read_request_headers()
         except errors.MaxSizeExceeded:
@@ -1220,10 +1219,8 @@ class HTTPConnection:
                 if self.server.stats['Enabled']:
                     self.requests_seen += 1
                 if not req.ready:
-                    # Allow conn to stay open to support non-blocking
-                    # sockets if timeout is 0, otherwise return and
-                    # let the conn close.
-                    return self.server.timeout == 0.0
+                    # Allow conn to stay open to support non-blocking sockets
+                    return True
 
                 request_seen = True
                 req.respond()
