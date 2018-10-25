@@ -116,7 +116,7 @@ class WorkerThread(threading.Thread):
 
     def close_conns(self, conn_list, conn_socks):
         for conn in conn_list:
-            conn.communicate() # allow for 408 to be sent
+            conn.communicate()  # allow for 408 to be sent
             conn.close()
             conn_socks.pop(conn.socket)
 
