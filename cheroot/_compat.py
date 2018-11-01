@@ -76,3 +76,14 @@ if six.PY3:
 else:
     """Link memoryview to buffer under Python 2."""
     memoryview = buffer  # noqa: F821
+
+
+def extract_bytes(mv):
+    """Retrieve bytes out of memoryview/buffer or bytes."""
+    if isinstance(mv, memoryview):
+        return mv.tobytes() if six.PY3 else bytes(mv)
+
+    if isinstance(mv, bytes):
+        return mv
+
+    return ValueError
