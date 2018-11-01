@@ -18,6 +18,10 @@ from . import errors
 from ._compat import extract_bytes, memoryview
 
 
+# Write only 16K at a time to sockets
+SOCK_WRITE_BLOCKSIZE = 16384
+
+
 class BufferedWriter(io.BufferedWriter):
     """Faux file object attached to a socket object."""
 
@@ -70,7 +74,9 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
         payload_size = len(data_mv)
         while bytes_sent < payload_size:
             try:
-                bytes_sent += self.send(data_mv[bytes_sent:])
+                bytes_sent += self.send(
+                    data_mv[bytes_sent:bytes_sent + SOCK_WRITE_BLOCKSIZE]
+                )
             except socket.error as e:
                 if e.args[0] not in errors.socket_errors_nonblocking:
                     raise
