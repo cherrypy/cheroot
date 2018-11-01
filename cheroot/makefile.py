@@ -15,7 +15,7 @@ except ImportError:
 import six
 
 from . import errors
-from ._compat import memoryview
+from ._compat import extract_bytes, memoryview
 
 
 class BufferedWriter(io.BufferedWriter):
@@ -77,7 +77,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
 
     def send(self, data):
         """Send some part of message to the socket."""
-        bytes_sent = self._sock.send(data)
+        bytes_sent = self._sock.send(extract_bytes(data))
         self.bytes_written += bytes_sent
         return bytes_sent
 
