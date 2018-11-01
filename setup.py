@@ -120,6 +120,15 @@ except ImportError:
 setup_params = {}
 declarative_setup_params = read_configuration('setup.cfg')
 
+# Patch incorrectly decoded package_dir option
+# ``egg_info`` demands native strings failing with unicode under Python 2
+# Ref https://github.com/pypa/setuptools/issues/1136
+if 'package_dir' in declarative_setup_params['options']:
+    declarative_setup_params['options']['package_dir'] = {
+        str(k): str(v)
+        for k, v in declarative_setup_params['options']['package_dir'].items()
+    }
+
 setup_params = dict(setup_params, **declarative_setup_params['metadata'])
 setup_params = dict(setup_params, **declarative_setup_params['options'])
 
