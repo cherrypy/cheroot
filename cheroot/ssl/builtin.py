@@ -10,10 +10,13 @@ To use this module, set ``HTTPServer.ssl_adapter`` to an instance of
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import sys
+
 try:
     import ssl
+    IS_BELOW_OPENSSL11 = ssl.OPENSSL_VERSION_INFO < (1, 1)
 except ImportError:
-    ssl = None
+    ssl = IS_BELOW_OPENSSL11 = None
 
 try:
     from _pyio import DEFAULT_BUFFER_SIZE
@@ -35,6 +38,9 @@ else:
     import socket
     generic_socket_error = socket.error
     del socket
+
+
+IS_BELOW_PY37 = sys.version_info[:2] < (3, 7)
 
 
 def _assert_ssl_exc_contains(exc, *msgs):
@@ -144,15 +150,19 @@ class BuiltinSSLAdapter(Adapter):
         except generic_socket_error as exc:
             """It is unclear why exactly this happens.
 
-            It's reproducible only under Python 2 with openssl>1.0 and stdlib
-            ``ssl`` wrapper, and only with CherryPy.
-            So it looks like some healthcheck tries to connect to this socket
-            during startup (from the same process).
+            It's reproducible only under Python<=3.6 with openssl>1.0
+            and stdlib ``ssl`` wrapper.
+            In CherryPy it's triggered by Checker plugin, which connects
+            to the app listening to the socket port in TLS mode via plain
+            HTTP during startup (from the same process).
 
 
             Ref: https://github.com/cherrypy/cherrypy/issues/1618
             """
-            if six.PY2 and exc.args == (0, 'Error'):
+            is_error0 = exc.args == (0, 'Error')
+            ssl_doesnt_handle_error0 = IS_BELOW_OPENSSL11 and IS_BELOW_PY37
+
+            if is_error0 and ssl_doesnt_handle_error0:
                 return EMPTY_RESULT
             raise
         return s, self.get_environ(s)
