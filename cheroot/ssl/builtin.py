@@ -14,9 +14,9 @@ import sys
 
 try:
     import ssl
-    IS_BELOW_OPENSSL11 = ssl.OPENSSL_VERSION_INFO < (1, 1)
+    IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
 except ImportError:
-    ssl = IS_BELOW_OPENSSL11 = None
+    ssl = IS_ABOVE_OPENSSL10 = None
 
 try:
     from _pyio import DEFAULT_BUFFER_SIZE
@@ -160,7 +160,7 @@ class BuiltinSSLAdapter(Adapter):
             Ref: https://github.com/cherrypy/cherrypy/issues/1618
             """
             is_error0 = exc.args == (0, 'Error')
-            ssl_doesnt_handle_error0 = IS_BELOW_OPENSSL11 and IS_BELOW_PY37
+            ssl_doesnt_handle_error0 = IS_ABOVE_OPENSSL10 and IS_BELOW_PY37
 
             if is_error0 and ssl_doesnt_handle_error0:
                 return EMPTY_RESULT
