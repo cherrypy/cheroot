@@ -99,8 +99,12 @@ IS_WINDOWS = platform.system() == 'Windows'
 
 
 if not IS_WINDOWS:
-    import grp
-    import pwd
+    try:
+        import grp
+        import pwd
+    except ImportError:
+        """Disabled by Google App Engine (GAE)."""
+        pass
     import struct
 
 
@@ -1375,7 +1379,7 @@ class HTTPConnection:
             raise NotImplementedError(
                 'UID/GID lookup can only be done under UNIX-like OS'
             )
-        elif not self.peercreds_resolve_enabled:
+        elif not self.peercreds_resolve_enabled or 'grp' not in globals() or 'pwd' not in globals():
             raise RuntimeError(
                 'UID/GID lookup is disabled within this server'
             )

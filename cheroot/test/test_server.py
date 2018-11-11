@@ -186,8 +186,14 @@ def test_peercreds_unix_sock(http_server, unix_sock_file):
     assert testclient.get(PEERCRED_IDS_URI) == expected_peercreds
     assert 'RuntimeError' in testclient.get(PEERCRED_TEXTS_URI)
 
-    httpserver.peercreds_resolve_enabled = True
-    import grp
-    expected_textcreds = os.getlogin(), grp.getgrgid(os.getgid()).gr_name
-    expected_textcreds = '!'.join(map(str, expected_textcreds))
-    assert testclient.get(PEERCRED_TEXTS_URI) == expected_textcreds
+    try:
+        import grp
+    except ImportError:
+        """Disabled by Google App Engine (GAE)."""
+        pass
+    else:
+        httpserver.peercreds_resolve_enabled = True
+
+        expected_textcreds = os.getlogin(), grp.getgrgid(os.getgid()).gr_name
+        expected_textcreds = '!'.join(map(str, expected_textcreds))
+        assert testclient.get(PEERCRED_TEXTS_URI) == expected_textcreds
