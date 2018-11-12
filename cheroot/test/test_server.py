@@ -197,8 +197,8 @@ def test_peercreds_unix_sock(peercreds_enabled_server):
 
 @pytest.mark.skipif(
     not IS_UID_GID_RESOLVABLE,
-    reason=
-    'Modules `grp` and `pwd` are not available under the current platform',
+    reason='Modules `grp` and `pwd` are not available '
+           'under the current platform',
 )
 @http_over_unix_socket
 @non_windows_sock_test
