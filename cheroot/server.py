@@ -96,11 +96,34 @@ __all__ = ('HTTPRequest', 'HTTPConnection', 'HTTPServer',
 
 
 IS_WINDOWS = platform.system() == 'Windows'
+"""Flag indicating whether the app is running under Windows."""
 
 
-if not IS_WINDOWS:
-    import grp
-    import pwd
+IS_GAE = os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/')
+"""Flag indicating whether the app is running in GAE env.
+
+Ref:
+https://cloud.google.com/appengine/docs/standard/python/tools
+/using-local-server#detecting_application_runtime_environment
+"""
+
+
+IS_UID_GID_RESOLVABLE = not IS_WINDOWS and not IS_GAE
+"""Indicates whether UID/GID resolution's available under current platform."""
+
+
+if IS_UID_GID_RESOLVABLE:
+    try:
+        import grp
+        import pwd
+    except ImportError:
+        """Unavailable in the current env.
+
+        This shouldn't be happening normally.
+        All of the known cases are excluded via the if clause.
+        """
+        IS_UID_GID_RESOLVABLE = False
+        grp, pwd = None, None
     import struct
 
 
@@ -1371,9 +1394,11 @@ class HTTPConnection:
             RuntimeError: in case of UID/GID lookup unsupported or disabled
 
         """
-        if IS_WINDOWS:
+        if not IS_UID_GID_RESOLVABLE:
             raise NotImplementedError(
-                'UID/GID lookup can only be done under UNIX-like OS'
+                'UID/GID lookup is unavailable under current platform. '
+                'It can only be done under UNIX-like OS '
+                'but not under the Google App Engine'
             )
         elif not self.peercreds_resolve_enabled:
             raise RuntimeError(

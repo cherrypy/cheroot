@@ -14,7 +14,7 @@ import time
 import pytest
 
 from .._compat import bton
-from ..server import Gateway, HTTPServer
+from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -41,6 +41,11 @@ def make_http_server(bind_addr):
 non_windows_sock_test = pytest.mark.skipif(
     not hasattr(socket, 'AF_UNIX'),
     reason='UNIX domain sockets are only available under UNIX-based OS',
+)
+
+
+http_over_unix_socket = pytest.mark.skip(
+    reason='Test HTTP client is not able to work through UNIX socket currently'
 )
 
 
@@ -169,24 +174,39 @@ class _TestGateway(Gateway):
         return super(_TestGateway, self).respond()
 
 
-@pytest.mark.skip(
-    reason='Test HTTP client is not able to work through UNIX socket currently'
-)
-@non_windows_sock_test
-def test_peercreds_unix_sock(http_server, unix_sock_file):
-    """Check that peercred lookup and resolution work when enabled."""
+@pytest.fixture
+def peercreds_enabled_server_and_client(http_server, unix_sock_file):
+    """Construct a test server with `peercreds_enabled`."""
     httpserver = http_server.send(unix_sock_file)
     httpserver.gateway = _TestGateway
     httpserver.peercreds_enabled = True
+    return httpserver, get_server_client(httpserver)
 
-    testclient = get_server_client(httpserver)
+
+@http_over_unix_socket
+@non_windows_sock_test
+def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
+    """Check that peercred lookup works when enabled."""
+    httpserver, testclient = peercreds_enabled_server_and_client
 
     expected_peercreds = os.getpid(), os.getuid(), os.getgid()
     expected_peercreds = '|'.join(map(str, expected_peercreds))
     assert testclient.get(PEERCRED_IDS_URI) == expected_peercreds
     assert 'RuntimeError' in testclient.get(PEERCRED_TEXTS_URI)
 
+
+@pytest.mark.skipif(
+    not IS_UID_GID_RESOLVABLE,
+    reason='Modules `grp` and `pwd` are not available '
+           'under the current platform',
+)
+@http_over_unix_socket
+@non_windows_sock_test
+def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
+    """Check that peercred resolution works when enabled."""
+    httpserver, testclient = peercreds_enabled_server_and_client
     httpserver.peercreds_resolve_enabled = True
+
     import grp
     expected_textcreds = os.getlogin(), grp.getgrgid(os.getgid()).gr_name
     expected_textcreds = '!'.join(map(str, expected_textcreds))
