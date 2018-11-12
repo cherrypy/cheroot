@@ -176,6 +176,7 @@ class _TestGateway(Gateway):
 
 @pytest.fixture
 def peercreds_enabled_server_and_client(http_server, unix_sock_file):
+    """Construct a test server with `peercreds_enabled`."""
     httpserver = http_server.send(unix_sock_file)
     httpserver.gateway = _TestGateway
     httpserver.peercreds_enabled = True
@@ -185,7 +186,7 @@ def peercreds_enabled_server_and_client(http_server, unix_sock_file):
 @http_over_unix_socket
 @non_windows_sock_test
 def test_peercreds_unix_sock(peercreds_enabled_server):
-    """Check that peercred lookup and resolution work when enabled."""
+    """Check that peercred lookup works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
 
     expected_peercreds = os.getpid(), os.getuid(), os.getgid()
@@ -202,7 +203,7 @@ def test_peercreds_unix_sock(peercreds_enabled_server):
 @http_over_unix_socket
 @non_windows_sock_test
 def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
-    """Check that peercred lookup and resolution work when enabled."""
+    """Check that peercred resolution works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
     httpserver.peercreds_resolve_enabled = True
 
