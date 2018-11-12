@@ -185,7 +185,7 @@ def peercreds_enabled_server_and_client(http_server, unix_sock_file):
 
 @http_over_unix_socket
 @non_windows_sock_test
-def test_peercreds_unix_sock(peercreds_enabled_server):
+def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
     """Check that peercred lookup works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
 
@@ -202,7 +202,7 @@ def test_peercreds_unix_sock(peercreds_enabled_server):
 )
 @http_over_unix_socket
 @non_windows_sock_test
-def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
+def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
     """Check that peercred resolution works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
     httpserver.peercreds_resolve_enabled = True
