@@ -1862,9 +1862,9 @@ class HTTPServer:
         """Create and prepare the socket object."""
         sock = socket.socket(family, type, proto)
         prevent_socket_inheritance(sock)
-        
+
         host, port = bind_addr[:2]
-        
+
         if not IS_WINDOWS and port != 0:
             # Windows has different semantics for SO_REUSEADDR,
             # so don't set it
