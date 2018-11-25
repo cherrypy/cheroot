@@ -1832,7 +1832,7 @@ class HTTPServer:
             FS_PERMS_SET = False
 
         try:
-            sock = self.\(sock, bind_addr)
+            sock = self.bind_socket(sock, bind_addr)
         except socket.error:
             sock.close()
             raise
