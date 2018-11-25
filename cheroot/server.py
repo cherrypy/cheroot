@@ -1867,11 +1867,16 @@ class HTTPServer:
         IS_EPHEMERAL_PORT = port == 0
 
         if not (IS_WINDOWS or IS_EPHEMERAL_PORT):
-            # Windows has different semantics for SO_REUSEADDR,
-            # so don't set it
-            # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
-            # Also refer to Issue #114 for why adding SO_REUSEADDR under linux
-            # when the port is ephemeral is bad
+            """Enable SO_REUSEADDR for the current socket.
+
+            Skip for Windows (has different semantics)
+            or ephemeral ports (can steal ports from others).
+
+            Refs:
+            * https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
+            * https://github.com/cherrypy/cheroot/issues/114
+            * https://gavv.github.io/blog/ephemeral-port-reuse/
+            """
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if nodelay and not isinstance(bind_addr, str):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
