@@ -1832,7 +1832,7 @@ class HTTPServer:
             FS_PERMS_SET = False
 
         try:
-            sock = self.bind_socket(sock, bind_addr)
+            sock = self.\(sock, bind_addr)
         except socket.error:
             sock.close()
             raise
@@ -1862,18 +1862,21 @@ class HTTPServer:
         """Create and prepare the socket object."""
         sock = socket.socket(family, type, proto)
         prevent_socket_inheritance(sock)
-        if not IS_WINDOWS:
+        
+        host, port = bind_addr[:2]
+        
+        if not IS_WINDOWS and port != 0:
             # Windows has different semantics for SO_REUSEADDR,
-            # so don't set it.
+            # so don't set it
             # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
+            # Also refer to Issue #114 for why adding SO_REUSEADDR under linux
+            # when the port is ephemeral is bad
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if nodelay and not isinstance(bind_addr, str):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
         if ssl_adapter is not None:
             sock = ssl_adapter.bind(sock)
-
-        host, port = bind_addr[:2]
 
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See
