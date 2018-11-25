@@ -1864,8 +1864,9 @@ class HTTPServer:
         prevent_socket_inheritance(sock)
 
         host, port = bind_addr[:2]
+        IS_EPHEMERAL_PORT = port == 0
 
-        if not IS_WINDOWS and port != 0:
+        if not (IS_WINDOWS or IS_EPHEMERAL_PORT):
             # Windows has different semantics for SO_REUSEADDR,
             # so don't set it
             # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
