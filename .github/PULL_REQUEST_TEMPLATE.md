@@ -1,29 +1,28 @@
-* **What kind of change does this PR introduce?**
-  - [ ] bug fix
-  - [ ] feature
-  - [ ] docs update
-  - [ ] tests/coverage improvement
-  - [ ] refactoring
-  - [ ] other
+❓ **What kind of change does this PR introduce?**
+  - [ ] 🐞 bug fix
+  - [ ] 🐣 feature
+  - [ ] 📋 docs update
+  - [ ] 📋 tests/coverage improvement
+  - [ ] 📋 refactoring
+  - [ ] 💥 other
+
+📋 **What is the related issue number (starting with `#`)**
+
+#
+
+❓ **What is the current behavior?** (You can also link to an open issue here)
 
 
 
-* **What is the related issue number (starting with `#`)**
+❓ **What is the new behavior (if this is a feature change)?**
 
 
 
-* **What is the current behavior?** (You can also link to an open issue here)
+📋 **Other information**:
 
 
 
-* **What is the new behavior (if this is a feature change)?**
-
-
-
-* **Other information**:
-
-
-* **Checklist**:
+📋 **Checklist**:
 
   - [ ] I think the code is well written
   - [ ] I wrote [good commit messages][1]
