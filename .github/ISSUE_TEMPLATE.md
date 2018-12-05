@@ -43,4 +43,3 @@ https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
 - Browser: [all | Chrome XX | Firefox XX | IE XX | Safari XX | Mobile Chrome XX | Android X.X Web Browser | iOS XX Safari | iOS XX UIWebView | iOS XX WKWebView ]
 
 📋 **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, e.g. stackoverflow, gitter, etc.)
-
