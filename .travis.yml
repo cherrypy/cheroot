@@ -1,7 +1,7 @@
 conditions: v1
 
-dist: trusty
-sudo: false
+dist: xenial
+sudo: required
 language: python
 
 python:
@@ -9,10 +9,9 @@ python:
 - 3.4
 - 3.5
 - 3.6
-- &pypy2 pypy2.7-5.10.0
-- &pypy3 pypy3.5-5.10.1
+- &pypy2 pypy2.7-6.0
+- &pypy3 pypy3.5-6.0
 
-group: edge
 _base_envs:
 - &stage_lint
   stage: &stage_lint_name lint
@@ -65,9 +64,6 @@ _base_envs:
   - brew --cache
 - &python_3_7_mixture
   python: &mainstream_python 3.7
-  dist: xenial
-  group:
-  sudo: true
 - &pure_python_base
   <<: *stage_test
   <<: *python_3_7_mixture
