@@ -1,7 +1,6 @@
 conditions: v1
 
 dist: xenial
-sudo: required
 language: python
 
 python:
