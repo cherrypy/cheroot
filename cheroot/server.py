@@ -7,12 +7,12 @@ sticking incoming connections onto a Queue::
 
     server = HTTPServer(...)
     server.start()
-    while True:
-        tick()
-        # This blocks until a request comes in:
-        child = socket.accept()
-        conn = HTTPConnection(child, ...)
-        server.requests.put(conn)
+    ->  while True:
+            tick()
+            # This blocks until a request comes in:
+            child = socket.accept()
+            conn = HTTPConnection(child, ...)
+            server.requests.put(conn)
 
 Worker threads are kept in a pool and poll the Queue, popping off and then
 handling each connection in turn. Each connection can consist of an arbitrary
@@ -38,6 +38,21 @@ number of requests and their responses, so we run a nested loop::
                             response.close()
                 if req.close_connection:
                     return
+
+For running a server you can invoke :func:`start() <HTTPServer.start()>` (it
+will run the server forever) or use invoking :func:`prepare()
+<HTTPServer.prepare()>` and :func:`serve() <HTTPServer.serve()>` like this::
+
+    server = HTTPServer(...)
+    server.prepare()
+    try:
+        threading.Thread(target=server.serve).start()
+
+        # waiting/detecting some appropriate stop condition here
+        ...
+
+    finally:
+        server.stop()
 
 And now for a trivial doctest to exercise the test suite
 
@@ -73,7 +88,7 @@ from six.moves import urllib
 from . import errors, __version__
 from ._compat import bton, ntou
 from .workers import threadpool
-from .makefile import MakeFile
+from .makefile import MakeFile, StreamWriter
 
 
 __all__ = (
@@ -89,11 +104,34 @@ __all__ = (
 
 
 IS_WINDOWS = platform.system() == 'Windows'
+"""Flag indicating whether the app is running under Windows."""
 
 
-if not IS_WINDOWS:
-    import grp
-    import pwd
+IS_GAE = os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/')
+"""Flag indicating whether the app is running in GAE env.
+
+Ref:
+https://cloud.google.com/appengine/docs/standard/python/tools
+/using-local-server#detecting_application_runtime_environment
+"""
+
+
+IS_UID_GID_RESOLVABLE = not IS_WINDOWS and not IS_GAE
+"""Indicates whether UID/GID resolution's available under current platform."""
+
+
+if IS_UID_GID_RESOLVABLE:
+    try:
+        import grp
+        import pwd
+    except ImportError:
+        """Unavailable in the current env.
+
+        This shouldn't be happening normally.
+        All of the known cases are excluded via the if clause.
+        """
+        IS_UID_GID_RESOLVABLE = False
+        grp, pwd = None, None
     import struct
 
 
@@ -1287,7 +1325,7 @@ class HTTPConnection:
         if not req or req.sent_headers:
             return
         # Unwrap wfile
-        self.wfile = MakeFile(self.socket._sock, 'wb', self.wbufsize)
+        self.wfile = StreamWriter(self.socket._sock, 'wb', self.wbufsize)
         msg = (
             'The client sent a plain HTTP request, but '
             'this server only speaks HTTPS on this port.'
@@ -1397,9 +1435,11 @@ class HTTPConnection:
             RuntimeError: in case of UID/GID lookup unsupported or disabled
 
         """
-        if IS_WINDOWS:
+        if not IS_UID_GID_RESOLVABLE:
             raise NotImplementedError(
-                'UID/GID lookup can only be done under UNIX-like OS'
+                'UID/GID lookup is unavailable under current platform. '
+                'It can only be done under UNIX-like OS '
+                'but not under the Google App Engine'
             )
         elif not self.peercreds_resolve_enabled:
             raise RuntimeError('UID/GID lookup is disabled within this server')
@@ -1713,12 +1753,12 @@ class HTTPServer:
             self.stop()
             raise
 
-    def start(self):
-        """Run the server forever."""
-        # We don't have to trap KeyboardInterrupt or SystemExit here,
-        # because cherrpy.server already does so, calling self.stop() for us.
-        # If you're using this server with another framework, you should
-        # trap those exceptions in whatever code block calls start().
+    def prepare(self):
+        """Prepare server to serving requests.
+
+        It binds a socket's port, setups the socket to ``listen()`` and does
+        other preparing things.
+        """
         self._interrupt = None
 
         if self.software is None:
@@ -1726,27 +1766,17 @@ class HTTPServer:
 
         # Select the appropriate socket
         self.socket = None
+        msg = 'No socket could be created'
         if os.getenv('LISTEN_PID', None):
             # systemd socket activation
             self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
         elif isinstance(self.bind_addr, six.string_types):
             # AF_UNIX socket
-
-            # So we can reuse the socket...
             try:
-                os.unlink(self.bind_addr)
-            except Exception:
-                pass
-
-            # So everyone can access the socket...
-            try:
-                os.chmod(self.bind_addr, 0o777)
-            except Exception:
-                pass
-
-            info = [
-                (socket.AF_UNIX, socket.SOCK_STREAM, 0, '', self.bind_addr)
-            ]
+                self.bind_unix_socket(self.bind_addr)
+            except socket.error as serr:
+                msg = '%s -- (%s: %s)' % (msg, self.bind_addr, serr)
+                six.raise_from(socket.error(msg), serr)
         else:
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6
@@ -1771,8 +1801,6 @@ class HTTPServer:
 
                 info = [(sock_type, socket.SOCK_STREAM, 0, '', bind_addr)]
 
-        if not self.socket:
-            msg = 'No socket could be created'
             for res in info:
                 af, socktype, proto, canonname, sa = res
                 try:
@@ -1784,8 +1812,8 @@ class HTTPServer:
                         self.socket.close()
                     self.socket = None
 
-            if not self.socket:
-                raise socket.error(msg)
+        if not self.socket:
+            raise socket.error(msg)
 
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
@@ -1796,6 +1824,9 @@ class HTTPServer:
 
         self.ready = True
         self._start_time = time.time()
+
+    def serve(self):
+        """Serve requests, after invoking :func:`prepare()`."""
         while self.ready:
             try:
                 self.tick()
@@ -1815,6 +1846,18 @@ class HTTPServer:
                 if self.interrupt:
                     raise self.interrupt
 
+    def start(self):
+        """Run the server forever.
+
+        It is shortcut for invoking :func:`prepare()` then :func:`serve()`.
+        """
+        # We don't have to trap KeyboardInterrupt or SystemExit here,
+        # because cherrypy.server already does so, calling self.stop() for us.
+        # If you're using this server with another framework, you should
+        # trap those exceptions in whatever code block calls start().
+        self.prepare()
+        self.serve()
+
     def error_log(self, msg='', level=20, traceback=False):
         """Write error message to log.
 
@@ -1833,20 +1876,103 @@ class HTTPServer:
 
     def bind(self, family, type, proto=0):
         """Create (or recreate) the actual socket object."""
-        self.socket = socket.socket(family, type, proto)
-        prevent_socket_inheritance(self.socket)
-        if not IS_WINDOWS:
-            # Windows has different semantics for SO_REUSEADDR,
-            # so don't set it.
-            # https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if self.nodelay and not isinstance(self.bind_addr, str):
-            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        sock = self.prepare_socket(
+            self.bind_addr, family, type, proto, self.nodelay, self.ssl_adapter
+        )
+        sock = self.socket = self.bind_socket(sock, self.bind_addr)
+        self.bind_addr = self.resolve_real_bind_addr(sock)
+        return sock
 
-        if self.ssl_adapter is not None:
-            self.socket = self.ssl_adapter.bind(self.socket)
+    def bind_unix_socket(self, bind_addr):
+        """Create (or recreate) a UNIX socket object."""
+        if IS_WINDOWS:
+            """
+            Trying to access socket.AF_UNIX under Windows
+            causes an AttributeError.
+            """
+            raise ValueError(  # or RuntimeError?
+                'AF_UNIX sockets are not supported under Windows.'
+            )
 
-        host, port = self.bind_addr[:2]
+        fs_permissions = 0o777  # TODO: allow changing mode
+
+        try:
+            # Make possible reusing the socket...
+            os.unlink(self.bind_addr)
+        except OSError:
+            """
+            File does not exist, which is the primary goal anyway.
+            """
+
+        sock = self.prepare_socket(
+            bind_addr=bind_addr,
+            family=socket.AF_UNIX,
+            type=socket.SOCK_STREAM,
+            proto=0,
+            nodelay=self.nodelay,
+            ssl_adapter=self.ssl_adapter,
+        )
+
+        try:
+            """Linux way of pre-populating fs mode permissions."""
+            # Allow everyone access the socket...
+            os.fchmod(sock.fileno(), fs_permissions)
+            FS_PERMS_SET = True
+        except OSError:
+            FS_PERMS_SET = False
+
+        try:
+            sock = self.bind_socket(sock, bind_addr)
+        except socket.error:
+            sock.close()
+            raise
+
+        bind_addr = self.resolve_real_bind_addr(sock)
+
+        try:
+            """FreeBSD/macOS pre-populating fs mode permissions."""
+            if not FS_PERMS_SET:
+                os.lchmod(bind_addr, fs_permissions)
+                FS_PERMS_SET = True
+        except OSError:
+            pass
+
+        if not FS_PERMS_SET:
+            self.error_log(
+                'Failed to set socket fs mode permissions',
+                level=logging.WARNING,
+            )
+
+        self.bind_addr = bind_addr
+        self.socket = sock
+        return sock
+
+    @staticmethod
+    def prepare_socket(bind_addr, family, type, proto, nodelay, ssl_adapter):
+        """Create and prepare the socket object."""
+        sock = socket.socket(family, type, proto)
+        prevent_socket_inheritance(sock)
+
+        host, port = bind_addr[:2]
+        IS_EPHEMERAL_PORT = port == 0
+
+        if not (IS_WINDOWS or IS_EPHEMERAL_PORT):
+            """Enable SO_REUSEADDR for the current socket.
+
+            Skip for Windows (has different semantics)
+            or ephemeral ports (can steal ports from others).
+
+            Refs:
+            * https://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
+            * https://github.com/cherrypy/cheroot/issues/114
+            * https://gavv.github.io/blog/ephemeral-port-reuse/
+            """
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if nodelay and not isinstance(bind_addr, str):
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+        if ssl_adapter is not None:
+            sock = ssl_adapter.bind(sock)
 
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See
@@ -1858,19 +1984,27 @@ class HTTPServer:
         )
         if listening_ipv6:
             try:
-                self.socket.setsockopt(
-                    socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0
-                )
+                sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             except (AttributeError, socket.error):
                 # Apparently, the socket option is not available in
                 # this machine's TCP stack
                 pass
 
-        self.socket.bind(self.bind_addr)
-        # TODO: keep requested bind_addr separate real bound_addr (port is
-        # different in case of ephemeral port 0)
-        self.bind_addr = self.socket.getsockname()
-        if family in (
+        return sock
+
+    @staticmethod
+    def bind_socket(socket_, bind_addr):
+        """Bind the socket to given interface."""
+        socket_.bind(bind_addr)
+        return socket_
+
+    @staticmethod
+    def resolve_real_bind_addr(socket_):
+        """Retrieve actual bind addr from bound socket."""
+        # FIXME: keep requested bind_addr separate real bound_addr (port
+        # is different in case of ephemeral port 0)
+        bind_addr = socket_.getsockname()
+        if socket_.family in (
             # Windows doesn't have socket.AF_UNIX, so not using it in check
             socket.AF_INET,
             socket.AF_INET6,
@@ -1879,7 +2013,8 @@ class HTTPServer:
 
             In case of bytes with a leading null-byte it's an abstract socket.
             """
-            self.bind_addr = self.bind_addr[:2]
+            return bind_addr[:2]
+        return bind_addr
 
     def tick(self):
         """Accept a new connection and put it on the Queue."""

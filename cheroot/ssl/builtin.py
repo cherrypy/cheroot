@@ -11,10 +11,14 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import sys
+
 try:
     import ssl
+
+    IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
 except ImportError:
-    ssl = None
+    ssl = IS_ABOVE_OPENSSL10 = None
 
 try:
     from _pyio import DEFAULT_BUFFER_SIZE
@@ -28,8 +32,7 @@ import six
 
 from . import Adapter
 from .. import errors
-from ..makefile import MakeFile
-
+from ..makefile import StreamReader, StreamWriter
 
 if six.PY3:
     generic_socket_error = OSError
@@ -40,6 +43,9 @@ else:
     del socket
 
 
+IS_BELOW_PY37 = sys.version_info[:2] < (3, 7)
+
+
 def _assert_ssl_exc_contains(exc, *msgs):
     """Check whether SSL exception contains either of messages provided."""
     if len(msgs) < 1:
@@ -47,7 +53,7 @@ def _assert_ssl_exc_contains(exc, *msgs):
             '_assert_ssl_exc_contains() requires '
             'at least one message to be passed.'
         )
-    err_msg_lower = exc.args[1].lower()
+    err_msg_lower = str(exc).lower()
     return any(m.lower() in err_msg_lower for m in msgs)
 
 
@@ -68,6 +74,21 @@ class BuiltinSSLAdapter(Adapter):
 
     ciphers = None
     """The ciphers list of SSL."""
+
+    CERT_KEY_TO_ENV = {
+        'subject': 'SSL_CLIENT_S_DN',
+        'issuer': 'SSL_CLIENT_I_DN',
+    }
+
+    CERT_KEY_TO_LDAP_CODE = {
+        'countryName': 'C',
+        'stateOrProvinceName': 'ST',
+        'localityName': 'L',
+        'organizationName': 'O',
+        'organizationalUnitName': 'OU',
+        'commonName': 'CN',
+        'emailAddress': 'Email',
+    }
 
     def __init__(
         self, certificate, private_key, certificate_chain=None, ciphers=None
@@ -93,12 +114,12 @@ class BuiltinSSLAdapter(Adapter):
 
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
+        EMPTY_RESULT = None, {}
         try:
             s = self.context.wrap_socket(
                 sock, do_handshake_on_connect=True, server_side=True
             )
         except ssl.SSLError as ex:
-            EMPTY_RESULT = None, {}
             if ex.errno == ssl.SSL_ERROR_EOF:
                 # This is almost certainly due to the cherrypy engine
                 # 'pinging' the socket to assert it's connectable;
@@ -136,15 +157,19 @@ class BuiltinSSLAdapter(Adapter):
         except generic_socket_error as exc:
             """It is unclear why exactly this happens.
 
-            It's reproducible only under Python 2 with openssl>1.0 and stdlib
-            ``ssl`` wrapper, and only with CherryPy.
-            So it looks like some healthcheck tries to connect to this socket
-            during startup (from the same process).
+            It's reproducible only under Python<=3.6 with openssl>1.0
+            and stdlib ``ssl`` wrapper.
+            In CherryPy it's triggered by Checker plugin, which connects
+            to the app listening to the socket port in TLS mode via plain
+            HTTP during startup (from the same process).
 
 
             Ref: https://github.com/cherrypy/cherrypy/issues/1618
             """
-            if six.PY2 and exc.args == (0, 'Error'):
+            is_error0 = exc.args == (0, 'Error')
+            ssl_doesnt_handle_error0 = IS_ABOVE_OPENSSL10 and IS_BELOW_PY37
+
+            if is_error0 and ssl_doesnt_handle_error0:
                 return EMPTY_RESULT
             raise
         return s, self.get_environ(s)
@@ -161,8 +186,36 @@ class BuiltinSSLAdapter(Adapter):
             # SSL_VERSION_INTERFACE     string  The mod_ssl program version
             # SSL_VERSION_LIBRARY   string  The OpenSSL program version
         }
+
+        if self.context and self.context.verify_mode != ssl.CERT_NONE:
+            client_cert = sock.getpeercert()
+            if client_cert:
+                for cert_key, env_var in self.CERT_KEY_TO_ENV.items():
+                    ssl_environ.update(
+                        self.env_dn_dict(env_var, client_cert.get(cert_key))
+                    )
+
         return ssl_environ
+
+    def env_dn_dict(self, env_prefix, cert_value):
+        """Return a dict of WSGI environment variables for a client cert DN.
+
+        E.g. SSL_CLIENT_S_DN_CN, SSL_CLIENT_S_DN_C, etc.
+        See SSL_CLIENT_S_DN_x509 at
+        https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#envvars.
+        """
+        if not cert_value:
+            return {}
+
+        env = {}
+        for rdn in cert_value:
+            for attr_name, val in rdn:
+                attr_code = self.CERT_KEY_TO_LDAP_CODE.get(attr_name)
+                if attr_code:
+                    env['%s_%s' % (env_prefix, attr_code)] = val
+        return env
 
     def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
         """Return socket file object."""
-        return MakeFile(sock, mode, bufsize)
+        cls = StreamReader if 'r' in mode else StreamWriter
+        return cls(sock, mode, bufsize)

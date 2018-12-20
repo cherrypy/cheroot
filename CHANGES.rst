@@ -1,3 +1,38 @@
+v6.5.2
+======
+- :issue:`6` via :pr:`109`: Fix import of
+  :py:mod:`cheroot.ssl.pyopenssl` by refactoring and separating
+  :py:mod:`cheroot.makefile`'s stream wrappers.
+
+- :issue:`95` via :pr:`109`: Add initial tests for SSL layer with use
+  of :py:mod:`trustme`
+
+v6.5.1
+======
+- :issue:`93` via :pr:`110`: Improve UNIX socket fs access mode
+  in :py:meth:`cheroot.server.HTTPServer.prepare` on a file socket
+  when starting to listen to it.
+
+v6.5.0
+======
+
+- :cp-issue:`1001` via :pr:`52` and :pr:`108`: Add support for
+  validating client certificates.
+
+v6.4.0
+======
+
+- :issue:`68` via :pr:`98`: Factor out parts of
+  :py:meth:`cheroot.server.HTTPServer.start` into
+  :py:meth:`prepare() <cheroot.server.HTTPServer.prepare>` and
+  :py:meth:`serve() <cheroot.server.HTTPServer.serve>`
+
+v6.3.3
+======
+
+- Fix bug with returning empty result in
+  :py:meth:`cheroot.ssl.builtin.BuiltinSSLAdapter.wrap`
+
 v6.3.2
 ======
 

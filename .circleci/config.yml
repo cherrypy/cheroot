@@ -24,25 +24,34 @@ jobs:
         ' >> $BASH_ENV
 
     - run: |-
-        for py_ver in 2.7.14 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
+        for py_ver in 2.7.14 3.7.0 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
         do
           pyenv install "$py_ver" &
         done
         wait
-    - run: pyenv global 2.7.14 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
+    - run: pyenv global 2.7.14 3.7.0 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
 
     - run: pip install tox tox-pyenv
     - checkout
-    - run: tox -e py27,py34,py35,py36,pypy3 -- -p no:sugar
+    - run:
+        name: Run tests
+        command: tox -e py27,py34,py35,py36,py37,pypy3 -- -p no:sugar
+        # Environment variables for py-cryptography library
+        environment:
+          LDFLAGS: "-L/usr/local/opt/openssl/lib"
+          CPPFLAGS: "-I/usr/local/opt/openssl/include"
+          PKG_CONFIG_PATH: "/usr/local/opt/openssl/lib/pkgconfig"
 
   linux-build:
+    parallelism: 4
+
     docker:
     - image: randomknowledge/docker-pyenv-tox
 
     steps:
     - checkout
     - run: pip install tox
-    - run: tox -e py27,py34,py35,py36
+    - run: tox -e py27,py34,py35,py36,py37
 
 workflows:
   version: 2

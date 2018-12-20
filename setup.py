@@ -1,103 +1,139 @@
 #! /usr/bin/env python
 """Cheroot package setuptools installer."""
 
-# Project skeleton maintained at https://github.com/jaraco/skeleton
-
-import io
-
 import setuptools
 
-with io.open('README.rst', encoding='utf-8') as readme:
-    long_description = readme.read()
 
-name = 'cheroot'
-description = 'Highly-optimized, pure-python HTTP server'
-nspkg_technique = 'native'
-"""
-Does this package use "native" namespace packages or
-pkg_resources "managed" namespace packages?
-"""
+try:
+    from setuptools.config import read_configuration, ConfigOptionsHandler
+    import setuptools.config
+    import setuptools.dist
 
-repo_slug = 'cherrypy/{}'.format(name)
-repo_url = 'https://github.com/{}'.format(repo_slug)
+    # Set default value for 'use_scm_version'
+    setattr(setuptools.dist.Distribution, 'use_scm_version', False)
 
-params = dict(
-    name=name,
-    use_scm_version=True,
-    author='CherryPy Team',
-    author_email='team@cherrypy.org',
-    description=description or name,
-    long_description=long_description,
-    url=repo_url,
-    project_urls={
-        'CI: AppVeyor': 'https://ci.appveyor.com/project/{}'.format(repo_slug),
-        'CI: Travis': 'https://travis-ci.org/{}'.format(repo_slug),
-        'CI: Circle': 'https://circleci.com/gh/{}'.format(repo_slug),
-        'Docs: RTD': 'https://{}.cherrypy.org'.format(name),
-        'GitHub: issues': '{}/issues'.format(repo_url),
-        'GitHub: repo': repo_url,
-    },
-    packages=setuptools.find_packages(),
-    include_package_data=True,
-    namespace_packages=(
-        name.split('.')[:-1] if nspkg_technique == 'managed' else []
-    ),
-    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
-    install_requires=[
-        'backports.functools_lru_cache',
-        'six>=1.11.0',
-        'more_itertools>=2.6',
-    ],
-    extras_require={
-        'docs': [
-            'sphinx',
-            'rst.linker>=1.9',
-            'jaraco.packaging>=3.2',
-            'docutils',
-            'alabaster',
-            'collective.checkdocs',
-        ],
-        'testing': [
-            'pytest>=2.8',
-            'pytest-sugar',
-            'pytest-testmon>=0.9.7',
-            'pytest-watch',
-            # measure test coverage
-            'coverage',
-            # send test coverage to codecov.io
-            'codecov',
-            'pytest-cov',
-            'backports.unittest_mock',
-        ],
-    },
-    setup_requires=[
-        'setuptools_scm>=1.15.0',
-        'setuptools_scm_git_archive>=1.0',
-    ],
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
-        'Operating System :: OS Independent',
-        'Framework :: CherryPy',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: Implementation',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: Jython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Topic :: Internet :: WWW/HTTP',
-        'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
-        'Topic :: Internet :: WWW/HTTP :: WSGI',
-        'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
-    ],
-    entry_points={'console_scripts': ['cheroot = cheroot.cli:main']},
-)
-if __name__ == '__main__':
-    setuptools.setup(**params)
+    # Attach bool parser to 'use_scm_version' option
+    class ShimConfigOptionsHandler(ConfigOptionsHandler):
+        """Extension class for ConfigOptionsHandler."""
+
+        @property
+        def parsers(self):
+            """Return an option mapping with default data type parsers."""
+            _orig_parsers = super(ShimConfigOptionsHandler, self).parsers
+            return dict(use_scm_version=self._parse_bool, **_orig_parsers)
+
+    setuptools.config.ConfigOptionsHandler = ShimConfigOptionsHandler
+except ImportError:
+    """This is a shim for setuptools<30.3."""
+    import io
+    import json
+
+    try:
+        from configparser import ConfigParser, NoSectionError
+    except ImportError:
+        from ConfigParser import ConfigParser, NoSectionError
+
+        ConfigParser.read_file = ConfigParser.readfp
+
+    def maybe_read_files(d):
+        """Read files if the string starts with `file:` marker."""
+        d = d.strip()
+        if not d.startswith('file:'):
+            return d
+        descs = []
+        for fname in map(str.strip, d[5:].split(',')):
+            with io.open(fname, encoding='utf-8') as f:
+                descs.append(f.read())
+        return ''.join(descs)
+
+    def cfg_val_to_list(v):
+        """Turn config val to list and filter out empty lines."""
+        return list(filter(bool, map(str.strip, v.strip().splitlines())))
+
+    def cfg_val_to_dict(v):
+        """Turn config val to dict and filter out empty lines."""
+        return dict(
+            map(
+                lambda l: list(map(str.strip, l.split('=', 1))),
+                filter(bool, map(str.strip, v.strip().splitlines())),
+            )
+        )
+
+    def cfg_val_to_primitive(v):
+        """Parse primitive config val to appropriate data type."""
+        return json.loads(v.strip().lower())
+
+    def read_configuration(filepath):
+        """Read metadata and options from setup.cfg located at filepath."""
+        cfg = ConfigParser()
+        with io.open(filepath, encoding='utf-8') as f:
+            cfg.read_file(f)
+
+        md = dict(cfg.items('metadata'))
+        for list_key in 'classifiers', 'keywords':
+            try:
+                md[list_key] = cfg_val_to_list(md[list_key])
+            except KeyError:
+                pass
+        try:
+            md['long_description'] = maybe_read_files(md['long_description'])
+        except KeyError:
+            pass
+        opt = dict(cfg.items('options'))
+        for list_key in 'use_scm_version', 'zip_safe':
+            try:
+                opt[list_key] = cfg_val_to_primitive(opt[list_key])
+            except KeyError:
+                pass
+        for list_key in 'scripts', 'install_requires', 'setup_requires':
+            try:
+                opt[list_key] = cfg_val_to_list(opt[list_key])
+            except KeyError:
+                pass
+        try:
+            opt['package_dir'] = cfg_val_to_dict(opt['package_dir'])
+        except KeyError:
+            pass
+        opt_package_data = dict(cfg.items('options.package_data'))
+        try:
+            if not opt_package_data.get('', '').strip():
+                opt_package_data[''] = opt_package_data['*']
+                del opt_package_data['*']
+        except KeyError:
+            pass
+        try:
+            opt_extras_require = dict(cfg.items('options.extras_require'))
+            opt['extras_require'] = {}
+            for k, v in opt_extras_require.items():
+                opt['extras_require'][k] = cfg_val_to_list(v)
+        except NoSectionError:
+            pass
+        opt['package_data'] = {}
+        for k, v in opt_package_data.items():
+            opt['package_data'][k] = cfg_val_to_list(v)
+        cur_pkgs = opt.get('packages', '').strip()
+        if '\n' in cur_pkgs:
+            opt['packages'] = cfg_val_to_list(opt['packages'])
+        elif cur_pkgs.startswith('find:'):
+            opt_packages_find = dict(cfg.items('options.packages.find'))
+            opt['packages'] = setuptools.find_packages(**opt_packages_find)
+        return {'metadata': md, 'options': opt}
+
+
+setup_params = {}
+declarative_setup_params = read_configuration('setup.cfg')
+
+# Patch incorrectly decoded package_dir option
+# ``egg_info`` demands native strings failing with unicode under Python 2
+# Ref https://github.com/pypa/setuptools/issues/1136
+if 'package_dir' in declarative_setup_params['options']:
+    declarative_setup_params['options']['package_dir'] = {
+        str(k): str(v)
+        for k, v in declarative_setup_params['options']['package_dir'].items()
+    }
+
+setup_params = dict(setup_params, **declarative_setup_params['metadata'])
+setup_params = dict(setup_params, **declarative_setup_params['options'])
+
+
+__name__ == '__main__' and setuptools.setup(**setup_params)

@@ -16,6 +16,11 @@ except ImportError:
 import six
 
 from . import errors
+from ._compat import extract_bytes, memoryview
+
+
+# Write only 16K at a time to sockets
+SOCK_WRITE_BLOCKSIZE = 16384
 
 
 class BufferedWriter(io.BufferedWriter):
@@ -44,14 +49,6 @@ class BufferedWriter(io.BufferedWriter):
             del self._write_buf[:n]
 
 
-def MakeFile_PY3(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
-    """File object attached to a socket object."""
-    if 'r' in mode:
-        return io.BufferedReader(socket.SocketIO(sock, mode), bufsize)
-    else:
-        return BufferedWriter(socket.SocketIO(sock, mode), bufsize)
-
-
 class MakeFile_PY2(getattr(socket, '_fileobject', object)):
     """Faux file object attached to a socket object."""
 
@@ -60,20 +57,34 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
         self.bytes_read = 0
         self.bytes_written = 0
         socket._fileobject.__init__(self, *args, **kwargs)
+        self._refcount = 0
+
+    def _reuse(self):
+        self._refcount += 1
+
+    def _drop(self):
+        if self._refcount < 0:
+            self.close()
+        else:
+            self._refcount -= 1
 
     def write(self, data):
         """Sendall for non-blocking sockets."""
-        while data:
+        bytes_sent = 0
+        data_mv = memoryview(data)
+        payload_size = len(data_mv)
+        while bytes_sent < payload_size:
             try:
-                bytes_sent = self.send(data)
-                data = data[bytes_sent:]
+                bytes_sent += self.send(
+                    data_mv[bytes_sent : bytes_sent + SOCK_WRITE_BLOCKSIZE]
+                )
             except socket.error as e:
                 if e.args[0] not in errors.socket_errors_nonblocking:
                     raise
 
     def send(self, data):
         """Send some part of message to the socket."""
-        bytes_sent = self._sock.send(data)
+        bytes_sent = self._sock.send(extract_bytes(data))
         self.bytes_written += bytes_sent
         return bytes_sent
 
@@ -389,4 +400,27 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return ''.join(buffers)
 
 
-MakeFile = MakeFile_PY2 if six.PY2 else MakeFile_PY3
+if six.PY3:
+
+    class StreamReader(io.BufferedReader):
+        """Socket stream reader."""
+
+        def __init__(self, sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
+            """Initialize socket stream reader."""
+            super().__init__(socket.SocketIO(sock, mode), bufsize)
+
+    class StreamWriter(BufferedWriter):
+        """Socket stream writer."""
+
+        def __init__(self, sock, mode='w', bufsize=io.DEFAULT_BUFFER_SIZE):
+            """Initialize socket stream writer."""
+            super().__init__(socket.SocketIO(sock, mode), bufsize)
+
+    def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
+        """File object attached to a socket object."""
+        cls = StreamReader if 'r' in mode else StreamWriter
+        return cls(sock, mode, bufsize)
+
+
+else:
+    StreamReader = StreamWriter = MakeFile = MakeFile_PY2

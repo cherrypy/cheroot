@@ -1,15 +1,16 @@
-dist: trusty
-sudo: false
+conditions: v1
+
+dist: xenial
 language: python
 
 python:
 - 2.7
 - 3.4
 - 3.5
-- &pypy2 pypy2.7-5.10.0
-- &pypy3 pypy3.5-5.10.0
+- 3.6
+- &pypy2 pypy2.7-6.0
+- &pypy3 pypy3.5-6.0
 
-group: edge
 _base_envs:
 - &stage_lint
   stage: &stage_lint_name lint
@@ -37,8 +38,6 @@ _base_envs:
     then
       rm -rf "$PYENV_ROOT"
       curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
-      eval "$(pyenv init -)"
-      eval "$(pyenv virtualenv-init -)"
     fi
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
@@ -52,8 +51,8 @@ _base_envs:
   os: osx
   language: generic
   before_install:
-  - brew update
-  - brew install pyenv || brew upgrade pyenv
+  - brew install zlib readline
+  - brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/pyenv.rb || brew upgrade pyenv
   - &ensure_pyenv_preloaded |
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
@@ -62,26 +61,37 @@ _base_envs:
   - *python_version
   before_cache:
   - brew --cache
+- &python_3_7_mixture
+  python: &mainstream_python 3.7
 - &pure_python_base
   <<: *stage_test
-  python: &mainstream_python 3.6
+  <<: *python_3_7_mixture
 - &pure_python_base_priority
   <<: *pure_python_base
   <<: *stage_test_priority
 - &lint_python_base
   <<: *stage_lint
-  python: *mainstream_python
+  # Some linters depend on pyyaml, which fails under Python 3.7 now:
+  python: 3.6
   after_failure: skip
 
 jobs:
   fast_finish: true
+  allow_failures:
+  - env: TOXENV=pre-commit-failing
   include:
   - <<: *lint_python_base
+    name: pre-commit.com tool linters
     env: TOXENV=pre-commit
   - <<: *lint_python_base
+    <<: *python_3_7_mixture
+    name: setup.py check linter
     env: TOXENV=setup-check
+  - <<: *lint_python_base
+    name: temporary failing pre-commit.com tool linters
+    env: TOXENV=pre-commit-failing
   - <<: *pure_python_base_priority
-    # mainstream here (3.6)
+    # mainstream here (3.7)
   - <<: *pure_python_base_priority
     python: nightly
   - <<: *osx_python_base
@@ -106,29 +116,36 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
+    python: 3.6
+    env:
+    - PYTHON_VERSION=3.6.5
+    - *env_pyenv
+    - *env_path
+  - <<: *osx_python_base
     python: *mainstream_python
     env:
-    - PYTHON_VERSION=3.6.1
+    - PYTHON_VERSION=3.7.0
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     <<: *manual_run_or_cron
     python: nightly
     env:
-    - PYTHON_VERSION=3.7-dev
+    - PYTHON_VERSION=3.8-dev
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     <<: *manual_run_or_cron
-    python: pypy3.5-5.10.0
+    osx_image: xcode9.4
+    python: pypy3.5-5.10.1
     env:
-    - PYTHON_VERSION=pypy3.5-5.10.0
+    - PYTHON_VERSION=pypy3.5-5.10.1
     - *env_pyenv
     - *env_path
   # pypy2.7-5.10.0 fails under OS X because it's unsupported
   - <<: *stage_deploy
     if: tag IS present
-    python: *mainstream_python
+    <<: *python_3_7_mixture
     install: skip
     script: skip
     deploy:
@@ -140,16 +157,17 @@ jobs:
         secure: RAfz06AINvz7bfij/YhfkAreRqamgxS8a6jSRNxntYhtJke3ZszUbIDag8+n1I+G5XT2LnMhHqPNR7Plc+AeMz7VXTuy+b81Li5kse20NYlPhd7mBVmTUpXtqYQashV5J39F4qkATBLznCOrMEomM07VTXjO/o2hmQuXniab2Uo=
       distributions: dists
       skip_cleanup: true
-      skip_upload_docs: true
 
 cache:
   pip: true
   directories:
+  - $HOME/.cache/pre-commit
   - $HOME/.pre-commit
+  - $HOME/virtualenv/python$(python -c 'import platform; print(platform.python_version())')
   - $HOME/Library/Caches/Homebrew
 
 install:
-- python -m pip install tox "setuptools>=28.2"
+- python -m pip install tox tox-venv
 - python -m tox --notest  # Pre-populate a virtualenv with dependencies
 
 script:
