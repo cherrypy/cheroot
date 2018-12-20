@@ -3,21 +3,21 @@
 """Configuration of Sphinx documentation generator."""
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.extlinks',
-    'sphinx.ext.intersphinx',
-    'jaraco.packaging.sphinx',
-    'rst.linker',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
+    "jaraco.packaging.sphinx",
+    "rst.linker",
 ]
 
-master_doc = 'index'
+master_doc = "index"
 
 link_files = {
-    '../CHANGES.rst': dict(
+    "../CHANGES.rst": dict(
         replace=[
             dict(
-                pattern=r'^(?m)((?P<scm_version>v?\d+(\.\d+){1,2}))\n[-=]+\n',
-                with_scm='{text}\n{rev[timestamp]:%d %b %Y}\n',
+                pattern=r"^(?m)((?P<scm_version>v?\d+(\.\d+){1,2}))\n[-=]+\n",
+                with_scm="{text}\n{rev[timestamp]:%d %b %Y}\n",
             ),
         ],
     ),
