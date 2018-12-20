@@ -1,3 +1,8 @@
+v6.5.3
+======
+
+- :pr:`149`: Make ``SCRIPT_NAME`` optional per PEP 333.
+
 v6.5.2
 ======
 - :issue:`6` via :pr:`109`: Fix import of
