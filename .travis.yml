@@ -53,12 +53,14 @@ _base_envs:
   before_install:
   - brew install zlib readline
   - brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/pyenv.rb || brew upgrade pyenv
+  - brew install openssl@1.1
   - &ensure_pyenv_preloaded |
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
   - *install_python
   - *switch_python
   - *python_version
+  - env CRYPTOGRAPHY_SUPPRESS_LINK_FLAGS=1 LDFLAGS="$(brew --prefix openssl@1.1)/lib/libssl.a $(brew --prefix openssl@1.1)/lib/libcrypto.a" CFLAGS="-I$(brew --prefix openssl@1.1)/include" pip install cryptography
   before_cache:
   - brew --cache
 - &python_3_7_mixture
