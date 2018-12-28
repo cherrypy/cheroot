@@ -9,9 +9,6 @@ import platform
 import ssl
 import threading
 import time
-from unittest.mock import (  # FIXME: replace it with pytest-mock
-    patch, MagicMock
-)
 
 import pytest
 import requests
@@ -105,7 +102,7 @@ def ca():
         pytest.param('pyopenssl', marks=fails_under_py3),
     ),
 )
-def test_ssl_adapters(tls_http_server, ca, adapter_type):
+def test_ssl_adapters(mocker, tls_http_server, ca, adapter_type):
     """Test ability to connect to server via HTTPS using adapters."""
     interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
     cert = ca.issue_server_cert(ntou(interface), )
@@ -115,7 +112,10 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
             if adapter_type == 'builtin':
                 # Temporary patch chain loading
                 # as it fails for some reason:
-                with patch('ssl.SSLContext.load_cert_chain', MagicMock):
+                with mocker.mock_module.patch(
+                        'ssl.SSLContext.load_cert_chain',
+                        mocker.MagicMock,
+                ):
                     tls_adapter = tls_adapter_cls(
                         cert_temp_path, ca_temp_path,
                     )
@@ -176,6 +176,7 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
     ),
 )
 def test_tls_client_auth(
+        mocker,
         tls_http_server, ca,
         adapter_type, cert_name,
         tls_verify_mode,
@@ -193,7 +194,10 @@ def test_tls_client_auth(
             if adapter_type == 'builtin':
                 # Temporary patch chain loading
                 # as it fails for some reason:
-                with patch('ssl.SSLContext.load_cert_chain', MagicMock):
+                with mocker.mock_module.patch(
+                        'ssl.SSLContext.load_cert_chain',
+                        mocker.MagicMock,
+                ):
                     tls_adapter = tls_adapter_cls(
                         cert_temp_path, ca_temp_path,
                     )
