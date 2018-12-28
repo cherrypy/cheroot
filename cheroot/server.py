@@ -1842,7 +1842,10 @@ class HTTPServer:
         try:
             """FreeBSD/macOS pre-populating fs mode permissions."""
             if not FS_PERMS_SET:
-                os.lchmod(bind_addr, fs_permissions)
+                try:
+                    os.lchmod(bind_addr, fs_permissions)
+                except AttributeError:
+                    os.chmod(bind_addr, fs_permissions, follow_symlinks=False)
                 FS_PERMS_SET = True
         except OSError:
             pass
