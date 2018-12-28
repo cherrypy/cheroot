@@ -5,7 +5,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-import platform
 import ssl
 import threading
 import time
@@ -25,7 +24,7 @@ from ..testing import (
 )
 
 
-IS_PYPY = platform.python_implementation() == 'PyPy'
+IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
 
 
 fails_under_py3 = pytest.mark.xfail(
@@ -255,7 +254,7 @@ def test_tls_client_auth(
         err_text = ssl_err.value.args[0].reason.args[0].args[0]
 
         expected_substring = (
-            'TLSV1_ALERT_UNKNOWN_CA' if IS_PYPY
+            'sslv3 alert bad certificate' if IS_LIBRESSL_BACKEND
             else 'tlsv1 alert unknown ca'
         )
         assert expected_substring in err_text
