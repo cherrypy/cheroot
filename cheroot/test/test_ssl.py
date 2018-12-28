@@ -251,10 +251,11 @@ def test_tls_client_auth(
 
         with pytest.raises(requests.exceptions.SSLError) as ssl_err:
             make_https_request()
-            err_text = ssl_err.args[0].reason.args[0].args[0]
 
-            expected_substring = (
-                'TLSV1_ALERT_UNKNOWN_CA' if IS_PYPY
-                else 'tlsv1 alert unknown ca'
-            )
-            assert expected_substring in err_text
+        err_text = ssl_err.value.args[0].reason.args[0].args[0]
+
+        expected_substring = (
+            'TLSV1_ALERT_UNKNOWN_CA' if IS_PYPY
+            else 'tlsv1 alert unknown ca'
+        )
+        assert expected_substring in err_text
