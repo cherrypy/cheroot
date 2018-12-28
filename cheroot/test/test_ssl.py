@@ -5,6 +5,8 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import platform
+import ssl
 import threading
 import time
 from unittest.mock import (  # FIXME: replace it with pytest-mock
@@ -12,6 +14,7 @@ from unittest.mock import (  # FIXME: replace it with pytest-mock
 )
 
 import pytest
+import requests
 import six
 import trustme
 
@@ -23,6 +26,9 @@ from ..testing import (
     # get_server_client,
     _get_conn_data,
 )
+
+
+IS_PYPY = platform.python_implementation() == 'PyPy'
 
 
 fails_under_py3 = pytest.mark.xfail(
@@ -137,7 +143,6 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
                 tlshttpserver.bind_addr
             )
 
-            import requests
             resp = requests.get(
                 'https://' + interface + ':' + str(port) + '/',
                 verify=ca_temp_path
@@ -145,3 +150,107 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
 
         assert resp.status_code == 200
         assert resp.text == 'Hello world!'
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    (
+        'builtin',
+        # pytest.param('pyopenssl', marks=fails_under_py3),
+    ),
+)
+@pytest.mark.parametrize(
+    'cert_name',
+    (
+        'client', 'client_ip',
+        'client_wildcard', 'client_wrong_host',
+        'client_wrong_ca',
+    ),
+)
+@pytest.mark.parametrize(
+    'tls_verify_mode',
+    (
+        ssl.CERT_NONE,  # server shouldn't validate client cert
+        ssl.CERT_OPTIONAL,  # same as CERT_REQUIRED in client mode, don't use
+        ssl.CERT_REQUIRED,  # server should validate if client cert CA is OK
+    ),
+)
+def test_tls_client_auth(
+        tls_http_server, ca,
+        adapter_type, cert_name,
+        tls_verify_mode,
+):
+    """Verify that client TLS certificate auth works correctly."""
+    test_cert_rejection = (
+        tls_verify_mode != ssl.CERT_NONE
+        and cert_name == 'client_wrong_ca'
+    )
+    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+    cert = ca.issue_server_cert(ntou(interface), )
+    with ca.cert_pem.tempfile() as ca_temp_path:
+        with cert.cert_chain_pems[0].tempfile() as cert_temp_path:
+            tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+            if adapter_type == 'builtin':
+                # Temporary patch chain loading
+                # as it fails for some reason:
+                with patch('ssl.SSLContext.load_cert_chain', MagicMock):
+                    tls_adapter = tls_adapter_cls(
+                        cert_temp_path, ca_temp_path,
+                    )
+            else:
+                tls_adapter = tls_adapter_cls(
+                    cert_temp_path, ca_temp_path,
+                )
+            if adapter_type == 'pyopenssl':
+                from OpenSSL import SSL
+                ctx = SSL.Context(SSL.SSLv23_METHOD)
+                tls_adapter.context = ctx
+
+        def ssl_file(filename):
+            import os
+            return os.path.join('cheroot/test/ssl/', filename)
+
+        tls_adapter.context.verify_mode = tls_verify_mode
+        if tls_verify_mode != ssl.CERT_NONE:
+            tls_adapter.context.load_verify_locations(ssl_file('ca.cert'))
+        # tls_adapter.context.load_verify_locations(
+        #         cadata=self.cert_pem.bytes().decode("ascii"))
+
+        # tls_adapter.context.load_cert_chain(ssl_file(cert_name + '.cert'),
+        #                                  keyfile=ssl_file('client.key'))
+
+        tlshttpserver = tls_http_server.send(
+            (
+                (interface, port),
+                tls_adapter,
+            )
+        )
+        cert.configure_cert(tls_adapter.context)
+        interface, host, port = _get_conn_data(tlshttpserver.bind_addr)
+
+        def make_https_request():
+            return requests.get(
+                'https://' + interface + ':' + str(port) + '/',
+
+                # Server TLS certificate verification:
+                verify=ca_temp_path,
+
+                # Client TLS certificate verification:
+                cert=(ssl_file(cert_name + '.cert'), ssl_file('client.key')),
+            )
+
+        if not test_cert_rejection:
+            resp = make_https_request()
+            assert resp.status_code == 200
+            assert resp.text == 'Hello world!'
+            return
+
+        with pytest.raises(requests.exceptions.SSLError) as ssl_err:
+            make_https_request()
+            err_text = ssl_err.args[0].reason.args[0].args[0]
+
+            expected_substring = (
+                'TLSV1_ALERT_UNKNOWN_CA' if IS_PYPY
+                else 'tlsv1 alert unknown ca'
+            )
+            assert expected_substring in err_text
