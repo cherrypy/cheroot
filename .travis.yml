@@ -45,6 +45,14 @@ _base_envs:
   - &install_python pyenv install --skip-existing --keep --verbose "$PYTHON_VERSION"
   - &switch_python pyenv shell "$PYTHON_VERSION"
   - &python_version python --version
+  - &python_ssl_openssl_version |
+    python -c '
+    import ssl
+    print("""
+    OPENSSL_VERSION: """ + ssl.OPENSSL_VERSION + """
+    OPENSSL_VERSION_INFO: """ + repr(ssl.OPENSSL_VERSION_INFO) + """
+    OPENSSL_VERSION_NUMBER: """ + repr(ssl.OPENSSL_VERSION_NUMBER))
+    '
 - &osx_python_base
   <<: *pyenv_base
   <<: *stage_test_osx
@@ -62,14 +70,7 @@ _base_envs:
   - *python_version
   - python -m pip install tox
   - env CRYPTOGRAPHY_SUPPRESS_LINK_FLAGS=1 LDFLAGS="$(brew --prefix openssl@1.1)/lib/libssl.a $(brew --prefix openssl@1.1)/lib/libcrypto.a" CFLAGS="-I$(brew --prefix openssl@1.1)/include" python -m tox --notest
-  - |
-    python -c '
-    import ssl
-    print("""
-    OPENSSL_VERSION: """ + ssl.OPENSSL_VERSION + """
-    OPENSSL_VERSION_INFO: """ + repr(ssl.OPENSSL_VERSION_INFO) + """
-    OPENSSL_VERSION_NUMBER: """ + repr(ssl.OPENSSL_VERSION_NUMBER))
-    '
+  - *python_ssl_openssl_version
   before_cache:
   - brew --cache
 - &python_3_7_mixture
