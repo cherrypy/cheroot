@@ -106,38 +106,39 @@ def test_ssl_adapters(mocker, tls_http_server, ca, adapter_type):
     """Test ability to connect to server via HTTPS using adapters."""
     interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
     cert = ca.issue_server_cert(ntou(interface), )
-    with ca.cert_pem.tempfile() as ca_temp_path:
-        with cert.private_key_and_cert_chain_pem.tempfile() as cert_pem:
-            tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-            tls_adapter = tls_adapter_cls(
-                cert_pem, cert_pem,
+    with \
+            ca.cert_pem.tempfile() as ca_temp_path, \
+            cert.private_key_and_cert_chain_pem.tempfile() as cert_pem:
+        tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+        tls_adapter = tls_adapter_cls(
+            cert_pem, cert_pem,
+        )
+        if adapter_type == 'pyopenssl':
+            tls_adapter.context = tls_adapter.get_context()
+
+        cert.configure_cert(tls_adapter.context)
+
+        tlshttpserver = tls_http_server.send(
+            (
+                (interface, port),
+                tls_adapter,
             )
-            if adapter_type == 'pyopenssl':
-                tls_adapter.context = tls_adapter.get_context()
+        )
 
-            cert.configure_cert(tls_adapter.context)
+        # testclient = get_server_client(tlshttpserver)
+        # testclient.get('/')
 
-            tlshttpserver = tls_http_server.send(
-                (
-                    (interface, port),
-                    tls_adapter,
-                )
-            )
+        interface, host, port = _get_conn_data(
+            tlshttpserver.bind_addr
+        )
 
-            # testclient = get_server_client(tlshttpserver)
-            # testclient.get('/')
+        resp = requests.get(
+            'https://' + interface + ':' + str(port) + '/',
+            verify=ca_temp_path
+        )
 
-            interface, host, port = _get_conn_data(
-                tlshttpserver.bind_addr
-            )
-
-            resp = requests.get(
-                'https://' + interface + ':' + str(port) + '/',
-                verify=ca_temp_path
-            )
-
-        assert resp.status_code == 200
-        assert resp.text == 'Hello world!'
+    assert resp.status_code == 200
+    assert resp.text == 'Hello world!'
 
 
 @pytest.mark.parametrize(
