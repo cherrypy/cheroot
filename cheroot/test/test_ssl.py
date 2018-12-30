@@ -7,6 +7,7 @@ __metaclass__ = type
 
 import functools
 import ssl
+import sys
 import threading
 import time
 
@@ -30,6 +31,7 @@ from .test_errors import IS_WINDOWS
 
 
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
+PY27 = sys.version_info[:2] == (2, 7)
 
 
 fails_under_py3 = pytest.mark.xfail(
@@ -318,7 +320,7 @@ def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
         if ip_addr is ANY_INTERFACE_IPV6:
             fqdn = '[{}]'.format(fqdn)
 
-        if adapter_type == 'pyopenssl':
+        if adapter_type == 'pyopenssl' or PY27:
             resp = requests.get(
                 'http://' + fqdn + ':' + str(port) + '/',
             )
