@@ -192,8 +192,8 @@ def test_tls_client_auth(
     cert = ca.issue_server_cert(ntou(interface), )
 
     with mocker.mock_module.patch(
-            'idna.core.ulabel',
-            return_value=ntob(tls_client_identity),
+        'idna.core.ulabel',
+        return_value=ntob(tls_client_identity),
     ):
         client_cert_root_ca = ca if is_trusted_cert else trustme.CA()
         client_cert = client_cert_root_ca.issue_server_cert(
@@ -211,8 +211,8 @@ def test_tls_client_auth(
             # Temporary patch chain loading
             # as it fails for some reason:
             with mocker.mock_module.patch(
-                    'ssl.SSLContext.load_cert_chain',
-                    mocker.MagicMock,
+                'ssl.SSLContext.load_cert_chain',
+                mocker.MagicMock,
             ):
                 tls_adapter = tls_adapter_cls(
                     cert_temp_path, ca_temp_path,
