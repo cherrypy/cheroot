@@ -137,6 +137,7 @@ class BuiltinSSLAdapter(Adapter):
                     'wrong version number',
                     'no shared cipher', 'certificate unknown',
                     'ccs received early',
+                    'certificate verify failed',  # client cert w/o trusted CA
                 )
                 if _assert_ssl_exc_contains(ex, *_block_errors):
                     # Accepted error, let's pass
