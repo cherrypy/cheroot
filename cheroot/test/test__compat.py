@@ -59,4 +59,4 @@ def test_extract_bytes(input_argument, expected_result):
 def test_extract_bytes_invalid():
     """Ensure that invalid input causes exception to be raised."""
     with pytest.raises(ValueError):
-        extract_bytes(1)
+        extract_bytes(u'some юнікод їїї')
