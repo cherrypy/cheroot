@@ -107,28 +107,16 @@ def test_ssl_adapters(mocker, tls_http_server, ca, adapter_type):
     interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
     cert = ca.issue_server_cert(ntou(interface), )
     with ca.cert_pem.tempfile() as ca_temp_path:
-        with cert.cert_chain_pems[0].tempfile() as cert_temp_path:
+        with cert.private_key_and_cert_chain_pem.tempfile() as cert_pem:
             tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-            if adapter_type == 'builtin':
-                # Temporary patch chain loading
-                # as it fails for some reason:
-                with mocker.mock_module.patch(
-                    'ssl.SSLContext.load_cert_chain',
-                    mocker.MagicMock,
-                ):
-                    tls_adapter = tls_adapter_cls(
-                        cert_temp_path, ca_temp_path,
-                    )
-            else:
-                tls_adapter = tls_adapter_cls(
-                    cert_temp_path, ca_temp_path,
-                )
-            # tls_adapter.context = tls_adapter.get_context()
+            tls_adapter = tls_adapter_cls(
+                cert_pem, cert_pem,
+            )
             if adapter_type == 'pyopenssl':
-                from OpenSSL import SSL
-                ctx = SSL.Context(SSL.SSLv23_METHOD)
-                tls_adapter.context = ctx
+                tls_adapter.context = tls_adapter.get_context()
+
             cert.configure_cert(tls_adapter.context)
+
             tlshttpserver = tls_http_server.send(
                 (
                     (interface, port),
@@ -204,27 +192,14 @@ def test_tls_client_auth(
 
     with \
             ca.cert_pem.tempfile() as ca_temp_path, \
-            cert.cert_chain_pems[0].tempfile() as cert_temp_path, \
+            cert.private_key_and_cert_chain_pem.tempfile() as cert_pem, \
             client_cert.private_key_and_cert_chain_pem.tempfile() as cl_pem:
         tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-        if adapter_type == 'builtin':
-            # Temporary patch chain loading
-            # as it fails for some reason:
-            with mocker.mock_module.patch(
-                'ssl.SSLContext.load_cert_chain',
-                mocker.MagicMock,
-            ):
-                tls_adapter = tls_adapter_cls(
-                    cert_temp_path, ca_temp_path,
-                )
-        else:
-            tls_adapter = tls_adapter_cls(
-                cert_temp_path, ca_temp_path,
-            )
+        tls_adapter = tls_adapter_cls(
+            cert_pem, cert_pem,
+        )
         if adapter_type == 'pyopenssl':
-            from OpenSSL import SSL
-            ctx = SSL.Context(SSL.SSLv23_METHOD)
-            tls_adapter.context = ctx
+            tls_adapter.context = tls_adapter.get_context()
 
         tls_adapter.context.verify_mode = tls_verify_mode
 
