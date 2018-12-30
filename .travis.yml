@@ -45,7 +45,7 @@ _base_envs:
   - &install_python pyenv install --skip-existing --keep --verbose "$PYTHON_VERSION"
   - &switch_python pyenv shell "$PYTHON_VERSION"
   - &python_version python --version
-  - &python_ssl_openssl_version |
+  - &python_ssl_openssl_version >-
     python -c '
     import ssl
     print("""
