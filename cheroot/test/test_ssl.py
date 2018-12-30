@@ -17,6 +17,7 @@ import six
 import trustme
 
 from .._compat import bton, ntob, ntou
+from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
 from ..server import Gateway, HTTPServer, get_ssl_adapter_class
 from ..ssl.builtin import IS_ABOVE_OPENSSL10
 from ..testing import (
@@ -26,8 +27,6 @@ from ..testing import (
     # get_server_client,
     _get_conn_data,
 )
-
-from .test_errors import IS_WINDOWS
 
 
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
@@ -336,11 +335,19 @@ def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
                 'http://' + fqdn + ':' + str(port) + '/',
             )
 
-    expected_error_code = (10054 if IS_WINDOWS else 104)
-    expected_error_text = (
-        'An existing connection was forcibly closed by the remote host'
-        if IS_WINDOWS else 'Connection reset by peer'
-    )
+    if IS_LINUX:
+        expected_error_code, expected_error_text = (
+            104, 'Connection reset by peer',
+        )
+    if IS_MACOS:
+        expected_error_code, expected_error_text = (
+            54, 'Connection reset by peer',
+        )
+    if IS_WINDOWS:
+        expected_error_code, expected_error_text = (
+            10054,
+            'An existing connection was forcibly closed by the remote host',
+        )
 
     underlying_error = ssl_err.value.args[0].args[-1]
     err_text = str(underlying_error)

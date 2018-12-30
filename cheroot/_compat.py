@@ -3,9 +3,17 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import platform
 import re
 
 import six
+
+
+SYS_PLATFORM = platform.system()
+IS_WINDOWS = SYS_PLATFORM == 'Windows'
+IS_LINUX = SYS_PLATFORM == 'Linux'
+IS_MACOS = SYS_PLATFORM == 'Darwin'
+
 
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
