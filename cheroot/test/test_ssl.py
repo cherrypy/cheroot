@@ -99,7 +99,7 @@ def ca():
     'adapter_type',
     (
         'builtin',
-        pytest.param('pyopenssl', marks=fails_under_py3),
+        'pyopenssl',
     ),
 )
 def test_ssl_adapters(mocker, tls_http_server, ca, adapter_type):

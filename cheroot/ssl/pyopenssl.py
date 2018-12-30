@@ -110,6 +110,14 @@ class SSLFileobjectMixin:
             size,
         )
 
+    def readline(self, size):
+        """Receive message of a size from the socket."""
+        return self._safe_call(
+            True,
+            super(SSLFileobjectMixin, self).readline,
+            size,
+        )
+
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
         return self._safe_call(
