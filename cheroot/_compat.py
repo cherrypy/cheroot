@@ -86,4 +86,4 @@ def extract_bytes(mv):
     if isinstance(mv, bytes):
         return mv
 
-    return ValueError
+    raise ValueError
