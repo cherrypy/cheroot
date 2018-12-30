@@ -179,11 +179,11 @@ def test_tls_client_auth(
     interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
     cert = ca.issue_server_cert(ntou(interface), )
 
+    client_cert_root_ca = ca if is_trusted_cert else trustme.CA()
     with mocker.mock_module.patch(
         'idna.core.ulabel',
         return_value=ntob(tls_client_identity),
     ):
-        client_cert_root_ca = ca if is_trusted_cert else trustme.CA()
         client_cert = client_cert_root_ca.issue_server_cert(
             # FIXME: change to issue_cert once new trustme is out
             ntou(tls_client_identity),
