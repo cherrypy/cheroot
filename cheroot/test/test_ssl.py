@@ -102,7 +102,7 @@ def ca():
         'pyopenssl',
     ),
 )
-def test_ssl_adapters(mocker, tls_http_server, ca, adapter_type):
+def test_ssl_adapters(tls_http_server, ca, adapter_type):
     """Test ability to connect to server via HTTPS using adapters."""
     interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
     cert = ca.issue_server_cert(ntou(interface), )
