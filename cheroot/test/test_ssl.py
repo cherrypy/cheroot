@@ -17,6 +17,7 @@ import trustme
 
 from .._compat import bton, ntob, ntou
 from ..server import Gateway, HTTPServer, get_ssl_adapter_class
+from ..ssl.builtin import IS_ABOVE_OPENSSL10
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -264,7 +265,11 @@ def test_https_over_http_error(http_server, ip_addr):
                 port=port,
             )
         ).request('GET', '/')
-    assert 'wrong version number' in str(ssl_err.value)
+    expected_substring = (
+        'wrong version number' if IS_ABOVE_OPENSSL10
+        else 'unknown protocol'
+    )
+    assert expected_substring in ssl_err.value.args[-1]
 
 
 @pytest.mark.parametrize(
