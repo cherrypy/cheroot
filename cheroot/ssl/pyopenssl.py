@@ -72,6 +72,7 @@ class SSLFileobjectMixin:
                 # the rest of the stack has no way of differentiating
                 # between a "new handshake" error and "client dropped".
                 # Note this isn't an endless loop: there's a timeout below.
+                # Ref: https://stackoverflow.com/a/5133568/595220
                 time.sleep(self.ssl_retry)
             except SSL.WantWriteError:
                 time.sleep(self.ssl_retry)
