@@ -265,3 +265,69 @@ def test_https_over_http_error(http_server, ip_addr):
             )
         ).request('GET', '/')
     assert 'wrong version number' in str(ssl_err.value)
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    (
+        'builtin',
+        'pyopenssl',
+    ),
+)
+@pytest.mark.parametrize(
+    'ip_addr',
+    (
+        ANY_INTERFACE_IPV4,
+        ANY_INTERFACE_IPV6,
+    )
+)
+def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
+    """Ensure that connecting over HTTP to HTTPS port is handled."""
+    interface, host, port = _get_conn_data(ip_addr)
+    cert = ca.issue_server_cert(ntou(interface), )
+
+    with cert.private_key_and_cert_chain_pem.tempfile() as cert_pem:
+        tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+        tls_adapter = tls_adapter_cls(
+            cert_pem, cert_pem,
+        )
+        if adapter_type == 'pyopenssl':
+            tls_adapter.context = tls_adapter.get_context()
+
+        cert.configure_cert(tls_adapter.context)
+
+        tlshttpserver = tls_http_server.send(
+            (
+                (interface, port),
+                tls_adapter,
+            )
+        )
+
+        interface, host, port = _get_conn_data(
+            tlshttpserver.bind_addr
+        )
+
+        fqdn = interface
+        if ip_addr is ANY_INTERFACE_IPV6:
+            fqdn = '[{}]'.format(fqdn)
+
+        if adapter_type == 'pyopenssl':
+            resp = requests.get(
+                'http://' + fqdn + ':' + str(port) + '/',
+            )
+            assert resp.status_code == 400
+            assert resp.text == (
+                'The client sent a plain HTTP request, '
+                'but this server only speaks HTTPS on this port.'
+            )
+            return
+
+        with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
+            requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
+                'http://' + fqdn + ':' + str(port) + '/',
+            )
+
+    underlying_error = ssl_err.value.args[0].args[-1]
+    err_text = str(underlying_error)
+    assert underlying_error.errno == 104
+    assert 'Connection reset by peer' in err_text
