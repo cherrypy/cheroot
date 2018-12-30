@@ -11,8 +11,10 @@ import tempfile
 import threading
 
 import pytest
+import requests
+import requests_unixsocket
 
-from .._compat import bton
+from .._compat import bton, ntob
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
@@ -131,10 +133,18 @@ class _TestGateway(Gateway):
         req_uri = bton(req.uri)
         if req_uri == PEERCRED_IDS_URI:
             peer_creds = conn.peer_pid, conn.peer_uid, conn.peer_gid
-            return ['|'.join(map(str, peer_creds))]
+            self.send_payload('|'.join(map(str, peer_creds)))
+            return
         elif req_uri == PEERCRED_TEXTS_URI:
-            return ['!'.join((conn.peer_user, conn.peer_group))]
+            self.send_payload('!'.join((conn.peer_user, conn.peer_group)))
+            return
         return super(_TestGateway, self).respond()
+
+    def send_payload(self, payload):
+        req = self.req
+        req.status = b'200 OK'
+        req.ensure_headers_sent()
+        req.write(ntob(payload))
 
 
 @pytest.fixture
@@ -146,16 +156,25 @@ def peercreds_enabled_server_and_client(http_server, unix_sock_file):
     return httpserver, get_server_client(httpserver)
 
 
-@http_over_unix_socket
 @non_windows_sock_test
 def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
     """Check that peercred lookup works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
 
+    unix_base_uri = 'http+unix://{}'.format(
+        httpserver.bind_addr.replace('/', '%2F'),
+    )
+
     expected_peercreds = os.getpid(), os.getuid(), os.getgid()
     expected_peercreds = '|'.join(map(str, expected_peercreds))
-    assert testclient.get(PEERCRED_IDS_URI) == expected_peercreds
-    assert 'RuntimeError' in testclient.get(PEERCRED_TEXTS_URI)
+
+    with requests_unixsocket.monkeypatch():
+        peercreds_resp = requests.get(unix_base_uri + PEERCRED_IDS_URI)
+        peercreds_resp.raise_for_status()
+        assert peercreds_resp.text == expected_peercreds
+
+        peercreds_text_resp = requests.get(unix_base_uri + PEERCRED_TEXTS_URI)
+        assert peercreds_text_resp.status_code == 500
 
 
 @pytest.mark.skipif(
