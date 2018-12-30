@@ -30,11 +30,6 @@ non_windows_sock_test = pytest.mark.skipif(
 )
 
 
-http_over_unix_socket = pytest.mark.skip(
-    reason='Test HTTP client is not able to work through UNIX socket currently'
-)
-
-
 @pytest.fixture
 def unix_sock_file():
     """Check that bound UNIX socket address is stored in server."""
@@ -182,14 +177,24 @@ def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
     reason='Modules `grp` and `pwd` are not available '
            'under the current platform',
 )
-@http_over_unix_socket
 @non_windows_sock_test
 def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
     """Check that peercred resolution works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
     httpserver.peercreds_resolve_enabled = True
 
+    unix_base_uri = 'http+unix://{}'.format(
+        httpserver.bind_addr.replace('/', '%2F'),
+    )
+
     import grp
-    expected_textcreds = os.getlogin(), grp.getgrgid(os.getgid()).gr_name
+    import pwd
+    expected_textcreds = (
+        pwd.getpwuid(os.getuid()).pw_name,
+        grp.getgrgid(os.getgid()).gr_name,
+    )
     expected_textcreds = '!'.join(map(str, expected_textcreds))
-    assert testclient.get(PEERCRED_TEXTS_URI) == expected_textcreds
+    with requests_unixsocket.monkeypatch():
+        peercreds_text_resp = requests.get(unix_base_uri + PEERCRED_TEXTS_URI)
+        peercreds_text_resp.raise_for_status()
+        assert peercreds_text_resp.text == expected_textcreds
