@@ -113,8 +113,8 @@ def test_ssl_adapters(mocker, tls_http_server, ca, adapter_type):
                 # Temporary patch chain loading
                 # as it fails for some reason:
                 with mocker.mock_module.patch(
-                        'ssl.SSLContext.load_cert_chain',
-                        mocker.MagicMock,
+                    'ssl.SSLContext.load_cert_chain',
+                    mocker.MagicMock,
                 ):
                     tls_adapter = tls_adapter_cls(
                         cert_temp_path, ca_temp_path,
