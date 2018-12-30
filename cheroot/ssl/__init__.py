@@ -38,14 +38,14 @@ class Adapter:
     @abstractmethod
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def get_environ(self):
         """Return WSGI environ entries to be merged into each request."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
