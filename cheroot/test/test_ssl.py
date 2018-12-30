@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import functools
 import ssl
 import threading
 import time
@@ -14,7 +15,7 @@ import requests
 import six
 import trustme
 
-from .._compat import bton, ntou
+from .._compat import bton, ntob, ntou
 from ..server import Gateway, HTTPServer, get_ssl_adapter_class
 # from ..ssl import builtin, pyopenssl
 from ..testing import (
@@ -159,11 +160,11 @@ def test_ssl_adapters(mocker, tls_http_server, ca, adapter_type):
     ),
 )
 @pytest.mark.parametrize(
-    'cert_name',
+    'is_trusted_cert,tls_client_identity',
     (
-        'client', 'client_ip',
-        'client_wildcard', 'client_wrong_host',
-        'client_wrong_ca',
+        (True, 'localhost'), (True, '127.0.0.1'),
+        (True, '*.localhost'), (True, 'not_localhost'),
+        (False, 'localhost'),
     ),
 )
 @pytest.mark.parametrize(
@@ -175,52 +176,60 @@ def test_ssl_adapters(mocker, tls_http_server, ca, adapter_type):
     ),
 )
 def test_tls_client_auth(
+        # FIXME: remove twisted logic, separate tests
         mocker,
         tls_http_server, ca,
-        adapter_type, cert_name,
+        adapter_type,
+        is_trusted_cert, tls_client_identity,
         tls_verify_mode,
 ):
     """Verify that client TLS certificate auth works correctly."""
     test_cert_rejection = (
         tls_verify_mode != ssl.CERT_NONE
-        and cert_name == 'client_wrong_ca'
+        and not is_trusted_cert
     )
     interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
     cert = ca.issue_server_cert(ntou(interface), )
-    with ca.cert_pem.tempfile() as ca_temp_path:
-        with cert.cert_chain_pems[0].tempfile() as cert_temp_path:
-            tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-            if adapter_type == 'builtin':
-                # Temporary patch chain loading
-                # as it fails for some reason:
-                with mocker.mock_module.patch(
-                        'ssl.SSLContext.load_cert_chain',
-                        mocker.MagicMock,
-                ):
-                    tls_adapter = tls_adapter_cls(
-                        cert_temp_path, ca_temp_path,
-                    )
-            else:
+
+    with mocker.mock_module.patch(
+            'idna.core.ulabel',
+            return_value=ntob(tls_client_identity),
+    ):
+        client_cert_root_ca = ca if is_trusted_cert else trustme.CA()
+        client_cert = client_cert_root_ca.issue_server_cert(
+            # FIXME: change to issue_cert once new trustme is out
+            ntou(tls_client_identity),
+        )
+        del client_cert_root_ca
+
+    with \
+            ca.cert_pem.tempfile() as ca_temp_path, \
+            cert.cert_chain_pems[0].tempfile() as cert_temp_path, \
+            client_cert.private_key_and_cert_chain_pem.tempfile() as cl_pem:
+        tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+        if adapter_type == 'builtin':
+            # Temporary patch chain loading
+            # as it fails for some reason:
+            with mocker.mock_module.patch(
+                    'ssl.SSLContext.load_cert_chain',
+                    mocker.MagicMock,
+            ):
                 tls_adapter = tls_adapter_cls(
                     cert_temp_path, ca_temp_path,
                 )
-            if adapter_type == 'pyopenssl':
-                from OpenSSL import SSL
-                ctx = SSL.Context(SSL.SSLv23_METHOD)
-                tls_adapter.context = ctx
-
-        def ssl_file(filename):
-            import os
-            return os.path.join('cheroot/test/ssl/', filename)
+        else:
+            tls_adapter = tls_adapter_cls(
+                cert_temp_path, ca_temp_path,
+            )
+        if adapter_type == 'pyopenssl':
+            from OpenSSL import SSL
+            ctx = SSL.Context(SSL.SSLv23_METHOD)
+            tls_adapter.context = ctx
 
         tls_adapter.context.verify_mode = tls_verify_mode
-        if tls_verify_mode != ssl.CERT_NONE:
-            tls_adapter.context.load_verify_locations(ssl_file('ca.cert'))
-        # tls_adapter.context.load_verify_locations(
-        #         cadata=self.cert_pem.bytes().decode("ascii"))
 
-        # tls_adapter.context.load_cert_chain(ssl_file(cert_name + '.cert'),
-        #                                  keyfile=ssl_file('client.key'))
+        ca.configure_trust(tls_adapter.context)
+        cert.configure_cert(tls_adapter.context)
 
         tlshttpserver = tls_http_server.send(
             (
@@ -228,19 +237,19 @@ def test_tls_client_auth(
                 tls_adapter,
             )
         )
-        cert.configure_cert(tls_adapter.context)
+
         interface, host, port = _get_conn_data(tlshttpserver.bind_addr)
 
-        def make_https_request():
-            return requests.get(
-                'https://' + interface + ':' + str(port) + '/',
+        make_https_request = functools.partial(
+            requests.get,
+            'https://' + interface + ':' + str(port) + '/',
 
-                # Server TLS certificate verification:
-                verify=ca_temp_path,
+            # Server TLS certificate verification:
+            verify=ca_temp_path,
 
-                # Client TLS certificate verification:
-                cert=(ssl_file(cert_name + '.cert'), ssl_file('client.key')),
-            )
+            # Client TLS certificate verification:
+            cert=cl_pem,
+        )
 
         if not test_cert_rejection:
             resp = make_https_request()
