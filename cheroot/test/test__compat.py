@@ -7,7 +7,7 @@ __metaclass__ = type
 import pytest
 import six
 
-from cheroot._compat import extract_bytes, ntob, ntou, bton
+from cheroot._compat import extract_bytes, memoryview, ntob, ntou, bton
 
 
 @pytest.mark.parametrize(
