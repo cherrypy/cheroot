@@ -1284,7 +1284,12 @@ class HTTPConnection:
         if not req or req.sent_headers:
             return
         # Unwrap wfile
-        self.wfile = StreamWriter(self.socket._sock, 'wb', self.wbufsize)
+        try:
+            resp_sock = self.socket._sock
+        except AttributeError:
+            # self.socket is of OpenSSL.SSL.Connection type
+            resp_sock = self.socket._socket
+        self.wfile = StreamWriter(resp_sock, 'wb', self.wbufsize)
         msg = (
             'The client sent a plain HTTP request, but '
             'this server only speaks HTTPS on this port.'
