@@ -77,15 +77,15 @@ class SSLFileobjectMixin:
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ''
+                    return b''
 
                 errnum = e.args[0]
                 if is_reader and errnum in errors.socket_errors_to_ignore:
-                    return ''
+                    return b''
                 raise socket.error(errnum)
             except SSL.Error as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ''
+                    return b''
 
                 thirdarg = None
                 try:
