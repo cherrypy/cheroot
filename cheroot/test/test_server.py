@@ -9,7 +9,6 @@ import os
 import socket
 import tempfile
 import threading
-import time
 
 import pytest
 
@@ -23,21 +22,6 @@ from ..testing import (
 )
 
 
-def make_http_server(bind_addr):
-    """Create and start an HTTP server bound to bind_addr."""
-    httpserver = HTTPServer(
-        bind_addr=bind_addr,
-        gateway=Gateway,
-    )
-
-    threading.Thread(target=httpserver.safe_start).start()
-
-    while not httpserver.ready:
-        time.sleep(0.1)
-
-    return httpserver
-
-
 non_windows_sock_test = pytest.mark.skipif(
     not hasattr(socket, 'AF_UNIX'),
     reason='UNIX domain sockets are only available under UNIX-based OS',
@@ -47,27 +31,6 @@ non_windows_sock_test = pytest.mark.skipif(
 http_over_unix_socket = pytest.mark.skip(
     reason='Test HTTP client is not able to work through UNIX socket currently'
 )
-
-
-@pytest.fixture
-def http_server():
-    """Provision a server creator as a fixture."""
-    def start_srv():
-        bind_addr = yield
-        httpserver = make_http_server(bind_addr)
-        yield httpserver
-        yield httpserver
-
-    srv_creator = iter(start_srv())
-    next(srv_creator)
-    yield srv_creator
-    try:
-        while True:
-            httpserver = next(srv_creator)
-            if httpserver is not None:
-                httpserver.stop()
-    except StopIteration:
-        pass
 
 
 @pytest.fixture
