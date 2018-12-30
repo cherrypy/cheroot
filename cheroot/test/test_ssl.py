@@ -17,9 +17,10 @@ import trustme
 
 from .._compat import bton, ntob, ntou
 from ..server import Gateway, HTTPServer, get_ssl_adapter_class
-# from ..ssl import builtin, pyopenssl
 from ..testing import (
     ANY_INTERFACE_IPV4,
+    ANY_INTERFACE_IPV6,
+    EPHEMERAL_PORT,
     # get_server_client,
     _get_conn_data,
 )
@@ -243,3 +244,24 @@ def test_tls_client_auth(
             else 'tlsv1 alert unknown ca'
         )
         assert expected_substring in err_text
+
+
+@pytest.mark.parametrize(
+    'ip_addr',
+    (
+        ANY_INTERFACE_IPV4,
+        ANY_INTERFACE_IPV6,
+    )
+)
+def test_https_over_http_error(http_server, ip_addr):
+    """Ensure that connecting over HTTPS to HTTP port is handled."""
+    httpserver = http_server.send((ip_addr, EPHEMERAL_PORT))
+    interface, host, port = _get_conn_data(httpserver.bind_addr)
+    with pytest.raises(ssl.SSLError) as ssl_err:
+        six.moves.http_client.HTTPSConnection(
+            '{interface}:{port}'.format(
+                interface=interface,
+                port=port,
+            )
+        ).request('GET', '/')
+    assert 'wrong version number' in str(ssl_err.value)
