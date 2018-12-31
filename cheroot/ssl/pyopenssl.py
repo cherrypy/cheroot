@@ -43,6 +43,11 @@ import six
 try:
     from OpenSSL import SSL
     from OpenSSL import crypto
+
+    try:
+        ssl_conn_type = SSL.Connection
+    except AttributeError:
+        ssl_conn_type = SSL.ConnectionType
 except ImportError:
     SSL = None
 
@@ -320,7 +325,7 @@ class pyOpenSSLAdapter(Adapter):
             if 'r' in mode else
             SSLFileobjectStreamWriter
         )
-        if SSL and isinstance(sock, SSL.ConnectionType):
+        if SSL and isinstance(sock, ssl_conn_type):
             wrapped_socket = cls(sock, mode, bufsize)
             wrapped_socket.ssl_timeout = sock.gettimeout()
             return wrapped_socket
