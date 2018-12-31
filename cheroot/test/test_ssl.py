@@ -17,9 +17,9 @@ import six
 import trustme
 
 from .._compat import bton, ntob, ntou
+from .._compat import IS_ABOVE_OPENSSL10
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
 from ..server import Gateway, HTTPServer, get_ssl_adapter_class
-from ..ssl.builtin import IS_ABOVE_OPENSSL10
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -319,7 +319,11 @@ def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
         if ip_addr is ANY_INTERFACE_IPV6:
             fqdn = '[{}]'.format(fqdn)
 
-        if adapter_type == 'pyopenssl' or PY27:
+        expect_fallback_response_over_plain_http = (
+            (adapter_type == 'pyopenssl' and IS_ABOVE_OPENSSL10)
+            or PY27
+        )
+        if expect_fallback_response_over_plain_http:
             resp = requests.get(
                 'http://' + fqdn + ':' + str(port) + '/',
             )
