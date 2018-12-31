@@ -14,9 +14,8 @@ import sys
 
 try:
     import ssl
-    IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
 except ImportError:
-    ssl = IS_ABOVE_OPENSSL10 = None
+    ssl = None
 
 try:
     from _pyio import DEFAULT_BUFFER_SIZE
@@ -30,6 +29,7 @@ import six
 
 from . import Adapter
 from .. import errors
+from .._compat import IS_ABOVE_OPENSSL10
 from ..makefile import StreamReader, StreamWriter
 
 if six.PY3:

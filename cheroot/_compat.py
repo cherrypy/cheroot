@@ -8,6 +8,13 @@ import re
 
 import six
 
+try:
+    import ssl
+    IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
+    del ssl
+except ImportError:
+    IS_ABOVE_OPENSSL10 = None
+
 
 SYS_PLATFORM = platform.system()
 IS_WINDOWS = SYS_PLATFORM == 'Windows'
