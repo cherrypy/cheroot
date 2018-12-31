@@ -177,7 +177,7 @@ install:
 - python -m tox --notest  # Pre-populate a virtualenv with dependencies
 - *python_ssl_openssl_version
 - >-
-  ".tox/${TOXENV:-python}/bin/python" -m OpenSSL.debug
+  ".tox/${TOXENV:-python}/bin/python" -m OpenSSL.debug || true
 
 script:
 - python -m tox
