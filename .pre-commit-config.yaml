@@ -24,7 +24,6 @@ repos:
     # disabled due to pre-commit/pre-commit-hooks#159
     #-   id: check-docstring-first
     -   id: check-json
-        include: .mention-bot
     -   id: check-symlinks
     -   id: check-yaml
     -   id: detect-private-key
