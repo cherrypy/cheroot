@@ -266,6 +266,8 @@ def test_tls_client_auth(
             'sslv3 alert bad certificate' if IS_LIBRESSL_BACKEND
             else 'tlsv1 alert unknown ca'
         )
+        if IS_PYPY and six.PY3 and IS_MACOS and adapter_type == 'pyopenssl':
+            expected_substring = 'tlsv1 alert unknown ca'
         assert expected_substring in err_text
 
 
