@@ -22,7 +22,6 @@ from cheroot.test import webtest
 
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
-serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 
 
 config = {
