@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 
+import OpenSSL.SSL
 import pytest
 import requests
 import six
@@ -31,6 +32,14 @@ from ..testing import (
 
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
 PY27 = sys.version_info[:2] == (2, 7)
+
+
+_stdlib_to_openssl_verify = {
+    ssl.CERT_NONE: OpenSSL.SSL.VERIFY_NONE,
+    ssl.CERT_OPTIONAL: OpenSSL.SSL.VERIFY_PEER,
+    ssl.CERT_REQUIRED:
+        OpenSSL.SSL.VERIFY_PEER + OpenSSL.SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+}
 
 
 fails_under_py3 = pytest.mark.xfail(
@@ -156,7 +165,7 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
     'adapter_type',
     (
         'builtin',
-        # pytest.param('pyopenssl', marks=fails_under_py3),
+        'pyopenssl',
     ),
 )
 @pytest.mark.parametrize(
@@ -212,8 +221,12 @@ def test_tls_client_auth(
         )
         if adapter_type == 'pyopenssl':
             tls_adapter.context = tls_adapter.get_context()
-
-        tls_adapter.context.verify_mode = tls_verify_mode
+            tls_adapter.context.set_verify(
+                _stdlib_to_openssl_verify[tls_verify_mode],
+                lambda conn, cert, errno, depth, preverify_ok: preverify_ok,
+            )
+        else:
+            tls_adapter.context.verify_mode = tls_verify_mode
 
         ca.configure_trust(tls_adapter.context)
         cert.configure_cert(tls_adapter.context)
