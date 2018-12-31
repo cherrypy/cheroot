@@ -25,7 +25,7 @@ from ..testing import (
 )
 
 
-non_windows_sock_test = pytest.mark.skipif(
+unix_only_sock_test = pytest.mark.skipif(
     not hasattr(socket, 'AF_UNIX'),
     reason='UNIX domain sockets are only available under UNIX-based OS',
 )
@@ -106,7 +106,7 @@ def test_bind_addr_inet(http_server, ip_addr):
     assert httpserver.bind_addr[1] != EPHEMERAL_PORT
 
 
-@non_windows_sock_test
+@unix_only_sock_test
 def test_bind_addr_unix(http_server, unix_sock_file):
     """Check that bound UNIX socket address is stored in server."""
     httpserver = http_server.send(unix_sock_file)
@@ -115,7 +115,7 @@ def test_bind_addr_unix(http_server, unix_sock_file):
 
 
 @pytest.mark.skip(reason="Abstract sockets don't work currently")
-@non_windows_sock_test
+@unix_only_sock_test
 def test_bind_addr_unix_abstract(http_server):
     """Check that bound UNIX socket address is stored in server."""
     unix_abstract_sock = b'\x00cheroot/test/socket/here.sock'
@@ -158,7 +158,7 @@ def peercreds_enabled_server_and_client(http_server, unix_sock_file):
     return httpserver, get_server_client(httpserver)
 
 
-@non_windows_sock_test
+@unix_only_sock_test
 @non_macos_sock_test
 def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
     """Check that peercred lookup works when enabled."""
@@ -185,7 +185,7 @@ def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
     reason='Modules `grp` and `pwd` are not available '
            'under the current platform',
 )
-@non_windows_sock_test
+@unix_only_sock_test
 @non_macos_sock_test
 def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
     """Check that peercred resolution works when enabled."""
