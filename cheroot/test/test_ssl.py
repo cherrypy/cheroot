@@ -32,6 +32,7 @@ from ..testing import (
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
 PY27 = sys.version_info[:2] == (2, 7)
 PY37 = sys.version_info[:2] == (3, 7)
+PY38 = sys.version_info[:2] == (3, 8)
 
 
 fails_under_py3 = pytest.mark.xfail(
@@ -322,7 +323,7 @@ def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
 
         expect_fallback_response_over_plain_http = (
             (adapter_type == 'pyopenssl'
-             and (IS_ABOVE_OPENSSL10 or PY37))
+             and (IS_ABOVE_OPENSSL10 or PY37 or PY38))
             or PY27
         )
         if expect_fallback_response_over_plain_http:
