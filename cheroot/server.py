@@ -1354,6 +1354,8 @@ class HTTPConnection:
 
         try:
             peer_creds = self.socket.getsockopt(
+                # FIXME: Use LOCAL_CREDS for BSD-like OSs
+                # Ref: https://gist.github.com/LucaFilipozzi/e4f1e118202aff27af6aadebda1b5d91  # noqa
                 socket.SOL_SOCKET, socket.SO_PEERCRED,
                 struct.calcsize(PEERCRED_STRUCT_DEF)
             )

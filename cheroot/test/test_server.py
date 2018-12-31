@@ -15,6 +15,7 @@ import requests
 import requests_unixsocket
 
 from .._compat import bton, ntob
+from .._compat import IS_MACOS
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
@@ -27,6 +28,12 @@ from ..testing import (
 non_windows_sock_test = pytest.mark.skipif(
     not hasattr(socket, 'AF_UNIX'),
     reason='UNIX domain sockets are only available under UNIX-based OS',
+)
+
+
+non_macos_sock_test = pytest.mark.skipif(
+    IS_MACOS,
+    reason='Peercreds lookup does not work under macOS/BSD currently.',
 )
 
 
@@ -152,6 +159,7 @@ def peercreds_enabled_server_and_client(http_server, unix_sock_file):
 
 
 @non_windows_sock_test
+@non_macos_sock_test
 def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
     """Check that peercred lookup works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
@@ -178,6 +186,7 @@ def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
            'under the current platform',
 )
 @non_windows_sock_test
+@non_macos_sock_test
 def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
     """Check that peercred resolution works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
