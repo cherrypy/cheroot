@@ -46,7 +46,7 @@ _base_envs:
   - &switch_python pyenv shell "$PYTHON_VERSION"
   - &python_version python --version
   - &python_ssl_openssl_version >-
-    python -c 'import ssl; print("\nOPENSSL_VERSION: " + ssl.OPENSSL_VERSION + "\nOPENSSL_VERSION_INFO: " + repr(ssl.OPENSSL_VERSION_INFO) + "\nOPENSSL_VERSION_NUMBER: " + repr(ssl.OPENSSL_VERSION_NUMBER))'
+    python -c 'import ssl, cryptography.hazmat.backends.openssl; print("\nOPENSSL_VERSION: " + ssl.OPENSSL_VERSION + "\nOPENSSL_VERSION_INFO: " + repr(ssl.OPENSSL_VERSION_INFO) + "\nOPENSSL_VERSION_NUMBER: " + repr(ssl.OPENSSL_VERSION_NUMBER) + "\n" + "\nCRYPTOGRAPHY OPENSSL_VERSION:" + repr(cryptography.hazmat.backends.openssl.backend.openssl_version_text()) + "\nCRYPTOGRAPHY OPENSSL_VERSION_NUMBER:" + repr(cryptography.hazmat.backends.openssl.backend.openssl_version_number()))'
 - &osx_python_base
   <<: *pyenv_base
   <<: *stage_test_osx
