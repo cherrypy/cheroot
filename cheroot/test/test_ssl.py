@@ -17,7 +17,7 @@ import six
 import trustme
 
 from .._compat import bton, ntob, ntou
-from .._compat import IS_ABOVE_OPENSSL10
+from .._compat import IS_ABOVE_OPENSSL10, IS_PYPY
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
 from ..server import Gateway, HTTPServer, get_ssl_adapter_class
 from ..testing import (
@@ -36,6 +36,12 @@ PY27 = sys.version_info[:2] == (2, 7)
 fails_under_py3 = pytest.mark.xfail(
     six.PY3,
     reason='Fails under Python 3',
+)
+
+
+fails_under_py3_in_pypy = pytest.mark.xfail(
+    six.PY3 and IS_PYPY,
+    reason='Fails under PyPy3',
 )
 
 
@@ -279,7 +285,7 @@ def test_https_over_http_error(http_server, ip_addr):
     'adapter_type',
     (
         'builtin',
-        'pyopenssl',
+        pytest.param('pyopenssl', marks=fails_under_py3_in_pypy),
     ),
 )
 @pytest.mark.parametrize(

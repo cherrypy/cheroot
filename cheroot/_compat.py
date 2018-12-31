@@ -16,6 +16,9 @@ except ImportError:
     IS_ABOVE_OPENSSL10 = None
 
 
+IS_PYPY = platform.python_implementation() == 'PyPy'
+
+
 SYS_PLATFORM = platform.system()
 IS_WINDOWS = SYS_PLATFORM == 'Windows'
 IS_LINUX = SYS_PLATFORM == 'Linux'
