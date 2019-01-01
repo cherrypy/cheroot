@@ -96,7 +96,7 @@ def test_stop_interrupts_serve():
     (
         ANY_INTERFACE_IPV4,
         ANY_INTERFACE_IPV6,
-    )
+    ),
 )
 def test_bind_addr_inet(http_server, ip_addr):
     """Check that bound IP address is stored in server."""

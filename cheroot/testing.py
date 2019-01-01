@@ -76,7 +76,7 @@ def native_server():
 class _TestClient:
     def __init__(self, server):
         self._interface, self._host, self._port = _get_conn_data(
-            server.bind_addr
+            server.bind_addr,
         )
         self.server_instance = server
         self._http_connection = self.get_connection()

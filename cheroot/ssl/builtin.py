@@ -48,7 +48,7 @@ def _assert_ssl_exc_contains(exc, *msgs):
     if len(msgs) < 1:
         raise TypeError(
             '_assert_ssl_exc_contains() requires '
-            'at least one message to be passed.'
+            'at least one message to be passed.',
         )
     err_msg_lower = str(exc).lower()
     return any(m.lower() in err_msg_lower for m in msgs)
@@ -74,7 +74,7 @@ class BuiltinSSLAdapter(Adapter):
 
     CERT_KEY_TO_ENV = {
         'subject': 'SSL_CLIENT_S_DN',
-        'issuer': 'SSL_CLIENT_I_DN'
+        'issuer': 'SSL_CLIENT_I_DN',
     }
 
     CERT_KEY_TO_LDAP_CODE = {
@@ -89,17 +89,19 @@ class BuiltinSSLAdapter(Adapter):
 
     def __init__(
             self, certificate, private_key, certificate_chain=None,
-            ciphers=None):
+            ciphers=None,
+    ):
         """Set up context in addition to base class properties if available."""
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
 
         super(BuiltinSSLAdapter, self).__init__(
-            certificate, private_key, certificate_chain, ciphers)
+            certificate, private_key, certificate_chain, ciphers,
+        )
 
         self.context = ssl.create_default_context(
             purpose=ssl.Purpose.CLIENT_AUTH,
-            cafile=certificate_chain
+            cafile=certificate_chain,
         )
         self.context.load_cert_chain(certificate, private_key)
         if self.ciphers is not None:
@@ -176,7 +178,7 @@ class BuiltinSSLAdapter(Adapter):
             'wsgi.url_scheme': 'https',
             'HTTPS': 'on',
             'SSL_PROTOCOL': cipher[1],
-            'SSL_CIPHER': cipher[0]
+            'SSL_CIPHER': cipher[0],
             # SSL_VERSION_INTERFACE     string  The mod_ssl program version
             # SSL_VERSION_LIBRARY   string  The OpenSSL program version
         }
@@ -186,7 +188,8 @@ class BuiltinSSLAdapter(Adapter):
             if client_cert:
                 for cert_key, env_var in self.CERT_KEY_TO_ENV.items():
                     ssl_environ.update(
-                        self.env_dn_dict(env_var, client_cert.get(cert_key)))
+                        self.env_dn_dict(env_var, client_cert.get(cert_key)),
+                    )
 
         return ssl_environ
 

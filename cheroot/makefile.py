@@ -75,7 +75,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
         while bytes_sent < payload_size:
             try:
                 bytes_sent += self.send(
-                    data_mv[bytes_sent:bytes_sent + SOCK_WRITE_BLOCKSIZE]
+                    data_mv[bytes_sent:bytes_sent + SOCK_WRITE_BLOCKSIZE],
                 )
             except socket.error as e:
                 if e.args[0] not in errors.socket_errors_nonblocking:
@@ -116,7 +116,8 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
             pass
 
     _fileobject_uses_str_type = six.PY2 and isinstance(
-        socket._fileobject(FauxSocket())._rbuf, six.string_types)
+        socket._fileobject(FauxSocket())._rbuf, six.string_types,
+    )
 
     # FauxSocket is no longer needed
     del FauxSocket

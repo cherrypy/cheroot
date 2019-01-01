@@ -142,19 +142,19 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
             (
                 (interface, port),
                 tls_adapter,
-            )
+            ),
         )
 
         # testclient = get_server_client(tlshttpserver)
         # testclient.get('/')
 
         interface, host, port = _get_conn_data(
-            tlshttpserver.bind_addr
+            tlshttpserver.bind_addr,
         )
 
         resp = requests.get(
             'https://' + interface + ':' + str(port) + '/',
-            verify=ca_temp_path
+            verify=ca_temp_path,
         )
 
     assert resp.status_code == 200
@@ -235,7 +235,7 @@ def test_tls_client_auth(
             (
                 (interface, port),
                 tls_adapter,
-            )
+            ),
         )
 
         interface, host, port = _get_conn_data(tlshttpserver.bind_addr)
@@ -276,7 +276,7 @@ def test_tls_client_auth(
     (
         ANY_INTERFACE_IPV4,
         ANY_INTERFACE_IPV6,
-    )
+    ),
 )
 def test_https_over_http_error(http_server, ip_addr):
     """Ensure that connecting over HTTPS to HTTP port is handled."""
@@ -287,7 +287,7 @@ def test_https_over_http_error(http_server, ip_addr):
             '{interface}:{port}'.format(
                 interface=interface,
                 port=port,
-            )
+            ),
         ).request('GET', '/')
     expected_substring = (
         'wrong version number' if IS_ABOVE_OPENSSL10
@@ -308,7 +308,7 @@ def test_https_over_http_error(http_server, ip_addr):
     (
         ANY_INTERFACE_IPV4,
         ANY_INTERFACE_IPV6,
-    )
+    ),
 )
 def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
     """Ensure that connecting over HTTP to HTTPS port is handled."""
@@ -329,11 +329,11 @@ def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
             (
                 (interface, port),
                 tls_adapter,
-            )
+            ),
         )
 
         interface, host, port = _get_conn_data(
-            tlshttpserver.bind_addr
+            tlshttpserver.bind_addr,
         )
 
         fqdn = interface

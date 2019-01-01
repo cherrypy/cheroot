@@ -1,4 +1,9 @@
 repos:
+- repo: git://github.com/asottile/add-trailing-comma
+  rev: v0.7.0
+  hooks:
+  - id: add-trailing-comma
+
 -   repo: git://github.com/pre-commit/pre-commit-hooks
     sha: v1.1.1
     hooks:

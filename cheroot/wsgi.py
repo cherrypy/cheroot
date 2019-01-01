@@ -83,7 +83,8 @@ class Server(server.HTTPServer):
         self.requests = threadpool.ThreadPool(
             self, min=numthreads or 1, max=max,
             accepted_queue_size=accepted_queue_size,
-            accepted_queue_timeout=accepted_queue_timeout)
+            accepted_queue_timeout=accepted_queue_timeout,
+        )
 
     @property
     def numthreads(self):
@@ -156,8 +157,10 @@ class Gateway(server.Gateway):
         # "The application may call start_response more than once,
         # if and only if the exc_info argument is provided."
         if self.started_response and not exc_info:
-            raise AssertionError('WSGI start_response called a second '
-                                 'time with no exc_info.')
+            raise AssertionError(
+                'WSGI start_response called a second '
+                'time with no exc_info.',
+            )
         self.started_response = True
 
         # "if exc_info is provided, and the HTTP headers have already been
@@ -174,10 +177,12 @@ class Gateway(server.Gateway):
         for k, v in headers:
             if not isinstance(k, str):
                 raise TypeError(
-                    'WSGI response header key %r is not of type str.' % k)
+                    'WSGI response header key %r is not of type str.' % k,
+                )
             if not isinstance(v, str):
                 raise TypeError(
-                    'WSGI response header value %r is not of type str.' % v)
+                    'WSGI response header value %r is not of type str.' % v,
+                )
             if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
             out_header = ntob(k), ntob(v)
@@ -217,7 +222,8 @@ class Gateway(server.Gateway):
                 self.req.simple_response(
                     '500 Internal Server Error',
                     'The requested resource returned more bytes than the '
-                    'declared Content-Length.')
+                    'declared Content-Length.',
+                )
             else:
                 # Dang. We have probably already sent data. Truncate the chunk
                 # to fit (so the client doesn't hang) and raise an error later.
@@ -231,7 +237,8 @@ class Gateway(server.Gateway):
             rbo -= chunklen
             if rbo < 0:
                 raise ValueError(
-                    'Response body exceeds the declared Content-Length.')
+                    'Response body exceeds the declared Content-Length.',
+                )
 
 
 class Gateway_10(Gateway):
@@ -408,8 +415,12 @@ class PathInfoDispatcher:
                 environ['PATH_INFO'] = path[len(p):]
                 return app(environ, start_response)
 
-        start_response('404 Not Found', [('Content-Type', 'text/plain'),
-                                         ('Content-Length', '0')])
+        start_response(
+            '404 Not Found', [
+                ('Content-Type', 'text/plain'),
+                ('Content-Length', '0'),
+            ],
+        )
         return ['']
 
 
