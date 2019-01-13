@@ -339,56 +339,59 @@ def test_https_over_http_error(http_server, ip_addr):
         ANY_INTERFACE_IPV6,
     ),
 )
-def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
+def test_http_over_https_error(
+    tls_http_server, adapter_type,
+    ca, ip_addr,
+    tls_certificate,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+):
     """Ensure that connecting over HTTP to HTTPS port is handled."""
-    interface, host, port = _get_conn_data(ip_addr)
-    cert = ca.issue_server_cert(ntou(interface), )
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path, tls_certificate_private_key_pem_path,
+    )
+    if adapter_type == 'pyopenssl':
+        tls_adapter.context = tls_adapter.get_context()
 
-    with cert.private_key_and_cert_chain_pem.tempfile() as cert_pem:
-        tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-        tls_adapter = tls_adapter_cls(
-            cert_pem, cert_pem,
+    tls_certificate.configure_cert(tls_adapter.context)
+
+    interface, _host, port = _get_conn_data(ip_addr)
+    tlshttpserver = tls_http_server.send(
+        (
+            (interface, port),
+            tls_adapter,
+        ),
+    )
+
+    interface, host, port = _get_conn_data(
+        tlshttpserver.bind_addr,
+    )
+
+    fqdn = interface
+    if ip_addr is ANY_INTERFACE_IPV6:
+        fqdn = '[{}]'.format(fqdn)
+
+    expect_fallback_response_over_plain_http = (
+        (adapter_type == 'pyopenssl'
+         and (IS_ABOVE_OPENSSL10 or six.PY3))
+        or PY27
+    )
+    if expect_fallback_response_over_plain_http:
+        resp = requests.get(
+            'http://' + fqdn + ':' + str(port) + '/',
         )
-        if adapter_type == 'pyopenssl':
-            tls_adapter.context = tls_adapter.get_context()
-
-        cert.configure_cert(tls_adapter.context)
-
-        tlshttpserver = tls_http_server.send(
-            (
-                (interface, port),
-                tls_adapter,
-            ),
+        assert resp.status_code == 400
+        assert resp.text == (
+            'The client sent a plain HTTP request, '
+            'but this server only speaks HTTPS on this port.'
         )
+        return
 
-        interface, host, port = _get_conn_data(
-            tlshttpserver.bind_addr,
+    with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
+        requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
+            'http://' + fqdn + ':' + str(port) + '/',
         )
-
-        fqdn = interface
-        if ip_addr is ANY_INTERFACE_IPV6:
-            fqdn = '[{}]'.format(fqdn)
-
-        expect_fallback_response_over_plain_http = (
-            (adapter_type == 'pyopenssl'
-             and (IS_ABOVE_OPENSSL10 or six.PY3))
-            or PY27
-        )
-        if expect_fallback_response_over_plain_http:
-            resp = requests.get(
-                'http://' + fqdn + ':' + str(port) + '/',
-            )
-            assert resp.status_code == 400
-            assert resp.text == (
-                'The client sent a plain HTTP request, '
-                'but this server only speaks HTTPS on this port.'
-            )
-            return
-
-        with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
-            requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-                'http://' + fqdn + ':' + str(port) + '/',
-            )
 
     if IS_LINUX:
         expected_error_code, expected_error_text = (
