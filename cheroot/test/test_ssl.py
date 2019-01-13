@@ -110,9 +110,35 @@ def tls_http_server():
 @pytest.fixture
 def ca():
     """Provide a certificate authority via fixture."""
-    ca = trustme.CA()
-    yield ca
-    del ca
+    return trustme.CA()
+
+
+@pytest.fixture
+def tls_ca_certificate_pem_path(ca):
+    """Provide a certificate authority certificate file via fixture."""
+    with ca.cert_pem.tempfile() as ca_cert_pem:
+        yield ca_cert_pem
+
+
+@pytest.fixture
+def tls_certificate(ca):
+    """Provide a leaf certificate via fixture."""
+    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+    return ca.issue_server_cert(ntou(interface), )
+
+
+@pytest.fixture
+def tls_certificate_chain_pem_path(tls_certificate):
+    """Provide a certificate chain PEM file path via fixture."""
+    with tls_certificate.private_key_and_cert_chain_pem.tempfile() as cert_pem:
+        yield cert_pem
+
+
+@pytest.fixture
+def tls_certificate_private_key_pem_path(tls_certificate):
+    """Provide a certificate private key PEM file path via fixture."""
+    with tls_certificate.private_key_pem.tempfile() as cert_key_pem:
+        yield cert_key_pem
 
 
 @pytest.mark.parametrize(
@@ -122,40 +148,42 @@ def ca():
         'pyopenssl',
     ),
 )
-def test_ssl_adapters(tls_http_server, ca, adapter_type):
+def test_ssl_adapters(
+    tls_http_server, ca, adapter_type,
+    tls_certificate,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+    tls_ca_certificate_pem_path,
+):
     """Test ability to connect to server via HTTPS using adapters."""
-    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
-    cert = ca.issue_server_cert(ntou(interface), )
-    with \
-            ca.cert_pem.tempfile() as ca_temp_path, \
-            cert.private_key_and_cert_chain_pem.tempfile() as cert_pem:
-        tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-        tls_adapter = tls_adapter_cls(
-            cert_pem, cert_pem,
-        )
-        if adapter_type == 'pyopenssl':
-            tls_adapter.context = tls_adapter.get_context()
+    interface, _host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path, tls_certificate_private_key_pem_path,
+    )
+    if adapter_type == 'pyopenssl':
+        tls_adapter.context = tls_adapter.get_context()
 
-        cert.configure_cert(tls_adapter.context)
+    tls_certificate.configure_cert(tls_adapter.context)
 
-        tlshttpserver = tls_http_server.send(
-            (
-                (interface, port),
-                tls_adapter,
-            ),
-        )
+    tlshttpserver = tls_http_server.send(
+        (
+            (interface, port),
+            tls_adapter,
+        ),
+    )
 
-        # testclient = get_server_client(tlshttpserver)
-        # testclient.get('/')
+    # testclient = get_server_client(tlshttpserver)
+    # testclient.get('/')
 
-        interface, host, port = _get_conn_data(
-            tlshttpserver.bind_addr,
-        )
+    interface, _host, port = _get_conn_data(
+        tlshttpserver.bind_addr,
+    )
 
-        resp = requests.get(
-            'https://' + interface + ':' + str(port) + '/',
-            verify=ca_temp_path,
-        )
+    resp = requests.get(
+        'https://' + interface + ':' + str(port) + '/',
+        verify=tls_ca_certificate_pem_path,
+    )
 
     assert resp.status_code == 200
     assert resp.text == 'Hello world!'
