@@ -213,20 +213,23 @@ def test_ssl_adapters(
     ),
 )
 def test_tls_client_auth(
-        # FIXME: remove twisted logic, separate tests
-        mocker,
-        tls_http_server, ca,
-        adapter_type,
-        is_trusted_cert, tls_client_identity,
-        tls_verify_mode,
+    # FIXME: remove twisted logic, separate tests
+    mocker,
+    tls_http_server, adapter_type,
+    ca,
+    tls_certificate,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+    tls_ca_certificate_pem_path,
+    is_trusted_cert, tls_client_identity,
+    tls_verify_mode,
 ):
     """Verify that client TLS certificate auth works correctly."""
     test_cert_rejection = (
         tls_verify_mode != ssl.CERT_NONE
         and not is_trusted_cert
     )
-    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
-    cert = ca.issue_server_cert(ntou(interface), )
+    interface, _host, port = _get_conn_data(ANY_INTERFACE_IPV4)
 
     client_cert_root_ca = ca if is_trusted_cert else trustme.CA()
     with mocker.mock_module.patch(
@@ -239,13 +242,11 @@ def test_tls_client_auth(
         )
         del client_cert_root_ca
 
-    with \
-            ca.cert_pem.tempfile() as ca_temp_path, \
-            cert.private_key_and_cert_chain_pem.tempfile() as cert_pem, \
-            client_cert.private_key_and_cert_chain_pem.tempfile() as cl_pem:
+    with client_cert.private_key_and_cert_chain_pem.tempfile() as cl_pem:
         tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
         tls_adapter = tls_adapter_cls(
-            cert_pem, cert_pem,
+            tls_certificate_chain_pem_path,
+            tls_certificate_private_key_pem_path,
         )
         if adapter_type == 'pyopenssl':
             tls_adapter.context = tls_adapter.get_context()
@@ -257,7 +258,7 @@ def test_tls_client_auth(
             tls_adapter.context.verify_mode = tls_verify_mode
 
         ca.configure_trust(tls_adapter.context)
-        cert.configure_cert(tls_adapter.context)
+        tls_certificate.configure_cert(tls_adapter.context)
 
         tlshttpserver = tls_http_server.send(
             (
@@ -273,7 +274,7 @@ def test_tls_client_auth(
             'https://' + interface + ':' + str(port) + '/',
 
             # Server TLS certificate verification:
-            verify=ca_temp_path,
+            verify=tls_ca_certificate_pem_path,
 
             # Client TLS certificate verification:
             cert=cl_pem,
