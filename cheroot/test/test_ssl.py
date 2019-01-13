@@ -267,7 +267,7 @@ def test_tls_client_auth(
             ),
         )
 
-        interface, host, port = _get_conn_data(tlshttpserver.bind_addr)
+        interface, _host, port = _get_conn_data(tlshttpserver.bind_addr)
 
         make_https_request = functools.partial(
             requests.get,
@@ -310,7 +310,7 @@ def test_tls_client_auth(
 def test_https_over_http_error(http_server, ip_addr):
     """Ensure that connecting over HTTPS to HTTP port is handled."""
     httpserver = http_server.send((ip_addr, EPHEMERAL_PORT))
-    interface, host, port = _get_conn_data(httpserver.bind_addr)
+    interface, _host, port = _get_conn_data(httpserver.bind_addr)
     with pytest.raises(ssl.SSLError) as ssl_err:
         six.moves.http_client.HTTPSConnection(
             '{interface}:{port}'.format(
