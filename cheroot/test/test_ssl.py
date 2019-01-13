@@ -149,7 +149,7 @@ def tls_certificate_private_key_pem_path(tls_certificate):
     ),
 )
 def test_ssl_adapters(
-    tls_http_server, ca, adapter_type,
+    tls_http_server, adapter_type,
     tls_certificate,
     tls_certificate_chain_pem_path,
     tls_certificate_private_key_pem_path,
