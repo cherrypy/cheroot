@@ -110,9 +110,35 @@ def tls_http_server():
 @pytest.fixture
 def ca():
     """Provide a certificate authority via fixture."""
-    ca = trustme.CA()
-    yield ca
-    del ca
+    return trustme.CA()
+
+
+@pytest.fixture
+def tls_ca_certificate_pem_path(ca):
+    """Provide a certificate authority certificate file via fixture."""
+    with ca.cert_pem.tempfile() as ca_cert_pem:
+        yield ca_cert_pem
+
+
+@pytest.fixture
+def tls_certificate(ca):
+    """Provide a leaf certificate via fixture."""
+    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+    return ca.issue_server_cert(ntou(interface), )
+
+
+@pytest.fixture
+def tls_certificate_chain_pem_path(tls_certificate):
+    """Provide a certificate chain PEM file path via fixture."""
+    with tls_certificate.private_key_and_cert_chain_pem.tempfile() as cert_pem:
+        yield cert_pem
+
+
+@pytest.fixture
+def tls_certificate_private_key_pem_path(tls_certificate):
+    """Provide a certificate private key PEM file path via fixture."""
+    with tls_certificate.private_key_pem.tempfile() as cert_key_pem:
+        yield cert_key_pem
 
 
 @pytest.mark.parametrize(
@@ -122,40 +148,42 @@ def ca():
         'pyopenssl',
     ),
 )
-def test_ssl_adapters(tls_http_server, ca, adapter_type):
+def test_ssl_adapters(
+    tls_http_server, adapter_type,
+    tls_certificate,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+    tls_ca_certificate_pem_path,
+):
     """Test ability to connect to server via HTTPS using adapters."""
-    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
-    cert = ca.issue_server_cert(ntou(interface), )
-    with \
-            ca.cert_pem.tempfile() as ca_temp_path, \
-            cert.private_key_and_cert_chain_pem.tempfile() as cert_pem:
-        tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-        tls_adapter = tls_adapter_cls(
-            cert_pem, cert_pem,
-        )
-        if adapter_type == 'pyopenssl':
-            tls_adapter.context = tls_adapter.get_context()
+    interface, _host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path, tls_certificate_private_key_pem_path,
+    )
+    if adapter_type == 'pyopenssl':
+        tls_adapter.context = tls_adapter.get_context()
 
-        cert.configure_cert(tls_adapter.context)
+    tls_certificate.configure_cert(tls_adapter.context)
 
-        tlshttpserver = tls_http_server.send(
-            (
-                (interface, port),
-                tls_adapter,
-            ),
-        )
+    tlshttpserver = tls_http_server.send(
+        (
+            (interface, port),
+            tls_adapter,
+        ),
+    )
 
-        # testclient = get_server_client(tlshttpserver)
-        # testclient.get('/')
+    # testclient = get_server_client(tlshttpserver)
+    # testclient.get('/')
 
-        interface, host, port = _get_conn_data(
-            tlshttpserver.bind_addr,
-        )
+    interface, _host, port = _get_conn_data(
+        tlshttpserver.bind_addr,
+    )
 
-        resp = requests.get(
-            'https://' + interface + ':' + str(port) + '/',
-            verify=ca_temp_path,
-        )
+    resp = requests.get(
+        'https://' + interface + ':' + str(port) + '/',
+        verify=tls_ca_certificate_pem_path,
+    )
 
     assert resp.status_code == 200
     assert resp.text == 'Hello world!'
@@ -185,20 +213,23 @@ def test_ssl_adapters(tls_http_server, ca, adapter_type):
     ),
 )
 def test_tls_client_auth(
-        # FIXME: remove twisted logic, separate tests
-        mocker,
-        tls_http_server, ca,
-        adapter_type,
-        is_trusted_cert, tls_client_identity,
-        tls_verify_mode,
+    # FIXME: remove twisted logic, separate tests
+    mocker,
+    tls_http_server, adapter_type,
+    ca,
+    tls_certificate,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+    tls_ca_certificate_pem_path,
+    is_trusted_cert, tls_client_identity,
+    tls_verify_mode,
 ):
     """Verify that client TLS certificate auth works correctly."""
     test_cert_rejection = (
         tls_verify_mode != ssl.CERT_NONE
         and not is_trusted_cert
     )
-    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
-    cert = ca.issue_server_cert(ntou(interface), )
+    interface, _host, port = _get_conn_data(ANY_INTERFACE_IPV4)
 
     client_cert_root_ca = ca if is_trusted_cert else trustme.CA()
     with mocker.mock_module.patch(
@@ -211,13 +242,11 @@ def test_tls_client_auth(
         )
         del client_cert_root_ca
 
-    with \
-            ca.cert_pem.tempfile() as ca_temp_path, \
-            cert.private_key_and_cert_chain_pem.tempfile() as cert_pem, \
-            client_cert.private_key_and_cert_chain_pem.tempfile() as cl_pem:
+    with client_cert.private_key_and_cert_chain_pem.tempfile() as cl_pem:
         tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
         tls_adapter = tls_adapter_cls(
-            cert_pem, cert_pem,
+            tls_certificate_chain_pem_path,
+            tls_certificate_private_key_pem_path,
         )
         if adapter_type == 'pyopenssl':
             tls_adapter.context = tls_adapter.get_context()
@@ -229,7 +258,7 @@ def test_tls_client_auth(
             tls_adapter.context.verify_mode = tls_verify_mode
 
         ca.configure_trust(tls_adapter.context)
-        cert.configure_cert(tls_adapter.context)
+        tls_certificate.configure_cert(tls_adapter.context)
 
         tlshttpserver = tls_http_server.send(
             (
@@ -238,14 +267,14 @@ def test_tls_client_auth(
             ),
         )
 
-        interface, host, port = _get_conn_data(tlshttpserver.bind_addr)
+        interface, _host, port = _get_conn_data(tlshttpserver.bind_addr)
 
         make_https_request = functools.partial(
             requests.get,
             'https://' + interface + ':' + str(port) + '/',
 
             # Server TLS certificate verification:
-            verify=ca_temp_path,
+            verify=tls_ca_certificate_pem_path,
 
             # Client TLS certificate verification:
             cert=cl_pem,
@@ -281,7 +310,7 @@ def test_tls_client_auth(
 def test_https_over_http_error(http_server, ip_addr):
     """Ensure that connecting over HTTPS to HTTP port is handled."""
     httpserver = http_server.send((ip_addr, EPHEMERAL_PORT))
-    interface, host, port = _get_conn_data(httpserver.bind_addr)
+    interface, _host, port = _get_conn_data(httpserver.bind_addr)
     with pytest.raises(ssl.SSLError) as ssl_err:
         six.moves.http_client.HTTPSConnection(
             '{interface}:{port}'.format(
@@ -310,56 +339,59 @@ def test_https_over_http_error(http_server, ip_addr):
         ANY_INTERFACE_IPV6,
     ),
 )
-def test_http_over_https_error(ca, adapter_type, tls_http_server, ip_addr):
+def test_http_over_https_error(
+    tls_http_server, adapter_type,
+    ca, ip_addr,
+    tls_certificate,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+):
     """Ensure that connecting over HTTP to HTTPS port is handled."""
-    interface, host, port = _get_conn_data(ip_addr)
-    cert = ca.issue_server_cert(ntou(interface), )
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path, tls_certificate_private_key_pem_path,
+    )
+    if adapter_type == 'pyopenssl':
+        tls_adapter.context = tls_adapter.get_context()
 
-    with cert.private_key_and_cert_chain_pem.tempfile() as cert_pem:
-        tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-        tls_adapter = tls_adapter_cls(
-            cert_pem, cert_pem,
+    tls_certificate.configure_cert(tls_adapter.context)
+
+    interface, _host, port = _get_conn_data(ip_addr)
+    tlshttpserver = tls_http_server.send(
+        (
+            (interface, port),
+            tls_adapter,
+        ),
+    )
+
+    interface, host, port = _get_conn_data(
+        tlshttpserver.bind_addr,
+    )
+
+    fqdn = interface
+    if ip_addr is ANY_INTERFACE_IPV6:
+        fqdn = '[{}]'.format(fqdn)
+
+    expect_fallback_response_over_plain_http = (
+        (adapter_type == 'pyopenssl'
+         and (IS_ABOVE_OPENSSL10 or six.PY3))
+        or PY27
+    )
+    if expect_fallback_response_over_plain_http:
+        resp = requests.get(
+            'http://' + fqdn + ':' + str(port) + '/',
         )
-        if adapter_type == 'pyopenssl':
-            tls_adapter.context = tls_adapter.get_context()
-
-        cert.configure_cert(tls_adapter.context)
-
-        tlshttpserver = tls_http_server.send(
-            (
-                (interface, port),
-                tls_adapter,
-            ),
+        assert resp.status_code == 400
+        assert resp.text == (
+            'The client sent a plain HTTP request, '
+            'but this server only speaks HTTPS on this port.'
         )
+        return
 
-        interface, host, port = _get_conn_data(
-            tlshttpserver.bind_addr,
+    with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
+        requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
+            'http://' + fqdn + ':' + str(port) + '/',
         )
-
-        fqdn = interface
-        if ip_addr is ANY_INTERFACE_IPV6:
-            fqdn = '[{}]'.format(fqdn)
-
-        expect_fallback_response_over_plain_http = (
-            (adapter_type == 'pyopenssl'
-             and (IS_ABOVE_OPENSSL10 or six.PY3))
-            or PY27
-        )
-        if expect_fallback_response_over_plain_http:
-            resp = requests.get(
-                'http://' + fqdn + ':' + str(port) + '/',
-            )
-            assert resp.status_code == 400
-            assert resp.text == (
-                'The client sent a plain HTTP request, '
-                'but this server only speaks HTTPS on this port.'
-            )
-            return
-
-        with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
-            requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-                'http://' + fqdn + ':' + str(port) + '/',
-            )
 
     if IS_LINUX:
         expected_error_code, expected_error_text = (
