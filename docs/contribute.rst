@@ -18,7 +18,7 @@ First-time setup
 
         $ git config --global core.editor vim
 
-- Create and log in in `GitHub`_ account Create ang log in in `github`_ account
+- Create and log in to a `GitHub`_ account
 
 - `Fork`_ Cheroot to your GitHub account it just needs clicking the Fork button
 
@@ -42,10 +42,12 @@ First-time setup
 Write your code
 ~~~~~~~~~~~~~~~
 
-- Please to use `pep8`_
+- Please, use `pep8`_
 
-After then you finished the code you need to do some steps:
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.. _pep8: https://pep8.org/
+
+Once you finished coding, you are recommended to do the following steps:
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 - Run tests with `tox`_
 
@@ -58,28 +60,27 @@ Run one test with Python3.6::
         envlist = python
         minversion = 3.5.3
 
-run with all Python interpreter:: 
+run with all Python interpreter::
 
         tox -e pre-commit,py27,py37 etc
 
 - Run the `pre-commit`_::
 
-        tox -e pre-commit - run pre-commit
+        tox -e pre-commit
 
 - `git add`_ your files
 
 - `Write good`_ `git commit`_ for your code
 
-- `Push`_ and `to create a pull request`_
+- `Push`_ and `create a pull request`_
 
 .. _tox: https://tox.readthedocs.io/en/latest/
-.. _git commit: https://git-scm.com/docs/git-commit
-.. _Write good: https://chris.beams.io/posts/git-commit/
-.. _Push: https://git-scm.com/docs/git-push
-.. _git add: https://git-scm.com/docs/git-add
-.. _to create a pull request: https://help.github.com/articles/creating-a-pull-request/
-.. _pep8: https://pep8.org/
 .. _pre-commit: https://github.com/pre-commit/pre-commit
+.. _git add: https://git-scm.com/docs/git-add
+.. _Write good: https://chris.beams.io/posts/git-commit/
+.. _git commit: https://git-scm.com/docs/git-commit
+.. _Push: https://git-scm.com/docs/git-push
+.. _create a pull request: https://help.github.com/articles/creating-a-pull-request/
 
 Building the docs
 ~~~~~~~~~~~~~~~~~
@@ -88,9 +89,16 @@ Building documentation::
 
         tox -e build-docs
 
-Open the documentation::
+Open the documentation:
 
-        firefox build/html/index.html
+for GNU/linux::
+
+        xdg-open build/html/index.html
+
+for macOS::
+
+        open build/html/index.html
+
 
 Read more about `Sphinx`_.
 
