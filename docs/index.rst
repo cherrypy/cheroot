@@ -1,5 +1,7 @@
 Welcome to Cheroot documentation!
-========================================
+=================================
+
+.. include:: ../README.rst
 
 .. toctree::
    :maxdepth: 1
