@@ -4,23 +4,31 @@
 First-time setup
 ~~~~~~~~~~~~~~~~
 
+- You need to install the third version of `Python`_.
+For example, Python3.7
+
+Then `to create and activate a virtual environment`_.
+And install `tox`_.
+
 - `Install git`_
 
 - `Configure git`_:
 
-1. Please identify yourself::
+1. Please, identify yourself::
 
         $ git config --global user.name "firstname lastname"
 
         $ git config --global user.email yourname@example.com
 
-2. Chose editor for git commit::
+* Use the address bound to your GitHub account so that the commits would be linked to your profile.
+
+2. Choose editor for git commit::
 
         $ git config --global core.editor vim
 
 - Create and log in to a `GitHub`_ account
 
-- `Fork`_ Cheroot to your GitHub account it just needs clicking the Fork button
+- `Fork`_ Cheroot to your GitHub account by clicking the Fork button
 
 - `Clone`_ your fork locally::
 
@@ -32,6 +40,8 @@ First-time setup
 
         git checkout -b patch/some_fix
 
+.. _to create and activate a virtual environment: https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments
+.. _Python: https://www.python.org/
 .. _Install git: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
 .. _Configure git: https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
 .. _GitHub: http://github.com
@@ -42,9 +52,9 @@ First-time setup
 Write your code
 ~~~~~~~~~~~~~~~
 
-- Please, use `pep8`_
+- Please, use `PEP 8`_
 
-.. _pep8: https://pep8.org/
+.. _PEP 8: https://pep8.org/
 
 Once you finished coding, you are recommended to do the following steps:
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -99,6 +109,12 @@ for macOS::
 
         open build/html/index.html
 
+Also, one can serve docs using a built-in static files server.
+This is preferable because of possible CSRF issues.::
+
+        python -m http.server --directory build/html/ 8000
+
+Open http://0.0.0.0:8000/ please in your browser.
 
 Read more about `Sphinx`_.
 
