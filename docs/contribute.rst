@@ -4,10 +4,10 @@
 First-time setup
 ~~~~~~~~~~~~~~~~
 
-- You need to install the third version of `Python`_.
+- You need to install `Python`_ 3 which is required for building docs.
 For example, Python3.7
 
-Then `to create and activate a virtual environment`_.
+Then, `create and activate a virtual environment`_.
 And install `tox`_.
 
 - `Install git`_
@@ -16,15 +16,14 @@ And install `tox`_.
 
 1. Please, identify yourself::
 
-        $ git config --global user.name "firstname lastname"
-
-        $ git config --global user.email yourname@example.com
+    $ git config --global user.name "firstname lastname"
+    $ git config --global user.email yourname@example.com
 
 * Use the address bound to your GitHub account so that the commits would be linked to your profile.
 
 2. Choose editor for git commit::
 
-        $ git config --global core.editor vim
+    $ git config --global core.editor vim
 
 - Create and log in to a `GitHub`_ account
 
@@ -32,15 +31,14 @@ And install `tox`_.
 
 - `Clone`_ your fork locally::
 
-        git clone https://github.com/{username}/cheroot
-
-        cd cheroot
+    $ git clone https://github.com/{username}/cheroot
+    $ cd cheroot
 
 - To create a new `branch`_ and switch to it::
 
-        git checkout -b patch/some_fix
+    $ git checkout -b patch/some_fix
 
-.. _to create and activate a virtual environment: https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments
+.. _create and activate a virtual environment: https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments
 .. _Python: https://www.python.org/
 .. _Install git: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
 .. _Configure git: https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
@@ -63,20 +61,21 @@ Once you finished coding, you are recommended to do the following steps:
 
 Run one test with Python3.6::
 
-        tox -e py36 -- cheroot/test/test_name.py
+    $ tox -e py36 -- cheroot/test/test_name.py
 
-**`tox`** - Run all tests for the environment, who wrote in tox settings::
+**`tox`** - Run all tests using the Python version where `python` command
+currently points to which is specified in tox settings::
 
-        envlist = python
-        minversion = 3.5.3
+    envlist = python
+    minversion = 3.5.3
 
-run with all Python interpreter::
+Run linters and all tests against several Python interpreters::
 
-        tox -e pre-commit,py27,py37 etc
+    $ tox -e pre-commit,py27,py37 etc
 
-- Run the `pre-commit`_::
+- Run the `pre-commit`_ linting suite::
 
-        tox -e pre-commit
+    $ tox -e pre-commit
 
 - `git add`_ your files
 
@@ -97,24 +96,24 @@ Building the docs
 
 Building documentation::
 
-        tox -e build-docs
+    $ tox -e build-docs
 
 Open the documentation:
 
 for GNU/linux::
 
-        xdg-open build/html/index.html
+    $ xdg-open build/html/index.html
 
 for macOS::
 
-        open build/html/index.html
+    $ open build/html/index.html
 
 Also, one can serve docs using a built-in static files server.
 This is preferable because of possible CSRF issues.::
 
-        python -m http.server --directory build/html/ 8000
+    $ python3 -m http.server --directory build/html/ 8000
 
-Open http://0.0.0.0:8000/ please in your browser.
+Open `http://localhost:8000/ <http://localhost:8000/>`_ please in your browser.
 
 Read more about `Sphinx`_.
 
