@@ -5,7 +5,7 @@ First-time setup
 ~~~~~~~~~~~~~~~~
 
 - You need to install `Python`_ 3 which is required for building docs.
-For example, Python3.7
+For example, Python 3.7.
 
 Then, `create and activate a virtual environment`_.
 And install `tox`_.
@@ -21,7 +21,7 @@ And install `tox`_.
 
 * Use the address bound to your GitHub account so that the commits would be linked to your profile.
 
-2. Choose editor for git commit::
+2. Choose an editor for Git::
 
     $ git config --global core.editor vim
 
@@ -32,6 +32,11 @@ And install `tox`_.
 - `Clone`_ your fork locally::
 
     $ git clone https://github.com/{username}/cheroot
+    $ cd cheroot
+
+* Also, you can `clone`_ fork using `ssh`_::
+
+    $ git clone git@github.com:{username}/cheroot.git
     $ cd cheroot
 
 - To create a new `branch`_ and switch to it::
@@ -45,6 +50,7 @@ And install `tox`_.
 .. _GitHub: http://github.com
 .. _Fork: https://help.github.com/articles/fork-a-repo/
 .. _Clone: https://help.github.com/articles/cloning-a-repository/
+.. _ssh: https://help.github.com/articles/connecting-to-github-with-ssh/
 .. _branch: https://www.atlassian.com/git/tutorials/using-branches
 
 Write your code
@@ -63,7 +69,7 @@ Run one test with Python3.6::
 
     $ tox -e py36 -- cheroot/test/test_name.py
 
-**`tox`** - Run all tests using the Python version where `python` command
+**`tox`** — Run all tests using the Python version where `python` command
 currently points to which is specified in tox settings::
 
     envlist = python
@@ -71,7 +77,7 @@ currently points to which is specified in tox settings::
 
 Run linters and all tests against several Python interpreters::
 
-    $ tox -e pre-commit,py27,py37 etc
+    $ tox -e pre-commit,py27,py37  # etc.
 
 - Run the `pre-commit`_ linting suite::
 
@@ -79,7 +85,7 @@ Run linters and all tests against several Python interpreters::
 
 - `git add`_ your files
 
-- `Write good`_ `git commit`_ for your code
+- `Write good`_ `commit messages`_ when checking in your changes to Git
 
 - `Push`_ and `create a pull request`_
 
@@ -87,14 +93,14 @@ Run linters and all tests against several Python interpreters::
 .. _pre-commit: https://github.com/pre-commit/pre-commit
 .. _git add: https://git-scm.com/docs/git-add
 .. _Write good: https://chris.beams.io/posts/git-commit/
-.. _git commit: https://git-scm.com/docs/git-commit
+.. _commit messages: https://git-scm.com/docs/git-commit
 .. _Push: https://git-scm.com/docs/git-push
 .. _create a pull request: https://help.github.com/articles/creating-a-pull-request/
 
 Building the docs
 ~~~~~~~~~~~~~~~~~
 
-Building documentation::
+To build the docs from a checked out source, run::
 
     $ tox -e build-docs
 
@@ -113,7 +119,7 @@ This is preferable because of possible CSRF issues.::
 
     $ python3 -m http.server --directory build/html/ 8000
 
-Open `http://localhost:8000/ <http://localhost:8000/>`_ please in your browser.
+After that, you can open `http://localhost:8000/ <http://localhost:8000/>`_ in your browser.
 
 Read more about `Sphinx`_.
 
