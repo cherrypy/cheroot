@@ -1265,12 +1265,12 @@ class HTTPConnection:
                     self.requests_seen += 1
                 if not req.ready:
                     # Allow conn to stay open to support non-blocking sockets
-                    return True
+                    return
 
                 request_seen = True
                 req.respond()
                 if req.close_connection:
-                    return False
+                    raise errors.CloseConnection()
         except socket.error as ex:
             errnum = ex.args[0]
             # sadly SSL sockets return a different (longer) time out string
@@ -1288,7 +1288,7 @@ class HTTPConnection:
                     level=logging.WARNING, traceback=True,
                 )
                 self._conditional_error(req, '500 Internal Server Error')
-            return False
+            raise
         except (KeyboardInterrupt, SystemExit):
             raise
         except errors.FatalSSLAlert:
@@ -1300,8 +1300,7 @@ class HTTPConnection:
                 repr(ex), level=logging.ERROR, traceback=True,
             )
             self._conditional_error(req, '500 Internal Server Error')
-            return False
-        return True
+            raise
 
     linger = False
 

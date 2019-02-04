@@ -132,15 +132,14 @@ class WorkerThread(threading.Thread):
             self.conn = conn
             self.log_start_stats()
             try:
-                err_occurred = conn.communicate() is False
-            finally:
-                if err_occurred:
-                    conn.close()
-                    conn_socks.pop(conn.socket)
-                else:
-                    conn_socks[conn.socket] = (conn, time.time())
-                self.log_close_stats()
-                self.conn = None
+                conn.communicate()
+            except Exception:
+                conn.close()
+                conn_socks.pop(conn.socket)
+            else:
+                conn_socks[conn.socket] = (conn, time.time())
+            self.log_close_stats()
+            self.conn = None
 
     def run(self):
         """Process incoming HTTP connections.

@@ -22,6 +22,10 @@ class FatalSSLAlert(Exception):
     """Exception raised when the SSL implementation signals a fatal alert."""
 
 
+class CloseConnection(Exception):
+    """Exception raised when client requested the connection to be closed."""
+
+
 def plat_specific_errors(*errnames):
     """Return error numbers for all errors in errnames on this platform.
 
