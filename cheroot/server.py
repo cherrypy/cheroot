@@ -696,6 +696,7 @@ class HTTPRequest:
         else:
             if not success:
                 return
+
         try:
             success = self.read_request_headers()
         except errors.MaxSizeExceeded:
