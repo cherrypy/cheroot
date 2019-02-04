@@ -8,6 +8,7 @@ import threading
 import time
 import socket
 import select
+import functools
 
 from six.moves import queue
 
@@ -95,17 +96,23 @@ class WorkerThread(threading.Thread):
         }
         threading.Thread.__init__(self)
 
-    def log_start_stats(self):
-        if self.server.stats['Enabled']:
-            self.start_time = time.time()
+    def if_stats(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            return self.server.stats['Enabled'] and func(self, *args, **kwargs)
+        return wrapper
 
+    @if_stats
+    def log_start_stats(self):
+        self.start_time = time.time()
+
+    @if_stats
     def log_close_stats(self):
-        if self.server.stats['Enabled']:
-            self.requests_seen += self.conn.requests_seen
-            self.bytes_read += self.conn.rfile.bytes_read
-            self.bytes_written += self.conn.wfile.bytes_written
-            self.work_time += time.time() - self.start_time
-            self.start_time = None
+        self.requests_seen += self.conn.requests_seen
+        self.bytes_read += self.conn.rfile.bytes_read
+        self.bytes_written += self.conn.wfile.bytes_written
+        self.work_time += time.time() - self.start_time
+        self.start_time = None
 
     def conn_expired(self, last_active, cur_time):
         srv_timeout = self.server.timeout
