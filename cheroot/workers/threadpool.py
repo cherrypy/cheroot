@@ -107,13 +107,13 @@ class WorkerThread(threading.Thread):
             self.work_time += time.time() - self.start_time
             self.start_time = None
 
-    def conn_expired(self, conn, last_active, cur_time):
+    def conn_expired(self, last_active, cur_time):
         srv_timeout = self.server.timeout
         return cur_time - last_active > srv_timeout
 
     def get_expired_conns(self, conn_socks, cur_time):
         for conn, last_active in tuple(conn_socks.values()):
-            if self.conn_expired(conn, last_active, cur_time):
+            if self.conn_expired(last_active, cur_time):
                 yield conn
 
     def close_conns(self, conn_list, conn_socks):
