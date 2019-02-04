@@ -9,12 +9,14 @@ import os
 import socket
 import tempfile
 import threading
-import time
 
 import pytest
+import requests
+import requests_unixsocket
 
-from .._compat import bton
-from ..server import Gateway, HTTPServer
+from .._compat import bton, ntob
+from .._compat import IS_MACOS
+from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -23,46 +25,16 @@ from ..testing import (
 )
 
 
-def make_http_server(bind_addr):
-    """Create and start an HTTP server bound to bind_addr."""
-    httpserver = HTTPServer(
-        bind_addr=bind_addr,
-        gateway=Gateway,
-    )
-
-    threading.Thread(target=httpserver.safe_start).start()
-
-    while not httpserver.ready:
-        time.sleep(0.1)
-
-    return httpserver
-
-
-non_windows_sock_test = pytest.mark.skipif(
+unix_only_sock_test = pytest.mark.skipif(
     not hasattr(socket, 'AF_UNIX'),
     reason='UNIX domain sockets are only available under UNIX-based OS',
 )
 
 
-@pytest.fixture
-def http_server():
-    """Provision a server creator as a fixture."""
-    def start_srv():
-        bind_addr = yield
-        httpserver = make_http_server(bind_addr)
-        yield httpserver
-        yield httpserver
-
-    srv_creator = iter(start_srv())
-    next(srv_creator)
-    yield srv_creator
-    try:
-        while True:
-            httpserver = next(srv_creator)
-            if httpserver is not None:
-                httpserver.stop()
-    except StopIteration:
-        pass
+non_macos_sock_test = pytest.mark.skipif(
+    IS_MACOS,
+    reason='Peercreds lookup does not work under macOS/BSD currently.',
+)
 
 
 @pytest.fixture
@@ -124,7 +96,7 @@ def test_stop_interrupts_serve():
     (
         ANY_INTERFACE_IPV4,
         ANY_INTERFACE_IPV6,
-    )
+    ),
 )
 def test_bind_addr_inet(http_server, ip_addr):
     """Check that bound IP address is stored in server."""
@@ -134,7 +106,7 @@ def test_bind_addr_inet(http_server, ip_addr):
     assert httpserver.bind_addr[1] != EPHEMERAL_PORT
 
 
-@non_windows_sock_test
+@unix_only_sock_test
 def test_bind_addr_unix(http_server, unix_sock_file):
     """Check that bound UNIX socket address is stored in server."""
     httpserver = http_server.send(unix_sock_file)
@@ -143,7 +115,7 @@ def test_bind_addr_unix(http_server, unix_sock_file):
 
 
 @pytest.mark.skip(reason="Abstract sockets don't work currently")
-@non_windows_sock_test
+@unix_only_sock_test
 def test_bind_addr_unix_abstract(http_server):
     """Check that bound UNIX socket address is stored in server."""
     unix_abstract_sock = b'\x00cheroot/test/socket/here.sock'
@@ -163,31 +135,75 @@ class _TestGateway(Gateway):
         req_uri = bton(req.uri)
         if req_uri == PEERCRED_IDS_URI:
             peer_creds = conn.peer_pid, conn.peer_uid, conn.peer_gid
-            return ['|'.join(map(str, peer_creds))]
+            self.send_payload('|'.join(map(str, peer_creds)))
+            return
         elif req_uri == PEERCRED_TEXTS_URI:
-            return ['!'.join((conn.peer_user, conn.peer_group))]
+            self.send_payload('!'.join((conn.peer_user, conn.peer_group)))
+            return
         return super(_TestGateway, self).respond()
 
+    def send_payload(self, payload):
+        req = self.req
+        req.status = b'200 OK'
+        req.ensure_headers_sent()
+        req.write(ntob(payload))
 
-@pytest.mark.skip(
-    reason='Test HTTP client is not able to work through UNIX socket currently'
-)
-@non_windows_sock_test
-def test_peercreds_unix_sock(http_server, unix_sock_file):
-    """Check that peercred lookup and resolution work when enabled."""
+
+@pytest.fixture
+def peercreds_enabled_server_and_client(http_server, unix_sock_file):
+    """Construct a test server with `peercreds_enabled`."""
     httpserver = http_server.send(unix_sock_file)
     httpserver.gateway = _TestGateway
     httpserver.peercreds_enabled = True
+    return httpserver, get_server_client(httpserver)
 
-    testclient = get_server_client(httpserver)
+
+@unix_only_sock_test
+@non_macos_sock_test
+def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
+    """Check that peercred lookup works when enabled."""
+    httpserver, testclient = peercreds_enabled_server_and_client
+
+    unix_base_uri = 'http+unix://{}'.format(
+        httpserver.bind_addr.replace('/', '%2F'),
+    )
 
     expected_peercreds = os.getpid(), os.getuid(), os.getgid()
     expected_peercreds = '|'.join(map(str, expected_peercreds))
-    assert testclient.get(PEERCRED_IDS_URI) == expected_peercreds
-    assert 'RuntimeError' in testclient.get(PEERCRED_TEXTS_URI)
 
+    with requests_unixsocket.monkeypatch():
+        peercreds_resp = requests.get(unix_base_uri + PEERCRED_IDS_URI)
+        peercreds_resp.raise_for_status()
+        assert peercreds_resp.text == expected_peercreds
+
+        peercreds_text_resp = requests.get(unix_base_uri + PEERCRED_TEXTS_URI)
+        assert peercreds_text_resp.status_code == 500
+
+
+@pytest.mark.skipif(
+    not IS_UID_GID_RESOLVABLE,
+    reason='Modules `grp` and `pwd` are not available '
+           'under the current platform',
+)
+@unix_only_sock_test
+@non_macos_sock_test
+def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
+    """Check that peercred resolution works when enabled."""
+    httpserver, testclient = peercreds_enabled_server_and_client
     httpserver.peercreds_resolve_enabled = True
+
+    unix_base_uri = 'http+unix://{}'.format(
+        httpserver.bind_addr.replace('/', '%2F'),
+    )
+
     import grp
-    expected_textcreds = os.getlogin(), grp.getgrgid(os.getgid()).gr_name
+    import pwd
+    expected_textcreds = (
+        pwd.getpwuid(os.getuid()).pw_name,
+        grp.getgrgid(os.getgid()).gr_name,
+    )
     expected_textcreds = '!'.join(map(str, expected_textcreds))
-    assert testclient.get(PEERCRED_TEXTS_URI) == expected_textcreds
+    with requests_unixsocket.monkeypatch():
+        peercreds_text_resp = requests.get(unix_base_uri + PEERCRED_TEXTS_URI)
+        peercreds_text_resp.raise_for_status()
+        assert peercreds_text_resp.text == expected_textcreds

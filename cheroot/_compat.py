@@ -3,9 +3,27 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import platform
 import re
 
 import six
+
+try:
+    import ssl
+    IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
+    del ssl
+except ImportError:
+    IS_ABOVE_OPENSSL10 = None
+
+
+IS_PYPY = platform.python_implementation() == 'PyPy'
+
+
+SYS_PLATFORM = platform.system()
+IS_WINDOWS = SYS_PLATFORM == 'Windows'
+IS_LINUX = SYS_PLATFORM == 'Linux'
+IS_MACOS = SYS_PLATFORM == 'Darwin'
+
 
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
@@ -42,10 +60,11 @@ else:
         # escapes, but without having to prefix it with u'' for Python 2,
         # but no prefix for Python 3.
         if encoding == 'escape':
-            return six.u(
-                re.sub(r'\\u([0-9a-zA-Z]{4})',
-                       lambda m: six.unichr(int(m.group(1), 16)),
-                       n.decode('ISO-8859-1')))
+            return re.sub(
+                r'\\u([0-9a-zA-Z]{4})',
+                lambda m: six.unichr(int(m.group(1), 16)),
+                n.decode('ISO-8859-1'),
+            )
         # Assume it's already in the given encoding, which for ISO-8859-1
         # is almost always what was intended.
         return n.decode(encoding)
@@ -64,3 +83,25 @@ def assert_native(n):
     """
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
+
+
+if six.PY3:
+    """Python 3 has memoryview builtin."""
+    # Python 2.7 has it backported, but socket.write() does
+    # str(memoryview(b'0' * 100)) -> <memory at 0x7fb6913a5588>
+    # instead of accessing it correctly.
+    memoryview = memoryview
+else:
+    """Link memoryview to buffer under Python 2."""
+    memoryview = buffer  # noqa: F821
+
+
+def extract_bytes(mv):
+    """Retrieve bytes out of memoryview/buffer or bytes."""
+    if isinstance(mv, memoryview):
+        return mv.tobytes() if six.PY3 else bytes(mv)
+
+    if isinstance(mv, bytes):
+        return mv
+
+    raise ValueError

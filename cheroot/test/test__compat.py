@@ -7,7 +7,7 @@ __metaclass__ = type
 import pytest
 import six
 
-from cheroot._compat import ntob, ntou, bton
+from cheroot._compat import extract_bytes, memoryview, ntob, ntou, bton
 
 
 @pytest.mark.parametrize(
@@ -37,13 +37,26 @@ def test_compat_functions_negative_nonnative(func):
         func(non_native_test_str, encoding='utf-8')
 
 
-@pytest.mark.skip(reason='This test does not work now')
-@pytest.mark.skipif(
-    six.PY3,
-    reason='This code path only appears in Python 2 version.',
-)
 def test_ntou_escape():
     """Check that ntou supports escape-encoding under Python 2."""
-    expected = u''
-    actual = ntou('hi'.encode('ISO-8859-1'), encoding='escape')
+    expected = u'hišřії'
+    actual = ntou('hi\u0161\u0159\u0456\u0457', encoding='escape')
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    'input_argument,expected_result',
+    [
+        (b'qwerty', b'qwerty'),
+        (memoryview(b'asdfgh'), b'asdfgh'),
+    ],
+)
+def test_extract_bytes(input_argument, expected_result):
+    """Check that legitimate inputs produce bytes."""
+    assert extract_bytes(input_argument) == expected_result
+
+
+def test_extract_bytes_invalid():
+    """Ensure that invalid input causes exception to be raised."""
+    with pytest.raises(ValueError):
+        extract_bytes(u'some юнікод їїї')

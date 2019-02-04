@@ -4,15 +4,22 @@ import pytest
 
 from cheroot import errors
 
+from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
+
 
 @pytest.mark.parametrize(
     'err_names,err_nums',
     (
         (('', 'some-nonsense-name'), []),
         (
-            ('EPROTOTYPE', 'EAGAIN', 'EWOULDBLOCK',
-             'WSAEWOULDBLOCK', 'EPIPE'),
-            [91, 11, 32]
+            (
+                'EPROTOTYPE', 'EAGAIN', 'EWOULDBLOCK',
+                'WSAEWOULDBLOCK', 'EPIPE',
+            ),
+            (91, 11, 32) if IS_LINUX else
+            (32, 35, 41) if IS_MACOS else
+            (32, 10041, 11, 10035) if IS_WINDOWS else
+            (),
         ),
     ),
 )

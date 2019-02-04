@@ -170,8 +170,10 @@ class WebCase(unittest.TestCase):
         """
         return interface(self.HOST)
 
-    def getPage(self, url, headers=None, method='GET', body=None,
-                protocol=None, raise_subcls=None):
+    def getPage(
+        self, url, headers=None, method='GET', body=None,
+        protocol=None, raise_subcls=None,
+    ):
         """Open the url with debugging support. Return status, headers, body.
 
         url should be the identifier passed to the server, typically a
@@ -204,15 +206,19 @@ class WebCase(unittest.TestCase):
         self.url = url
         self.time = None
         start = time.time()
-        result = openURL(url, headers, method, body, self.HOST, self.PORT,
-                         self.HTTP_CONN, protocol or self.PROTOCOL,
-                         raise_subcls, ssl_context=self.ssl_context)
+        result = openURL(
+            url, headers, method, body, self.HOST, self.PORT,
+            self.HTTP_CONN, protocol or self.PROTOCOL,
+            raise_subcls, ssl_context=self.ssl_context,
+        )
         self.time = time.time() - start
         self.status, self.headers, self.body = result
 
         # Build a list of request cookies from the previous response cookies.
-        self.cookies = [('Cookie', v) for k, v in self.headers
-                        if k.lower() == 'set-cookie']
+        self.cookies = [
+            ('Cookie', v) for k, v in self.headers
+            if k.lower() == 'set-cookie'
+        ]
 
         if ServerError.on:
             raise ServerError()
@@ -232,7 +238,7 @@ class WebCase(unittest.TestCase):
             warnings.warn(
                 'Interactive test failure interceptor support via '
                 'WEBTEST_INTERACTIVE environment variable is deprecated.',
-                DeprecationWarning
+                DeprecationWarning,
             )
         return is_interactive
 
@@ -245,9 +251,11 @@ class WebCase(unittest.TestCase):
         if not self.interactive:
             raise self.failureException(msg)
 
-        p = ('    Show: '
-             '[B]ody [H]eaders [S]tatus [U]RL; '
-             '[I]gnore, [R]aise, or sys.e[X]it >> ')
+        p = (
+            '    Show: '
+            '[B]ody [H]eaders [S]tatus [U]RL; '
+            '[I]gnore, [R]aise, or sys.e[X]it >> '
+        )
         sys.stdout.write(p)
         sys.stdout.flush()
         while True:
@@ -376,7 +384,8 @@ class WebCase(unittest.TestCase):
         if value != self.body:
             if msg is None:
                 msg = 'expected body:\n%r\n\nactual body:\n%r' % (
-                    value, self.body)
+                    value, self.body,
+                )
             self._handlewebError(msg)
 
     def assertInBody(self, value, msg=None):
@@ -437,7 +446,8 @@ def cleanHeaders(headers, method, body, host, port):
                 break
         if not found:
             headers.append(
-                ('Content-Type', 'application/x-www-form-urlencoded'))
+                ('Content-Type', 'application/x-www-form-urlencoded'),
+            )
             headers.append(('Content-Length', str(len(body or ''))))
 
     return headers
@@ -466,9 +476,11 @@ def shb(response):
     return '%s %s' % (response.status, response.reason), h, response.read()
 
 
-def openURL(url, headers=None, method='GET', body=None,
-            host='127.0.0.1', port=8000, http_conn=http_client.HTTPConnection,
-            protocol='HTTP/1.1', raise_subcls=None, ssl_context=None):
+def openURL(
+    url, headers=None, method='GET', body=None,
+    host='127.0.0.1', port=8000, http_conn=http_client.HTTPConnection,
+    protocol='HTTP/1.1', raise_subcls=None, ssl_context=None,
+):
     """
     Open the given HTTP resource and return status, headers, and body.
 
@@ -497,8 +509,10 @@ def openURL(url, headers=None, method='GET', body=None,
 
             if six.PY3 and isinstance(url, bytes):
                 url = url.decode()
-            conn.putrequest(method.upper(), url, skip_host=True,
-                            skip_accept_encoding=True)
+            conn.putrequest(
+                method.upper(), url, skip_host=True,
+                skip_accept_encoding=True,
+            )
 
             for key, value in headers:
                 conn.putheader(key, value.encode('Latin-1'))

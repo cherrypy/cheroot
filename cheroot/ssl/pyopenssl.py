@@ -43,6 +43,11 @@ import six
 try:
     from OpenSSL import SSL
     from OpenSSL import crypto
+
+    try:
+        ssl_conn_type = SSL.Connection
+    except AttributeError:
+        ssl_conn_type = SSL.ConnectionType
 except ImportError:
     SSL = None
 
@@ -72,20 +77,21 @@ class SSLFileobjectMixin:
                 # the rest of the stack has no way of differentiating
                 # between a "new handshake" error and "client dropped".
                 # Note this isn't an endless loop: there's a timeout below.
+                # Ref: https://stackoverflow.com/a/5133568/595220
                 time.sleep(self.ssl_retry)
             except SSL.WantWriteError:
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ''
+                    return b''
 
                 errnum = e.args[0]
                 if is_reader and errnum in errors.socket_errors_to_ignore:
-                    return ''
+                    return b''
                 raise socket.error(errnum)
             except SSL.Error as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ''
+                    return b''
 
                 thirdarg = None
                 try:
@@ -107,6 +113,14 @@ class SSLFileobjectMixin:
         return self._safe_call(
             True,
             super(SSLFileobjectMixin, self).recv,
+            size,
+        )
+
+    def readline(self, size):
+        """Receive message of a size from the socket."""
+        return self._safe_call(
+            True,
+            super(SSLFileobjectMixin, self).readline,
             size,
         )
 
@@ -225,13 +239,15 @@ class pyOpenSSLAdapter(Adapter):
 
     def __init__(
             self, certificate, private_key, certificate_chain=None,
-            ciphers=None):
+            ciphers=None,
+    ):
         """Initialize OpenSSL Adapter instance."""
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
         super(pyOpenSSLAdapter, self).__init__(
-            certificate, private_key, certificate_chain, ciphers)
+            certificate, private_key, certificate_chain, ciphers,
+        )
 
         self._environ = None
 
@@ -281,8 +297,10 @@ class pyOpenSSLAdapter(Adapter):
                 #   Validity of server's certificate (end time),
             })
 
-            for prefix, dn in [('I', cert.get_issuer()),
-                               ('S', cert.get_subject())]:
+            for prefix, dn in [
+                ('I', cert.get_issuer()),
+                ('S', cert.get_subject()),
+            ]:
                 # X509Name objects don't seem to have a way to get the
                 # complete DN string. Use str() and slice it instead,
                 # because str(dn) == "<X509Name object '/C=US/ST=...'>"
@@ -311,7 +329,7 @@ class pyOpenSSLAdapter(Adapter):
             if 'r' in mode else
             SSLFileobjectStreamWriter
         )
-        if SSL and isinstance(sock, SSL.ConnectionType):
+        if SSL and isinstance(sock, ssl_conn_type):
             wrapped_socket = cls(sock, mode, bufsize)
             wrapped_socket.ssl_timeout = sock.gettimeout()
             return wrapped_socket

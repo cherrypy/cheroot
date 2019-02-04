@@ -15,6 +15,11 @@ except ImportError:
 import six
 
 from . import errors
+from ._compat import extract_bytes, memoryview
+
+
+# Write only 16K at a time to sockets
+SOCK_WRITE_BLOCKSIZE = 16384
 
 
 class BufferedWriter(io.BufferedWriter):
@@ -64,17 +69,21 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
 
     def write(self, data):
         """Sendall for non-blocking sockets."""
-        while data:
+        bytes_sent = 0
+        data_mv = memoryview(data)
+        payload_size = len(data_mv)
+        while bytes_sent < payload_size:
             try:
-                bytes_sent = self.send(data)
-                data = data[bytes_sent:]
+                bytes_sent += self.send(
+                    data_mv[bytes_sent:bytes_sent + SOCK_WRITE_BLOCKSIZE],
+                )
             except socket.error as e:
                 if e.args[0] not in errors.socket_errors_nonblocking:
                     raise
 
     def send(self, data):
         """Send some part of message to the socket."""
-        bytes_sent = self._sock.send(data)
+        bytes_sent = self._sock.send(extract_bytes(data))
         self.bytes_written += bytes_sent
         return bytes_sent
 
@@ -107,7 +116,8 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
             pass
 
     _fileobject_uses_str_type = six.PY2 and isinstance(
-        socket._fileobject(FauxSocket())._rbuf, six.string_types)
+        socket._fileobject(FauxSocket())._rbuf, six.string_types,
+    )
 
     # FauxSocket is no longer needed
     del FauxSocket
