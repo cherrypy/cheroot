@@ -106,13 +106,19 @@ To build the docs from a checked out source, run::
 
 Open the documentation:
 
-for GNU/linux::
+.. tabs::
 
-    $ xdg-open build/html/index.html
+   .. tab:: GNU/linux
 
-for macOS::
+      $ xdg-open build/html/index.html
 
-    $ open build/html/index.html
+   .. tab:: macOS
+
+      $ open build/html/index.html
+
+   .. tab:: Windows
+
+      Please, open build/html/index.html in your browser.
 
 Also, one can serve docs using a built-in static files server.
 This is preferable because of possible CSRF issues.::
