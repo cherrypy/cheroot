@@ -97,6 +97,7 @@ class WorkerThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def if_stats(func):
+        """Decorate the function to only invoke if stats are enabled."""
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
             return self.server.stats['Enabled'] and func(self, *args, **kwargs)
@@ -104,10 +105,12 @@ class WorkerThread(threading.Thread):
 
     @if_stats
     def log_start_stats(self):
+        """Record the start time."""
         self.start_time = time.time()
 
     @if_stats
     def log_close_stats(self):
+        """On close, record the stats."""
         self.requests_seen += self.conn.requests_seen
         self.bytes_read += self.conn.rfile.bytes_read
         self.bytes_written += self.conn.wfile.bytes_written
@@ -115,21 +118,25 @@ class WorkerThread(threading.Thread):
         self.start_time = None
 
     def conn_expired(self, last_active, cur_time):
+        """Return True if the connection has expired."""
         srv_timeout = self.server.timeout
         return cur_time - last_active > srv_timeout
 
     def get_expired_conns(self, conn_socks, cur_time):
+        """Generate all expired connections."""
         for conn, last_active in tuple(conn_socks.values()):
             if self.conn_expired(last_active, cur_time):
                 yield conn
 
     def close_conns(self, conn_list, conn_socks):
+        """Close all connections and associated sockets."""
         for conn in conn_list:
             conn.communicate()  # allow for 408 to be sent
             conn.close()
             conn_socks.pop(conn.socket)
 
     def process_conns(self, conn_socks):
+        """Process connections."""
         rlist = []
         socks = [sck for sck in conn_socks.keys() if sck.fileno() > -1]
         if socks:
