@@ -32,6 +32,10 @@ from ..testing import (
 
 
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
+IS_PYOPENSSL_SSL_VERSION_1_0 = (
+    OpenSSL.SSL.SSLeay_version(OpenSSL.SSL.SSLEAY_VERSION).
+    startswith(b'OpenSSL 1.0.')
+)
 PY27 = sys.version_info[:2] == (2, 7)
 
 
@@ -292,7 +296,19 @@ def test_tls_client_auth(
 
         if not test_cert_rejection:
             resp = make_https_request()
-            assert resp.status_code == 200
+            is_req_successful = resp.status_code == 200
+            if (
+                    not is_req_successful
+                    and IS_PYOPENSSL_SSL_VERSION_1_0
+                    and adapter_type == 'builtin'
+                    and tls_verify_mode == ssl.CERT_REQUIRED
+                    and tls_client_identity == 'localhost'
+                    and is_trusted_cert
+            ):
+                pytest.xfail(
+                    'OpenSSL 1.0 has problems with verifying client certs',
+                )
+            assert is_req_successful
             assert resp.text == 'Hello world!'
             return
 
