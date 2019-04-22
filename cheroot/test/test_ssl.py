@@ -339,7 +339,7 @@ def test_https_over_http_error(http_server, ip_addr):
     'adapter_type',
     (
         'builtin',
-        pytest.param('pyopenssl', marks=fails_under_py3_in_pypy),
+        'pyopenssl',
     ),
 )
 @pytest.mark.parametrize(
