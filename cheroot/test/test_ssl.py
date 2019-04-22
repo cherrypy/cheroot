@@ -56,7 +56,7 @@ fails_under_py3_in_pypy = pytest.mark.xfail(
 
 
 missing_ipv6 = pytest.mark.skipif(
-    not _probe_ipv6_sock('::'),
+    not _probe_ipv6_sock('::1'),
     reason=''
     'IPv6 is disabled '
     '(for example, under Travis CI '
