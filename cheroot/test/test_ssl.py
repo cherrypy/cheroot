@@ -287,12 +287,7 @@ def test_tls_client_auth(
             return
 
         with pytest.raises(requests.exceptions.SSLError) as ssl_err:
-            try:
-                make_https_request()
-            except OpenSSL.SSL.Error:
-                pytest.xfail(
-                    reason='https://github.com/cherrypy/cheroot/issues/173',
-                )
+            make_https_request()
 
         err_text = ssl_err.value.args[0].reason.args[0].args[0]
 
