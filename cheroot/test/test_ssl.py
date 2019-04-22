@@ -27,6 +27,7 @@ from ..testing import (
     EPHEMERAL_PORT,
     # get_server_client,
     _get_conn_data,
+    _probe_ipv6_sock,
 )
 
 
@@ -51,6 +52,15 @@ fails_under_py3 = pytest.mark.xfail(
 fails_under_py3_in_pypy = pytest.mark.xfail(
     six.PY3 and IS_PYPY,
     reason='Fails under PyPy3',
+)
+
+
+missing_ipv6 = pytest.mark.skipif(
+    not _probe_ipv6_sock('::'),
+    reason=''
+    'IPv6 is disabled '
+    '(for example, under Travis CI '
+    'which runs under GCE supporting only IPv4)',
 )
 
 
@@ -336,7 +346,7 @@ def test_https_over_http_error(http_server, ip_addr):
     'ip_addr',
     (
         ANY_INTERFACE_IPV4,
-        ANY_INTERFACE_IPV6,
+        pytest.param(ANY_INTERFACE_IPV6, marks=missing_ipv6),
     ),
 )
 def test_http_over_https_error(
