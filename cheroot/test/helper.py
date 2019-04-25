@@ -22,7 +22,6 @@ from cheroot.test import webtest
 
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
-serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 
 
 config = {
@@ -156,8 +155,8 @@ class Controller:
             resp.status = '404 Not Found'
         else:
             output = handler(req, resp)
-            if (output is not None and
-                    not any(resp.status.startswith(status_code)
+            if (output is not None
+                and not any(resp.status.startswith(status_code)
                             for status_code in ('204', '304'))):
                 resp.body = output
                 try:

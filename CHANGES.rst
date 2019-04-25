@@ -1,3 +1,51 @@
+v6.5.5
+======
+
+- :issue:`99` via :pr:`186': Sockets now collect statistics (bytes
+  read and written) on Python 3 same as Python 2.
+
+v6.5.4
+======
+
+- :issue:`113`: Fix :py:mod:`cheroot.ssl.pyopenssl`
+  under Python 3.
+
+- :issue:`154` via :pr:`159`: Remove custom license field from
+  dist metadata.
+
+- :issue:`95`: Fully integrate :py:mod:`trustme` into all TLS tests.
+  Also remove all hardcoded TLS certificates.
+
+- :issue:`42`: Remove traces of :py:mod:`unittest` and
+  :py:mod:`ddt` usage.
+
+- Fix invalid input processing in
+  :py:func:`cheroot._compat.extract_bytes`.
+
+- Fix returning error explanation over plain HTTP for PyOpenSSL.
+
+- Add a fallback for :py:func:`os.lchmod` where it's missing.
+
+- Avoid traceback for invalid client cert with builtin
+  :py:mod:`ssl` adapter.
+
+- Avoid deprecation warning with :py:class:`OpenSSL.SSL.Connection`.
+
+- Fix socket wrapper in PyOpenSSL adapter.
+
+- Improve tests coverage:
+
+  * Client TLS certificate tests
+
+  * :py:func:`cheroot._compat.extract_bytes`
+
+  * Peercreds lookup
+
+v6.5.3
+======
+
+- :pr:`149`: Make ``SCRIPT_NAME`` optional per PEP 333.
+
 v6.5.2
 ======
 - :issue:`6` via :pr:`109`: Fix import of
