@@ -1,3 +1,9 @@
+v6.5.5
+======
+
+- :issue:`99` via :pr:`186': Sockets now collect statistics (bytes
+  read and written) on Python 3 same as Python 2.
+
 - :cp-issue:`1618` via :pr:`180`: Ignore OpenSSL's 1.0+ Error 0
   under any Python while wrapping a socket.
 

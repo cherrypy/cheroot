@@ -27,10 +27,15 @@ from ..testing import (
     EPHEMERAL_PORT,
     # get_server_client,
     _get_conn_data,
+    _probe_ipv6_sock,
 )
 
 
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
+IS_PYOPENSSL_SSL_VERSION_1_0 = (
+    OpenSSL.SSL.SSLeay_version(OpenSSL.SSL.SSLEAY_VERSION).
+    startswith(b'OpenSSL 1.0.')
+)
 PY27 = sys.version_info[:2] == (2, 7)
 
 
@@ -51,6 +56,15 @@ fails_under_py3 = pytest.mark.xfail(
 fails_under_py3_in_pypy = pytest.mark.xfail(
     six.PY3 and IS_PYPY,
     reason='Fails under PyPy3',
+)
+
+
+missing_ipv6 = pytest.mark.skipif(
+    not _probe_ipv6_sock('::1'),
+    reason=''
+    'IPv6 is disabled '
+    '(for example, under Travis CI '
+    'which runs under GCE supporting only IPv4)',
 )
 
 
@@ -282,17 +296,24 @@ def test_tls_client_auth(
 
         if not test_cert_rejection:
             resp = make_https_request()
-            assert resp.status_code == 200
+            is_req_successful = resp.status_code == 200
+            if (
+                    not is_req_successful
+                    and IS_PYOPENSSL_SSL_VERSION_1_0
+                    and adapter_type == 'builtin'
+                    and tls_verify_mode == ssl.CERT_REQUIRED
+                    and tls_client_identity == 'localhost'
+                    and is_trusted_cert
+            ):
+                pytest.xfail(
+                    'OpenSSL 1.0 has problems with verifying client certs',
+                )
+            assert is_req_successful
             assert resp.text == 'Hello world!'
             return
 
         with pytest.raises(requests.exceptions.SSLError) as ssl_err:
-            try:
-                make_https_request()
-            except OpenSSL.SSL.Error:
-                pytest.xfail(
-                    reason='https://github.com/cherrypy/cheroot/issues/173',
-                )
+            make_https_request()
 
         err_text = ssl_err.value.args[0].reason.args[0].args[0]
 
@@ -334,14 +355,14 @@ def test_https_over_http_error(http_server, ip_addr):
     'adapter_type',
     (
         'builtin',
-        pytest.param('pyopenssl', marks=fails_under_py3_in_pypy),
+        'pyopenssl',
     ),
 )
 @pytest.mark.parametrize(
     'ip_addr',
     (
         ANY_INTERFACE_IPV4,
-        ANY_INTERFACE_IPV6,
+        pytest.param(ANY_INTERFACE_IPV6, marks=missing_ipv6),
     ),
 )
 def test_http_over_https_error(
