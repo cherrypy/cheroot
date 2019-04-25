@@ -10,8 +10,6 @@ To use this module, set ``HTTPServer.ssl_adapter`` to an instance of
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-import sys
-
 try:
     import ssl
 except ImportError:
@@ -38,9 +36,6 @@ else:
     import socket
     generic_socket_error = socket.error
     del socket
-
-
-IS_BELOW_PY37 = sys.version_info[:2] < (3, 7)
 
 
 def _assert_ssl_exc_contains(exc, *msgs):
