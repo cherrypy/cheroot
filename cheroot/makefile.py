@@ -403,6 +403,13 @@ if six.PY3:
         def __init__(self, sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
             """Initialize socket stream reader."""
             super().__init__(socket.SocketIO(sock, mode), bufsize)
+            self.bytes_read = 0
+
+        def read(self, *args, **kwargs):
+            """Capture bytes read."""
+            val = super().read(*args, **kwargs)
+            self.bytes_read += len(val)
+            return val
 
     class StreamWriter(BufferedWriter):
         """Socket stream writer."""
@@ -410,6 +417,13 @@ if six.PY3:
         def __init__(self, sock, mode='w', bufsize=io.DEFAULT_BUFFER_SIZE):
             """Initialize socket stream writer."""
             super().__init__(socket.SocketIO(sock, mode), bufsize)
+            self.bytes_written = 0
+
+        def write(self, val, *args, **kwargs):
+            """Capture bytes written."""
+            res = super().write(val, *args, **kwargs)
+            self.bytes_written += len(val)
+            return res
 
     def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
         """File object attached to a socket object."""

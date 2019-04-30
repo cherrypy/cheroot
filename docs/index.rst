@@ -7,6 +7,7 @@ Welcome to Cheroot documentation!
    :maxdepth: 1
    :glob:
 
+   contribute
    history
    pkg/*
 

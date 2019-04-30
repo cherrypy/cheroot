@@ -116,8 +116,12 @@ class SSLFileobjectMixin:
             size,
         )
 
-    def readline(self, size):
-        """Receive message of a size from the socket."""
+    def readline(self, size=-1):
+        """Receive message of a size from the socket.
+
+        Matches the following interface:
+        https://docs.python.org/3/library/io.html#io.IOBase.readline
+        """
         return self._safe_call(
             True,
             super(SSLFileobjectMixin, self).readline,
