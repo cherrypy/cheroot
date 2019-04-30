@@ -1,3 +1,10 @@
+v6.7.0
+======
+
+- :issue:`91` via :pr:`176`: Server now processes sockets in a
+  non-blocking manner, improving support for keep-alive connections
+  on HTTP 1.1 especially when operating under load.
+
 v6.5.5
 ======
 
