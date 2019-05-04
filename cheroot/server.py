@@ -84,7 +84,7 @@ import six
 from six.moves import queue
 from six.moves import urllib
 
-from . import errors, __version__
+from . import connections, errors, __version__
 from ._compat import bton, ntou
 from ._compat import IS_PPC
 from .workers import threadpool
@@ -1474,39 +1474,6 @@ class HTTPConnection:
             self.socket._sock.close()
 
 
-try:
-    import fcntl
-except ImportError:
-    try:
-        from ctypes import windll, WinError
-        import ctypes.wintypes
-        _SetHandleInformation = windll.kernel32.SetHandleInformation
-        _SetHandleInformation.argtypes = [
-            ctypes.wintypes.HANDLE,
-            ctypes.wintypes.DWORD,
-            ctypes.wintypes.DWORD,
-        ]
-        _SetHandleInformation.restype = ctypes.wintypes.BOOL
-    except ImportError:
-        def prevent_socket_inheritance(sock):
-            """Stub inheritance prevention.
-
-            Dummy function, since neither fcntl nor ctypes are available.
-            """
-            pass
-    else:
-        def prevent_socket_inheritance(sock):
-            """Mark the given socket fd as non-inheritable (Windows)."""
-            if not _SetHandleInformation(sock.fileno(), 1, 0):
-                raise WinError()
-else:
-    def prevent_socket_inheritance(sock):
-        """Mark the given socket fd as non-inheritable (POSIX)."""
-        fd = sock.fileno()
-        old_flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-        fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
-
-
 class HTTPServer:
     """An HTTP server."""
 
@@ -1603,6 +1570,7 @@ class HTTPServer:
         self.requests = threadpool.ThreadPool(
             self, min=minthreads or 1, max=maxthreads,
         )
+        self.connections = connections.ConnectionManager(self)
 
         if not server_name:
             server_name = self.version
@@ -1936,7 +1904,7 @@ class HTTPServer:
     def prepare_socket(bind_addr, family, type, proto, nodelay, ssl_adapter):
         """Create and prepare the socket object."""
         sock = socket.socket(family, type, proto)
-        prevent_socket_inheritance(sock)
+        connections.prevent_socket_inheritance(sock)
 
         host, port = bind_addr[:2]
         IS_EPHEMERAL_PORT = port == 0
@@ -2012,102 +1980,17 @@ class HTTPServer:
 
     def tick(self):
         """Accept a new connection and put it on the Queue."""
-        try:
-            s, addr = self.socket.accept()
-            if self.stats['Enabled']:
-                self.stats['Accepts'] += 1
-            if not self.ready:
-                return
-
-            prevent_socket_inheritance(s)
-            if hasattr(s, 'settimeout'):
-                s.settimeout(self.timeout)
-
-            mf = MakeFile
-            ssl_env = {}
-            # if ssl cert and key are set, we try to be a secure HTTP server
-            if self.ssl_adapter is not None:
-                try:
-                    s, ssl_env = self.ssl_adapter.wrap(s)
-                except errors.NoSSLError:
-                    msg = (
-                        'The client sent a plain HTTP request, but '
-                        'this server only speaks HTTPS on this port.'
-                    )
-                    buf = [
-                        '%s 400 Bad Request\r\n' % self.protocol,
-                        'Content-Length: %s\r\n' % len(msg),
-                        'Content-Type: text/plain\r\n\r\n',
-                        msg,
-                    ]
-
-                    sock_to_make = s if not six.PY2 else s._sock
-                    wfile = mf(sock_to_make, 'wb', io.DEFAULT_BUFFER_SIZE)
-                    try:
-                        wfile.write(''.join(buf).encode('ISO-8859-1'))
-                    except socket.error as ex:
-                        if ex.args[0] not in errors.socket_errors_to_ignore:
-                            raise
-                    return
-                if not s:
-                    return
-                mf = self.ssl_adapter.makefile
-                # Re-apply our timeout since we may have a new socket object
-                if hasattr(s, 'settimeout'):
-                    s.settimeout(self.timeout)
-
-            conn = self.ConnectionClass(self, s, mf)
-
-            if not isinstance(
-                    self.bind_addr,
-                    (six.text_type, six.binary_type),
-            ):
-                # optional values
-                # Until we do DNS lookups, omit REMOTE_HOST
-                if addr is None:  # sometimes this can happen
-                    # figure out if AF_INET or AF_INET6.
-                    if len(s.getsockname()) == 2:
-                        # AF_INET
-                        addr = ('0.0.0.0', 0)
-                    else:
-                        # AF_INET6
-                        addr = ('::', 0)
-                conn.remote_addr = addr[0]
-                conn.remote_port = addr[1]
-
-            conn.ssl_env = ssl_env
-
-            try:
-                self.requests.put(conn)
-            except queue.Full:
-                # Just drop the conn. TODO: write 503 back?
-                conn.close()
-                return
-        except socket.timeout:
-            # The only reason for the timeout in start() is so we can
-            # notice keyboard interrupts on Win32, which don't interrupt
-            # accept() by default
+        if not self.ready:
             return
-        except socket.error as ex:
-            if self.stats['Enabled']:
-                self.stats['Socket Errors'] += 1
-            if ex.args[0] in errors.socket_error_eintr:
-                # I *think* this is right. EINTR should occur when a signal
-                # is received during the accept() call; all docs say retry
-                # the call, and I *think* I'm reading it right that Python
-                # will then go ahead and poll for and handle the signal
-                # elsewhere. See
-                # https://github.com/cherrypy/cherrypy/issues/707.
-                return
-            if ex.args[0] in errors.socket_errors_nonblocking:
-                # Just try again. See
-                # https://github.com/cherrypy/cherrypy/issues/479.
-                return
-            if ex.args[0] in errors.socket_errors_to_ignore:
-                # Our socket was closed.
-                # See https://github.com/cherrypy/cherrypy/issues/686.
-                return
-            raise
+        conn = self.connections.from_server_socket(self.socket)
+        if not conn:
+            return
+
+        try:
+            self.requests.put(conn)
+        except queue.Full:
+            # Just drop the conn. TODO: write 503 back?
+            conn.close()
 
     @property
     def interrupt(self):
