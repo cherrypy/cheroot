@@ -110,10 +110,14 @@ class WorkerThread(threading.Thread):
                 self.conn = conn
                 if self.server.stats['Enabled']:
                     self.start_time = time.time()
+                keep_conn_open = False
                 try:
-                    conn.communicate()
+                    keep_conn_open = conn.communicate()
                 finally:
-                    conn.close()
+                    if keep_conn_open:
+                        self.server.connections.put(conn)
+                    else:
+                        conn.close()
                     if self.server.stats['Enabled']:
                         self.requests_seen += self.conn.requests_seen
                         self.bytes_read += self.conn.rfile.bytes_read

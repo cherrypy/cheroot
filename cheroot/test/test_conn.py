@@ -116,6 +116,7 @@ def testing_server(wsgi_server_client):
     wsgi_server.max_request_body_size = 1001
     wsgi_server.timeout = timeout
     wsgi_server.server_client = wsgi_server_client
+    wsgi_server.keep_alive_conn_limit = 2
     return wsgi_server
 
 
@@ -387,6 +388,78 @@ def test_keepalive(test_client, http_server_protocol):
     assert not header_exists('Connection', actual_headers)
 
     test_client.server_instance.protocol = original_server_protocol
+
+
+def test_keepalive_conn_management(test_client):
+    """Test management of Keep-Alive connections."""
+
+    test_client.server_instance.timeout = 2
+
+    def connection():
+        # Initialize a persistent HTTP connection
+        http_connection = test_client.get_connection()
+        http_connection.auto_open = False
+        http_connection.connect()
+        return http_connection
+
+    def request(conn):
+        status_line, actual_headers, actual_resp_body = test_client.get(
+            '/page3', headers=[('Connection', 'Keep-Alive')],
+            http_conn=conn, protocol='HTTP/1.0',
+        )
+        actual_status = int(status_line[:3])
+        assert actual_status == 200
+        assert status_line[4:] == 'OK'
+        assert actual_resp_body == pov.encode()
+        assert header_has_value('Connection', 'Keep-Alive', actual_headers)
+
+    disconnect_errors = (http_client.BadStatusLine, http_client.NotConnected)
+
+    # Make a new connection.
+    c1 = connection()
+    request(c1)
+
+    # Make a second one.
+    c2 = connection()
+    request(c2)
+
+    # Reusing the first connection should still work.
+    request(c1)
+
+    # Creating a new connection should still work.
+    c3 = connection()
+    request(c3)
+
+    # Allow a tick.
+    time.sleep(0.2)
+
+    # That's three connections, we should expect the one used less recently
+    # to be expired.
+    with pytest.raises(disconnect_errors):
+        request(c2)
+
+    # But the oldest created one should still be valid.
+    # (As well as the newest one).
+    request(c1)
+    request(c3)
+
+    # Wait for some of our timeout.
+    time.sleep(1.0)
+
+    # Refresh the third connection.
+    request(c3)
+
+    # Wait for the remainder of our timeout, plus one tick.
+    time.sleep(1.2)
+
+    # First connection should now be expired.
+    with pytest.raises(disconnect_errors):
+        request(c1)
+
+    # But the third one should still be valid.
+    request(c3)
+
+    test_client.server_instance.timeout = timeout
 
 
 @pytest.mark.parametrize(
