@@ -1255,30 +1255,27 @@ class HTTPConnection:
         )
 
     def communicate(self):
-        """Read each request and respond appropriately."""
+        """Read each request and respond appropriately.
+
+        Returns true if the connection should be kept open."""
         request_seen = False
         try:
-            while True:
-                # (re)set req to None so that if something goes wrong in
-                # the RequestHandlerClass constructor, the error doesn't
-                # get written to the previous request.
-                req = None
-                req = self.RequestHandlerClass(self.server, self)
+            req = self.RequestHandlerClass(self.server, self)
 
-                # This order of operations should guarantee correct pipelining.
-                req.parse_request()
-                if self.server.stats['Enabled']:
-                    self.requests_seen += 1
-                if not req.ready:
-                    # Something went wrong in the parsing (and the server has
-                    # probably already made a simple_response). Return and
-                    # let the conn close.
-                    return
+            # This order of operations should guarantee correct pipelining.
+            req.parse_request()
+            if self.server.stats['Enabled']:
+                self.requests_seen += 1
+            if not req.ready:
+                # Something went wrong in the parsing (and the server has
+                # probably already made a simple_response). Return and
+                # let the conn close.
+                return
 
-                request_seen = True
-                req.respond()
-                if req.close_connection:
-                    return
+            request_seen = True
+            req.respond()
+            if not req.close_connection:
+                return True
         except socket.error as ex:
             errnum = ex.args[0]
             # sadly SSL sockets return a different (longer) time out string
@@ -1548,6 +1545,11 @@ class HTTPServer:
 
     peercreds_resolve_enabled = False
     """If True, username/group will be looked up in the OS from peercreds."""
+
+    keep_alive_conn_limit = 10
+    """The maximum number of waiting keep-alive connections that will be kept open.
+
+    Default is 10. Set to None to have unlimited connections."""
 
     def __init__(
         self, bind_addr, gateway,
@@ -1982,15 +1984,16 @@ class HTTPServer:
         """Accept a new connection and put it on the Queue."""
         if not self.ready:
             return
-        conn = self.connections.from_server_socket(self.socket)
-        if not conn:
-            return
 
-        try:
-            self.requests.put(conn)
-        except queue.Full:
-            # Just drop the conn. TODO: write 503 back?
-            conn.close()
+        conn = self.connections.get_conn(self.socket)
+        if conn:
+            try:
+                self.requests.put(conn)
+            except queue.Full:
+                # Just drop the conn. TODO: write 503 back?
+                conn.close()
+
+        self.connections.expire()
 
     @property
     def interrupt(self):

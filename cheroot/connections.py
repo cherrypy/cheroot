@@ -2,11 +2,15 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import io
+import select
 import six
 import socket
+import time
 
 from . import errors
 from .makefile import MakeFile
+
+from collections import OrderedDict
 
 
 try:
@@ -46,8 +50,48 @@ class ConnectionManager:
 
     def __init__(self, server):
         self.server = server
+        self.connections = OrderedDict()
 
-    def from_server_socket(self, server_socket):
+    def put(self, conn):
+        self.connections[conn] = time.time()
+
+    def expire(self):
+        if not self.connections:
+            return
+
+        # Check for too many open connections.
+        conns = list(self.connections.items())
+        if self.server.keep_alive_conn_limit is not None:
+            [self.close(conn[0]) for conn in conns[:-self.server.keep_alive_conn_limit]]
+            conns = conns[-self.server.keep_alive_conn_limit:]
+
+        # Check for old connections.
+        now = time.time()
+        for (conn, ctime) in conns:
+            # Oldest connection out of the currently available ones.
+            if (ctime + self.server.timeout) < now:
+                self.close(conn)
+            else:
+                break
+
+    def get_conn(self, server_socket):
+        socket_dict = {s.socket.fileno(): s for s in self.connections}
+        socket_dict[server_socket.fileno()] = server_socket
+        rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
+        if not rlist:
+            return None
+        conn = socket_dict[rlist[0]]
+        if conn is server_socket:
+            return self._from_server_socket(server_socket)
+        else:
+            del self.connections[conn]
+            return conn
+
+    def close(self, conn):
+        del self.connections[conn]
+        conn.close()
+
+    def _from_server_socket(self, server_socket):
         try:
             s, addr = server_socket.accept()
             if self.server.stats['Enabled']:
