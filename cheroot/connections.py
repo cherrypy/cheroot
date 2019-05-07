@@ -1,3 +1,5 @@
+"""Utilities to manage open connections."""
+
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
@@ -47,9 +49,10 @@ else:
 
 
 class ConnectionManager:
+    """Class which manages HTTPConnection objects.
 
-    """Class which manages HTTPConnection objects which are being
-    kept-alive for follow-up requests."""
+    This is for connections which are being kept-alive for follow-up requests.
+    """
 
     def __init__(self, server):
         """Initialize ConnectionManager object.
@@ -71,9 +74,10 @@ class ConnectionManager:
         self.connections[conn] = time.time(), conn.rfile.has_data()
 
     def expire(self):
-        """Expires the least recently used connections if there are
-        either too many open connections, or if the connections have
-        been timed out.
+        """Expire least recently used connections.
+
+        This happens if there are either too many open connections, or if the
+        connections have been timed out.
 
         This should be called periodically.
         """
@@ -97,8 +101,11 @@ class ConnectionManager:
                 break
 
     def get_conn(self, server_socket):
-        """Returns a HTTPConnection object which is ready to be handled
-        by a worker - or None if there's no connection ready.
+        """Return a HTTPConnection object which is ready to be handled.
+
+        A connection returned by this method should be ready for a worker
+        to handle it. If there are no connections ready, None will be
+        returned.
 
         Any connection returned by this method will need to be `put`
         back if it should be examined again for another request.
@@ -108,6 +115,7 @@ class ConnectionManager:
             connections.
         Returns:
             cheroot.server.HTTPConnection instance, or None.
+
         """
         # Grab file descriptors from sockets, but stop if we find a
         # connection which is already marked as ready.
