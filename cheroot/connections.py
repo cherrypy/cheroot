@@ -53,7 +53,7 @@ class ConnectionManager:
         self.connections = OrderedDict()
 
     def put(self, conn):
-        self.connections[conn] = time.time()
+        self.connections[conn] = time.time(), conn.rfile.has_data()
 
     def expire(self):
         if not self.connections:
@@ -67,7 +67,7 @@ class ConnectionManager:
 
         # Check for old connections.
         now = time.time()
-        for (conn, ctime) in conns:
+        for (conn, (ctime, _)) in conns:
             # Oldest connection out of the currently available ones.
             if (ctime + self.server.timeout) < now:
                 self.close(conn)
@@ -75,17 +75,51 @@ class ConnectionManager:
                 break
 
     def get_conn(self, server_socket):
-        socket_dict = {s.socket.fileno(): s for s in self.connections}
-        socket_dict[server_socket.fileno()] = server_socket
-        rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
-        if not rlist:
-            return None
-        conn = socket_dict[rlist[0]]
-        if conn is server_socket:
-            return self._from_server_socket(server_socket)
+
+        # Grab file descriptors from sockets, but stop if we find a
+        # connection which is already marked as ready.
+        socket_dict = {}
+        for conn, (tstamp, has_data) in self.connections.items():
+            if has_data:
+                break
+            socket_dict[conn.socket.fileno()] = conn
         else:
-            del self.connections[conn]
-            return conn
+            # No ready connection.
+            conn = None
+
+        # Will require a select call.
+        if not conn:
+            ss_fileno = server_socket.fileno()
+            socket_dict[ss_fileno] = server_socket
+            rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
+
+            # No available socket.
+            if not rlist:
+                return None
+
+            try:
+                # See if we have a new connection coming in.
+                rlist.remove(ss_fileno)
+            except ValueError:
+                # No new connection, but reuse existing socket.
+                conn = socket_dict[rlist.pop()]
+            else:
+                conn = server_socket
+
+            # All remaining connections in rlist should be added
+            # to the ready queue.
+            if rlist:
+                socket_dict.update({
+                    fno: (socket_dict[fno], True)
+                    for fno in rlist
+                })
+
+            # New connection.
+            if conn is server_socket:
+                return self._from_server_socket(server_socket)
+
+        del self.connections[conn]
+        return conn
 
     def close(self, conn):
         del self.connections[conn]
