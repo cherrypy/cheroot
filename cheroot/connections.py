@@ -61,16 +61,17 @@ class ConnectionManager:
 
         # Check for too many open connections.
         conns = list(self.connections.items())
-        if self.server.keep_alive_conn_limit is not None:
-            [self.close(conn[0]) for conn in conns[:-self.server.keep_alive_conn_limit]]
-            conns = conns[-self.server.keep_alive_conn_limit:]
+        ka_limit = self.server.keep_alive_conn_limit
+        if ka_limit is not None:
+            [self._close(conn[0]) for conn in conns[:-ka_limit]]
+            conns = conns[-ka_limit:]
 
         # Check for old connections.
         now = time.time()
         for (conn, (ctime, _)) in conns:
             # Oldest connection out of the currently available ones.
             if (ctime + self.server.timeout) < now:
-                self.close(conn)
+                self._close(conn)
             else:
                 break
 
@@ -121,7 +122,7 @@ class ConnectionManager:
         del self.connections[conn]
         return conn
 
-    def close(self, conn):
+    def _close(self, conn):
         del self.connections[conn]
         conn.close()
 
