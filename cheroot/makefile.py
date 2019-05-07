@@ -235,6 +235,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                         break
                     buf.write(data)
                 return buf.getvalue()
+
             else:
                 # Read until size bytes or \n or EOF seen, whichever comes
                 # first
@@ -279,6 +280,10 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                     buf_len += n
                     # assert buf_len == buf.tell()
                 return buf.getvalue()
+
+        def has_data(self):
+            return bool(self._rbuf.getvalue())
+
     else:
         def read(self, size=-1):
             """Read data from the socket to buffer."""
@@ -395,6 +400,9 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                     buf_len += n
                 return ''.join(buffers)
 
+        def has_data(self):
+            return bool(self._rbuf)
+
 
 if not six.PY2:
     class StreamReader(io.BufferedReader):
@@ -410,6 +418,9 @@ if not six.PY2:
             val = super().read(*args, **kwargs)
             self.bytes_read += len(val)
             return val
+
+        def has_data(self):
+            return bool(self.peek(1))
 
     class StreamWriter(BufferedWriter):
         """Socket stream writer."""
