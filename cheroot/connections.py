@@ -1,3 +1,5 @@
+"""Utilities to manage open connections."""
+
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
@@ -47,15 +49,38 @@ else:
 
 
 class ConnectionManager:
+    """Class which manages HTTPConnection objects.
+
+    This is for connections which are being kept-alive for follow-up requests.
+    """
 
     def __init__(self, server):
+        """Initialize ConnectionManager object.
+
+        Args:
+            server (cheroot.server.HTTPServer): web server object
+                that uses this ConnectionManager instance.
+        """
         self.server = server
         self.connections = OrderedDict()
 
     def put(self, conn):
+        """Put idle connection into the ConnectionManager to be managed.
+
+        Args:
+            conn (cheroot.server.HTTPConnection): HTTP connection
+                to be managed.
+        """
         self.connections[conn] = time.time(), conn.rfile.has_data()
 
     def expire(self):
+        """Expire least recently used connections.
+
+        This happens if there are either too many open connections, or if the
+        connections have been timed out.
+
+        This should be called periodically.
+        """
         if not self.connections:
             return
 
@@ -76,7 +101,22 @@ class ConnectionManager:
                 break
 
     def get_conn(self, server_socket):
+        """Return a HTTPConnection object which is ready to be handled.
 
+        A connection returned by this method should be ready for a worker
+        to handle it. If there are no connections ready, None will be
+        returned.
+
+        Any connection returned by this method will need to be `put`
+        back if it should be examined again for another request.
+
+        Args:
+            server_socket: ServerSocket instance to listen to for new
+            connections.
+        Returns:
+            cheroot.server.HTTPConnection instance, or None.
+
+        """
         # Grab file descriptors from sockets, but stop if we find a
         # connection which is already marked as ready.
         socket_dict = {}

@@ -392,7 +392,6 @@ def test_keepalive(test_client, http_server_protocol):
 
 def test_keepalive_conn_management(test_client):
     """Test management of Keep-Alive connections."""
-
     test_client.server_instance.timeout = 2
 
     def connection():
@@ -413,7 +412,11 @@ def test_keepalive_conn_management(test_client):
         assert actual_resp_body == pov.encode()
         assert header_has_value('Connection', 'Keep-Alive', actual_headers)
 
-    disconnect_errors = (http_client.BadStatusLine, http_client.NotConnected)
+    disconnect_errors = (
+        http_client.BadStatusLine,
+        http_client.CannotSendRequest,
+        http_client.NotConnected,
+    )
 
     # Make a new connection.
     c1 = connection()
@@ -612,7 +615,7 @@ def test_HTTP11_pipelining(test_client):
         response = conn.response_class(conn.sock, method='GET')
         # there is a bug in python3 regarding the buffering of
         # ``conn.sock``. Until that bug get's fixed we will
-        # monkey patch the ``reponse`` instance.
+        # monkey patch the ``response`` instance.
         # https://bugs.python.org/issue23377
         if not six.PY2:
             response.fp = conn.sock.makefile('rb', 0)

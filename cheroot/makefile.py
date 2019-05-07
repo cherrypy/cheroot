@@ -282,6 +282,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return buf.getvalue()
 
         def has_data(self):
+            """Return true if there is buffered data to read."""
             return bool(self._rbuf.getvalue())
 
     else:
@@ -401,6 +402,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return ''.join(buffers)
 
         def has_data(self):
+            """Return true if there is buffered data to read."""
             return bool(self._rbuf)
 
 
@@ -420,6 +422,7 @@ if not six.PY2:
             return val
 
         def has_data(self):
+            """Return true if there is buffered data to read."""
             return bool(self.peek(1))
 
     class StreamWriter(BufferedWriter):

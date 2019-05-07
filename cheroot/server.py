@@ -1257,12 +1257,11 @@ class HTTPConnection:
     def communicate(self):
         """Read each request and respond appropriately.
 
-        Returns true if the connection should be kept open."""
+        Returns true if the connection should be kept open.
+        """
         request_seen = False
         try:
             req = self.RequestHandlerClass(self.server, self)
-
-            # This order of operations should guarantee correct pipelining.
             req.parse_request()
             if self.server.stats['Enabled']:
                 self.requests_seen += 1
