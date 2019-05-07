@@ -423,7 +423,7 @@ if not six.PY2:
 
         def has_data(self):
             """Return true if there is buffered data to read."""
-            return bool(self.peek(1))
+            return len(self._read_buf) > self._read_pos
 
     class StreamWriter(BufferedWriter):
         """Socket stream writer."""
