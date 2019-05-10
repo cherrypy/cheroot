@@ -1227,6 +1227,9 @@ class HTTPConnection:
     peercreds_enabled = False
     peercreds_resolve_enabled = False
 
+    # Fields set by ConnectionManager.
+    closeable = False
+
     def __init__(self, server, sock, makefile=MakeFile):
         """Initialize HTTPConnection instance.
 
