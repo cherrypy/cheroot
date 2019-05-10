@@ -1230,6 +1230,7 @@ class HTTPConnection:
     # Fields set by ConnectionManager.
     closeable = False
     last_used = None
+    ready_with_data = False
 
     def __init__(self, server, sock, makefile=MakeFile):
         """Initialize HTTPConnection instance.

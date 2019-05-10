@@ -63,7 +63,7 @@ class ConnectionManager:
                 that uses this ConnectionManager instance.
         """
         self.server = server
-        self.connections = OrderedDict()
+        self.connections = OrderedDict()  # using this as a set
 
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
@@ -73,7 +73,8 @@ class ConnectionManager:
                 to be managed.
         """
         conn.last_used = time.time()
-        self.connections[conn] = conn.rfile.has_data()
+        conn.ready_with_data = conn.rfile.has_data()
+        self.connections[conn] = None
 
     def expire(self):
         """Expire least recently used connections.
@@ -123,8 +124,8 @@ class ConnectionManager:
         # Grab file descriptors from sockets, but stop if we find a
         # connection which is already marked as ready.
         socket_dict = {}
-        for conn, has_data in self.connections.items():
-            if conn.closeable or has_data:
+        for conn in self.connections:
+            if conn.closeable or conn.ready_with_data:
                 break
             socket_dict[conn.socket.fileno()] = conn
         else:
@@ -173,13 +174,9 @@ class ConnectionManager:
         else:
             conn = server_socket
 
-        # All remaining connections in rlist should be added
-        # to the ready queue.
-        if rlist:
-            socket_dict.update({
-                fno: (socket_dict[fno], True)
-                for fno in rlist
-            })
+        # All remaining connections in rlist should be marked as ready.
+        for fno in rlist:
+            socket_dict[fno].ready_with_data = True
 
         # New connection.
         if conn is server_socket:
