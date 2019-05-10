@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import io
+import os
 import select
 import six
 import socket
@@ -138,10 +139,29 @@ class ConnectionManager:
         # Will require a select call.
         ss_fileno = server_socket.fileno()
         socket_dict[ss_fileno] = server_socket
-        rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
+        try:
+            rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
+            # No available socket.
+            if not rlist:
+                return None
+        except OSError:
+            # Mark any connection which no longer appears valid.
+            for fno, conn in list(socket_dict.items()):
+                # If the server socket is invalid, we'll just ignore it and
+                # wait to be shutdown.
+                if fno == ss_fileno:
+                    continue
+                try:
+                    os.fstat(fno)
+                except OSError:
+                    # Socket is invalid, close the connection.
+                    conn.closeable = True
+                else:
+                    # Connection is fine, move to the end so that
+                    # closeable connections appear at the front.
+                    self.connections[fno] = self.connections.pop(fno)
 
-        # No available socket.
-        if not rlist:
+            # Wait for the next tick to occur.
             return None
 
         try:
