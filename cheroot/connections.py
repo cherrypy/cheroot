@@ -130,39 +130,40 @@ class ConnectionManager:
             # No ready connection.
             conn = None
 
+        # We have a connection ready for use.
+        if conn:
+            del self.connections[conn]
+            return conn
+
         # Will require a select call.
-        if not conn:
-            ss_fileno = server_socket.fileno()
-            socket_dict[ss_fileno] = server_socket
-            rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
+        ss_fileno = server_socket.fileno()
+        socket_dict[ss_fileno] = server_socket
+        rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
 
-            # No available socket.
-            if not rlist:
-                return None
+        # No available socket.
+        if not rlist:
+            return None
 
-            try:
-                # See if we have a new connection coming in.
-                rlist.remove(ss_fileno)
-            except ValueError:
-                # No new connection, but reuse existing socket.
-                conn = socket_dict[rlist.pop()]
-            else:
-                conn = server_socket
+        try:
+            # See if we have a new connection coming in.
+            rlist.remove(ss_fileno)
+        except ValueError:
+            # No new connection, but reuse existing socket.
+            conn = socket_dict[rlist.pop()]
+        else:
+            conn = server_socket
 
-            # All remaining connections in rlist should be added
-            # to the ready queue.
-            if rlist:
-                socket_dict.update({
-                    fno: (socket_dict[fno], True)
-                    for fno in rlist
-                })
+        # All remaining connections in rlist should be added
+        # to the ready queue.
+        if rlist:
+            socket_dict.update({
+                fno: (socket_dict[fno], True)
+                for fno in rlist
+            })
 
-            # New connection.
-            if conn is server_socket:
-                return self._from_server_socket(server_socket)
-
-        del self.connections[conn]
-        return conn
+        # New connection.
+        if conn is server_socket:
+            return self._from_server_socket(server_socket)
 
         del self.connections[conn]
         return conn
