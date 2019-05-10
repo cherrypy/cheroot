@@ -84,21 +84,23 @@ class ConnectionManager:
         if not self.connections:
             return
 
-        # Check for too many open connections.
-        conns = list(self.connections.items())
-        ka_limit = self.server.keep_alive_conn_limit
-        if ka_limit is not None:
-            [self._close(conn[0]) for conn in conns[:-ka_limit]]
-            conns = conns[-ka_limit:]
+        # Look at the first connection - if it can be closed, then do
+        # that, and wait for get_conn to return it.
+        conn = next(iter(self.connections))
+        if conn.closeable:
+            return
 
-        # Check for old connections.
-        now = time.time()
-        for (conn, (ctime, _)) in conns:
-            # Oldest connection out of the currently available ones.
-            if (ctime + self.server.timeout) < now:
-                self._close(conn)
-            else:
-                break
+        # Too many connections?
+        ka_limit = self.server.keep_alive_conn_limit
+        if ka_limit is not None and len(self.connections) > ka_limit:
+            conn.closeable = True
+            return
+
+        # Connection too old?
+        ctime, _ = self.connections[conn]
+        if (ctime + self.server.timeout) < time.time():
+            conn.closeable = True
+            return
 
     def get_conn(self, server_socket):
         """Return a HTTPConnection object which is ready to be handled.
@@ -121,7 +123,7 @@ class ConnectionManager:
         # connection which is already marked as ready.
         socket_dict = {}
         for conn, (tstamp, has_data) in self.connections.items():
-            if has_data:
+            if conn.closeable or has_data:
                 break
             socket_dict[conn.socket.fileno()] = conn
         else:
@@ -162,9 +164,8 @@ class ConnectionManager:
         del self.connections[conn]
         return conn
 
-    def _close(self, conn):
         del self.connections[conn]
-        conn.close()
+        return conn
 
     def _from_server_socket(self, server_socket):
         try:
