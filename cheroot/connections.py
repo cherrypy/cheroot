@@ -72,7 +72,8 @@ class ConnectionManager:
             conn (cheroot.server.HTTPConnection): HTTP connection
                 to be managed.
         """
-        self.connections[conn] = time.time(), conn.rfile.has_data()
+        conn.last_used = time.time()
+        self.connections[conn] = conn.rfile.has_data()
 
     def expire(self):
         """Expire least recently used connections.
@@ -98,8 +99,7 @@ class ConnectionManager:
             return
 
         # Connection too old?
-        ctime, _ = self.connections[conn]
-        if (ctime + self.server.timeout) < time.time():
+        if (conn.last_used + self.server.timeout) < time.time():
             conn.closeable = True
             return
 
@@ -123,7 +123,7 @@ class ConnectionManager:
         # Grab file descriptors from sockets, but stop if we find a
         # connection which is already marked as ready.
         socket_dict = {}
-        for conn, (tstamp, has_data) in self.connections.items():
+        for conn, has_data in self.connections.items():
             if conn.closeable or has_data:
                 break
             socket_dict[conn.socket.fileno()] = conn
