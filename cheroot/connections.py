@@ -6,15 +6,14 @@ __metaclass__ = type
 import io
 import os
 import select
-import six
 import socket
 import time
+from collections import OrderedDict
 
 from . import errors
 from .makefile import MakeFile
 
-from collections import OrderedDict
-
+import six
 
 try:
     import fcntl
@@ -115,7 +114,7 @@ class ConnectionManager:
         back if it should be examined again for another request.
 
         Args:
-            server_socket: ServerSocket instance to listen to for new
+            server_socket (socket.socket): Socket to listen to for new
             connections.
         Returns:
             cheroot.server.HTTPConnection instance, or None.
