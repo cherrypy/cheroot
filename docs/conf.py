@@ -8,6 +8,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'jaraco.packaging.sphinx',
     'rst.linker',
+    'sphinx_tabs.tabs',
 ]
 
 master_doc = 'index'

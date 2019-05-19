@@ -1,7 +1,6 @@
 conditions: v1
 
-dist: trusty
-sudo: false
+dist: xenial
 language: python
 
 python:
@@ -9,10 +8,9 @@ python:
 - 3.4
 - 3.5
 - 3.6
-- &pypy2 pypy2.7-5.10.0
-- &pypy3 pypy3.5-5.10.1
+- &pypy2 pypy
+- &pypy3 pypy3
 
-group: edge
 _base_envs:
 - &stage_lint
   stage: &stage_lint_name lint
@@ -31,7 +29,7 @@ _base_envs:
   language: generic
   python: *pypy2
   env:
-  - &env_pypy2 PYTHON_VERSION=pypy2.7-5.10.0
+  - &env_pypy2 PYTHON_VERSION=pypy2.7-7.1.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
   - &env_path PATH="$PYENV_ROOT/bin:$PATH"
   before_install:
@@ -47,6 +45,8 @@ _base_envs:
   - &install_python pyenv install --skip-existing --keep --verbose "$PYTHON_VERSION"
   - &switch_python pyenv shell "$PYTHON_VERSION"
   - &python_version python --version
+  - &python_ssl_openssl_version >-
+    python -c 'import ssl; print("\nOPENSSL_VERSION: " + ssl.OPENSSL_VERSION + "\nOPENSSL_VERSION_INFO: " + repr(ssl.OPENSSL_VERSION_INFO) + "\nOPENSSL_VERSION_NUMBER: " + repr(ssl.OPENSSL_VERSION_NUMBER))'
 - &osx_python_base
   <<: *pyenv_base
   <<: *stage_test_osx
@@ -55,19 +55,20 @@ _base_envs:
   before_install:
   - brew install zlib readline
   - brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/pyenv.rb || brew upgrade pyenv
+  - brew install openssl@1.1
   - &ensure_pyenv_preloaded |
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
   - *install_python
   - *switch_python
   - *python_version
+  - python -m pip install tox
+  - env CRYPTOGRAPHY_SUPPRESS_LINK_FLAGS=1 LDFLAGS="$(brew --prefix openssl@1.1)/lib/libssl.a $(brew --prefix openssl@1.1)/lib/libcrypto.a" CFLAGS="-I$(brew --prefix openssl@1.1)/include" python -m tox --notest
+  - *python_ssl_openssl_version
   before_cache:
   - brew --cache
 - &python_3_7_mixture
   python: &mainstream_python 3.7
-  dist: xenial
-  group:
-  sudo: true
 - &pure_python_base
   <<: *stage_test
   <<: *python_3_7_mixture
@@ -142,9 +143,9 @@ jobs:
   - <<: *osx_python_base
     <<: *manual_run_or_cron
     osx_image: xcode9.4
-    python: pypy3.5-5.10.1
+    python: pypy3.6-7.1.0
     env:
-    - PYTHON_VERSION=pypy3.5-5.10.1
+    - PYTHON_VERSION=pypy3.6-7.1.0
     - *env_pyenv
     - *env_path
   # pypy2.7-5.10.0 fails under OS X because it's unsupported
@@ -174,6 +175,9 @@ cache:
 install:
 - python -m pip install tox tox-venv
 - python -m tox --notest  # Pre-populate a virtualenv with dependencies
+- *python_ssl_openssl_version
+- >-
+  ".tox/${TOXENV:-python}/bin/python" -m OpenSSL.debug || true
 
 script:
 - python -m tox

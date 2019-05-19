@@ -1,4 +1,9 @@
 repos:
+- repo: git://github.com/asottile/add-trailing-comma
+  rev: v0.7.0
+  hooks:
+  - id: add-trailing-comma
+
 -   repo: git://github.com/pre-commit/pre-commit-hooks
     sha: v1.1.1
     hooks:
@@ -24,11 +29,9 @@ repos:
     # disabled due to pre-commit/pre-commit-hooks#159
     #-   id: check-docstring-first
     -   id: check-json
-        include: .mention-bot
     -   id: check-symlinks
     -   id: check-yaml
     -   id: detect-private-key
-        exclude: cheroot/test/(test.pem|ssl/*)
     -   id: requirements-txt-fixer
 
 -   repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle

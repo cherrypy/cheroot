@@ -3,9 +3,27 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import platform
 import re
 
 import six
+
+try:
+    import ssl
+    IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
+    del ssl
+except ImportError:
+    IS_ABOVE_OPENSSL10 = None
+
+
+IS_PYPY = platform.python_implementation() == 'PyPy'
+
+
+SYS_PLATFORM = platform.system()
+IS_WINDOWS = SYS_PLATFORM == 'Windows'
+IS_LINUX = SYS_PLATFORM == 'Linux'
+IS_MACOS = SYS_PLATFORM == 'Darwin'
+
 
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
@@ -86,4 +104,4 @@ def extract_bytes(mv):
     if isinstance(mv, bytes):
         return mv
 
-    return ValueError
+    raise ValueError

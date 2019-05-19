@@ -52,8 +52,10 @@ except ImportError:
     def cfg_val_to_dict(v):
         """Turn config val to dict and filter out empty lines."""
         return dict(
-            map(lambda l: list(map(str.strip, l.split('=', 1))),
-                filter(bool, map(str.strip, v.strip().splitlines())))
+            map(
+                lambda l: list(map(str.strip, l.split('=', 1))),
+                filter(bool, map(str.strip, v.strip().splitlines())),
+            ),
         )
 
     def cfg_val_to_primitive(v):

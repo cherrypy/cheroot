@@ -89,7 +89,7 @@ class Application:
         if not callable(wsgi_app):
             raise TypeError(
                 'Application must be a callable object or '
-                'cheroot.server.Gateway subclass'
+                'cheroot.server.Gateway subclass',
             )
         self.wsgi_app = wsgi_app
 
@@ -221,7 +221,8 @@ _arg_spec = {
 def main():
     """Create a new Cheroot instance with arguments from the command line."""
     parser = argparse.ArgumentParser(
-        description='Start an instance of the Cheroot WSGI/HTTP server.')
+        description='Start an instance of the Cheroot WSGI/HTTP server.',
+    )
     for arg, spec in _arg_spec.items():
         parser.add_argument(arg, **spec)
     raw_args = parser.parse_args()
