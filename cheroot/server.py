@@ -2059,6 +2059,7 @@ class HTTPServer:
                 sock.close()
             self.socket = None
 
+        self.connections.close()
         self.requests.stop(self.shutdown_timeout)
 
 

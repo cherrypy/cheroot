@@ -268,3 +268,9 @@ class ConnectionManager:
                 # See https://github.com/cherrypy/cherrypy/issues/686.
                 return
             raise
+
+    def close(self):
+        """Close all monitored connections."""
+        for conn in self.connections[:]:
+            conn.close()
+        self.connections = []
