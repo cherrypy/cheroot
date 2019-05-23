@@ -8,7 +8,6 @@ import os
 import select
 import socket
 import time
-from collections import OrderedDict
 
 from . import errors
 from .makefile import MakeFile
@@ -62,7 +61,7 @@ class ConnectionManager:
                 that uses this ConnectionManager instance.
         """
         self.server = server
-        self.connections = OrderedDict()  # using this as a set
+        self.connections = []
 
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
@@ -73,7 +72,7 @@ class ConnectionManager:
         """
         conn.last_used = time.time()
         conn.ready_with_data = conn.rfile.has_data()
-        self.connections[conn] = None
+        self.connections.append(conn)
 
     def expire(self):
         """Expire least recently used connections.
@@ -88,7 +87,7 @@ class ConnectionManager:
 
         # Look at the first connection - if it can be closed, then do
         # that, and wait for get_conn to return it.
-        conn = next(iter(self.connections))
+        conn = self.connections[0]
         if conn.closeable:
             return
 
@@ -133,7 +132,7 @@ class ConnectionManager:
 
         # We have a connection ready for use.
         if conn:
-            del self.connections[conn]
+            self.connections.remove(conn)
             return conn
 
         # Will require a select call.
@@ -154,12 +153,11 @@ class ConnectionManager:
                 try:
                     os.fstat(fno)
                 except OSError:
-                    # Socket is invalid, close the connection.
+                    # Socket is invalid, close the connection, insert at
+                    # the front.
+                    self.connections.remove(conn)
+                    self.connections.insert(0, conn)
                     conn.closeable = True
-                else:
-                    # Connection is fine, move to the end so that
-                    # closeable connections appear at the front.
-                    self.connections[fno] = self.connections.pop(fno)
 
             # Wait for the next tick to occur.
             return None
@@ -181,7 +179,7 @@ class ConnectionManager:
         if conn is server_socket:
             return self._from_server_socket(server_socket)
 
-        del self.connections[conn]
+        self.connections.remove(conn)
         return conn
 
     def _from_server_socket(self, server_socket):
