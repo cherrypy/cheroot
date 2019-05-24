@@ -313,8 +313,20 @@ def test_tls_client_auth(
             assert resp.text == 'Hello world!'
             return
 
-        with pytest.raises(requests.exceptions.SSLError) as ssl_err:
+        expected_ssl_errors = (
+            requests.exceptions.SSLError,
+            OpenSSL.SSL.Error,
+        ) if PY34 else (
+            requests.exceptions.SSLError,
+        )
+        with pytest.raises(expected_ssl_errors) as ssl_err:
             make_https_request()
+
+        if PY34 and isinstance(ssl_err, OpenSSL.SSL.Error):
+            pytest.xfail(
+                'OpenSSL behaves wierdly under Python 3.4 '
+                'because of an outdated urllib3',
+            )
 
         err_text = ssl_err.value.args[0].reason.args[0].args[0]
 
