@@ -37,6 +37,7 @@ IS_PYOPENSSL_SSL_VERSION_1_0 = (
     startswith(b'OpenSSL 1.0.')
 )
 PY27 = sys.version_info[:2] == (2, 7)
+PY34 = sys.version_info[:2] == (3, 4)
 
 
 _stdlib_to_openssl_verify = {
@@ -304,7 +305,7 @@ def test_tls_client_auth(
                     and tls_verify_mode == ssl.CERT_REQUIRED
                     and tls_client_identity == 'localhost'
                     and is_trusted_cert
-            ):
+            ) or PY34:
                 pytest.xfail(
                     'OpenSSL 1.0 has problems with verifying client certs',
                 )
