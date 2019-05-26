@@ -354,7 +354,7 @@ def test_tls_client_auth(
             ):
                 expected_substrings += (
                     'bad handshake: '
-                    "SysCallError(10054, 'WSAECONNRESET')"
+                    "SysCallError(10054, 'WSAECONNRESET')",
                 )
         assert any(e in err_text for e in expected_substrings)
 
