@@ -344,7 +344,7 @@ def test_tls_client_auth(
                 expected_substring = 'tlsv1 alert unknown ca'
             if (
                     IS_WINDOWS
-                    and tls_verify_mode == ssl.CERT_OPTIONAL
+                    and tls_verify_mode == ssl.CERT_REQUIRED
                     and adapter_type == 'builtin'
             ):
                 expected_substring = (
