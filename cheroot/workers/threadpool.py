@@ -186,13 +186,12 @@ class ThreadPool:
 
     def _clear_dead_threads(self):
         # Remove any dead threads from our list
-        for t in self._threads:
-            if not t.isAlive():
-                self._threads.remove(t)
-                try:
-                    self._pending_shutdowns.popleft()
-                except IndexError:
-                    pass
+        for t in [t for t in self._threads if not t.isAlive()]:
+            self._threads.remove(t)
+            try:
+                self._pending_shutdowns.popleft()
+            except IndexError:
+                pass
 
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
