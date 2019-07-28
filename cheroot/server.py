@@ -1226,7 +1226,7 @@ class HTTPConnection:
 
         Args:
             server (HTTPServer): web server object receiving this request
-            socket (socket._socketobject): the raw socket object (usually
+            sock (socket._socketobject): the raw socket object (usually
                 TCP) for this connection
             makefile (file): a fileobject class for reading from the socket
         """
