@@ -274,6 +274,10 @@ def test_content_length_required(test_client):
             HTTP_BAD_REQUEST, b'Malformed Request-Line: bad protocol',
         ),
         (
+            b'GET / HTTP/1',  # invalid version
+            HTTP_BAD_REQUEST, b'Malformed Request-Line: bad version',
+        ),
+        (
             b'GET / HTTP/2.15',  # invalid ver
             HTTP_VERSION_NOT_SUPPORTED, b'Cannot fulfill request',
         ),
