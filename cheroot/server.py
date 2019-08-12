@@ -788,12 +788,12 @@ class HTTPRequest:
                 )
                 return False
             rp = req_protocol[5:].split(b'.', 1)
-            rp = tuple(map(int, rp))  # Minor.Major must be threat as integers
             if len(rp) != 2:
                 self.simple_response(
                     '400 Bad Request', 'Malformed Request-Line: bad version',
                 )
                 return False
+            rp = tuple(map(int, rp))  # Minor.Major must be threat as integers
             if rp > (1, 1):
                 self.simple_response(
                     '505 HTTP Version Not Supported', 'Cannot fulfill request',
