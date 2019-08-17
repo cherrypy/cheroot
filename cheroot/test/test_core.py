@@ -241,7 +241,7 @@ def test_no_content_length(test_client):
     c = test_client.get_connection()
     c.request('POST', '/no_body')
     response = c.getresponse()
-    actual_resp_body = response.fp.read()
+    actual_resp_body = response.read()
     actual_status = response.status
     assert actual_status == HTTP_OK
     assert actual_resp_body == b'Hello world!'
