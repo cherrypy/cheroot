@@ -319,7 +319,7 @@ def test_tls_client_auth(
         ) if PY34 else (
             requests.exceptions.SSLError,
         )
-        if six.PY3 and IS_WINDOWS:
+        if IS_WINDOWS:
             expected_ssl_errors += requests.exceptions.ConnectionError,
         with pytest.raises(expected_ssl_errors) as ssl_err:
             make_https_request()
