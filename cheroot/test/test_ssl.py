@@ -335,9 +335,10 @@ def test_tls_client_auth(
         except AttributeError:
             if PY34:
                 pytest.xfail('OpenSSL behaves wierdly under Python 3.4')
-            if six.PY3 and IS_WINDOWS:
+            elif six.PY3 and IS_WINDOWS:
                 err_text = str(ssl_err)
-            raise
+            else:
+                raise
 
         expected_substrings = (
             'sslv3 alert bad certificate' if IS_LIBRESSL_BACKEND
