@@ -256,7 +256,7 @@ def test_content_length_required(test_client):
     c = test_client.get_connection()
     c.request('POST', '/body_required')
     response = c.getresponse()
-    response.fp.read()
+    response.read()
 
     actual_status = response.status
     assert actual_status == HTTP_LENGTH_REQUIRED
