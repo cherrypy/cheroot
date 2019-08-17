@@ -336,7 +336,7 @@ def test_tls_client_auth(
             if PY34:
                 pytest.xfail('OpenSSL behaves wierdly under Python 3.4')
             elif six.PY3 and IS_WINDOWS:
-                err_text = str(ssl_err)
+                err_text = str(ssl_err.value)
             else:
                 raise
 
