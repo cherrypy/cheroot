@@ -160,7 +160,7 @@ def test_parse_uri_unsafe_uri(test_client):
     response = _get_http_response(c, method='GET')
     response.begin()
     assert response.status == HTTP_OK
-    assert response.fp.read(12) == b'Hello world!'
+    assert response.read(12) == b'Hello world!'
     c.close()
 
 
@@ -175,7 +175,7 @@ def test_parse_uri_invalid_uri(test_client):
     response = _get_http_response(c, method='GET')
     response.begin()
     assert response.status == HTTP_BAD_REQUEST
-    assert response.fp.read(21) == b'Malformed Request-URI'
+    assert response.read(21) == b'Malformed Request-URI'
     c.close()
 
 
@@ -294,7 +294,7 @@ def test_malformed_request_line(
     response = _get_http_response(c, method='GET')
     response.begin()
     assert response.status == status_code
-    assert response.fp.read(len(expected_body)) == expected_body
+    assert response.read(len(expected_body)) == expected_body
     c.close()
 
 
@@ -308,7 +308,7 @@ def test_malformed_http_method(test_client):
     response = c.getresponse()
     actual_status = response.status
     assert actual_status == HTTP_BAD_REQUEST
-    actual_resp_body = response.fp.read(21)
+    actual_resp_body = response.read(21)
     assert actual_resp_body == b'Malformed method name'
 
 
@@ -324,7 +324,7 @@ def test_malformed_header(test_client):
     response = c.getresponse()
     actual_status = response.status
     assert actual_status == HTTP_BAD_REQUEST
-    actual_resp_body = response.fp.read(20)
+    actual_resp_body = response.read(20)
     assert actual_resp_body == b'Illegal header line.'
 
 
@@ -357,7 +357,7 @@ def test_garbage_in(test_client):
         response.begin()
         actual_status = response.status
         assert actual_status == HTTP_BAD_REQUEST
-        actual_resp_body = response.fp.read(22)
+        actual_resp_body = response.read(22)
         assert actual_resp_body == b'Malformed Request-Line'
         c.close()
     except socket.error as ex:
