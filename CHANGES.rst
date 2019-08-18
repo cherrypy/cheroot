@@ -1,3 +1,9 @@
+v6.5.6
+======
+
+- :issue:`218` via :pr:`219`: Fix HTTP parser to return 400 on
+  invalid major-only HTTP version in Request-Line.
+
 v6.5.5
 ======
 
