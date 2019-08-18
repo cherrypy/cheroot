@@ -355,7 +355,6 @@ def test_tls_client_auth(
                     )
                     and not is_trusted_cert
                     and tls_client_identity == 'localhost'
-                    and adapter_type == 'builtin'
             ):
                 expected_substrings += (
                     'bad handshake: '
