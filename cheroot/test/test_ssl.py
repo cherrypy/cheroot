@@ -441,7 +441,7 @@ def test_http_over_https_error(
     expect_fallback_response_over_plain_http = (
         (adapter_type == 'pyopenssl'
          and (IS_ABOVE_OPENSSL10 or six.PY3))
-        or (PY27 and not IS_WINDOWS)
+        or PY27
     )
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
