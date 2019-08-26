@@ -35,16 +35,16 @@ repos:
     -   id: requirements-txt-fixer
 
 -   repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
-    sha: v2.1.1
+    rev: v2.1.1
     hooks:
     -   id: pydocstyle
 
 -   repo: git://github.com/Lucas-C/pre-commit-hooks
-    sha: v1.1.1
+    rev: v1.1.6
     hooks:
     -   id: remove-tabs
 
 -   repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
-    sha: v1.0.2
+    rev: v1.1.0
     hooks:
     -   id: forbid-html-img-without-alt-text
