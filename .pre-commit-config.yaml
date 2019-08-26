@@ -5,7 +5,7 @@ repos:
   - id: add-trailing-comma
 
 -   repo: git://github.com/pre-commit/pre-commit-hooks
-    sha: v1.1.1
+    rev: v2.3.0
     hooks:
     -   id: trailing-whitespace
     -   id: flake8
