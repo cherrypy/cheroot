@@ -455,25 +455,27 @@ def cleanHeaders(headers, method, body, host, port):
 
 def shb(response):
     """Return status, headers, body the way we like from a response."""
-    if six.PY3:
-        h = response.getheaders()
-    else:
-        h = []
-        key, value = None, None
-        for line in response.msg.headers:
-            if line:
-                if line[0] in ' \t':
-                    value += line.strip()
-                else:
-                    if key and value:
-                        h.append((key, value))
-                    key, value = line.split(':', 1)
-                    key = key.strip()
-                    value = value.strip()
-        if key and value:
-            h.append((key, value))
+    resp_status_line = '%s %s' % (response.status, response.reason)
 
-    return '%s %s' % (response.status, response.reason), h, response.read()
+    if not six.PY2:
+        return resp_status_line, response.getheaders(), response.read()
+
+    h = []
+    key, value = None, None
+    for line in response.msg.headers:
+        if line:
+            if line[0] in ' \t':
+                value += line.strip()
+            else:
+                if key and value:
+                    h.append((key, value))
+                key, value = line.split(':', 1)
+                key = key.strip()
+                value = value.strip()
+    if key and value:
+        h.append((key, value))
+
+    return resp_status_line, h, response.read()
 
 
 def openURL(
@@ -507,7 +509,7 @@ def openURL(
             conn._http_vsn_str = protocol
             conn._http_vsn = int(''.join([x for x in protocol if x.isdigit()]))
 
-            if six.PY3 and isinstance(url, bytes):
+            if not six.PY2 and isinstance(url, bytes):
                 url = url.decode()
             conn.putrequest(
                 method.upper(), url, skip_host=True,

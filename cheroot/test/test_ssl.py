@@ -49,13 +49,13 @@ _stdlib_to_openssl_verify = {
 
 
 fails_under_py3 = pytest.mark.xfail(
-    six.PY3,
-    reason='Fails under Python 3',
+    not six.PY2,
+    reason='Fails under Python 3+',
 )
 
 
 fails_under_py3_in_pypy = pytest.mark.xfail(
-    six.PY3 and IS_PYPY,
+    not six.PY2 and IS_PYPY,
     reason='Fails under PyPy3',
 )
 
@@ -335,7 +335,7 @@ def test_tls_client_auth(
         except AttributeError:
             if PY34:
                 pytest.xfail('OpenSSL behaves wierdly under Python 3.4')
-            elif six.PY3 and IS_WINDOWS:
+            elif not six.PY2 and IS_WINDOWS:
                 err_text = str(ssl_err.value)
             else:
                 raise
@@ -344,7 +344,7 @@ def test_tls_client_auth(
             'sslv3 alert bad certificate' if IS_LIBRESSL_BACKEND
             else 'tlsv1 alert unknown ca',
         )
-        if six.PY3:
+        if not six.PY2:
             if IS_MACOS and IS_PYPY and adapter_type == 'pyopenssl':
                 expected_substrings = ('tlsv1 alert unknown ca', )
             if (
@@ -439,7 +439,7 @@ def test_http_over_https_error(
 
     expect_fallback_response_over_plain_http = (
         (adapter_type == 'pyopenssl'
-         and (IS_ABOVE_OPENSSL10 or six.PY3))
+         and (IS_ABOVE_OPENSSL10 or not six.PY2))
         or PY27
     )
     if expect_fallback_response_over_plain_http:

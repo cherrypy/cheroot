@@ -13,6 +13,8 @@ repos:
         # W503 ignored for https://github.com/PyCQA/pycodestyle/issues/498
         - --ignore=W503
         exclude: cheroot/test/test_(http|config_server).py
+        additional_dependencies:
+        - flake8-2020==1.0.0
     -   id: check-merge-conflict
     -   id: double-quote-string-fixer
     -   id: end-of-file-fixer

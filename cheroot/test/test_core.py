@@ -52,9 +52,9 @@ class HelloController(helper.Controller):
         WSGI 1.0 is a mess around unicode. Create endpoints
         that match the PATH_INFO that it produces.
         """
-        if six.PY3:
-            return string.encode('utf-8').decode('latin-1')
-        return string
+        if six.PY2:
+            return string
+        return string.encode('utf-8').decode('latin-1')
 
     handlers = {
         '/hello': hello,

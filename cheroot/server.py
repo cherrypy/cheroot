@@ -1733,10 +1733,12 @@ class HTTPServer:
         # Select the appropriate socket
         self.socket = None
         msg = 'No socket could be created'
+        if isinstance(self.bind_addr, six.text_type):
+            self.bind_addr = self.bind_addr.encode()
         if os.getenv('LISTEN_PID', None):
             # systemd socket activation
             self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
-        elif isinstance(self.bind_addr, six.string_types):
+        elif isinstance(self.bind_addr, six.binary_type):
             # AF_UNIX socket
             try:
                 self.bind_unix_socket(self.bind_addr)
@@ -1866,6 +1868,9 @@ class HTTPServer:
             """
             File does not exist, which is the primary goal anyway.
             """
+        except ValueError as val_err:
+            if 'unlink: embedded null character in path' not in str(val_err):
+                raise
 
         sock = self.prepare_socket(
             bind_addr=bind_addr,
@@ -1931,7 +1936,7 @@ class HTTPServer:
             * https://gavv.github.io/blog/ephemeral-port-reuse/
             """
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if nodelay and not isinstance(bind_addr, str):
+        if nodelay and not isinstance(bind_addr, six.binary_type):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
         if ssl_adapter is not None:
@@ -2012,7 +2017,7 @@ class HTTPServer:
                         msg,
                     ]
 
-                    sock_to_make = s if six.PY3 else s._sock
+                    sock_to_make = s if not six.PY2 else s._sock
                     wfile = mf(sock_to_make, 'wb', io.DEFAULT_BUFFER_SIZE)
                     try:
                         wfile.write(''.join(buf).encode('ISO-8859-1'))
@@ -2098,7 +2103,7 @@ class HTTPServer:
 
         sock = getattr(self, 'socket', None)
         if sock:
-            if not isinstance(self.bind_addr, six.string_types):
+            if not isinstance(self.bind_addr, six.binary_type):
                 # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]
