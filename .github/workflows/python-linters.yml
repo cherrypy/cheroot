@@ -35,6 +35,10 @@ jobs:
       run: |
         python -m tox --parallel auto --notest
       env: ${{ matrix.env }}
+    - name: Initialize pre-commit envs if needed
+      run: |
+        test -d .tox/pre-commit-ci && .tox/pre-commit-ci/bin/python -m pre_commit install-hooks || :
+        test -d .tox/pre-commit-failing && .tox/pre-commit-failing/bin/python -m pre_commit install-hooks || :
     - name: Test with tox
       run: |
         python -m tox --parallel 0
