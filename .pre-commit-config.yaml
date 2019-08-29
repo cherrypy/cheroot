@@ -33,6 +33,8 @@ repos:
   - id: check-json
   - id: check-symlinks
   - id: check-yaml
+    args:
+    - --unsafe
   - id: detect-private-key
   - id: requirements-txt-fixer
 
