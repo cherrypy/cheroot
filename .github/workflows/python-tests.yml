@@ -49,8 +49,10 @@ jobs:
         + repr(ssl.OPENSSL_VERSION_NUMBER))"
       env: ${{ matrix.env }}
     - name: Log PyOpenSSL version
-      run: |
-        ".tox/${TOXENV:-python}/bin/python" -m OpenSSL.debug || :
+      run: >-
+        python -m tox --run-command
+        "{envpython} -m OpenSSL.debug"
+        || :
       env: ${{ matrix.env }}
     - name: Test with tox
       run: |
