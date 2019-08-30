@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import functools
+import os
 import ssl
 import sys
 import threading
@@ -31,6 +32,7 @@ from ..testing import (
 )
 
 
+IS_GITHUB_ACTIONS_WORKFLOW = bool(os.getenv('GITHUB_WORKFLOW'))
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
 IS_PYOPENSSL_SSL_VERSION_1_0 = (
     OpenSSL.SSL.SSLeay_version(OpenSSL.SSL.SSLEAY_VERSION).
@@ -319,7 +321,7 @@ def test_tls_client_auth(
         ) if PY34 else (
             requests.exceptions.SSLError,
         )
-        if IS_WINDOWS:
+        if IS_WINDOWS or IS_GITHUB_ACTIONS_WORKFLOW:
             expected_ssl_errors += requests.exceptions.ConnectionError,
         with pytest.raises(expected_ssl_errors) as ssl_err:
             make_https_request()
