@@ -1867,10 +1867,12 @@ class HTTPServer:
             File does not exist, which is the primary goal anyway.
             """
         except TypeError as typ_err:
+            err_msg = str(typ_err)
             if (
                     'remove() argument 1 must be encoded '
                     'string without null bytes, not unicode'
-                    not in str(typ_err)
+                    not in err_msg
+                    and 'embedded NUL character' not in err_msg
             ):
                 raise
         except ValueError as val_err:
@@ -1881,7 +1883,6 @@ class HTTPServer:
                     and 'embedded null byte' not in err_msg
                     and 'argument must be a '
                     'string without NUL characters' not in err_msg
-                    and 'embedded NUL character' not in err_msg
             ):
                 raise
 
