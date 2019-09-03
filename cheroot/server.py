@@ -1881,6 +1881,7 @@ class HTTPServer:
                     and 'embedded null byte' not in err_msg
                     and 'argument must be a '
                     'string without NUL characters' not in err_msg
+                    and 'embedded NUL character' not in err_msg
             ):
                 raise
 
