@@ -1736,7 +1736,7 @@ class HTTPServer:
         if os.getenv('LISTEN_PID', None):
             # systemd socket activation
             self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
-        elif isinstance(self.bind_addr, six.string_types):
+        elif isinstance(self.bind_addr, (six.text_type, six.binary_type)):
             # AF_UNIX socket
             try:
                 self.bind_unix_socket(self.bind_addr)
@@ -1866,8 +1866,20 @@ class HTTPServer:
             """
             File does not exist, which is the primary goal anyway.
             """
+        except TypeError as typ_err:
+            if (
+                    'remove() argument 1 must be encoded '
+                    'string without null bytes, not unicode'
+                    not in str(typ_err)
+            ):
+                raise
         except ValueError as val_err:
-            if 'unlink: embedded null character in path' not in str(val_err):
+            err_msg = str(val_err)
+            if (
+                    'unlink: embedded null '
+                    'character in path' not in err_msg
+                    and 'embedded null byte' not in err_msg
+            ):
                 raise
 
         sock = self.prepare_socket(
@@ -1934,7 +1946,10 @@ class HTTPServer:
             * https://gavv.github.io/blog/ephemeral-port-reuse/
             """
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if nodelay and not isinstance(bind_addr, six.string_types):
+        if nodelay and not isinstance(
+                bind_addr,
+                (six.text_type, six.binary_type),
+        ):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
         if ssl_adapter is not None:
@@ -1982,6 +1997,10 @@ class HTTPServer:
             In case of bytes with a leading null-byte it's an abstract socket.
             """
             return bind_addr[:2]
+
+        if isinstance(bind_addr, six.binary_type):
+            bind_addr = bton(bind_addr)
+
         return bind_addr
 
     def tick(self):
@@ -2032,7 +2051,10 @@ class HTTPServer:
 
             conn = self.ConnectionClass(self, s, mf)
 
-            if not isinstance(self.bind_addr, six.string_types):
+            if not isinstance(
+                    self.bind_addr,
+                    (six.text_type, six.binary_type),
+            ):
                 # optional values
                 # Until we do DNS lookups, omit REMOTE_HOST
                 if addr is None:  # sometimes this can happen
@@ -2101,7 +2123,10 @@ class HTTPServer:
 
         sock = getattr(self, 'socket', None)
         if sock:
-            if not isinstance(self.bind_addr, six.string_types):
+            if not isinstance(
+                    self.bind_addr,
+                    (six.text_type, six.binary_type),
+            ):
                 # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]
