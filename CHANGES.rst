@@ -1,3 +1,15 @@
+v6.5.7
+======
+
+- :issue:`198` via :commit:`9f7affe`: Fix race condition when
+  toggling stats counting in the middle of request processing.
+
+- Improve post Python 3.9 compatibility checks.
+
+- Fix support of `abstract namespace sockets
+  <https://utcc.utoronto.ca/~cks
+  /space/blog/linux/SocketAbstractNamespace>`_.
+
 v6.5.6
 ======
 
