@@ -1879,6 +1879,8 @@ class HTTPServer:
                     'unlink: embedded null '
                     'character in path' not in err_msg
                     and 'embedded null byte' not in err_msg
+                    and 'argument must be a '
+                    'string without NUL characters' not in err_msg
             ):
                 raise
 
