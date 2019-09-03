@@ -1733,12 +1733,10 @@ class HTTPServer:
         # Select the appropriate socket
         self.socket = None
         msg = 'No socket could be created'
-        if isinstance(self.bind_addr, six.text_type):
-            self.bind_addr = self.bind_addr.encode()
         if os.getenv('LISTEN_PID', None):
             # systemd socket activation
             self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
-        elif isinstance(self.bind_addr, six.binary_type):
+        elif isinstance(self.bind_addr, six.string_types):
             # AF_UNIX socket
             try:
                 self.bind_unix_socket(self.bind_addr)
@@ -1936,7 +1934,7 @@ class HTTPServer:
             * https://gavv.github.io/blog/ephemeral-port-reuse/
             """
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if nodelay and not isinstance(bind_addr, six.binary_type):
+        if nodelay and not isinstance(bind_addr, six.string_types):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
         if ssl_adapter is not None:
@@ -2103,7 +2101,7 @@ class HTTPServer:
 
         sock = getattr(self, 'socket', None)
         if sock:
-            if not isinstance(self.bind_addr, six.binary_type):
+            if not isinstance(self.bind_addr, six.string_types):
                 # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]
