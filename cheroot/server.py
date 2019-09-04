@@ -86,6 +86,7 @@ from six.moves import urllib
 
 from . import errors, __version__
 from ._compat import bton, ntou
+from ._compat import IS_PPC
 from .workers import threadpool
 from .makefile import MakeFile, StreamWriter
 
@@ -142,7 +143,7 @@ if not hasattr(socket, 'SO_PEERCRED'):
     which case the getsockopt() will hopefully fail. The arch
     specific value could be derived from platform.processor()
     """
-    socket.SO_PEERCRED = 17
+    socket.SO_PEERCRED = 21 if IS_PPC else 17
 
 
 LF = b'\n'
