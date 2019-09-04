@@ -17,7 +17,7 @@ import requests_unixsocket
 import six
 
 from .._compat import bton, ntob
-from .._compat import IS_MACOS
+from .._compat import IS_LINUX, IS_MACOS, SYS_PLATFORM
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
@@ -56,6 +56,11 @@ def unix_sock_file(request):
 @pytest.fixture
 def unix_abstract_sock():
     """Return an abstract UNIX socket address."""
+    if not IS_LINUX:
+        pytest.skip(
+            '{os} does not support an abstract '
+            'socket namespace'.format(os=SYS_PLATFORM),
+        )
     return b''.join((
         b'\x00cheroot-test-socket',
         ntob(str(uuid.uuid4())),
