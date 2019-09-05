@@ -1,3 +1,10 @@
+v6.5.8
+======
+
+- :issue:`222` via :commit:`621f4ee`: Fix
+  :py:const:`socket.SO_PEERCRED` constant fallback value
+  under PowerPC.
+
 v6.5.7
 ======
 
