@@ -476,5 +476,8 @@ def test_http_over_https_error(
 
     underlying_error = ssl_err.value.args[0].args[-1]
     err_text = str(underlying_error)
-    assert underlying_error.errno == expected_error_code
+    assert underlying_error.errno == expected_error_code, (
+        'The underlying error is {!r}'.
+        format(underlying_error)
+    )
     assert expected_error_text in err_text
