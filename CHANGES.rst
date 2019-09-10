@@ -1,3 +1,9 @@
+v6.6.0
+======
+
+- Revisit :pr:`85` under :pr:`221`. Now ``backports.unittest_mock``
+  is only required on Python 3.2 and earlier.
+
 v6.5.6
 ======
 
