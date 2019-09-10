@@ -4,6 +4,25 @@ v6.6.0
 - Revisit :pr:`85` under :pr:`221`. Now ``backports.unittest_mock``
   is only required on Python 3.2 and earlier.
 
+v6.5.8
+======
+
+- :issue:`222` via :commit:`621f4ee`: Fix
+  :py:const:`socket.SO_PEERCRED` constant fallback value
+  under PowerPC.
+
+v6.5.7
+======
+
+- :issue:`198` via :commit:`9f7affe`: Fix race condition when
+  toggling stats counting in the middle of request processing.
+
+- Improve post Python 3.9 compatibility checks.
+
+- Fix support of `abstract namespace sockets
+  <https://utcc.utoronto.ca/~cks
+  /space/blog/linux/SocketAbstractNamespace>`_.
+
 v6.5.6
 ======
 

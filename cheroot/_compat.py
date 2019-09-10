@@ -24,6 +24,9 @@ IS_WINDOWS = SYS_PLATFORM == 'Windows'
 IS_LINUX = SYS_PLATFORM == 'Linux'
 IS_MACOS = SYS_PLATFORM == 'Darwin'
 
+PLATFORM_ARCH = platform.machine()
+IS_PPC = PLATFORM_ARCH.startswith('ppc')
+
 
 if not six.PY2:
     def ntob(n, encoding='ISO-8859-1'):
