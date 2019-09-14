@@ -191,10 +191,7 @@ class WebCase(unittest.TestCase):
                         *args, **kwargs
                     )
 
-        `raise_subcls` must be a tuple with the exceptions classes
-        or a single exception class that are not going to be considered
-        a socket.error regardless that they were are subclass of a
-        socket.error and therefore not considered for a connection retry.
+        `raise_subcls` is passed through to openURL.
         """
         ServerError.on = False
 
@@ -209,7 +206,7 @@ class WebCase(unittest.TestCase):
         result = openURL(
             url, headers, method, body, self.HOST, self.PORT,
             self.HTTP_CONN, protocol or self.PROTOCOL,
-            raise_subcls, ssl_context=self.ssl_context,
+            raise_subcls=raise_subcls, ssl_context=self.ssl_context,
         )
         self.time = time.time() - start
         self.status, self.headers, self.body = result
@@ -478,13 +475,9 @@ def shb(response):
     return resp_status_line, h, response.read()
 
 
-def openURL(
-    url, headers=None, method='GET', body=None,
-    host='127.0.0.1', port=8000, http_conn=http_client.HTTPConnection,
-    protocol='HTTP/1.1', raise_subcls=None, ssl_context=None,
-):
+def openURL(*args, raise_subcls=None, **kwargs):
     """
-    Open the given HTTP resource and return status, headers, and body.
+    Open a URL, retrying when it fails.
 
     `raise_subcls` must be a tuple with the exceptions classes
     or a single exception class that are not going to be considered
@@ -495,10 +488,7 @@ def openURL(
     # Normal case--it should run once.
     for trial in range(10):
         try:
-            return _open_url_once(
-                body, headers, host, http_conn, method,
-                port, protocol, ssl_context, url,
-            )
+            return _open_url_once(*args, **kwargs)
         except socket.error as e:
             if raise_subcls is not None and isinstance(e, raise_subcls):
                 raise
@@ -509,9 +499,11 @@ def openURL(
 
 
 def _open_url_once(
-        body, headers, host, http_conn, method,
-        port, protocol, ssl_context, url,
+    url, headers=None, method='GET', body=None,
+    host='127.0.0.1', port=8000, http_conn=http_client.HTTPConnection,
+    protocol='HTTP/1.1', ssl_context=None,
 ):
+    """Open the given HTTP resource and return status, headers, and body."""
     headers = cleanHeaders(headers, method, body, host, port)
 
     # Allow http_conn to be a class or an instance
