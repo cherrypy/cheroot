@@ -154,7 +154,7 @@ class WebCase(unittest.TestCase):
         )
 
     @property
-    def persistent(self):  # noqa: D401; irrelevant for properties
+    def persistent(self):
         """Presense of the persistent HTTP connection."""
         return hasattr(self.HTTP_CONN, '__class__')
 
