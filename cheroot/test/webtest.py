@@ -26,11 +26,13 @@ import os
 import json
 import unittest
 import warnings
+import functools
 
-from six.moves import range, http_client, map, urllib_parse
+from six.moves import http_client, map, urllib_parse
 import six
 
 from more_itertools.more import always_iterable
+import jaraco.functools
 
 
 def interface(host):
@@ -475,27 +477,28 @@ def shb(response):
     return resp_status_line, h, response.read()
 
 
-def openURL(*args, raise_subcls=None, **kwargs):
+def openURL(*args, raise_subcls=(), **kwargs):
     """
     Open a URL, retrying when it fails.
 
-    `raise_subcls` must be a tuple with the exceptions classes
-    or a single exception class that are not going to be considered
-    a socket.error regardless that they were are subclass of a
-    socket.error and therefore not considered for a connection retry.
+    Specify `raise_subcls` (class or tuple of classes) to exclude
+    those socket.error subclasses from being suppressed and retried.
     """
-    # Trying 10 times is simply in case of socket errors.
-    # Normal case--it should run once.
-    for trial in range(10):
-        try:
-            return _open_url_once(*args, **kwargs)
-        except socket.error as e:
-            if raise_subcls is not None and isinstance(e, raise_subcls):
-                raise
-            else:
-                time.sleep(0.5)
-                if trial == 9:
-                    raise
+    opener = functools.partial(_open_url_once, *args, **kwargs)
+
+    def on_exception():
+        type_, exc = sys.exc_info()[:2]
+        if isinstance(exc, raise_subcls):
+            raise
+        time.sleep(0.5)
+
+    # Try up to 10 times
+    return jaraco.functools.retry_call(
+        opener,
+        retries=9,
+        cleanup=on_exception,
+        trap=socket.error,
+    )
 
 
 def _open_url_once(
