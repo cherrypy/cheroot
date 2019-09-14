@@ -491,8 +491,6 @@ def openURL(
     a socket.error regardless that they were are subclass of a
     socket.error and therefore not considered for a connection retry.
     """
-    headers = cleanHeaders(headers, method, body, host, port)
-
     # Trying 10 times is simply in case of socket errors.
     # Normal case--it should run once.
     for trial in range(10):
@@ -514,6 +512,8 @@ def _open_url_once(
         body, headers, host, http_conn, method,
         port, protocol, ssl_context, url,
 ):
+    headers = cleanHeaders(headers, method, body, host, port)
+
     # Allow http_conn to be a class or an instance
     if hasattr(http_conn, 'host'):
         conn = http_conn
