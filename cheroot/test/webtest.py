@@ -497,42 +497,10 @@ def openURL(
     # Normal case--it should run once.
     for trial in range(10):
         try:
-            # Allow http_conn to be a class or an instance
-            if hasattr(http_conn, 'host'):
-                conn = http_conn
-            else:
-                kw = {}
-                if ssl_context:
-                    kw['context'] = ssl_context
-                conn = http_conn(interface(host), port, **kw)
-
-            conn._http_vsn_str = protocol
-            conn._http_vsn = int(''.join([x for x in protocol if x.isdigit()]))
-
-            if not six.PY2 and isinstance(url, bytes):
-                url = url.decode()
-            conn.putrequest(
-                method.upper(), url, skip_host=True,
-                skip_accept_encoding=True,
+            return _open_url_once(
+                body, headers, host, http_conn, method,
+                port, protocol, ssl_context, url,
             )
-
-            for key, value in headers:
-                conn.putheader(key, value.encode('Latin-1'))
-            conn.endheaders()
-
-            if body is not None:
-                conn.send(body)
-
-            # Handle response
-            response = conn.getresponse()
-
-            s, h, b = shb(response)
-
-            if not hasattr(http_conn, 'host'):
-                # We made our own conn instance. Close it.
-                conn.close()
-
-            return s, h, b
         except socket.error as e:
             if raise_subcls is not None and isinstance(e, raise_subcls):
                 raise
@@ -540,6 +508,40 @@ def openURL(
                 time.sleep(0.5)
                 if trial == 9:
                     raise
+
+
+def _open_url_once(
+        body, headers, host, http_conn, method,
+        port, protocol, ssl_context, url,
+):
+    # Allow http_conn to be a class or an instance
+    if hasattr(http_conn, 'host'):
+        conn = http_conn
+    else:
+        kw = {}
+        if ssl_context:
+            kw['context'] = ssl_context
+        conn = http_conn(interface(host), port, **kw)
+    conn._http_vsn_str = protocol
+    conn._http_vsn = int(''.join([x for x in protocol if x.isdigit()]))
+    if not six.PY2 and isinstance(url, bytes):
+        url = url.decode()
+    conn.putrequest(
+        method.upper(), url, skip_host=True,
+        skip_accept_encoding=True,
+    )
+    for key, value in headers:
+        conn.putheader(key, value.encode('Latin-1'))
+    conn.endheaders()
+    if body is not None:
+        conn.send(body)
+    # Handle response
+    response = conn.getresponse()
+    s, h, b = shb(response)
+    if not hasattr(http_conn, 'host'):
+        # We made our own conn instance. Close it.
+        conn.close()
+    return s, h, b
 
 
 def strip_netloc(url):
