@@ -186,7 +186,7 @@ class ThreadPool:
 
     def _clear_dead_threads(self):
         # Remove any dead threads from our list
-        for t in [t for t in self._threads if not t.isAlive()]:
+        for t in [t for t in self._threads if not t.is_alive()]:
             self._threads.remove(t)
             try:
                 self._pending_shutdowns.popleft()
