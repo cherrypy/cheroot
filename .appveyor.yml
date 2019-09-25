@@ -15,6 +15,7 @@ install:
   - "mklink /d \"C:\\Program Files\\Python\" %PYTHON%"
   - "SET PYTHON=\"C:\\Program Files\\Python\""
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python -m pip install --upgrade --force-reinstall virtualenv"
   - "python -m pip install tox"
   - "python -m tox --notest -vv"
 
