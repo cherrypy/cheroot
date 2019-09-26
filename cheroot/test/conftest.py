@@ -36,6 +36,8 @@ def http_server():
     """Provision a server creator as a fixture."""
     def start_srv():
         bind_addr = yield
+        if bind_addr is None:
+            return
         httpserver = make_http_server(bind_addr)
         yield httpserver
         yield httpserver

@@ -396,7 +396,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return ''.join(buffers)
 
 
-if six.PY3:
+if not six.PY2:
     class StreamReader(io.BufferedReader):
         """Socket stream reader."""
 

@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import functools
+import os
 import ssl
 import sys
 import threading
@@ -31,6 +32,7 @@ from ..testing import (
 )
 
 
+IS_GITHUB_ACTIONS_WORKFLOW = bool(os.getenv('GITHUB_WORKFLOW'))
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
 IS_PYOPENSSL_SSL_VERSION_1_0 = (
     OpenSSL.SSL.SSLeay_version(OpenSSL.SSL.SSLEAY_VERSION).
@@ -49,13 +51,13 @@ _stdlib_to_openssl_verify = {
 
 
 fails_under_py3 = pytest.mark.xfail(
-    six.PY3,
-    reason='Fails under Python 3',
+    not six.PY2,
+    reason='Fails under Python 3+',
 )
 
 
 fails_under_py3_in_pypy = pytest.mark.xfail(
-    six.PY3 and IS_PYPY,
+    not six.PY2 and IS_PYPY,
     reason='Fails under PyPy3',
 )
 
@@ -319,6 +321,8 @@ def test_tls_client_auth(
         ) if PY34 else (
             requests.exceptions.SSLError,
         )
+        if IS_WINDOWS or IS_GITHUB_ACTIONS_WORKFLOW:
+            expected_ssl_errors += requests.exceptions.ConnectionError,
         with pytest.raises(expected_ssl_errors) as ssl_err:
             make_https_request()
 
@@ -333,13 +337,16 @@ def test_tls_client_auth(
         except AttributeError:
             if PY34:
                 pytest.xfail('OpenSSL behaves wierdly under Python 3.4')
-            raise
+            elif not six.PY2 and IS_WINDOWS:
+                err_text = str(ssl_err.value)
+            else:
+                raise
 
         expected_substrings = (
             'sslv3 alert bad certificate' if IS_LIBRESSL_BACKEND
             else 'tlsv1 alert unknown ca',
         )
-        if six.PY3:
+        if not six.PY2:
             if IS_MACOS and IS_PYPY and adapter_type == 'pyopenssl':
                 expected_substrings = ('tlsv1 alert unknown ca', )
             if (
@@ -350,11 +357,12 @@ def test_tls_client_auth(
                     )
                     and not is_trusted_cert
                     and tls_client_identity == 'localhost'
-                    and adapter_type == 'builtin'
             ):
                 expected_substrings += (
                     'bad handshake: '
                     "SysCallError(10054, 'WSAECONNRESET')",
+                    "('Connection aborted.', "
+                    'OSError("(10054, \'WSAECONNRESET\')"))',
                 )
         assert any(e in err_text for e in expected_substrings)
 
@@ -433,7 +441,7 @@ def test_http_over_https_error(
 
     expect_fallback_response_over_plain_http = (
         (adapter_type == 'pyopenssl'
-         and (IS_ABOVE_OPENSSL10 or six.PY3))
+         and (IS_ABOVE_OPENSSL10 or not six.PY2))
         or PY27
     )
     if expect_fallback_response_over_plain_http:
@@ -468,5 +476,8 @@ def test_http_over_https_error(
 
     underlying_error = ssl_err.value.args[0].args[-1]
     err_text = str(underlying_error)
-    assert underlying_error.errno == expected_error_code
+    assert underlying_error.errno == expected_error_code, (
+        'The underlying error is {!r}'.
+        format(underlying_error)
+    )
     assert expected_error_text in err_text

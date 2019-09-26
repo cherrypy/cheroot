@@ -176,3 +176,6 @@ ENV/
 
 # mypy
 .mypy_cache
+
+# pip wheel dist info
+pip-wheel-metadata/

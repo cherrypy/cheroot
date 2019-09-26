@@ -109,13 +109,14 @@ class WorkerThread(threading.Thread):
                     return
 
                 self.conn = conn
-                if self.server.stats['Enabled']:
+                is_stats_enabled = self.server.stats['Enabled']
+                if is_stats_enabled:
                     self.start_time = time.time()
                 try:
                     conn.communicate()
                 finally:
                     conn.close()
-                    if self.server.stats['Enabled']:
+                    if is_stats_enabled:
                         self.requests_seen += self.conn.requests_seen
                         self.bytes_read += self.conn.rfile.bytes_read
                         self.bytes_written += self.conn.wfile.bytes_written

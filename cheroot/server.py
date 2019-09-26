@@ -86,6 +86,7 @@ from six.moves import urllib
 
 from . import errors, __version__
 from ._compat import bton, ntou
+from ._compat import IS_PPC
 from .workers import threadpool
 from .makefile import MakeFile, StreamWriter
 
@@ -142,7 +143,7 @@ if not hasattr(socket, 'SO_PEERCRED'):
     which case the getsockopt() will hopefully fail. The arch
     specific value could be derived from platform.processor()
     """
-    socket.SO_PEERCRED = 17
+    socket.SO_PEERCRED = 21 if IS_PPC else 17
 
 
 LF = b'\n'
@@ -788,6 +789,11 @@ class HTTPRequest:
                 )
                 return False
             rp = req_protocol[5:].split(b'.', 1)
+            if len(rp) != 2:
+                self.simple_response(
+                    '400 Bad Request', 'Malformed Request-Line: bad version',
+                )
+                return False
             rp = tuple(map(int, rp))  # Minor.Major must be threat as integers
             if rp > (1, 1):
                 self.simple_response(
@@ -1226,7 +1232,7 @@ class HTTPConnection:
 
         Args:
             server (HTTPServer): web server object receiving this request
-            socket (socket._socketobject): the raw socket object (usually
+            sock (socket._socketobject): the raw socket object (usually
                 TCP) for this connection
             makefile (file): a fileobject class for reading from the socket
         """
@@ -1731,7 +1737,7 @@ class HTTPServer:
         if os.getenv('LISTEN_PID', None):
             # systemd socket activation
             self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
-        elif isinstance(self.bind_addr, six.string_types):
+        elif isinstance(self.bind_addr, (six.text_type, six.binary_type)):
             # AF_UNIX socket
             try:
                 self.bind_unix_socket(self.bind_addr)
@@ -1861,6 +1867,27 @@ class HTTPServer:
             """
             File does not exist, which is the primary goal anyway.
             """
+        except TypeError as typ_err:
+            err_msg = str(typ_err)
+            if (
+                    'remove() argument 1 must be encoded '
+                    'string without null bytes, not unicode'
+                    not in err_msg
+                    and 'embedded NUL character' not in err_msg  # py34
+                    and 'argument must be a '
+                    'string without NUL characters' not in err_msg  # pypy2
+            ):
+                raise
+        except ValueError as val_err:
+            err_msg = str(val_err)
+            if (
+                    'unlink: embedded null '
+                    'character in path' not in err_msg
+                    and 'embedded null byte' not in err_msg
+                    and 'argument must be a '
+                    'string without NUL characters' not in err_msg  # pypy3
+            ):
+                raise
 
         sock = self.prepare_socket(
             bind_addr=bind_addr,
@@ -1926,7 +1953,10 @@ class HTTPServer:
             * https://gavv.github.io/blog/ephemeral-port-reuse/
             """
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if nodelay and not isinstance(bind_addr, str):
+        if nodelay and not isinstance(
+                bind_addr,
+                (six.text_type, six.binary_type),
+        ):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
         if ssl_adapter is not None:
@@ -1974,6 +2004,10 @@ class HTTPServer:
             In case of bytes with a leading null-byte it's an abstract socket.
             """
             return bind_addr[:2]
+
+        if isinstance(bind_addr, six.binary_type):
+            bind_addr = bton(bind_addr)
+
         return bind_addr
 
     def tick(self):
@@ -2007,7 +2041,7 @@ class HTTPServer:
                         msg,
                     ]
 
-                    sock_to_make = s if six.PY3 else s._sock
+                    sock_to_make = s if not six.PY2 else s._sock
                     wfile = mf(sock_to_make, 'wb', io.DEFAULT_BUFFER_SIZE)
                     try:
                         wfile.write(''.join(buf).encode('ISO-8859-1'))
@@ -2024,7 +2058,10 @@ class HTTPServer:
 
             conn = self.ConnectionClass(self, s, mf)
 
-            if not isinstance(self.bind_addr, six.string_types):
+            if not isinstance(
+                    self.bind_addr,
+                    (six.text_type, six.binary_type),
+            ):
                 # optional values
                 # Until we do DNS lookups, omit REMOTE_HOST
                 if addr is None:  # sometimes this can happen
@@ -2093,7 +2130,10 @@ class HTTPServer:
 
         sock = getattr(self, 'socket', None)
         if sock:
-            if not isinstance(self.bind_addr, six.string_types):
+            if not isinstance(
+                    self.bind_addr,
+                    (six.text_type, six.binary_type),
+            ):
                 # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]

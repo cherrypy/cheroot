@@ -1,7 +1,39 @@
+v6.6.0
+======
+
+- Revisit :pr:`85` under :pr:`221`. Now
+  ``backports.functools_lru_cache`` is only
+  required on Python 3.2 and earlier.
+
+v6.5.8
+======
+
+- :issue:`222` via :commit:`621f4ee`: Fix
+  :py:const:`socket.SO_PEERCRED` constant fallback value
+  under PowerPC.
+
+v6.5.7
+======
+
+- :issue:`198` via :commit:`9f7affe`: Fix race condition when
+  toggling stats counting in the middle of request processing.
+
+- Improve post Python 3.9 compatibility checks.
+
+- Fix support of `abstract namespace sockets
+  <https://utcc.utoronto.ca/~cks
+  /space/blog/linux/SocketAbstractNamespace>`_.
+
+v6.5.6
+======
+
+- :issue:`218` via :pr:`219`: Fix HTTP parser to return 400 on
+  invalid major-only HTTP version in Request-Line.
+
 v6.5.5
 ======
 
-- :issue:`99` via :pr:`186': Sockets now collect statistics (bytes
+- :issue:`99` via :pr:`186`: Sockets now collect statistics (bytes
   read and written) on Python 3 same as Python 2.
 
 - :cp-issue:`1618` via :pr:`180`: Ignore OpenSSL's 1.1+ Error 0
