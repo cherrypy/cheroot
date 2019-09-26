@@ -226,8 +226,8 @@ jobs:
     <<: *python_3_7_mixture
     install:
     - python -m pip install tox tox-venv
-    script:
-    - python -m tox -e release
+    env:
+      TOXENV: release
 
 cache:
   pip: true
