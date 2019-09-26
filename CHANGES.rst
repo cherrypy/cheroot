@@ -1,3 +1,12 @@
+v7.0.0
+======
+
+- :pr:`224`: Refactored "open URL" behavior in webtest to
+  rely on `retry_call
+  <https://jaracofunctools.readthedocs.io/en/latest/?badge=latest#jaraco.functools.retry_call>`_.
+  Callers can no longer pass ``raise_subcls`` or ``ssl_context``
+  positionally, but must pass them as keyword arguments.
+
 v6.6.0
 ======
 
