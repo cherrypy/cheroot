@@ -226,7 +226,10 @@ class ConnectionManager:
 
             conn = self.server.ConnectionClass(self.server, s, mf)
 
-            if not isinstance(self.server.bind_addr, six.string_types):
+            if not isinstance(
+                    self.server.bind_addr,
+                    (six.text_type, six.binary_type),
+            ):
                 # optional values
                 # Until we do DNS lookups, omit REMOTE_HOST
                 if addr is None:  # sometimes this can happen
