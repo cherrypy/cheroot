@@ -1274,7 +1274,7 @@ class HTTPConnection:
                 # Something went wrong in the parsing (and the server has
                 # probably already made a simple_response). Return and
                 # let the conn close.
-                return
+                return False
 
             request_seen = True
             req.respond()
@@ -1308,6 +1308,7 @@ class HTTPConnection:
                 repr(ex), level=logging.ERROR, traceback=True,
             )
             self._conditional_error(req, '500 Internal Server Error')
+        return False
 
     linger = False
 
