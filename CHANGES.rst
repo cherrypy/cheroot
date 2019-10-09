@@ -1,3 +1,13 @@
+v7.1.0
+======
+
+- :issue:`231` via :pr:`232`: Remove custom setup.cfg
+  parser handling, allowing the project (including sdist)
+  to build/run on setuptools 41.4. Now building cheroot
+  requires setuptools 30.3 or later (for declarative
+  config support) and preferably 34.4 or later (as
+  indicated in pyproject.toml).
+
 v7.0.0
 ======
 
