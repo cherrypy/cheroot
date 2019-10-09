@@ -1,4 +1,4 @@
-v7.1.0
+v8.0.0
 ======
 
 - :issue:`231` via :pr:`232`: Remove custom setup.cfg
