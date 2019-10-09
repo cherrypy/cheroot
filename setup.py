@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""setup.py."""
+"""Cheroot package setuptools installer."""
 
 import setuptools
 
