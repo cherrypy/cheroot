@@ -1,3 +1,10 @@
+v8.1.0
+======
+
+- Workers are now request-based, addressing the
+  long-standing issue with keep-alive connections
+  (:issue:`91` via :pr:`199`).
+
 v8.0.0
 ======
 
