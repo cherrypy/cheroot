@@ -35,7 +35,7 @@ jobs:
     - checkout
     - run:
         name: Run tests
-        command: tox -e py27,py34,py35,py36,py37,pypy3 -- -p no:sugar
+        command: tox -e py27-circleci,py34-circleci,py35-circleci,py36-circleci,py37-circleci,pypy3-circleci -- -p no:sugar
         # Environment variables for py-cryptography library
         environment:
           LDFLAGS: "-L/usr/local/opt/openssl/lib"
