@@ -424,6 +424,15 @@ def test_http_over_https_error(
     tls_certificate_private_key_pem_path,
 ):
     """Ensure that connecting over HTTP to HTTPS port is handled."""
+    # disable some flaky tests
+    # https://github.com/cherrypy/cheroot/issues/225
+    issue_225 = (
+        IS_MACOS
+        and adapter_type == 'builtin'
+    )
+    if issue_225:
+        pytest.xfail('Test fails in Travis-CI')
+
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
     tls_adapter = tls_adapter_cls(
         tls_certificate_chain_pem_path, tls_certificate_private_key_pem_path,
