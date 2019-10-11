@@ -315,6 +315,16 @@ def test_tls_client_auth(
             assert resp.text == 'Hello world!'
             return
 
+        # xfail some flaky tests
+        # https://github.com/cherrypy/cheroot/issues/237
+        issue_237 = (
+            IS_MACOS
+            and adapter_type == 'builtin'
+            and tls_verify_mode != ssl.CERT_NONE
+        )
+        if issue_237:
+            pytest.xfail('Test sometimes fails')
+
         expected_ssl_errors = (
             requests.exceptions.SSLError,
             OpenSSL.SSL.Error,
