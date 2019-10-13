@@ -271,6 +271,13 @@ class ThreadPool:
         for worker in self._threads:
             self._queue.put(_SHUTDOWNREQUEST)
 
+        ignored_errors = (
+            # TODO: explain this exception.
+            AssertionError,
+            # Ignore repeated Ctrl-C. See cherrypy#691.
+            KeyboardInterrupt,
+        )
+
         # Don't join currentThread (when stop is called inside a request).
         current = threading.currentThread()
         while self._threads:
@@ -290,13 +297,7 @@ class ThreadPool:
                                 # pyOpenSSL sockets don't take an arg
                                 c.socket.shutdown()
                         worker.join()
-                except (
-                    AssertionError,
-                    # Ignore repeated Ctrl-C.
-                    # See
-                    # https://github.com/cherrypy/cherrypy/issues/691.
-                    KeyboardInterrupt,
-                ):
+                except ignored_errors:
                     pass
 
     @property
