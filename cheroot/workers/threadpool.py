@@ -276,23 +276,20 @@ class ThreadPool:
         while self._threads:
             worker = self._threads.pop()
             if worker is not current and worker.is_alive():
+                remaining_time = timeout and endtime - time.time()
                 try:
-                    if timeout is None:
+                    worker.join(remaining_time)
+                    if worker.is_alive():
+                        # We exhausted the timeout.
+                        # Forcibly shut down the socket.
+                        c = worker.conn
+                        if c and not c.rfile.closed:
+                            try:
+                                c.socket.shutdown(socket.SHUT_RD)
+                            except TypeError:
+                                # pyOpenSSL sockets don't take an arg
+                                c.socket.shutdown()
                         worker.join()
-                    else:
-                        remaining_time = endtime - time.time()
-                        worker.join(remaining_time)
-                        if worker.is_alive():
-                            # We exhausted the timeout.
-                            # Forcibly shut down the socket.
-                            c = worker.conn
-                            if c and not c.rfile.closed:
-                                try:
-                                    c.socket.shutdown(socket.SHUT_RD)
-                                except TypeError:
-                                    # pyOpenSSL sockets don't take an arg
-                                    c.socket.shutdown()
-                            worker.join()
                 except (
                     AssertionError,
                     # Ignore repeated Ctrl-C.
