@@ -278,11 +278,8 @@ class ThreadPool:
             KeyboardInterrupt,
         )
 
-        # Don't join currentThread (when stop is called inside a request).
-        current = threading.currentThread()
-        while self._threads:
-            worker = self._threads.pop()
-            if worker is not current and worker.is_alive():
+        for worker in self._clear_threads():
+            if worker.is_alive():
                 remaining_time = timeout and endtime - time.time()
                 try:
                     worker.join(remaining_time)
@@ -299,6 +296,16 @@ class ThreadPool:
                         worker.join()
                 except ignored_errors:
                     pass
+
+    def _clear_threads(self):
+        """Clear self._threads and yield all joinable threads."""
+        # threads = pop_all(self._threads)
+        threads, self._threads[:] = self._threads[:], []
+        return (
+            thread
+            for thread in threads
+            if thread is not threading.currentThread()
+        )
 
     @property
     def qsize(self):
