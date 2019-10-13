@@ -283,18 +283,20 @@ class ThreadPool:
             try:
                 worker.join(remaining_time)
                 if worker.is_alive():
-                    # We exhausted the timeout.
-                    # Forcibly shut down the socket.
-                    c = worker.conn
-                    if c and not c.rfile.closed:
-                        try:
-                            c.socket.shutdown(socket.SHUT_RD)
-                        except TypeError:
-                            # pyOpenSSL sockets don't take an arg
-                            c.socket.shutdown()
+                    # Timeout exhausted; forcibly shut down the socket.
+                    self._force_close(worker.conn)
                     worker.join()
             except ignored_errors:
                 pass
+
+    @staticmethod
+    def _force_close(conn):
+        if conn and not conn.rfile.closed:
+            try:
+                conn.socket.shutdown(socket.SHUT_RD)
+            except TypeError:
+                # pyOpenSSL sockets don't take an arg
+                conn.socket.shutdown()
 
     def _clear_threads(self):
         """Clear self._threads and yield all joinable threads."""
