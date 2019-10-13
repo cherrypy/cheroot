@@ -12,6 +12,8 @@ import warnings
 
 from six.moves import queue
 
+from jaraco.functools import pass_none
+
 
 __all__ = ('WorkerThread', 'ThreadPool')
 
@@ -290,13 +292,15 @@ class ThreadPool:
                 pass
 
     @staticmethod
+    @pass_none
     def _force_close(conn):
-        if conn and not conn.rfile.closed:
-            try:
-                conn.socket.shutdown(socket.SHUT_RD)
-            except TypeError:
-                # pyOpenSSL sockets don't take an arg
-                conn.socket.shutdown()
+        if conn.rfile.closed:
+            return
+        try:
+            conn.socket.shutdown(socket.SHUT_RD)
+        except TypeError:
+            # pyOpenSSL sockets don't take an arg
+            conn.socket.shutdown()
 
     def _clear_threads(self):
         """Clear self._threads and yield all joinable threads."""
