@@ -281,8 +281,7 @@ class ThreadPool:
                         worker.join()
                     else:
                         remaining_time = endtime - time.time()
-                        if remaining_time > 0:
-                            worker.join(remaining_time)
+                        worker.join(remaining_time)
                         if worker.is_alive():
                             # We exhausted the timeout.
                             # Forcibly shut down the socket.
