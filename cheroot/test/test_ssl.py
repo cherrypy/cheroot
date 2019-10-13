@@ -86,7 +86,7 @@ class HelloWorldGateway(Gateway):
         return super(HelloWorldGateway, self).respond()
 
 
-def make_tls_http_server(bind_addr, ssl_adapter):
+def make_tls_http_server(bind_addr, ssl_adapter, request):
     """Create and start an HTTP server bound to bind_addr."""
     httpserver = HTTPServer(
         bind_addr=bind_addr,
@@ -100,28 +100,15 @@ def make_tls_http_server(bind_addr, ssl_adapter):
     while not httpserver.ready:
         time.sleep(0.1)
 
+    request.addfinalizer(httpserver.stop)
+
     return httpserver
 
 
 @pytest.fixture
-def tls_http_server():
+def tls_http_server(request):
     """Provision a server creator as a fixture."""
-    def start_srv():
-        bind_addr, ssl_adapter = yield
-        httpserver = make_tls_http_server(bind_addr, ssl_adapter)
-        yield httpserver
-        yield httpserver
-
-    srv_creator = iter(start_srv())
-    next(srv_creator)
-    yield srv_creator
-    try:
-        while True:
-            httpserver = next(srv_creator)
-            if httpserver is not None:
-                httpserver.stop()
-    except StopIteration:
-        pass
+    return functools.partial(make_tls_http_server, request=request)
 
 
 @pytest.fixture
@@ -183,12 +170,7 @@ def test_ssl_adapters(
 
     tls_certificate.configure_cert(tls_adapter.context)
 
-    tlshttpserver = tls_http_server.send(
-        (
-            (interface, port),
-            tls_adapter,
-        ),
-    )
+    tlshttpserver = tls_http_server((interface, port), tls_adapter)
 
     # testclient = get_server_client(tlshttpserver)
     # testclient.get('/')
@@ -277,12 +259,7 @@ def test_tls_client_auth(
         ca.configure_trust(tls_adapter.context)
         tls_certificate.configure_cert(tls_adapter.context)
 
-        tlshttpserver = tls_http_server.send(
-            (
-                (interface, port),
-                tls_adapter,
-            ),
-        )
+        tlshttpserver = tls_http_server((interface, port), tls_adapter)
 
         interface, _host, port = _get_conn_data(tlshttpserver.bind_addr)
 
@@ -443,12 +420,7 @@ def test_http_over_https_error(
     tls_certificate.configure_cert(tls_adapter.context)
 
     interface, _host, port = _get_conn_data(ip_addr)
-    tlshttpserver = tls_http_server.send(
-        (
-            (interface, port),
-            tls_adapter,
-        ),
-    )
+    tlshttpserver = tls_http_server((interface, port), tls_adapter)
 
     interface, host, port = _get_conn_data(
         tlshttpserver.bind_addr,
