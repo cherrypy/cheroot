@@ -297,10 +297,15 @@ class ThreadPool:
         if conn.rfile.closed:
             return
         try:
-            conn.socket.shutdown(socket.SHUT_RD)
-        except TypeError:
-            # pyOpenSSL sockets don't take an arg
-            conn.socket.shutdown()
+            try:
+                conn.socket.shutdown(socket.SHUT_RD)
+            except TypeError:
+                # pyOpenSSL sockets don't take an arg
+                conn.socket.shutdown()
+        except OSError:
+            # shutdown sometimes fails (race with 'closed' check?)
+            # ref #238
+            pass
 
     def _clear_threads(self):
         """Clear self._threads and yield all joinable threads."""
