@@ -1,3 +1,9 @@
+v8.2.0
+======
+
+- Deprecated use of negative timeouts as alias for
+  infinite timeouts in ``ThreadPool.stop``.
+
 v8.1.0
 ======
 

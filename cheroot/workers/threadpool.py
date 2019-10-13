@@ -8,6 +8,7 @@ import collections
 import threading
 import time
 import socket
+import warnings
 
 from six.moves import queue
 
@@ -252,6 +253,19 @@ class ThreadPool:
         Args:
             timeout (int): time to wait for threads to stop gracefully
         """
+        # for compatability, negative timeouts are treated like None
+        # TODO: treat negative timeouts like already expired timeouts
+        if timeout is not None and timeout < 0:
+            timeout = None
+            warnings.warning(
+                'In the future, negative timeouts to Server.stop() '
+                'will be equivalent to a timeout of zero.',
+                stacklevel=2,
+            )
+
+        if timeout is not None:
+            endtime = time.time() + timeout
+
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
         for worker in self._threads:
@@ -259,13 +273,11 @@ class ThreadPool:
 
         # Don't join currentThread (when stop is called inside a request).
         current = threading.currentThread()
-        if timeout is not None and timeout >= 0:
-            endtime = time.time() + timeout
         while self._threads:
             worker = self._threads.pop()
             if worker is not current and worker.is_alive():
                 try:
-                    if timeout is None or timeout < 0:
+                    if timeout is None:
                         worker.join()
                     else:
                         remaining_time = endtime - time.time()
