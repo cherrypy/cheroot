@@ -31,13 +31,11 @@ jobs:
         wait
     - run: pyenv global 2.7.14 3.7.0 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
 
-    - run: circleci tests glob **/test/**.py | circleci tests split --split-by=timings | grep -v '__init__.py' | xargs echo >> $TEST_ARGS
-
     - run: pip install tox tox-pyenv
     - checkout
     - run:
         name: Run tests
-        command: tox -e py27,py34,py35,py36,py37,pypy3 -- -p no:sugar $TEST_ARGS
+        command: tox -e py27,py34,py35,py36,py37,pypy3 -- -p no:sugar $(circleci tests glob **/test/**.py | circleci tests split --split-by=timings | grep -v '__init__.py')
         # Environment variables for py-cryptography library
         environment:
           LDFLAGS: "-L/usr/local/opt/openssl/lib"
