@@ -1,47 +1,45 @@
 <!--
-**** DELETE THIS BLOCK ****  
+**** DELETE THIS BLOCK ****
 
 Thanks for filing an issue!  Please keep keep issues limited to bug reports,
 feature requests, and other general issues. For support questions, please feel
 free to reach out on stackoverflow:
-http://stackoverflow.com/questions/tagged/cherrypy
+https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
 
-**** /DELETE THIS BLOCK ****  
+**** /DELETE THIS BLOCK ****
 -->
 
-* **I'm submitting a ...**
-[ ] bug report
-[ ] feature request
-[ ] question about the decisions made in the repository
+❓ **I'm submitting a ...**
+- [ ] 🐞 bug report
+- [ ] 🐣 feature request
+- [ ] ❓ question about the decisions made in the repository
 
-* **Do you want to request a *feature* or report a *bug*?**
-
-
-
-* **What is the current behavior?**
+❓ **Do you want to request a *feature* or report a *bug*?**
 
 
 
-* **If the current behavior is a bug, please provide the steps to reproduce and if possible a screenshots and logs of the problem. If you can, show us your code.**
+❓ **What is the current behavior?**
 
 
 
-* **What is the expected behavior?**
+💡 **If the current behavior is a bug, please provide the steps to reproduce and if possible a screenshots and logs of the problem. If you can, show us your code.**
 
 
 
-* **What is the motivation / use case for changing the behavior?**
+💡 **What is the expected behavior?**
 
 
 
-* **Please tell us about your environment:**
+❓ **What is the motivation / use case for changing the behavior?**
 
-- Python version: 3.6.X
+
+
+📋 **Please tell us about your environment:**
+
 - Cheroot version: X.X.X
 - CherryPy version: X.X.X (if applicable)
+- Python version: 3.7.X
 - OS: XXX
 - Browser: [all | Chrome XX | Firefox XX | IE XX | Safari XX | Mobile Chrome XX | Android X.X Web Browser | iOS XX Safari | iOS XX UIWebView | iOS XX WKWebView ]
 
-
-
-* **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, e.g. stackoverflow, gitter, etc.)
+📋 **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, e.g. stackoverflow, gitter, etc.)

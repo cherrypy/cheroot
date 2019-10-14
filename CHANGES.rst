@@ -1,3 +1,268 @@
+v8.2.0
+======
+
+- Deprecated use of negative timeouts as alias for
+  infinite timeouts in ``ThreadPool.stop``.
+
+v8.1.0
+======
+
+- Workers are now request-based, addressing the
+  long-standing issue with keep-alive connections
+  (:issue:`91` via :pr:`199`).
+
+v8.0.0
+======
+
+- :issue:`231` via :pr:`232`: Remove custom setup.cfg
+  parser handling, allowing the project (including sdist)
+  to build/run on setuptools 41.4. Now building cheroot
+  requires setuptools 30.3 or later (for declarative
+  config support) and preferably 34.4 or later (as
+  indicated in pyproject.toml).
+
+v7.0.0
+======
+
+- :pr:`224`: Refactored "open URL" behavior in webtest to
+  rely on `retry_call
+  <https://jaracofunctools.readthedocs.io/en/latest/?badge=latest#jaraco.functools.retry_call>`_.
+  Callers can no longer pass ``raise_subcls`` or ``ssl_context``
+  positionally, but must pass them as keyword arguments.
+
+v6.6.0
+======
+
+- Revisit :pr:`85` under :pr:`221`. Now
+  ``backports.functools_lru_cache`` is only
+  required on Python 3.2 and earlier.
+- :cp-issue:`1206` via :pr:`204`: Fix race condition in
+  threadpool shrink code.
+
+v6.5.8
+======
+
+- :issue:`222` via :commit:`621f4ee`: Fix
+  :py:const:`socket.SO_PEERCRED` constant fallback value
+  under PowerPC.
+
+v6.5.7
+======
+
+- :issue:`198` via :commit:`9f7affe`: Fix race condition when
+  toggling stats counting in the middle of request processing.
+
+- Improve post Python 3.9 compatibility checks.
+
+- Fix support of `abstract namespace sockets
+  <https://utcc.utoronto.ca/~cks
+  /space/blog/linux/SocketAbstractNamespace>`_.
+
+v6.5.6
+======
+
+- :issue:`218` via :pr:`219`: Fix HTTP parser to return 400 on
+  invalid major-only HTTP version in Request-Line.
+
+v6.5.5
+======
+
+- :issue:`99` via :pr:`186`: Sockets now collect statistics (bytes
+  read and written) on Python 3 same as Python 2.
+
+- :cp-issue:`1618` via :pr:`180`: Ignore OpenSSL's 1.1+ Error 0
+  under any Python while wrapping a socket.
+
+v6.5.4
+======
+
+- :issue:`113`: Fix :py:mod:`cheroot.ssl.pyopenssl`
+  under Python 3.
+
+- :issue:`154` via :pr:`159`: Remove custom license field from
+  dist metadata.
+
+- :issue:`95`: Fully integrate :py:mod:`trustme` into all TLS tests.
+  Also remove all hardcoded TLS certificates.
+
+- :issue:`42`: Remove traces of :py:mod:`unittest` and
+  :py:mod:`ddt` usage.
+
+- Fix invalid input processing in
+  :py:func:`cheroot._compat.extract_bytes`.
+
+- Fix returning error explanation over plain HTTP for PyOpenSSL.
+
+- Add a fallback for :py:func:`os.lchmod` where it's missing.
+
+- Avoid traceback for invalid client cert with builtin
+  :py:mod:`ssl` adapter.
+
+- Avoid deprecation warning with :py:class:`OpenSSL.SSL.Connection`.
+
+- Fix socket wrapper in PyOpenSSL adapter.
+
+- Improve tests coverage:
+
+  * Client TLS certificate tests
+
+  * :py:func:`cheroot._compat.extract_bytes`
+
+  * Peercreds lookup
+
+v6.5.3
+======
+
+- :pr:`149`: Make ``SCRIPT_NAME`` optional per PEP 333.
+
+v6.5.2
+======
+- :issue:`6` via :pr:`109`: Fix import of
+  :py:mod:`cheroot.ssl.pyopenssl` by refactoring and separating
+  :py:mod:`cheroot.makefile`'s stream wrappers.
+
+- :issue:`95` via :pr:`109`: Add initial tests for SSL layer with use
+  of :py:mod:`trustme`
+
+v6.5.1
+======
+- :issue:`93` via :pr:`110`: Improve UNIX socket fs access mode
+  in :py:meth:`cheroot.server.HTTPServer.prepare` on a file socket
+  when starting to listen to it.
+
+v6.5.0
+======
+
+- :cp-issue:`1001` via :pr:`52` and :pr:`108`: Add support for
+  validating client certificates.
+
+v6.4.0
+======
+
+- :issue:`68` via :pr:`98`: Factor out parts of
+  :py:meth:`cheroot.server.HTTPServer.start` into
+  :py:meth:`prepare() <cheroot.server.HTTPServer.prepare>` and
+  :py:meth:`serve() <cheroot.server.HTTPServer.serve>`
+
+v6.3.3
+======
+
+- Fix bug with returning empty result in
+  :py:meth:`cheroot.ssl.builtin.BuiltinSSLAdapter.wrap`
+
+v6.3.2
+======
+
+- :issue:`100` via :pr:`101`: Respond with HTTP 400 to malicious
+  ``Content-Length`` in request headers.
+
+v6.3.1
+======
+
+- :cp-issue:`1618`: Ignore OpenSSL's 1.1+ Error 0 under Python 2 while
+  wrapping a socket.
+
+v6.3.0
+======
+
+- :pr:`87`: Add ``cheroot`` command and runpy launcher to
+  launch a WSGI app from the command-line.
+
+v6.2.4
+======
+
+- Fix missing ``resolve_peer_creds`` argument in
+  :py:class:`cheroot.wsgi.Server` being bypassed into
+  :py:class:`cheroot.server.HTTPServer`.
+
+- :pr:`85`: Revert conditional dependencies. System packagers should
+  honor the dependencies as declared by cheroot, which are defined
+  intentionally.
+
+v6.2.3
+======
+
+- :pr:`85`: Skip installing dependencies from backports namespace under
+  Python 3.
+
+v6.2.2
+======
+
+- :issue:`84` (:cp-issue:`1704`): Fix regression, causing
+  :py:exc:`ModuleNotFoundError` under cygwin.
+
+v6.2.1
+======
+
+- :pr:`83`: Fix regression, caused by inverted check for Windows OS.
+
+- Add more URLs to distribution metadata
+
+v6.2.0
+======
+
+- :pr:`37`: Implement PEERCRED lookup over UNIX-socket HTTP connection.
+
+  * Discover connected process' PID/UID/GID
+
+  * Respect server switches: ``peercreds_enabled`` and
+    ``peercreds_resolve_enabled``
+
+  * ``get_peer_creds`` and ``resolve_peer_creds``  methods on connection
+
+  * ``peer_pid``, ``peer_uid``, ``peer_gid``, ``peer_user`` and ``peer_group``
+    properties on connection
+
+  * ``X_REMOTE_PID``, ``X_REMOTE_UID``, ``X_REMOTE_GID``, ``X_REMOTE_USER``
+    (``REMOTE_USER``) and ``X_REMOTE_GROUP`` WSGI environment variables when
+    enabled and supported
+
+  * Per-connection caching to reduce lookup cost
+
+v6.1.2
+======
+
+- :issue:`81`: Fix regression introduced by :pr:`80`.
+
+  * Restore :py:attr:`storing bound socket
+    <cheroot.server.HTTPServer.bind_addr>` in Windows broken by use of
+    :py:obj:`socket.AF_UNIX`
+
+v6.1.1
+======
+
+- :pr:`80`: Fix regression introduced by :commit:`68a5769`.
+
+  * Get back support for :py:obj:`socket.AF_UNIX` in stored bound address in
+    :py:attr:`cheroot.server.HTTPServer.bind_addr`
+
+v6.1.0
+======
+
+- :pr:`67`: Refactor testsuite to completely rely on pytest.
+
+  * Integrate pytest-testmon and pytest-watch
+
+  * Stabilise testing
+
+- :cp-issue:`1664` via :pr:`66`: Implement input termination flag support as
+  suggested by `@mitsuhiko <https://github.com/mitsuhiko>`_ in his
+  `wsgi.input_terminated Proposal
+  <https://gist.github.com/mitsuhiko/5721547>`_.
+
+- :issue:`73`: Fix SSL error bypassing.
+
+- :issue:`77` via :pr:`78`: Fix WSGI documentation example to support Python 3.
+
+- :pr:`76`: Send correct conditional HTTP error in helper function.
+
+- :cp-issue:`1404` via :pr:`75`: Fix headers being unsent before request
+  closed. Now we double check that they've been sent.
+
+- Minor docs improvements.
+
+- Minor refactoring.
+
 v6.0.0
 ======
 
@@ -52,10 +317,13 @@ v5.8.3
 ======
 
 - Improve HTTP request line validation:
+
   * Improve HTTP version parsing
 
 - Fix HTTP CONNECT method processing:
+
   * Respond with ``405 Method Not Allowed`` if ``proxy_mode is False``
+
   * Validate that request-target is in authority-form
 
 - Improve tests in ``test.test_core``
@@ -215,7 +483,7 @@ v5.3.0
   <https://github.com/jaraco/skeleton>`_.
 
   Docs now built and `deployed at RTD
-  <http://cheroot.readthedocs.io/en/latest/history.html>`_.
+  <https://cheroot.cherrypy.org/en/latest/history.html>`_.
 
 v5.2.0
 ======

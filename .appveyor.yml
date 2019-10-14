@@ -7,7 +7,7 @@ environment:
   PYPI_USERNAME: jaraco
 
   matrix:
-    - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Python37-x64"
     - PYTHON: "C:\\Python27-x64"
 
 install:
@@ -15,7 +15,9 @@ install:
   - "mklink /d \"C:\\Program Files\\Python\" %PYTHON%"
   - "SET PYTHON=\"C:\\Program Files\\Python\""
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python -m pip install --upgrade --force-reinstall virtualenv"
   - "python -m pip install tox"
+  - "python -m tox --notest -vv"
 
 
 before_build:
@@ -25,11 +27,11 @@ build_script:
   - python -m setup bdist_wheel
 
 test_script:
-  - tox
+  - python -m tox
 
 version: '{build}'
 
-after_test:
+on_finish:
   - ps: |
       $wc = New-Object 'System.Net.WebClient'
       $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\junit-test-results.xml))

@@ -8,6 +8,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'jaraco.packaging.sphinx',
     'rst.linker',
+    'sphinx_tabs.tabs',
 ]
 
 master_doc = 'index'
@@ -32,14 +33,16 @@ cp_github_repo_url = f'{github_url}/{github_repo_org}/cherrypy'
 
 extlinks = {
     'issue': (f'{github_repo_url}/issues/%s', '#'),
-    'pr': (f'{github_repo_url}/pulls/%s', 'PR #'),
+    'pr': (f'{github_repo_url}/pull/%s', 'PR #'),
     'commit': (f'{github_repo_url}/commit/%s', ''),
     'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #'),
-    'cp-pr': (f'{cp_github_repo_url}/pulls/%s', 'CherryPy PR #'),
+    'cp-pr': (f'{cp_github_repo_url}/pull/%s', 'CherryPy PR #'),
     'gh': (f'{github_url}/%s', 'GitHub: '),
 }
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    'cherrypy': ('http://docs.cherrypy.org/en/latest/', None),
+    'python2': ('https://docs.python.org/2', None),
+    'cherrypy': ('https://docs.cherrypy.org/en/latest/', None),
+    'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
 }

@@ -1,5 +1,8 @@
 """A library of helper functions for the Cheroot test suite."""
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import datetime
 import logging
 import os
@@ -19,7 +22,6 @@ from cheroot.test import webtest
 
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
-serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
 
 
 config = {
@@ -30,6 +32,7 @@ config = {
 
 
 class CherootWebCase(webtest.WebCase):
+    """Helper class for a web app test suite."""
 
     script_name = ''
     scheme = 'http'
@@ -74,7 +77,7 @@ class CherootWebCase(webtest.WebCase):
 
     @classmethod
     def teardown_class(cls):
-        ''
+        """Cleanup HTTP server."""
         if hasattr(cls, 'setup_server'):
             cls.stop()
 
@@ -87,6 +90,7 @@ class CherootWebCase(webtest.WebCase):
 
     @classmethod
     def stop(cls):
+        """Terminate HTTP server."""
         cls.httpserver.stop()
         td = getattr(cls, 'teardown', None)
         if td:
@@ -108,20 +112,25 @@ class CherootWebCase(webtest.WebCase):
                                  (dt1, dt2, seconds))
 
 
-class Request(object):
+class Request:
+    """HTTP request container."""
 
     def __init__(self, environ):
+        """Initialize HTTP request."""
         self.environ = environ
 
 
-class Response(object):
+class Response:
+    """HTTP response container."""
 
     def __init__(self):
+        """Initialize HTTP response."""
         self.status = '200 OK'
         self.headers = {'Content-Type': 'text/html'}
         self.body = None
 
     def output(self):
+        """Generate iterable response body object."""
         if self.body is None:
             return []
         elif isinstance(self.body, six.text_type):
@@ -132,9 +141,11 @@ class Response(object):
             return [x.encode('iso-8859-1') for x in self.body]
 
 
-class Controller(object):
+class Controller:
+    """WSGI app for tests."""
 
     def __call__(self, environ, start_response):
+        """WSGI request handler."""
         req, resp = Request(environ), Response()
         try:
             # Python 3 supports unicode attribute names
@@ -144,8 +155,8 @@ class Controller(object):
             resp.status = '404 Not Found'
         else:
             output = handler(req, resp)
-            if (output is not None and
-                    not any(resp.status.startswith(status_code)
+            if (output is not None
+                and not any(resp.status.startswith(status_code)
                             for status_code in ('204', '304'))):
                 resp.body = output
                 try:

@@ -31,23 +31,33 @@ and .certificate are both given and valid, they will be read, and the
 context will be automatically created from them.
 """
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import socket
 import threading
 import time
 
+import six
+
 try:
     from OpenSSL import SSL
     from OpenSSL import crypto
+
+    try:
+        ssl_conn_type = SSL.Connection
+    except AttributeError:
+        ssl_conn_type = SSL.ConnectionType
 except ImportError:
     SSL = None
 
 from . import Adapter
 from .. import errors, server as cheroot_server
-from ..makefile import MakeFile
+from ..makefile import StreamReader, StreamWriter
 
 
-class SSL_fileobject(MakeFile):
-    """SSL file object attached to a socket object."""
+class SSLFileobjectMixin:
+    """Base mixin for an SSL socket stream."""
 
     ssl_timeout = 3
     ssl_retry = .01
@@ -67,20 +77,21 @@ class SSL_fileobject(MakeFile):
                 # the rest of the stack has no way of differentiating
                 # between a "new handshake" error and "client dropped".
                 # Note this isn't an endless loop: there's a timeout below.
+                # Ref: https://stackoverflow.com/a/5133568/595220
                 time.sleep(self.ssl_retry)
             except SSL.WantWriteError:
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ''
+                    return b''
 
                 errnum = e.args[0]
                 if is_reader and errnum in errors.socket_errors_to_ignore:
-                    return ''
+                    return b''
                 raise socket.error(errnum)
             except SSL.Error as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return ''
+                    return b''
 
                 thirdarg = None
                 try:
@@ -99,19 +110,104 @@ class SSL_fileobject(MakeFile):
 
     def recv(self, size):
         """Receive message of a size from the socket."""
-        return self._safe_call(True, super(SSL_fileobject, self).recv, size)
+        return self._safe_call(
+            True,
+            super(SSLFileobjectMixin, self).recv,
+            size,
+        )
+
+    def readline(self, size=-1):
+        """Receive message of a size from the socket.
+
+        Matches the following interface:
+        https://docs.python.org/3/library/io.html#io.IOBase.readline
+        """
+        return self._safe_call(
+            True,
+            super(SSLFileobjectMixin, self).readline,
+            size,
+        )
 
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
-        return self._safe_call(False, super(SSL_fileobject, self).sendall,
-                               *args, **kwargs)
+        return self._safe_call(
+            False,
+            super(SSLFileobjectMixin, self).sendall,
+            *args, **kwargs
+        )
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""
-        return self._safe_call(False, super(SSL_fileobject, self).send,
-                               *args, **kwargs)
+        return self._safe_call(
+            False,
+            super(SSLFileobjectMixin, self).send,
+            *args, **kwargs
+        )
 
 
+class SSLFileobjectStreamReader(SSLFileobjectMixin, StreamReader):
+    """SSL file object attached to a socket object."""
+
+
+class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
+    """SSL file object attached to a socket object."""
+
+
+class SSLConnectionProxyMeta:
+    """Metaclass for generating a bunch of proxy methods."""
+
+    def __new__(mcl, name, bases, nmspc):
+        """Attach a list of proxy methods to a new class."""
+        proxy_methods = (
+            'get_context', 'pending', 'send', 'write', 'recv', 'read',
+            'renegotiate', 'bind', 'listen', 'connect', 'accept',
+            'setblocking', 'fileno', 'close', 'get_cipher_list',
+            'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
+            'makefile', 'get_app_data', 'set_app_data', 'state_string',
+            'sock_shutdown', 'get_peer_certificate', 'want_read',
+            'want_write', 'set_connect_state', 'set_accept_state',
+            'connect_ex', 'sendall', 'settimeout', 'gettimeout',
+            'shutdown',
+        )
+        proxy_methods_no_args = (
+            'shutdown',
+        )
+
+        proxy_props = (
+            'family',
+        )
+
+        def lock_decorator(method):
+            """Create a proxy method for a new class."""
+            def proxy_wrapper(self, *args):
+                self._lock.acquire()
+                try:
+                    new_args = (
+                        args[:] if method not in proxy_methods_no_args else []
+                    )
+                    return getattr(self._ssl_conn, method)(*new_args)
+                finally:
+                    self._lock.release()
+            return proxy_wrapper
+        for m in proxy_methods:
+            nmspc[m] = lock_decorator(m)
+            nmspc[m].__name__ = m
+
+        def make_property(property_):
+            """Create a proxy method for a new class."""
+            def proxy_prop_wrapper(self):
+                return getattr(self._ssl_conn, property_)
+            proxy_prop_wrapper.__name__ = property_
+            return property(proxy_prop_wrapper)
+        for p in proxy_props:
+            nmspc[p] = make_property(p)
+
+        # Doesn't work via super() for some reason.
+        # Falling back to type() instead:
+        return type(name, bases, nmspc)
+
+
+@six.add_metaclass(SSLConnectionProxyMeta)
 class SSLConnection:
     """A thread-safe wrapper for an SSL.Connection.
 
@@ -122,33 +218,6 @@ class SSLConnection:
         """Initialize SSLConnection instance."""
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
-
-    for f in ('get_context', 'pending', 'send', 'write', 'recv', 'read',
-              'renegotiate', 'bind', 'listen', 'connect', 'accept',
-              'setblocking', 'fileno', 'close', 'get_cipher_list',
-              'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
-              'makefile', 'get_app_data', 'set_app_data', 'state_string',
-              'sock_shutdown', 'get_peer_certificate', 'want_read',
-              'want_write', 'set_connect_state', 'set_accept_state',
-              'connect_ex', 'sendall', 'settimeout', 'gettimeout'):
-        exec("""def %s(self, *args):
-        self._lock.acquire()
-        try:
-            return self._ssl_conn.%s(*args)
-        finally:
-            self._lock.release()
-""" % (f, f))
-
-    def shutdown(self, *args):
-        """Shutdown the SSL connection.
-
-        Ignore all incoming args since pyOpenSSL.socket.shutdown takes no args.
-        """
-        self._lock.acquire()
-        try:
-            return self._ssl_conn.shutdown()
-        finally:
-            self._lock.release()
 
 
 class pyOpenSSLAdapter(Adapter):
@@ -174,13 +243,15 @@ class pyOpenSSLAdapter(Adapter):
 
     def __init__(
             self, certificate, private_key, certificate_chain=None,
-            ciphers=None):
+            ciphers=None,
+    ):
         """Initialize OpenSSL Adapter instance."""
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
         super(pyOpenSSLAdapter, self).__init__(
-            certificate, private_key, certificate_chain, ciphers)
+            certificate, private_key, certificate_chain, ciphers,
+        )
 
         self._environ = None
 
@@ -198,7 +269,7 @@ class pyOpenSSLAdapter(Adapter):
 
     def get_context(self):
         """Return an SSL.Context from self attributes."""
-        # See http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/442473
+        # See https://code.activestate.com/recipes/442473/
         c = SSL.Context(SSL.SSLv23_METHOD)
         c.use_privatekey_file(self.private_key)
         if self.certificate_chain:
@@ -230,8 +301,10 @@ class pyOpenSSLAdapter(Adapter):
                 #   Validity of server's certificate (end time),
             })
 
-            for prefix, dn in [('I', cert.get_issuer()),
-                               ('S', cert.get_subject())]:
+            for prefix, dn in [
+                ('I', cert.get_issuer()),
+                ('S', cert.get_subject()),
+            ]:
                 # X509Name objects don't seem to have a way to get the
                 # complete DN string. Use str() and slice it instead,
                 # because str(dn) == "<X509Name object '/C=US/ST=...'>"
@@ -255,10 +328,16 @@ class pyOpenSSLAdapter(Adapter):
 
     def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
-        if SSL and isinstance(sock, SSL.ConnectionType):
-            timeout = sock.gettimeout()
-            f = SSL_fileobject(sock, mode, bufsize)
-            f.ssl_timeout = timeout
-            return f
+        cls = (
+            SSLFileobjectStreamReader
+            if 'r' in mode else
+            SSLFileobjectStreamWriter
+        )
+        if SSL and isinstance(sock, ssl_conn_type):
+            wrapped_socket = cls(sock, mode, bufsize)
+            wrapped_socket.ssl_timeout = sock.gettimeout()
+            return wrapped_socket
+        # This is from past:
+        # TODO: figure out what it's meant for
         else:
             return cheroot_server.CP_fileobject(sock, mode, bufsize)

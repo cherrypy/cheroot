@@ -25,5 +25,5 @@ post a markdown snippet demonstrating minimum reproducible example of an issue.
 
 Also
 ----
-See `Contributing <http://docs.cherrypy.org/en/latest/contribute.html>`_ in
+See `Contributing <https://docs.cherrypy.org/en/latest/contribute.html>`_ in
 the CherryPy docs.

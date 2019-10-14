@@ -1,5 +1,8 @@
 """Collection of exceptions raised and/or processed by Cheroot."""
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 import errno
 import sys
 
@@ -26,10 +29,9 @@ def plat_specific_errors(*errnames):
     the specific platform (OS). This function will return the list of
     numeric values for a given list of potential names.
     """
-    errno_names = dir(errno)
-    nums = [getattr(errno, k) for k in errnames if k in errno_names]
-    # de-dupe the list
-    return list(dict.fromkeys(nums).keys())
+    missing_attr = set([None, ])
+    unique_nums = set(getattr(errno, k, None) for k in errnames)
+    return list(unique_nums - missing_attr)
 
 
 socket_error_eintr = plat_specific_errors('EINTR', 'WSAEINTR')
@@ -48,7 +50,8 @@ socket_errors_to_ignore = plat_specific_errors(
 socket_errors_to_ignore.append('timed out')
 socket_errors_to_ignore.append('The read operation timed out')
 socket_errors_nonblocking = plat_specific_errors(
-    'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK')
+    'EAGAIN', 'EWOULDBLOCK', 'WSAEWOULDBLOCK',
+)
 
 if sys.platform == 'darwin':
     socket_errors_to_ignore.extend(plat_specific_errors('EPROTOTYPE'))

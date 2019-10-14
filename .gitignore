@@ -170,3 +170,12 @@ ENV/
 
 # pytest-mon
 .testmondata
+
+# pytest
+.pytest_cache
+
+# mypy
+.mypy_cache
+
+# pip wheel dist info
+pip-wheel-metadata/
