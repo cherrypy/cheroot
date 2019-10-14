@@ -51,7 +51,7 @@ jobs:
     steps:
     - checkout
     - run: pip install tox
-    - run: tox -e py27,py34,py35,py36,py37
+    - run: tox -e py27,py34,py35,py36,py37 -- $(circleci tests glob **/test/**.py | circleci tests split --split-by=timings | grep -v '__init__.py')
 
 workflows:
   version: 2
