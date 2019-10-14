@@ -3,6 +3,8 @@ v8.2.0
 
 - Deprecated use of negative timeouts as alias for
   infinite timeouts in ``ThreadPool.stop``.
+- :cp-issue:`1662` via :pr:`74`: For OPTION requests,
+  bypass URI as path if it does not appear absolute.
 
 v8.1.0
 ======
