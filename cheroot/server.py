@@ -835,7 +835,6 @@ class HTTPRequest:
                 uri
                 # https://tools.ietf.org/html/rfc7230#section-5.3.4
                 if (self.proxy_mode and uri_is_absolute_form)
-                or uri == ASTERISK
                 else path
             )
         elif self.method == b'CONNECT':
