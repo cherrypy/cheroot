@@ -10,7 +10,9 @@ To use this module, set ``HTTPServer.ssl_adapter`` to an instance of
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import socket
 import sys
+import threading
 
 try:
     import ssl
@@ -34,9 +36,7 @@ from ..makefile import StreamReader, StreamWriter
 from ..server import HTTPServer
 
 if six.PY2:
-    import socket
     generic_socket_error = socket.error
-    del socket
 else:
     generic_socket_error = OSError
 
@@ -52,8 +52,47 @@ def _assert_ssl_exc_contains(exc, *msgs):
     return any(m.lower() in err_msg_lower for m in msgs)
 
 
-def _parse_cert(certificate):
+def _loopback_for_cert(certificate, private_key, certificate_chain):
+    """Create a loopback connection to parse a cert with a private key."""
+    context = ssl.create_default_context(cafile=certificate_chain)
+    context.load_cert_chain(certificate, private_key)
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+
+    # Python 3+ Unix, Python 3.5+ Windows
+    client, server = socket.socketpair()
+    try:
+        # ssl handshake is blocking and needs to happen on
+        # both ends at the same time so use a thread
+        thread = threading.Thread(
+            target=lambda: context.wrap_socket(
+                server, do_handshake_on_connect=True,
+                server_side=True,
+            ),
+        )
+        try:
+            thread.start()
+            return context.wrap_socket(
+                client, do_handshake_on_connect=True,
+                server_side=False,
+            ).getpeercert()
+        finally:
+            thread.join()
+    finally:
+        client.close()
+        server.close()
+
+
+def _parse_cert(certificate, private_key, certificate_chain):
     """Parse a certificate."""
+    # loopback_for_cert uses socket.socketpair which was only
+    # introduced in Python 3.0 for *nix and 3.5 for Windows
+    # and requires OS support (AttributeError, OSError)
+    # it also requires a private key either in its own file
+    # or combined with the cert (SSLError)
+    with suppress(AttributeError, ssl.SSLError, OSError):
+        return _loopback_for_cert(certificate, private_key, certificate_chain)
+
     # KLUDGE: using an undocumented, private, test method to parse a cert
     # unfortunately, it is the only built-in way without a connection
     # as a private, undocumented method, it may change at any time
@@ -155,7 +194,8 @@ class BuiltinSSLAdapter(Adapter):
             self.context.set_ciphers(ciphers)
 
         self._server_env = self.env_cert_dict(
-            'SSL_SERVER', _parse_cert(certificate),
+            'SSL_SERVER',
+            _parse_cert(certificate, private_key, self.certificate_chain),
         )
         if not self._server_env:
             return
