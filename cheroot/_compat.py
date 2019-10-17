@@ -15,6 +15,21 @@ try:
 except ImportError:
     IS_ABOVE_OPENSSL10 = None
 
+# contextlib.suppress was added in Python 3.4
+try:
+    from contextlib import suppress
+except ImportError:
+    from contextlib import contextmanager
+
+    @contextmanager
+    def suppress(*exceptions):
+        """Return a context manager that suppresses the `exceptions`."""
+        try:
+            yield
+        except Exception as e:
+            if not any(isinstance(e, x) for x in exceptions):
+                raise
+
 
 IS_PYPY = platform.python_implementation() == 'PyPy'
 
