@@ -157,8 +157,21 @@ class BuiltinSSLAdapter(Adapter):
         """Wrap and return the given socket."""
         return super(BuiltinSSLAdapter, self).bind(sock)
 
+    @staticmethod
+    def sni_callback(sock, sni, context):
+        """Handle the SNI callback to tag the socket with the SNI."""
+        sock.sni = sni
+        return None
+
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
+        # Python 3.7+
+        # set the SNI callback here incase the user supplies their own
+        # but don't override their callback
+        with suppress(AttributeError):
+            if ssl.HAS_SNI and self.context.sni_callback is None:
+                self.context.sni_callback = self.sni_callback
+
         EMPTY_RESULT = None, {}
         try:
             s = self.context.wrap_socket(
@@ -246,6 +259,10 @@ class BuiltinSSLAdapter(Adapter):
                 if target_cipher == (cip['name'], cip['protocol']):
                     ssl_environ['SSL_CIPHER_ALGKEYSIZE'] = cip['alg_bits']
                     break
+
+        # Python 3.7+ sni_callback
+        with suppress(AttributeError):
+            ssl_environ['SSL_TLS_SNI'] = sock.sni
 
         if self.context and self.context.verify_mode != ssl.CERT_NONE:
             client_cert = sock.getpeercert()
