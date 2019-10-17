@@ -10,7 +10,9 @@ To use this module, set ``HTTPServer.ssl_adapter`` to an instance of
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import socket
 import sys
+import threading
 
 try:
     import ssl
@@ -33,9 +35,7 @@ from .._compat import IS_ABOVE_OPENSSL10
 from ..makefile import StreamReader, StreamWriter
 
 if six.PY2:
-    import socket
     generic_socket_error = socket.error
-    del socket
 else:
     generic_socket_error = OSError
 
@@ -137,7 +137,7 @@ class BuiltinSSLAdapter(Adapter):
             self.context.set_ciphers(ciphers)
 
         self._server_env = self.env_cert_dict(
-            'SSL_SERVER', self.parse_cert(certificate),
+            'SSL_SERVER', self.parse_cert(certificate, private_key),
         )
         if self._server_env:
             cert = None
@@ -283,8 +283,42 @@ class BuiltinSSLAdapter(Adapter):
 
         return ssl_environ
 
-    def parse_cert(self, path):
+    def parse_cert(self, path, private_key=False):
         """Parse a certificate."""
+        # Python 3+ Unix, Python 3.5+ Windows
+        if private_key is not False:
+            try:
+                client, server = socket.socketpair()
+                try:
+                    context = ssl.create_default_context(
+                        cafile=self.certificate_chain,
+                    )
+                    context.load_cert_chain(path, private_key)
+                    context.check_hostname = False
+                    context.verify_mode = ssl.CERT_NONE
+
+                    # ssl handshake is blocking and needs to happen on
+                    # both ends at the same time so use a thread
+                    thread = threading.Thread(
+                        target=lambda: context.wrap_socket(
+                            server, do_handshake_on_connect=True,
+                            server_side=True,
+                        ),
+                    )
+                    try:
+                        thread.start()
+                        return context.wrap_socket(
+                            client, do_handshake_on_connect=True,
+                            server_side=False,
+                        ).getpeercert()
+                    finally:
+                        thread.join()
+                finally:
+                    client.close()
+                    server.close()
+            except Exception:
+                pass
+
         # KLUDGE: using an undocumented, private, test method to parse a cert
         # unfortunately, it is the only built-in way without a connection
         try:
