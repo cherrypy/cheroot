@@ -136,6 +136,21 @@ class BuiltinSSLAdapter(Adapter):
         if self.ciphers is not None:
             self.context.set_ciphers(ciphers)
 
+        self._server_env = self.env_cert_dict(
+            'SSL_SERVER', self.parse_cert(certificate),
+        )
+        if self._server_env:
+            cert = None
+            with open(certificate, mode='rt') as f:
+                cert = f.read()
+
+            # strip off any keys by only taking the first certificate
+            if all(x in cert for x in {ssl.PEM_HEADER, ssl.PEM_FOOTER}):
+                cert = cert.split(ssl.PEM_HEADER, 1)[-1]
+                cert = cert.split(ssl.PEM_FOOTER, 1)[0]
+                cert = ssl.PEM_HEADER + cert + ssl.PEM_FOOTER
+                self._server_env['SSL_SERVER_CERT'] = cert
+
     def bind(self, sock):
         """Wrap and return the given socket."""
         return super(BuiltinSSLAdapter, self).bind(sock)
@@ -257,6 +272,8 @@ class BuiltinSSLAdapter(Adapter):
                     sock.getpeercert(binary_form=True),
                 ).strip()
 
+        ssl_environ.update(self._server_env)
+
         # not supplied by the Python standard library (as of 3.8)
         # - SSL_SESSION_RESUMED
         # - SSL_SECURE_RENEG
@@ -265,6 +282,17 @@ class BuiltinSSLAdapter(Adapter):
         # - SRP_USERINFO
 
         return ssl_environ
+
+    def parse_cert(self, path):
+        """Parse a certificate."""
+        # KLUDGE: using an undocumented, private, test method to parse a cert
+        # unfortunately, it is the only built-in way without a connection
+        try:
+            return ssl._ssl._test_decode_cert(path)
+        except Exception:
+            # as a private, undocumented method, it may change at any time
+            # so be tolerant of *any* possible errors it may raise
+            return {}
 
     def env_cert_dict(self, env_prefix, parsed_cert):
         """Return a dict of WSGI environment variables for a certificate.
