@@ -41,6 +41,7 @@ import time
 import six
 
 try:
+    import OpenSSL.version
     from OpenSSL import SSL
     from OpenSSL import crypto
 
@@ -265,6 +266,9 @@ class pyOpenSSLAdapter(Adapter):
 
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
+        # pyOpenSSL doesn't perform the handshake until the first read/write
+        # forcing the handshake to complete tends to result in the connection
+        # closing so we can't reliably access protocol/client cert for the env
         return sock, self._environ.copy()
 
     def get_context(self):
@@ -280,12 +284,12 @@ class pyOpenSSLAdapter(Adapter):
     def get_environ(self):
         """Return WSGI environ entries to be merged into each request."""
         ssl_environ = {
+            'wsgi.url_scheme': 'https',
             'HTTPS': 'on',
-            # pyOpenSSL doesn't provide access to any of these AFAICT
-            # 'SSL_PROTOCOL': 'SSLv2',
-            # SSL_CIPHER    string  The cipher specification name
-            # SSL_VERSION_INTERFACE     string  The mod_ssl program version
-            # SSL_VERSION_LIBRARY   string  The OpenSSL program version
+            'SSL_VERSION_INTERFACE': '%s %s'.format(
+                OpenSSL.version.__title__, OpenSSL.version.__version__,
+            ),
+            'SSL_VERSION_LIBRARY': SSL.SSLeay_version(SSL.SSLEAY_VERSION),
         }
 
         if self.certificate:
