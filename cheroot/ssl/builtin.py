@@ -52,6 +52,12 @@ def _assert_ssl_exc_contains(exc, *msgs):
     return any(m.lower() in err_msg_lower for m in msgs)
 
 
+def _sni_callback(sock, sni, context):
+    """Handle the SNI callback to tag the socket with the SNI."""
+    sock.sni = sni
+    # return None to allow the TLS negotiation to continue
+
+
 class BuiltinSSLAdapter(Adapter):
     """Wrapper for integrating Python's builtin :py:mod:`ssl` with Cheroot."""
 
@@ -63,9 +69,6 @@ class BuiltinSSLAdapter(Adapter):
 
     certificate_chain = None
     """The file name of the certificate chain file."""
-
-    context = None
-    """The :py:class:`~ssl.SSLContext` that will be used to wrap sockets."""
 
     ciphers = None
     """The ciphers list of SSL."""
@@ -138,6 +141,25 @@ class BuiltinSSLAdapter(Adapter):
         self.context.load_cert_chain(certificate, private_key)
         if self.ciphers is not None:
             self.context.set_ciphers(ciphers)
+
+    @property
+    def context(self):
+        """:py:class:`~ssl.SSLContext` that will be used to wrap sockets."""
+        return self._context
+
+    @context.setter
+    def context(self, context):
+        """Set the ssl ``context`` to use."""
+        self._context = context
+        # Python 3.7+
+        # if a context is provided via `cherrypy.config.update` then
+        # `self.context` will be set after `__init__`
+        # use a property to intercept it to add an SNI callback
+        # but don't override the user's callback
+        # TODO: chain callbacks
+        with suppress(AttributeError):
+            if ssl.HAS_SNI and context.sni_callback is None:
+                context.sni_callback = _sni_callback
 
     def bind(self, sock):
         """Wrap and return the given socket."""
@@ -234,6 +256,10 @@ class BuiltinSSLAdapter(Adapter):
                 if target_cipher == (cip['name'], cip['protocol']):
                     ssl_environ['SSL_CIPHER_ALGKEYSIZE'] = cip['alg_bits']
                     break
+
+        # Python 3.7+ sni_callback
+        with suppress(AttributeError):
+            ssl_environ['SSL_TLS_SNI'] = sock.sni
 
         if self.context and self.context.verify_mode != ssl.CERT_NONE:
             client_cert = sock.getpeercert()
