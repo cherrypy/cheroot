@@ -5,7 +5,7 @@ First-time setup
 ~~~~~~~~~~~~~~~~
 
 - You need to install `Python`_ 3 which is required for building docs.
-For example, Python 3.7.
+  For example, Python 3.7.
 
 Then, `create and activate a virtual environment`_.
 And install `tox`_.
