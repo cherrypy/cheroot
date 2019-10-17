@@ -52,6 +52,18 @@ def _assert_ssl_exc_contains(exc, *msgs):
     return any(m.lower() in err_msg_lower for m in msgs)
 
 
+def _parse_cert(certificate):
+    """Parse a certificate."""
+    # KLUDGE: using an undocumented, private, test method to parse a cert
+    # unfortunately, it is the only built-in way without a connection
+    # as a private, undocumented method, it may change at any time
+    # so be tolerant of *any* possible errors it may raise
+    with suppress(Exception):
+        return ssl._ssl._test_decode_cert(certificate)
+
+    return {}
+
+
 def _sni_callback(sock, sni, context):
     """Handle the SNI callback to tag the socket with the SNI."""
     sock.sni = sni
@@ -141,6 +153,25 @@ class BuiltinSSLAdapter(Adapter):
         self.context.load_cert_chain(certificate, private_key)
         if self.ciphers is not None:
             self.context.set_ciphers(ciphers)
+
+        self._server_env = self.env_cert_dict(
+            'SSL_SERVER', _parse_cert(certificate),
+        )
+        if not self._server_env:
+            return
+        cert = None
+        with open(certificate, mode='rt') as f:
+            cert = f.read()
+
+        # strip off any keys by only taking the first certificate
+        cert_start = cert.find(ssl.PEM_HEADER)
+        if cert_start == -1:
+            return
+        cert_end = cert.find(ssl.PEM_FOOTER, cert_start)
+        if cert_end == -1:
+            return
+        cert_end += len(ssl.PEM_FOOTER)
+        self._server_env['SSL_SERVER_CERT'] = cert[cert_start:cert_end]
 
     @property
     def context(self):
@@ -273,6 +304,8 @@ class BuiltinSSLAdapter(Adapter):
                 ssl_environ['SSL_CLIENT_CERT'] = ssl.DER_cert_to_PEM_cert(
                     sock.getpeercert(binary_form=True),
                 ).strip()
+
+        ssl_environ.update(self._server_env)
 
         # not supplied by the Python standard library (as of 3.8)
         # - SSL_SESSION_RESUMED
