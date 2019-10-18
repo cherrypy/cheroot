@@ -1,3 +1,9 @@
+v8.2.1
+======
+
+- :cp-issue:`1818`: Fix default argument to
+  ``WebCase.getPage()``.
+
 v8.2.0
 ======
 

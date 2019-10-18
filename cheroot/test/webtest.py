@@ -174,7 +174,7 @@ class WebCase(unittest.TestCase):
 
     def getPage(
         self, url, headers=None, method='GET', body=None,
-        protocol=None, raise_subcls=None,
+        protocol=None, raise_subcls=(),
     ):
         """Open the url with debugging support. Return status, headers, body.
 
