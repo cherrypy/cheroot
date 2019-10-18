@@ -202,13 +202,17 @@ class WebCase(unittest.TestCase):
         if isinstance(body, six.text_type):
             body = body.encode('utf-8')
 
+        # for compatibility, support raise_subcls is None
+        raise_subcls = raise_subcls or ()
+
         self.url = url
         self.time = None
         start = time.time()
         result = openURL(
             url, headers, method, body, self.HOST, self.PORT,
             self.HTTP_CONN, protocol or self.PROTOCOL,
-            raise_subcls=raise_subcls, ssl_context=self.ssl_context,
+            raise_subcls=raise_subcls,
+            ssl_context=self.ssl_context,
         )
         self.time = time.time() - start
         self.status, self.headers, self.body = result
