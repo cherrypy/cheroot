@@ -10,6 +10,7 @@ from six.moves import range, http_client, urllib
 
 import six
 import pytest
+from jaraco.text import trim, unwrap
 
 from cheroot.test import helper, webtest
 
@@ -800,7 +801,11 @@ def test_No_Message_Body(test_client):
 
 
 @pytest.mark.xfail(
-    reason='https://github.com/cherrypy/cheroot/issues/69',
+    reason=unwrap(trim("""
+        Headers from earlier request leak into the request
+        line for a subsequent request, resulting in 400
+        instead of 413. See cherrypy/cheroot#69 for details.
+        """)),
 )
 def test_Chunked_Encoding(test_client):
     """Test HTTP uploads with chunked transfer-encoding."""
