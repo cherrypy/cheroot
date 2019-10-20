@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # Requires Python 3.6+
+# pylint: disable=invalid-name
 """Configuration of Sphinx documentation generator."""
 
 extensions = [
