@@ -50,7 +50,7 @@ jobs:
       env: ${{ matrix.env }}
     - name: Log PyOpenSSL version
       run: |
-        .tokx/python/bin/python -m OpenSSL.debug
+        .tox/python/bin/python -m OpenSSL.debug
       env: ${{ matrix.env }}
     - name: Test with tox
       run: |
