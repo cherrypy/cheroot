@@ -42,3 +42,26 @@ intersphinx_mapping = {
     'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
     'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
 }
+
+nitpicky = True
+
+nitpick_ignore = [
+    ('py:attr', 'cheroot.server.HTTPServer.bind_addr'),
+    ('py:const', 'socket.SO_PEERCRED'),
+    ('py:class', '_io.BufferedWriter'),
+    ('py:class', '_io.BufferedReader'),
+    ('py:class', 'cheroot.server.DropUnderscoreHeaderReader'),
+    ('py:class', 'cheroot.server.HeaderReader'),
+    ('py:class', 'cheroot.server.HTTPServer'),
+    ('py:class', 'cheroot.test.helper.Controller'),
+    ('py:class', 'cheroot.wsgi.Server'),
+    ('py:func', 'cheroot._compat.extract_bytes'),
+    ('py:meth', 'cheroot.server.HTTPServer.prepare'),
+    ('py:meth', 'cheroot.server.HTTPServer.serve'),
+    ('py:meth', 'cheroot.ssl.builtin.BuiltinSSLAdapter.wrap'),
+    ('py:mod', 'cheroot._compat'),
+    ('py:mod', 'cheroot.makefile'),
+    ('py:mod', 'cheroot.server'),
+    ('py:mod', 'cheroot.ssl.pyopenssl'),
+    ('py:mod', 'cheroot.wsgi'),
+]
