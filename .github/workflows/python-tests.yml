@@ -34,7 +34,7 @@ jobs:
         version: ${{ matrix.python-version }}
     - name: Install tox
       run: |
-        python -m pip install --upgrade tox
+        python -m pip install --upgrade tox tox-run-command
     - name: 'Initialize tox envs: ${{ matrix.env.TOXENV }}'
       run: |
         python -m tox --parallel auto --notest
@@ -49,8 +49,10 @@ jobs:
         + repr(ssl.OPENSSL_VERSION_NUMBER))"
       env: ${{ matrix.env }}
     - name: Log PyOpenSSL version
-      run: |
-        .tox/python/bin/python -m OpenSSL.debug
+      run: >-
+        python -m tox --run-command
+        "{envpython} -m OpenSSL.debug"
+        || :
       env: ${{ matrix.env }}
     - name: Test with tox
       run: |
