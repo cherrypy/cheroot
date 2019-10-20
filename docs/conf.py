@@ -48,8 +48,8 @@ nitpicky = True
 nitpick_ignore = [
     ('py:attr', 'cheroot.server.HTTPServer.bind_addr'),
     ('py:const', 'socket.SO_PEERCRED'),
-    ('py:class', '_io.BufferedWriter'),
-    ('py:class', '_io.BufferedReader'),
+    ('py:class', '_pyio.BufferedWriter'),
+    ('py:class', '_pyio.BufferedReader'),
     ('py:class', 'cheroot.server.DropUnderscoreHeaderReader'),
     ('py:class', 'cheroot.server.HeaderReader'),
     ('py:class', 'cheroot.server.HTTPServer'),
