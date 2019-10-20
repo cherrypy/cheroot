@@ -39,4 +39,6 @@ intersphinx_mapping = {
     'python2': ('https://docs.python.org/2', None),
     'cherrypy': ('https://docs.cherrypy.org/en/latest/', None),
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
+    'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
+    'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
 }
