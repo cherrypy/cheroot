@@ -13,6 +13,11 @@ extensions = [
 
 master_doc = 'index'
 
+scm_version_title_settings = {
+    'scm': 'git',
+    'date_format': '%d %b %Y',
+}
+
 github_url = 'https://github.com'
 github_repo_org = 'cherrypy'
 github_repo_name = 'cheroot'
@@ -34,9 +39,4 @@ intersphinx_mapping = {
     'python2': ('https://docs.python.org/2', None),
     'cherrypy': ('https://docs.cherrypy.org/en/latest/', None),
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
-}
-
-scm_version_title_settings = {
-    'scm': 'git',
-    'date_format': '%d %b %Y',
 }
