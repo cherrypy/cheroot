@@ -38,4 +38,5 @@ python:
     path: .
     extra_requirements:
     - docs
+    - testing
   system_packages: false
