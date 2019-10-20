@@ -7,22 +7,11 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'jaraco.packaging.sphinx',
-    'rst.linker',
     'sphinx_tabs.tabs',
+    'scm_tag_titles_ext',
 ]
 
 master_doc = 'index'
-
-link_files = {
-    '../CHANGES.rst': dict(
-        replace=[
-            dict(
-                pattern=r'^(?m)((?P<scm_version>v?\d+(\.\d+){1,2}))\n[-=]+\n',
-                with_scm='{text}\n{rev[timestamp]:%d %b %Y}\n',
-            ),
-        ],
-    ),
-}
 
 github_url = 'https://github.com'
 github_repo_org = 'cherrypy'
@@ -45,4 +34,9 @@ intersphinx_mapping = {
     'python2': ('https://docs.python.org/2', None),
     'cherrypy': ('https://docs.cherrypy.org/en/latest/', None),
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
+}
+
+scm_version_title_settings = {
+    'scm': 'git',
+    'date_format': '%d %b %Y',
 }
