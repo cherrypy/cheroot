@@ -93,6 +93,7 @@ from .makefile import MakeFile, StreamWriter
 
 __all__ = (
     'HTTPRequest', 'HTTPConnection', 'HTTPServer',
+    'HeaderReader', 'DropUnderscoreHeaderReader',
     'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
     'Gateway', 'get_ssl_adapter_class',
 )
