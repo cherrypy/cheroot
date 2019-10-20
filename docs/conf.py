@@ -51,5 +51,5 @@ nitpick_ignore = [
     ('py:const', 'socket.SO_PEERCRED'),
     ('py:class', '_pyio.BufferedWriter'),
     ('py:class', '_pyio.BufferedReader'),
-    ('py:class', 'cheroot.test.helper.Controller'),
+    ('py:class', 'unittest.case.TestCase'),
 ]
