@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 # Requires Python 3.6+
 """Configuration of Sphinx documentation generator."""
 
