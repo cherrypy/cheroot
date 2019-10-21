@@ -451,8 +451,6 @@ def test_http_over_https_error(
         IS_GITHUB_ACTIONS_WORKFLOW
         and IS_WINDOWS
         and six.PY2
-        and ip_addr is not ANY_INTERFACE_IPV6
-        and adapter_type == 'builtin'
     )
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
