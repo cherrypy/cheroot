@@ -39,6 +39,10 @@ jobs:
       run: |
         python -m tox --parallel auto --notest
       env: ${{ matrix.env }}
+    - name: >-
+        Log platform.platform()
+      run: >-
+        python -m platform
     - name: Log stdlib OpenSSL version
       run: >-
         python -c
