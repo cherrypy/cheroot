@@ -337,8 +337,7 @@ def test_tls_client_auth(
             if IS_MACOS and IS_PYPY and adapter_type == 'pyopenssl':
                 expected_substrings = ('tlsv1 alert unknown ca', )
             if (
-                    IS_WINDOWS
-                    and tls_verify_mode in (
+                    tls_verify_mode in (
                         ssl.CERT_REQUIRED,
                         ssl.CERT_OPTIONAL,
                     )
@@ -350,26 +349,16 @@ def test_tls_client_auth(
                     "SysCallError(10054, 'WSAECONNRESET')",
                     "('Connection aborted.', "
                     'OSError("(10054, \'WSAECONNRESET\')"))',
-                )
-
-        if (  # pylint: disable=too-many-boolean-expressions
-                IS_GITHUB_ACTIONS_WORKFLOW
-                and IS_LINUX
-                and adapter_type == 'builtin'
-                and tls_verify_mode in (
-                    ssl.CERT_REQUIRED,
-                    ssl.CERT_OPTIONAL,
-                )
-                and not is_trusted_cert
-                and tls_client_identity == 'localhost'
-        ):
-            expected_substrings += (
-                "('Connection aborted.', "
-                'OSError("(104, \'ECONNRESET\')"))',
-                "('Connection aborted.', "
-                'OSError("(104, \'ECONNRESET\')",))',
-            )
-
+                ) if IS_WINDOWS else (
+                    "('Connection aborted.', "
+                    'OSError("(104, \'ECONNRESET\')"))',
+                    "('Connection aborted.', "
+                    'OSError("(104, \'ECONNRESET\')",))',
+                ) if (
+                    IS_GITHUB_ACTIONS_WORKFLOW
+                    and IS_LINUX
+                    and adapter_type == 'builtin'
+                ) else ()
         assert any(e in err_text for e in expected_substrings)
 
 
