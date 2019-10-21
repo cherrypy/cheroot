@@ -352,6 +352,8 @@ def test_tls_client_auth(
                 ) if IS_WINDOWS else (
                     "('Connection aborted.', "
                     'OSError("(104, \'ECONNRESET\')"))',
+                    "('Connection aborted.', "
+                    'OSError("(104, \'ECONNRESET\')",))',
                 ) if (
                     IS_GITHUB_ACTIONS_WORKFLOW
                     and IS_LINUX
