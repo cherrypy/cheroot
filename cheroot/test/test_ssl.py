@@ -447,7 +447,7 @@ def test_http_over_https_error(
         (adapter_type == 'pyopenssl'
          and (IS_ABOVE_OPENSSL10 or not six.PY2))
         or PY27
-    ) and not (
+    ) or (
         IS_GITHUB_ACTIONS_WORKFLOW
         and IS_WINDOWS
         and six.PY2
