@@ -450,7 +450,7 @@ def test_http_over_https_error(
     ) and not (
         IS_GITHUB_ACTIONS_WORKFLOW
         and IS_WINDOWS
-        and PY3
+        and six.PY2
         and adapter_type == 'builtin'
     )
     if expect_fallback_response_over_plain_http:
