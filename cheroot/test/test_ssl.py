@@ -446,6 +446,10 @@ def test_http_over_https_error(
         (adapter_type == 'pyopenssl'
          and (IS_ABOVE_OPENSSL10 or not six.PY2))
         or PY27
+    ) and not (
+        IS_GITHUB_ACTIONS_WORKFLOW
+        and IS_WINDOWS
+        and adapter_type == 'builtin'
     )
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
