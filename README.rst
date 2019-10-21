@@ -1,8 +1,8 @@
 .. image:: https://img.shields.io/pypi/v/cheroot.svg
    :target: https://pypi.org/project/cheroot
 
-.. image:: https://img.shields.io/travis/cherrypy/cheroot/master.svg?label=Linux%20build%20%40%20Travis%20CI
-   :target: https://travis-ci.org/cherrypy/cheroot
+.. image:: https://img.shields.io/travis/com/cherrypy/cheroot/master.svg?logo=travis&label=Linux%20build%20%40%20Travis%20CI
+   :target: https://travis-ci.com/cherrypy/cheroot
 
 .. image:: https://circleci.com/gh/cherrypy/cheroot/tree/master.svg?style=svg
    :target: https://circleci.com/gh/cherrypy/cheroot/tree/master
