@@ -40,6 +40,7 @@ IS_PYOPENSSL_SSL_VERSION_1_0 = (
 )
 PY27 = sys.version_info[:2] == (2, 7)
 PY34 = sys.version_info[:2] == (3, 4)
+PY3 = not six.PY2
 
 
 _stdlib_to_openssl_verify = {
@@ -449,6 +450,7 @@ def test_http_over_https_error(
     ) and not (
         IS_GITHUB_ACTIONS_WORKFLOW
         and IS_WINDOWS
+        and PY3
         and adapter_type == 'builtin'
     )
     if expect_fallback_response_over_plain_http:
