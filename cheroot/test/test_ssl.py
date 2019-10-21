@@ -324,7 +324,7 @@ def test_tls_client_auth(
         except AttributeError:
             if PY34:
                 pytest.xfail('OpenSSL behaves wierdly under Python 3.4')
-            elif not six.PY2 and IS_WINDOWS:
+            elif not six.PY2 and IS_WINDOWS or IS_GITHUB_ACTIONS_WORKFLOW:
                 err_text = str(ssl_err.value)
             else:
                 raise
