@@ -38,10 +38,9 @@ IS_GITHUB_ACTIONS_WIN2016 = (
     IS_GITHUB_ACTIONS_WORKFLOW
     and IS_WINDOWS
     # pylint: disable=unsupported-membership-test
-    and u'Microsoft Windows Server 2016 Datacenter' in subprocess.check_output(
+    and b'Microsoft Windows Server 2016 Datacenter' in subprocess.check_output(
         ('systeminfo', ),
         stderr=subprocess.DEVNULL,
-        text=True,
     )
 )
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
