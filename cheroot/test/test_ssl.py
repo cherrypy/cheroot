@@ -39,7 +39,6 @@ IS_WIN2016 = (
     # pylint: disable=unsupported-membership-test
     and b'Microsoft Windows Server 2016 Datacenter' in subprocess.check_output(
         ('systeminfo', ),
-        stderr=subprocess.DEVNULL,
     )
 )
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
