@@ -461,6 +461,13 @@ def test_http_over_https_error(
         and six.PY2
         and not IS_WIN2016
     )
+    if (
+            IS_GITHUB_ACTIONS_WORKFLOW
+            and IS_WINDOWS
+            and six.PY2
+            and IS_WIN2016
+    ):
+        expect_fallback_response_over_plain_http = False
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
             'http://' + fqdn + ':' + str(port) + '/',
