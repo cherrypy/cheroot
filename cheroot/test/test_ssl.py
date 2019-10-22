@@ -34,9 +34,8 @@ from ..testing import (
 
 
 IS_GITHUB_ACTIONS_WORKFLOW = bool(os.getenv('GITHUB_WORKFLOW'))
-IS_GITHUB_ACTIONS_WIN2016 = (
-    IS_GITHUB_ACTIONS_WORKFLOW
-    and IS_WINDOWS
+IS_WIN2016 = (
+    IS_WINDOWS
     # pylint: disable=unsupported-membership-test
     and b'Microsoft Windows Server 2016 Datacenter' in subprocess.check_output(
         ('systeminfo', ),
@@ -461,7 +460,7 @@ def test_http_over_https_error(
         IS_GITHUB_ACTIONS_WORKFLOW
         and IS_WINDOWS
         and six.PY2
-        and not IS_GITHUB_ACTIONS_WIN2016
+        and not IS_WIN2016
     )
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
