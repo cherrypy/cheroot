@@ -50,17 +50,13 @@ jobs:
     - name: >-
         Log platform.version()
       run: >-
-        python -c '
-        import platform;
-        print(platform.version())
-        '
+        python -c 'import platform;
+        print(platform.version())'
     - name: >-
         Log platform.release()
       run: >-
-        python -c '
-        import platform;
-        print(platform.release())
-        '
+        python -c 'import platform;
+        print(platform.release())'
     - name: Log stdlib OpenSSL version
       run: >-
         python -c
