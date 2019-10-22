@@ -8,6 +8,7 @@ __metaclass__ = type
 import functools
 import os
 import ssl
+import subprocess
 import sys
 import threading
 import time
@@ -33,6 +34,16 @@ from ..testing import (
 
 
 IS_GITHUB_ACTIONS_WORKFLOW = bool(os.getenv('GITHUB_WORKFLOW'))
+IS_GITHUB_ACTIONS_WIN2016 = (
+    IS_GITHUB_ACTIONS_WORKFLOW
+    and IS_WINDOWS
+    # pylint: disable=unsupported-membership-test
+    and u'Microsoft Windows Server 2016 Datacenter' in subprocess.check_output(
+        ('systeminfo', ),
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+)
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
 IS_PYOPENSSL_SSL_VERSION_1_0 = (
     OpenSSL.SSL.SSLeay_version(OpenSSL.SSL.SSLEAY_VERSION).
@@ -451,6 +462,7 @@ def test_http_over_https_error(
         IS_GITHUB_ACTIONS_WORKFLOW
         and IS_WINDOWS
         and six.PY2
+        and not IS_GITHUB_ACTIONS_WIN2016
     )
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
