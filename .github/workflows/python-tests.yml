@@ -53,6 +53,11 @@ jobs:
         python -c "import platform;
         print(platform.version())"
     - name: >-
+        Log platform.uname()
+      run: >-
+        python -c "import platform;
+        print(platform.uname())"
+    - name: >-
         Log platform.release()
       run: >-
         python -c "import platform;
