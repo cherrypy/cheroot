@@ -9,6 +9,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'jaraco.packaging.sphinx',
     'sphinx_tabs.tabs',
+    'sphinxcontrib.spelling',
     'scm_tag_titles_ext',
 ]
 
