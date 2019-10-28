@@ -1,12 +1,14 @@
 """Extensions to unittest for web frameworks.
 
-Use the WebCase.getPage method to request a page from your HTTP server.
+Use the :py:meth:`WebCase.getPage` method to request a page
+from your HTTP server.
+
 Framework Integration
 =====================
 If you have control over your server process, you can handle errors
 in the server-side of the HTTP conversation a bit better. You must run
-both the client (your WebCase tests) and the server in the same process
-(but in separate threads, obviously).
+both the client (your :py:class:`WebCase` tests) and the server in the
+same process (but in separate threads, obviously).
 When an error occurs in the framework, call server_error. It will print
 the traceback to stdout, and keep any assertions you have from running
 (the assumption is that, if the server errors, the page output will not
@@ -157,7 +159,7 @@ class WebCase(unittest.TestCase):
 
     @property
     def persistent(self):
-        """Presense of the persistent HTTP connection."""
+        """Presence of the persistent HTTP connection."""
         return hasattr(self.HTTP_CONN, '__class__')
 
     @persistent.setter
@@ -184,16 +186,16 @@ class WebCase(unittest.TestCase):
         enabled in the server.
 
         If the application under test generates absolute URIs, be sure
-        to wrap them first with strip_netloc::
+        to wrap them first with :py:func:`strip_netloc`::
 
-            class MyAppWebCase(WebCase):
-                def getPage(url, *args, **kwargs):
-                    super(MyAppWebCase, self).getPage(
-                        cheroot.test.webtest.strip_netloc(url),
-                        *args, **kwargs
-                    )
+            >>> class MyAppWebCase(WebCase):
+            ...     def getPage(url, *args, **kwargs):
+            ...         super(MyAppWebCase, self).getPage(
+            ...             cheroot.test.webtest.strip_netloc(url),
+            ...             *args, **kwargs
+            ...         )
 
-        `raise_subcls` is passed through to openURL.
+        `raise_subcls` is passed through to :py:func:`openURL`.
         """
         ServerError.on = False
 
@@ -553,7 +555,7 @@ def strip_netloc(url):
     server-absolute portion.
 
     Useful for wrapping an absolute-URI for which only the
-    path is expected (such as in calls to getPage).
+    path is expected (such as in calls to :py:meth:`WebCase.getPage`).
 
     >>> strip_netloc('https://google.com/foo/bar?bing#baz')
     '/foo/bar?bing'

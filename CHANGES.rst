@@ -21,18 +21,18 @@
 
 .. scm-version-title:: v8.0.0
 
-- :issue:`231` via :pr:`232`: Remove custom setup.cfg
-  parser handling, allowing the project (including sdist)
+- :issue:`231` via :pr:`232`: Remove custom ``setup.cfg``
+  parser handling, allowing the project (including ``sdist``)
   to build/run on setuptools 41.4. Now building cheroot
   requires setuptools 30.3 or later (for declarative
   config support) and preferably 34.4 or later (as
-  indicated in pyproject.toml).
+  indicated in ``pyproject.toml``).
 
 
 .. scm-version-title:: v7.0.0
 
-- :pr:`224`: Refactored "open URL" behavior in webtest to
-  rely on `retry_call
+- :pr:`224`: Refactored "open URL" behavior in
+  :py:mod:`~cheroot.test.webtest` to rely on `retry_call
   <https://jaracofunctools.readthedocs.io/en/latest/?badge=latest#jaraco.functools.retry_call>`_.
   Callers can no longer pass ``raise_subcls`` or ``ssl_context``
   positionally, but must pass them as keyword arguments.
@@ -114,7 +114,7 @@
 
   * :py:func:`cheroot._compat.extract_bytes`
 
-  * Peercreds lookup
+  * ``PEERCREDS`` lookup
 
 
 .. scm-version-title:: v6.5.3
@@ -134,7 +134,7 @@
 
 .. scm-version-title:: v6.5.1
 
-- :issue:`93` via :pr:`110`: Improve UNIX socket fs access mode
+- :issue:`93` via :pr:`110`: Improve UNIX socket FS access mode
   in :py:meth:`cheroot.server.HTTPServer.prepare` on a file socket
   when starting to listen to it.
 
@@ -197,7 +197,7 @@
 .. scm-version-title:: v6.2.2
 
 - :issue:`84` (:cp-issue:`1704`): Fix regression, causing
-  :py:exc:`ModuleNotFoundError` under cygwin.
+  :py:exc:`ModuleNotFoundError` under ``cygwin``.
 
 
 .. scm-version-title:: v6.2.1
@@ -247,11 +247,11 @@
 
 .. scm-version-title:: v6.1.0
 
-- :pr:`67`: Refactor testsuite to completely rely on pytest.
+- :pr:`67`: Refactor test suite to completely rely on pytest.
 
-  * Integrate pytest-testmon and pytest-watch
+  * Integrate ``pytest-testmon`` and ``pytest-watch``
 
-  * Stabilise testing
+  * Stabilize testing
 
 - :cp-issue:`1664` via :pr:`66`: Implement input termination flag support as
   suggested by `@mitsuhiko <https://github.com/mitsuhiko>`_ in his
@@ -282,15 +282,17 @@
 
 .. scm-version-title:: v5.11.0
 
-- :cp-issue:`1621`: To support webtest applications that feed
-  absolute URIs to getPage but expect the scheme/host/port to
-  be ignored (as cheroot 5.8 and earlier did), provide a
-  ``strip_netloc`` helper and recipe for calling it in a subclass.
+- :cp-issue:`1621`: To support :py:mod:`~cheroot.test.webtest`
+  applications that feed absolute URIs to
+  :py:meth:`~cheroot.test.webtest.WebCase.getPage`
+  but expect the scheme/host/port to be ignored (as cheroot 5.8
+  and earlier did), provide a ``strip_netloc`` helper and recipe
+  for calling it in a subclass.
 
 
 .. scm-version-title:: v5.10.0
 
-- Minor refactorings of cheroot/server.py to reduce redundancy
+- Minor refactorings of ``cheroot/server.py`` to reduce redundancy
   of behavior.
 
 - Delinting with fewer exceptions.
@@ -317,7 +319,8 @@
 - ``cheroot.tests.webtest`` adopts the one method that was unique
   in CherryPy, now superseding the implementation there.
 
-- Substantial cleanup around compatibility functions (_compat module).
+- Substantial cleanup around compatibility functions
+  (:py:mod:`~cheroot._compat` module).
 
 - License unintentionally changed to MIT. BSD still declared and intended.
 
@@ -355,7 +358,7 @@
 - Fix URI encoding bug introduced in :pr:`39`
 
   * Improve :py:class:`cheroot.test.helper.Controller` to properly match
-    unicode
+    Unicode
 
 
 .. scm-version-title:: v5.8.0
@@ -366,7 +369,7 @@
 
   * Take into account :pep:`257` compliant modules
 
-  * Build wheel in Appveyor and store it as an artifact
+  * Build wheel in AppVeyor and store it as an artifact
 
 - Improve urllib support in :py:mod:`cheroot._compat`
 
@@ -378,7 +381,7 @@
 
   * Introduce ``proxy_mode`` and ``strict_mode`` argument in ``server.HTTPRequest``
 
-  * Fix decoding of unicode URIs in WSGI 1.0 gateway
+  * Fix decoding of Unicode URIs in WSGI 1.0 gateway
 
 
 .. scm-version-title:: v5.7.0
@@ -387,13 +390,13 @@
 
   * Don't run tests during deploy stage
 
-  * Use VM based build job env only for pyenv envs
+  * Use VM based build job environments only for ``pyenv`` environments
 
   * Opt-in for beta trusty image @ Travis CI
 
   * Be verbose when running tests (show test names)
 
-  * Show xfail/skip details during test run
+  * Show ``xfail``/skip details during test run
 
 - :issue:`34`: Fix ``_handle_no_ssl`` error handler calls
 
@@ -415,7 +418,7 @@
 
 - :issue:`27`: Default HTTP Server header to Cheroot version str
 
-- Cleanup _compat functions from server module
+- Cleanup :py:mod:`~cheroot._compat` functions from server module
 
 
 .. scm-version-title:: v5.6.0
@@ -434,7 +437,8 @@
 
 .. scm-version-title:: v5.5.2
 
-- :pr:`32`: Ignore "unknown error" and "https proxy request" SSL errors.
+- :pr:`32`: Ignore ``"unknown error"`` and ``"https proxy request"``
+  SSL errors.
 
   Ref: :gh:`sabnzbd/sabnzbd#820 <sabnzbd/sabnzbd/issues/820>`
 
@@ -443,7 +447,7 @@
 
 .. scm-version-title:: v5.5.1
 
-- Make Appveyor list separate tests in corresponding tab.
+- Make AppVeyor list separate tests in corresponding tab.
 
 - :pr:`29`: Configure Travis CI build stages.
 

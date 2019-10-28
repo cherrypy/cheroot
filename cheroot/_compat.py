@@ -36,7 +36,7 @@ if not six.PY2:
         return n.encode(encoding)
 
     def ntou(n, encoding='ISO-8859-1'):
-        """Return the native string as unicode with the given encoding."""
+        """Return the native string as Unicode with the given encoding."""
         assert_native(n)
         # In Python 3, the native string type is unicode
         return n
@@ -55,7 +55,7 @@ else:
         return n
 
     def ntou(n, encoding='ISO-8859-1'):
-        """Return the native string as unicode with the given encoding."""
+        """Return the native string as Unicode with the given encoding."""
         assert_native(n)
         # In Python 2, the native string type is bytes.
         # First, check for the special encoding 'escape'. The test suite uses
@@ -78,7 +78,7 @@ else:
 
 
 def assert_native(n):
-    """Check whether the input is of nativ ``str`` type.
+    """Check whether the input is of native :py:class:`str` type.
 
     Raises:
         TypeError: in case of failed check
@@ -89,7 +89,7 @@ def assert_native(n):
 
 
 if not six.PY2:
-    """Python 3 has memoryview builtin."""
+    """Python 3 has :py:class:`memoryview` builtin."""
     # Python 2.7 has it backported, but socket.write() does
     # str(memoryview(b'0' * 100)) -> <memory at 0x7fb6913a5588>
     # instead of accessing it correctly.

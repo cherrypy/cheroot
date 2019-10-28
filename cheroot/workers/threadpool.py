@@ -192,7 +192,7 @@ class ThreadPool:
         """Put request into queue.
 
         Args:
-            obj (cheroot.server.HTTPConnection): HTTP connection
+            obj (:py:class:`~cheroot.server.HTTPConnection`): HTTP connection
                 waiting to be processed
         """
         self._queue.put(obj, block=True, timeout=self._queue_put_timeout)

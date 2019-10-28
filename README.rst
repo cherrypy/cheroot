@@ -52,7 +52,7 @@ Contribute Cheroot
 if unsure. Please follow `CherryPy's common contribution guidelines
 <https://github.com/cherrypy/cherrypy/blob/master/.github/CONTRIBUTING.rst>`_.
 Note that PR is more likely to be accepted if it includes tests and detailed
-description helping maintainers to understand it better :tada:
+description helping maintainers to understand it better 🎉
 
 Oh, and be pythonic, please :snake:
 

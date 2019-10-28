@@ -44,7 +44,7 @@ def test_bytes_read():
 
 
 def test_bytes_written():
-    """Writer should capture bytes writtten."""
+    """Writer should capture bytes written."""
     sock = MockSocket()
     sock.messages.append(b'foo')
     wfile = makefile.MakeFile(sock, 'w')
