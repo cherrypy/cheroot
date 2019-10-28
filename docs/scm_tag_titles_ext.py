@@ -121,3 +121,7 @@ def setup(app: Sphinx) -> None:
     app.add_directive(
         'scm-version-title', SCMVersionTitle,
     )
+
+    return {
+        'parallel_read_safe': True,
+    }
