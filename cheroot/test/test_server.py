@@ -135,7 +135,7 @@ def test_bind_addr_unix(http_server, unix_sock_file):
 
 @unix_only_sock_test
 def test_bind_addr_unix_abstract(http_server, unix_abstract_sock):
-    """Check that bound UNIX abstract sockaddr is stored in server."""
+    """Check that bound UNIX abstract socket address is stored in server."""
     httpserver = http_server.send(unix_abstract_sock)
 
     assert httpserver.bind_addr == unix_abstract_sock
@@ -168,7 +168,7 @@ class _TestGateway(Gateway):
 
 @pytest.fixture
 def peercreds_enabled_server_and_client(http_server, unix_sock_file):
-    """Construct a test server with `peercreds_enabled`."""
+    """Construct a test server with ``peercreds_enabled``."""
     httpserver = http_server.send(unix_sock_file)
     httpserver.gateway = _TestGateway
     httpserver.peercreds_enabled = True
@@ -178,7 +178,7 @@ def peercreds_enabled_server_and_client(http_server, unix_sock_file):
 @unix_only_sock_test
 @non_macos_sock_test
 def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
-    """Check that peercred lookup works when enabled."""
+    """Check that ``PEERCRED`` lookup works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
     bind_addr = httpserver.bind_addr
 
@@ -209,7 +209,7 @@ def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
 @unix_only_sock_test
 @non_macos_sock_test
 def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
-    """Check that peercred resolution works when enabled."""
+    """Check that ``PEERCRED`` resolution works when enabled."""
     httpserver, testclient = peercreds_enabled_server_and_client
     httpserver.peercreds_resolve_enabled = True
 
