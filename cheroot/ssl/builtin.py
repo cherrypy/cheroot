@@ -1,7 +1,7 @@
 """
-A library for integrating Python's builtin ``ssl`` library with Cheroot.
+A library for integrating Python's builtin :py:mod:`ssl` library with Cheroot.
 
-The ssl module must be importable for SSL functionality.
+The :py:mod:`ssl` module must be importable for SSL functionality.
 
 To use this module, set ``HTTPServer.ssl_adapter`` to an instance of
 ``BuiltinSSLAdapter``.
@@ -50,7 +50,7 @@ def _assert_ssl_exc_contains(exc, *msgs):
 
 
 class BuiltinSSLAdapter(Adapter):
-    """A wrapper for integrating Python's builtin ssl module with Cheroot."""
+    """Wrapper for integrating Python's builtin :py:mod:`ssl` with Cheroot."""
 
     certificate = None
     """The filename of the server SSL certificate."""
@@ -62,7 +62,7 @@ class BuiltinSSLAdapter(Adapter):
     """The filename of the certificate chain file."""
 
     context = None
-    """The ssl.SSLContext that will be used to wrap sockets."""
+    """The :py:class:`~ssl.SSLContext` that will be used to wrap sockets."""
 
     ciphers = None
     """The ciphers list of SSL."""
@@ -148,7 +148,8 @@ class BuiltinSSLAdapter(Adapter):
         except generic_socket_error as exc:
             """It is unclear why exactly this happens.
 
-            It's reproducible only with openssl>1.0 and stdlib ``ssl`` wrapper.
+            It's reproducible only with openssl>1.0 and stdlib
+            :py:mod:`ssl` wrapper.
             In CherryPy it's triggered by Checker plugin, which connects
             to the app listening to the socket port in TLS mode via plain
             HTTP during startup (from the same process).
