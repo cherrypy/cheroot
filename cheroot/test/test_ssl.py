@@ -1,4 +1,4 @@
-"""Tests for TLS/SSL support."""
+"""Tests for TLS support."""
 # -*- coding: utf-8 -*-
 # vim: set fileencoding=utf-8 :
 
@@ -96,7 +96,7 @@ class HelloWorldGateway(Gateway):
 
 
 def make_tls_http_server(bind_addr, ssl_adapter, request):
-    """Create and start an HTTP server bound to bind_addr."""
+    """Create and start an HTTP server bound to ``bind_addr``."""
     httpserver = HTTPServer(
         bind_addr=bind_addr,
         gateway=HelloWorldGateway,
