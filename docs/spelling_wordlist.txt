@@ -12,6 +12,7 @@ linters
 linux
 localhost
 macOS
+metaclass
 namespace
 netloc
 PIL
