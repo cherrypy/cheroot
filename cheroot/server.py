@@ -1645,7 +1645,7 @@ class HTTPServer:
         IN6ADDR_ANY for :term:`IPv6`.
         The empty string or :py:data:`None` are not allowed.
 
-        For UNIX sockets, supply the filename as a string.
+        For UNIX sockets, supply the file name as a string.
 
         Systemd socket activation is automatic and doesn't require tempering
         with this variable.
