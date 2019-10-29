@@ -27,7 +27,7 @@ class Controller(helper.Controller):
         return 'Hello, world!'
 
     def pov(req, resp):
-        """Render pov value."""
+        """Render ``pov`` value."""
         return pov
 
     def stream(req, resp):
@@ -106,7 +106,7 @@ class Controller(helper.Controller):
 
 @pytest.fixture
 def testing_server(wsgi_server_client):
-    """Attach a WSGI app to the given server and pre-configure it."""
+    """Attach a WSGI app to the given server and preconfigure it."""
     app = Controller()
 
     def _timeout(req, resp):
@@ -476,7 +476,7 @@ def test_keepalive_conn_management(test_client):
 def test_HTTP11_Timeout(test_client, timeout_before_headers):
     """Check timeout without sending any data.
 
-    The server will close the conn with a 408.
+    The server will close the connection with a 408.
     """
     conn = test_client.get_connection()
     conn.auto_open = False
@@ -595,7 +595,7 @@ def test_HTTP11_Timeout_after_request(test_client):
 def test_HTTP11_pipelining(test_client):
     """Test HTTP/1.1 pipelining.
 
-    httplib doesn't support this directly.
+    :py:mod:`http.client` doesn't support this directly.
     """
     conn = test_client.get_connection()
 
@@ -640,7 +640,7 @@ def test_100_Continue(test_client):
     conn = test_client.get_connection()
 
     # Try a page without an Expect request header first.
-    # Note that httplib's response.begin automatically ignores
+    # Note that http.client's response.begin automatically ignores
     # 100 Continue responses, so we must manually check for it.
     conn.putrequest('POST', '/upload', skip_host=True)
     conn.putheader('Host', conn.host)
