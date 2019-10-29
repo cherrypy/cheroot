@@ -228,7 +228,7 @@ class SSLConnection:
 
     :param tuple args: the arguments to create the wrapped \
                         :py:class:`SSL.Connection(*args) \
-                        <pyopenssl:OpenSSL.SSL.Connection>`.
+                        <pyopenssl:OpenSSL.SSL.Connection>`
     """
 
     def __init__(self, *args):
