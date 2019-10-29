@@ -53,13 +53,13 @@ class BuiltinSSLAdapter(Adapter):
     """Wrapper for integrating Python's builtin :py:mod:`ssl` with Cheroot."""
 
     certificate = None
-    """The filename of the server SSL certificate."""
+    """The file name of the server SSL certificate."""
 
     private_key = None
-    """The filename of the server's private key file."""
+    """The file name of the server's private key file."""
 
     certificate_chain = None
-    """The filename of the certificate chain file."""
+    """The file name of the certificate chain file."""
 
     context = None
     """The :py:class:`~ssl.SSLContext` that will be used to wrap sockets."""

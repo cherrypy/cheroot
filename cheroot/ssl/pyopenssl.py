@@ -34,10 +34,10 @@ Method Two (shortcut)
 ---------------------
 
  * :py:attr:`ssl_adapter.certificate
-   <cheroot.ssl.pyopenssl.pyOpenSSLAdapter.certificate>`: the filename
+   <cheroot.ssl.pyopenssl.pyOpenSSLAdapter.certificate>`: the file name
    of the server's TLS certificate.
  * :py:attr:`ssl_adapter.private_key
-   <cheroot.ssl.pyopenssl.pyOpenSSLAdapter.private_key>`: the filename
+   <cheroot.ssl.pyopenssl.pyOpenSSLAdapter.private_key>`: the file name
    of the server's private key file.
 
 Both are :py:data:`None` by default. If :py:attr:`ssl_adapter.context
@@ -241,13 +241,13 @@ class pyOpenSSLAdapter(Adapter):
     """A wrapper for integrating pyOpenSSL with Cheroot."""
 
     certificate = None
-    """The filename of the server's TLS certificate."""
+    """The file name of the server's TLS certificate."""
 
     private_key = None
-    """The filename of the server's private key file."""
+    """The file name of the server's private key file."""
 
     certificate_chain = None
-    """Optional. The filename of CA's intermediate certificate bundle.
+    """Optional. The file name of CA's intermediate certificate bundle.
 
     This is needed for cheaper "chained root" TLS certificates,
     and should be left as :py:data:`None` if not required."""

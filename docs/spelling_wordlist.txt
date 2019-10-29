@@ -1,12 +1,15 @@
 AppVeyor
 Args
 backports
+builtin
 compat
 config
 conftest
 conn
+chunked
 docstrings
 environ
+Faux
 Fortran
 hardcoded
 hostname
@@ -18,6 +21,7 @@ localhost
 macOS
 makefile
 metaclass
+multi
 namespace
 netloc
 PIL
@@ -26,7 +30,10 @@ positionally
 pytest
 pythonic
 rebase
+Refactor
+refactoring
 refactorings
+Sep
 signalling
 ssl
 stdout
@@ -35,8 +42,10 @@ submodules
 systemd
 threadpool
 tracebacks
+tuple
 unbuffered
 uri
 url
+username
 webtest
 wsgi
