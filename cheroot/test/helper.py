@@ -99,7 +99,7 @@ class CherootWebCase(webtest.WebCase):
     date_tolerance = 2
 
     def assertEqualDates(self, dt1, dt2, seconds=None):
-        """Assert abs(dt1 - dt2) is within Y seconds."""
+        """Assert ``abs(dt1 - dt2)`` is within ``Y`` seconds."""
         if seconds is None:
             seconds = self.date_tolerance
 
