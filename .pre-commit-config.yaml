@@ -19,10 +19,10 @@ repos:
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
   - id: name-tests-test
-    include: cheroot/test/
     args:
     - --django
-    exclude: tests/dist-check.py
+    exclude: (tests/dist-check|cheroot/test/(helper|webtest)).py
+    files: cheroot/test/.+\.py$
   - id: debug-statements
   - id: check-added-large-files
   - id: check-ast
