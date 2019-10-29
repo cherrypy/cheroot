@@ -1,7 +1,10 @@
 AppVeyor
 Args
 backports
+compat
 config
+conftest
+conn
 docstrings
 environ
 Fortran
@@ -13,6 +16,7 @@ linters
 linux
 localhost
 macOS
+makefile
 metaclass
 namespace
 netloc
@@ -24,6 +28,7 @@ pythonic
 rebase
 refactorings
 signalling
+ssl
 stdout
 subclasses
 submodules
@@ -33,4 +38,5 @@ tracebacks
 unbuffered
 uri
 url
+webtest
 wsgi
