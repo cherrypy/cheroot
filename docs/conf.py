@@ -55,6 +55,13 @@ intersphinx_mapping = {
     'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
 }
 
+linkcheck_ignore = [
+    r'http://localhost:\d+/',  # local URLs
+    r'https://codecov\.io/gh/cherrypy/cheroot/branch/master/graph/badge\.svg',
+    r'https://github\.com/cherrypy/cheroot/actions',  # 404 if no auth
+]
+linkcheck_workers = 25
+
 nitpicky = True
 
 # NOTE: consider having a separate ignore file
@@ -65,3 +72,7 @@ nitpick_ignore = [
     ('py:class', '_pyio.BufferedReader'),
     ('py:class', 'unittest.case.TestCase'),
 ]
+
+# Ref:
+# * https://github.com/djungelorm/sphinx-tabs/issues/26#issuecomment-422160463
+sphinx_tabs_valid_builders = ['linkcheck']  # prevent linkcheck warning
