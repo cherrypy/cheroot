@@ -6,6 +6,7 @@ docstrings
 environ
 Fortran
 hardcoded
+hostname
 iterable
 linter
 linters
@@ -26,6 +27,7 @@ signalling
 stdout
 subclasses
 submodules
+systemd
 threadpool
 tracebacks
 unbuffered
