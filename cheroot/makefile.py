@@ -68,7 +68,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
             self._refcount -= 1
 
     def write(self, data):
-        """Sendall for non-blocking sockets."""
+        """Send entire data contents for non-blocking sockets."""
         bytes_sent = 0
         data_mv = memoryview(data)
         payload_size = len(data_mv)
