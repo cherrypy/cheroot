@@ -4,6 +4,7 @@ backports
 config
 docstrings
 environ
+Fortran
 hardcoded
 iterable
 linter
@@ -13,6 +14,7 @@ localhost
 macOS
 namespace
 netloc
+PIL
 pipelining
 positionally
 pytest

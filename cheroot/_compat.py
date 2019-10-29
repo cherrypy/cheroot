@@ -95,12 +95,23 @@ if not six.PY2:
     # instead of accessing it correctly.
     memoryview = memoryview
 else:
-    """Link memoryview to buffer under Python 2."""
+    """Link :py:class:`memoryview` to buffer under Python 2."""
     memoryview = buffer  # noqa: F821
 
 
 def extract_bytes(mv):
-    """Retrieve bytes out of memoryview/buffer or bytes."""
+    r"""Retrieve bytes out of the given input buffer.
+
+    :param mv: input :py:func:`buffer`
+    :type mv: memoryview or bytes
+
+    :return: unwrapped bytes
+    :rtype: bytes
+
+    :raises ValueError: if the input is not one of \
+                        :py:class:`memoryview`/:py:func:`buffer` \
+                        or :py:class:`bytes`
+    """
     if isinstance(mv, memoryview):
         return bytes(mv) if six.PY2 else mv.tobytes()
 
