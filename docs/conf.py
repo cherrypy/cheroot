@@ -15,6 +15,16 @@ extensions = [
 
 master_doc = 'index'
 
+spelling_ignore_acronyms = True
+spelling_ignore_importable_modules = True
+spelling_ignore_pypi_package_names = True
+spelling_ignore_python_builtins = True
+spelling_ignore_wiki_words = True
+spelling_show_suggestions = True
+spelling_word_list_filename = [
+    'spelling_wordlist.txt',
+]
+
 scm_version_title_settings = {
     'scm': 'git',
     'date_format': '%d %b %Y',
