@@ -12,6 +12,8 @@ from sphinx.util.nodes import nodes
 
 import dateutil.parser
 
+from cheroot import __version__
+
 
 _SCM_COMMANDS = {
     'hg': (
@@ -124,4 +126,5 @@ def setup(app: Sphinx) -> None:
 
     return {
         'parallel_read_safe': True,
+        'version': __version__,
     }
