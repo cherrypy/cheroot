@@ -18,6 +18,7 @@ from cheroot.test import helper
 HTTP_BAD_REQUEST = 400
 HTTP_LENGTH_REQUIRED = 411
 HTTP_NOT_FOUND = 404
+HTTP_REQUEST_ENTITY_TOO_LARGE = 413
 HTTP_OK = 200
 HTTP_VERSION_NOT_SUPPORTED = 505
 
@@ -259,6 +260,24 @@ def test_content_length_required(test_client):
 
     actual_status = response.status
     assert actual_status == HTTP_LENGTH_REQUIRED
+
+
+@pytest.mark.xfail(reason='https://github.com/cherrypy/cheroot/issues/106')
+def test_large_request(test_client):
+    """Test GET query with maliciously large Content-Length."""
+    # If the server's max_request_body_size is not set (i.e. is set to 0)
+    # then this will result in an Overflow error in the server.
+    # We expect that this should instead return that the request is too
+    # large.
+    c = test_client.get_connection()
+    c.putrequest('GET', '/hello')
+    c.putheader('Content-Length', str(2**64))
+    c.endheaders()
+
+    response = c.getresponse()
+    actual_status = response.status
+
+    assert actual_status == HTTP_REQUEST_ENTITY_TOO_LARGE
 
 
 @pytest.mark.parametrize(
