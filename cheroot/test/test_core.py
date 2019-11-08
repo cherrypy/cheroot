@@ -93,6 +93,21 @@ def test_client(testing_server):
     return testing_server.server_client
 
 
+@pytest.fixture
+def testing_server_with_defaults(wsgi_server_client):
+    """Attach a WSGI app to the given server and preconfigure it."""
+    wsgi_server = wsgi_server_client.server_instance
+    wsgi_server.wsgi_app = HelloController()
+    wsgi_server.server_client = wsgi_server_client
+    return wsgi_server
+
+
+@pytest.fixture
+def test_client_with_defaults(testing_server_with_defaults):
+    """Get and return a test client out of the given server."""
+    return testing_server_with_defaults.server_client
+
+
 def test_http_connect_request(test_client):
     """Check that CONNECT query results in Method Not Allowed status."""
     status_line = test_client.connect('/anything')[0]
@@ -264,14 +279,14 @@ def test_content_length_required(test_client):
 
 
 @pytest.mark.xfail(reason='https://github.com/cherrypy/cheroot/issues/106')
-def test_large_request(test_client):
+def test_large_request(test_client_with_defaults):
     """Test GET query with maliciously large Content-Length."""
     # If the server's max_request_body_size is not set (i.e. is set to 0)
     # then this will result in an `OverflowError: Python int too large to convert to C ssize_t`
     # in the server.
     # We expect that this should instead return that the request is too
     # large.
-    c = test_client.get_connection()
+    c = test_client_with_defaults.get_connection()
     c.putrequest('GET', '/hello')
     c.putheader('Content-Length', str(2**64))
     c.endheaders()
