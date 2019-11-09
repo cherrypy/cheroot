@@ -193,7 +193,7 @@ class BuiltinSSLAdapter(Adapter):
         if self.ciphers is not None:
             self.context.set_ciphers(ciphers)
 
-        self._server_env = self.env_cert_dict(
+        self._server_env = self._make_env_cert_dict(
             'SSL_SERVER',
             _parse_cert(certificate, private_key, self.certificate_chain),
         )
@@ -339,7 +339,7 @@ class BuiltinSSLAdapter(Adapter):
                 # and terminates the connection on failure
                 ssl_environ['SSL_CLIENT_VERIFY'] = 'SUCCESS'
                 ssl_environ.update(
-                    self.env_cert_dict('SSL_CLIENT', client_cert),
+                    self._make_env_cert_dict('SSL_CLIENT', client_cert),
                 )
                 ssl_environ['SSL_CLIENT_CERT'] = ssl.DER_cert_to_PEM_cert(
                     sock.getpeercert(binary_form=True),
@@ -356,7 +356,7 @@ class BuiltinSSLAdapter(Adapter):
 
         return ssl_environ
 
-    def env_cert_dict(self, env_prefix, parsed_cert):
+    def _make_env_cert_dict(self, env_prefix, parsed_cert):
         """Return a dict of WSGI environment variables for a certificate.
 
         E.g. SSL_CLIENT_M_VERSION, SSL_CLIENT_M_SERIAL, etc.
