@@ -26,9 +26,8 @@ except ImportError:
         """Return a context manager that suppresses the `exceptions`."""
         try:
             yield
-        except Exception as e:
-            if not any(isinstance(e, x) for x in exceptions):
-                raise
+        except exceptions:
+            pass
 
 
 IS_PYPY = platform.python_implementation() == 'PyPy'
