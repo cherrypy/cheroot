@@ -64,9 +64,9 @@ class UnixSocket(BindLocation):
 class AbstractSocket(BindLocation):
     """AbstractSocket."""
 
-    def __init__(self, addr):
+    def __init__(self, abstract_socket):
         """Initialize."""
-        self.bind_addr = '\0{}'.format(self.abstract_socket)
+        self.bind_addr = '\0{}'.format(abstract_socket)
 
 
 class Application:
@@ -128,6 +128,12 @@ class GatewayYo:
 
 def parse_wsgi_bind_location(bind_addr_string):
     """Convert bind address string to a BindLocation."""
+    # if the string begins with an @ symbol, use an abstract socket,
+    # this is the first condition to verify, otherwise the urlparse
+    # validation would detect //@<value> as a valid url with a hostname
+    # with value: "<value>" and port: None
+    if bind_addr_string.startswith('@'):
+        return AbstractSocket(bind_addr_string[1:])
     # try and match for an IP/hostname and port
     match = six.moves.urllib.parse.urlparse('//{}'.format(bind_addr_string))
     try:
@@ -137,11 +143,7 @@ def parse_wsgi_bind_location(bind_addr_string):
             return TCPSocket(addr, port)
     except ValueError:
         pass
-
     # else, assume a UNIX socket path
-    # if the string begins with an @ symbol, use an abstract socket
-    if bind_addr_string.startswith('@'):
-        return AbstractSocket(bind_addr_string[1:])
     return UnixSocket(path=bind_addr_string)
 
 
