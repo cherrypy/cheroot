@@ -134,6 +134,7 @@ def parse_wsgi_bind_location(bind_addr_string):
     # with value: "<value>" and port: None
     if bind_addr_string.startswith('@'):
         return AbstractSocket(bind_addr_string[1:])
+
     # try and match for an IP/hostname and port
     match = six.moves.urllib.parse.urlparse('//{}'.format(bind_addr_string))
     try:
@@ -143,6 +144,7 @@ def parse_wsgi_bind_location(bind_addr_string):
             return TCPSocket(addr, port)
     except ValueError:
         pass
+
     # else, assume a UNIX socket path
     return UnixSocket(path=bind_addr_string)
 
