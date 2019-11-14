@@ -1,37 +1,70 @@
+"""Tests to verify the command line interface."""
+# -*- coding: utf-8 -*-
+# vim: set fileencoding=utf-8 :
+import sys
+
+import pytest
+
 from cheroot.cli import (
     Application,
-    parse_wsgi_bind_addr
+    parse_wsgi_bind_addr,
 )
 
 
-def test_parse_wsgi_bind_location_for_tcpip():
-    assert parse_wsgi_bind_addr('192.168.1.1:80') == ('192.168.1.1', 80)
-    assert parse_wsgi_bind_addr('[::1]:8000') == ('::1', 8000)
+@pytest.mark.parametrize(
+    'raw_bind_addr, expected_bind_addr', (
+        ('192.168.1.1:80', ('192.168.1.1', 80)),
+        ('[::1]:8000', ('::1', 8000)),
+    ),
+)
+def test_parse_wsgi_bind_addr_for_tcpip(raw_bind_addr, expected_bind_addr):
+    """Check the parsing of the --bind option for TCP/IP addresses."""
+    assert parse_wsgi_bind_addr(raw_bind_addr) == expected_bind_addr
 
 
-def test_parse_wsgi_bind_location_for_unix_socket():
+def test_parse_wsgi_bind_addr_for_unix_socket():
+    """Check the parsing of the --bind option for UNIX Sockets."""
     assert parse_wsgi_bind_addr('/tmp/cheroot.sock') == '/tmp/cheroot.sock'
 
 
 def test_parse_wsgi_bind_addr_for_abstract_unix_socket():
+    """Check the parsing of the --bind option for Abstract UNIX Sockets."""
     assert parse_wsgi_bind_addr('@cheroot') == '\0cheroot'
 
 
-def test_Aplication_resolve():
-    import sys
+class WSGIAppMock:
+    """Mock of a wsgi module."""
 
-    class WSGIAppMock:
-        def application(self):
-            pass
+    def application(self):
+        """Empty application method.
 
-        def main(self):
-            pass
-    try:
-        wsgi_app_mock = WSGIAppMock()
-        sys.modules['mypkg.wsgi'] = wsgi_app_mock
-        app = Application.resolve('mypkg.wsgi')
-        assert app.wsgi_app == wsgi_app_mock.application
-        app = Application.resolve('mypkg.wsgi:main')
-        assert app.wsgi_app == wsgi_app_mock.main
-    finally:
-        del sys.modules['mypkg.wsgi']
+        Default method to be called when no specific callable
+        is defined in the wsgi application identifier.
+
+        It has an empty body because we are expecting to verify that
+        the same method is return no the actual execution of it.
+        """
+
+    def main(self):
+        """Empty custom method (callable) inside the mocked WSGI app.
+
+        It has an empty body because we are expecting to verify that
+        the same method is return no the actual execution of it.
+        """
+
+
+@pytest.mark.parametrize(
+    'wsgi_app_spec, pkg_name, app_method, mocked_app', (
+        ('mypkg.wsgi', 'mypkg.wsgi', 'application', WSGIAppMock()),
+        ('mypkg.wsgi:application', 'mypkg.wsgi', 'application', WSGIAppMock()),
+        ('mypkg.wsgi:main', 'mypkg.wsgi', 'main', WSGIAppMock()),
+    ),
+)
+def test_Aplication_resolve(
+    monkeypatch,
+    wsgi_app_spec, pkg_name, app_method, mocked_app,
+):
+    """Check the wsgi application name conversion."""
+    monkeypatch.setitem(sys.modules, pkg_name, mocked_app)
+    expected_app = getattr(mocked_app, app_method)
+    assert Application.resolve(wsgi_app_spec).wsgi_app == expected_app
