@@ -282,8 +282,8 @@ def test_content_length_required(test_client):
 def test_large_request(test_client_with_defaults):
     """Test GET query with maliciously large Content-Length."""
     # If the server's max_request_body_size is not set (i.e. is set to 0)
-    # then this will result in an `OverflowError: Python int too large to convert to C ssize_t`
-    # in the server.
+    # then this will result in an `OverflowError: Python int too large to
+    # convert to C ssize_t` in the server.
     # We expect that this should instead return that the request is too
     # large.
     c = test_client_with_defaults.get_connection()
