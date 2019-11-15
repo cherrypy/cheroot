@@ -3,6 +3,7 @@
 # vim: set fileencoding=utf-8 :
 import sys
 
+import six
 import pytest
 
 from cheroot.cli import (
@@ -65,6 +66,17 @@ def test_Aplication_resolve(
     wsgi_app_spec, pkg_name, app_method, mocked_app,
 ):
     """Check the wsgi application name conversion."""
-    monkeypatch.setitem(sys.modules, pkg_name, mocked_app)
+    if six.PY2:
+        # python2 requires the previous namespaces to be part of sys.modules
+        #   (e.g. for 'a.b.c' we need to insert 'a', 'a.b' and 'a.b.c')
+        # otherwise it fails, we're setting the same instance on each level,
+        # we don't really care about those, just the last one.
+        full_path = None
+        for p in pkg_name.split('.'):
+            full_path = p if full_path is None else '.'.join((full_path, p))
+            print('Full path is {}'.format(full_path))
+            monkeypatch.setitem(sys.modules, full_path, mocked_app)
+    else:
+        monkeypatch.setitem(sys.modules, pkg_name, mocked_app)
     expected_app = getattr(mocked_app, app_method)
     assert Application.resolve(wsgi_app_spec).wsgi_app == expected_app

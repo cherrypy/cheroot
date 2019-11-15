@@ -25,7 +25,7 @@ import argparse
 from importlib import import_module
 import os
 import sys
-import contextlib
+import inspect
 
 import six
 
@@ -49,6 +49,7 @@ class TCPSocket(BindLocation):
         Args:
             address (str): Host name or IP address
             port (int): TCP port number
+
         """
         self.bind_addr = address, port
 
@@ -77,12 +78,12 @@ class Application:
         """Read WSGI app/Gateway path string and import application module."""
         mod_path, _, app_path = full_path.partition(':')
         app = getattr(import_module(mod_path), app_path or 'application')
-
-        with contextlib.suppress(TypeError):
-            if issubclass(app, server.Gateway):
-                return GatewayYo(app)
-
-        return cls(app)
+        # verify that `app` is a class before the issubclass verification,
+        # otherwise a TypeError will be rised.
+        if inspect.isclass(app) and issubclass(app, server.Gateway):
+            return GatewayYo(app)
+        else:
+            return cls(app)
 
     def __init__(self, wsgi_app):
         """Initialize."""
