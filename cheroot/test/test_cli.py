@@ -74,7 +74,6 @@ def test_Aplication_resolve(
         full_path = None
         for p in pkg_name.split('.'):
             full_path = p if full_path is None else '.'.join((full_path, p))
-            print('Full path is {}'.format(full_path))
             monkeypatch.setitem(sys.modules, full_path, mocked_app)
     else:
         monkeypatch.setitem(sys.modules, pkg_name, mocked_app)
