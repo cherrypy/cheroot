@@ -25,12 +25,12 @@ import argparse
 from importlib import import_module
 import os
 import sys
-import inspect
 
 import six
 
 from . import server
 from . import wsgi
+from ._compat import suppress
 
 
 __metaclass__ = type
@@ -78,12 +78,12 @@ class Application:
         """Read WSGI app/Gateway path string and import application module."""
         mod_path, _, app_path = full_path.partition(':')
         app = getattr(import_module(mod_path), app_path or 'application')
-        # verify that `app` is a class before the issubclass verification,
-        # otherwise a TypeError will be rised.
-        if inspect.isclass(app) and issubclass(app, server.Gateway):
-            return GatewayYo(app)
-        else:
-            return cls(app)
+        # suppress the `TypeError` exception, just in case `app` is not a class
+        with suppress(TypeError):
+            if issubclass(app, server.Gateway):
+                return GatewayYo(app)
+
+        return cls(app)
 
     def __init__(self, wsgi_app):
         """Initialize."""
