@@ -46,6 +46,17 @@ Status
 
 The test suite currently relies on pytest. It's being run via Travis CI.
 
+For Enterprise
+==============
+
+Cheroot is available as part of the Tidelift Subscription.
+
+The CherryPy maintainers and the maintainers of thousands of other packages
+are working with Tidelift to deliver one enterprise subscription that covers
+all of the open source you use.
+
+`Learn more <https://tidelift.com/subscription/pkg/pypi-cheroot?utm_source=pypi-cheroot&utm_medium=referral&utm_campaign=github>`_.
+
 Contribute Cheroot
 ==================
 **Want to add something to upstream?** Feel free to submit a PR or file an issue
