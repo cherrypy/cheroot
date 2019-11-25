@@ -65,10 +65,10 @@ if unsure. Please follow `CherryPy's common contribution guidelines
 Note that PR is more likely to be accepted if it includes tests and detailed
 description helping maintainers to understand it better 🎉
 
-Oh, and be pythonic, please :snake:
+Oh, and be pythonic, please 🐍
 
 **Don't know how?** Check out `How to Contribute to Open Source
-<https://opensource.guide/how-to-contribute/>`_ article by GitHub :rocket:
+<https://opensource.guide/how-to-contribute/>`_ article by GitHub 🚀
 
 
 License
