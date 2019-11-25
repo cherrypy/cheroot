@@ -1,6 +1,10 @@
 .. image:: https://img.shields.io/pypi/v/cheroot.svg
    :target: https://pypi.org/project/cheroot
 
+.. image:: https://tidelift.com/badges/package/pypi/cheroot
+   :target: https://tidelift.com/subscription/pkg/pypi-cheroot?utm_source=pypi-cheroot&utm_medium=readme
+   :alt: Cheroot is available as part of the Tidelift Subscription
+
 .. image:: https://img.shields.io/travis/com/cherrypy/cheroot/master.svg?logo=travis&label=Linux%20build%20%40%20Travis%20CI
    :target: https://travis-ci.com/cherrypy/cheroot
 
