@@ -15,7 +15,8 @@ jobs:
       #xcode: "9.1.0"  # available
       #xcode: "9.2.0"  # not available
       #xcode: "9.3.1"  # available
-      xcode: "11.3.0"  # available
+      #xcode: "11.3.0"  # not available
+      xcode: "11.2.1"  # available
 
     steps:
     - run: brew install pyenv readline xz
