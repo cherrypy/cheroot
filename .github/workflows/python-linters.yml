@@ -20,8 +20,11 @@ jobs:
         - ubuntu-latest
         env:
         - TOXENV: pre-commit
-        - TOXENV: setup-check
         # - TOXENV: pre-commit-failing
+        - TOXENV: setup-check
+        - TOXENV: build-docs
+        - TOXENV: spellcheck-docs
+        - TOXENV: linkcheck-docs
     steps:
     - uses: actions/checkout@master
     - name: Set up Python ${{ matrix.python-version }}
