@@ -17,7 +17,7 @@ jobs:
         python-version:
         - 3.7
         os:
-        - ubuntu-18.04
+        - ubuntu-latest
         env:
         - TOXENV: pre-commit
         - TOXENV: setup-check
