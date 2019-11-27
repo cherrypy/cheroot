@@ -467,7 +467,6 @@ def test_http_over_https_error(
             IS_GITHUB_ACTIONS_WORKFLOW
             and IS_WINDOWS
             and six.PY2
-            and IS_WIN2016
             and adapter_type == 'builtin'
             and ip_addr is ANY_INTERFACE_IPV6
     ):
