@@ -42,6 +42,7 @@ subclasses
 submodules
 systemd
 threadpool
+Tidelift
 tracebacks
 tuple
 tuples
