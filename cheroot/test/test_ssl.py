@@ -360,6 +360,8 @@ def test_tls_client_auth(
                 'OSError("(10054, \'WSAECONNRESET\')"))',
                 "('Connection aborted.', "
                 'OSError("(10054, \'WSAECONNRESET\')",))',
+                "('Connection aborted.', "
+                'error("(10054, \'WSAECONNRESET\')",))',
             ) if IS_WINDOWS else (
                 "('Connection aborted.', "
                 'OSError("(104, \'ECONNRESET\')"))',
