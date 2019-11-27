@@ -1,6 +1,8 @@
 version: 2
 jobs:
   macos-build:
+    # Ref: https://circleci.com/docs/2.0/hello-world-macos/
+    # Ref: https://circleci.com/docs/2.0/testing-ios/#supported-xcode-versions
     macos:
       # Travis:
       # 6.4 -> 10.10
@@ -11,7 +13,8 @@ jobs:
       #xcode: "8.3.3"  # available
       #xcode: "7.3.1"  # not available
       #xcode: "9.1.0"  # available
-      xcode: "9.2.0"  # available
+      #xcode: "9.2.0"  # not available
+      xcode: "9.3.1"  # available
 
     steps:
     - run: brew install pyenv readline xz
