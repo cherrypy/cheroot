@@ -18,7 +18,7 @@ import six
 
 from .._compat import bton, ntob
 from .._compat import IS_LINUX, IS_MACOS, SYS_PLATFORM
-from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
+from ..server import IS_UID_GID_RESOLVABLE, Gateway, HeaderReader, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -233,3 +233,21 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
         peercreds_text_resp = requests.get(unix_base_uri + PEERCRED_TEXTS_URI)
         peercreds_text_resp.raise_for_status()
         assert peercreds_text_resp.text == expected_textcreds
+
+
+@pytest.mark.parametrize(
+    'pre_existing_headers',
+    (
+        {b'b_header': b'b_value'},
+        {b'b_header': 'value'},
+        {'header': b'b_value'},
+    ),
+)
+def test_adding_non_bytes_headers(pre_existing_headers):
+    """Check that non-bytes headers produce ValueError."""
+    read_headers = HeaderReader()
+    with pytest.raises(
+            ValueError,
+            match='Initial dict must contain byte-encoded data',
+    ):
+        read_headers(six.BytesIO(b'\r\n'), pre_existing_headers)
