@@ -467,7 +467,8 @@ class ChunkedRFile:
             chunk_size = line.pop(0)
             chunk_size = int(chunk_size, 16)
         except ValueError:
-            raise ValueError('Bad chunked transfer size: %s' % (repr(chunk_size)))
+            raise ValueError('Bad chunked transfer size: %s'
+                % (repr(chunk_size)))
 
         if chunk_size <= 0:
             self.closed = True
@@ -1037,7 +1038,8 @@ class HTTPRequest:
             # Don't use simple_response here, because it emits headers
             # we don't want. See
             # https://github.com/cherrypy/cherrypy/issues/951
-            msg = b''.join([self.server.protocol.encode('ascii'), b' 100 Contunue\r\n\r\n'])
+            msg = b''.join([self.server.protocol.encode('ascii'),
+                 b' 100 Contunue\r\n\r\n'])
             try:
                 self.conn.wfile.write(msg)
             except socket.error as ex:
