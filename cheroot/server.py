@@ -156,7 +156,7 @@ EMPTY = b''
 ASTERISK = b'*'
 FORWARD_SLASH = b'/'
 QUOTED_SLASH = b'%2F'
-QUOTED_SLASH_REGEX = re.compile(b('(?i)%s' % (QUOTED_SLASH)))
+QUOTED_SLASH_REGEX = re.compile(b'(?i)%s' % (QUOTED_SLASH))
 
 
 comma_separated_headers = [
