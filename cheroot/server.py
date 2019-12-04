@@ -824,8 +824,8 @@ class HTTPRequest:
             # `urlsplit()` above parses "example.com:3128" as path part of URI.
             # this is a workaround, which makes it detect netloc correctly
             uri_split = urllib.parse.urlsplit(
-                        '//{}'.format(uri)
-                        .encode('ascii'))
+                '//{}'.format(uri)
+                .encode('ascii'))
             _scheme, _authority, _path, _qs, _fragment = uri_split
             _port = EMPTY
             try:
