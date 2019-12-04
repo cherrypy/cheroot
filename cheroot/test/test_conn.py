@@ -838,7 +838,7 @@ def test_Chunked_Encoding(test_client):
 
     # Try a chunked request that exceeds server.max_request_body_size.
     # Note that the delimiters and trailer are included.
-    body = '{}{}{}'.format('3e3\r\n', 'x' * 995, '\r\n0\r\n\r\n')
+    body = '{}{}{}'.format('3e3\r\n', 'x' * 995, '\r\n0\r\n\r\n') \
                        .encode('ascii')
     conn.putrequest('POST', '/upload', skip_host=True)
     conn.putheader('Host', conn.host)
