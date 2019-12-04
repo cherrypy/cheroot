@@ -1041,8 +1041,8 @@ class HTTPRequest:
             # we don't want. See
             # https://github.com/cherrypy/cherrypy/issues/951
             msg = '{} {}'.format(self.server.protocol,
-                                 '100 Continue\r\n\r\n') \
-                                 .encode('ascii')
+                '100 Continue\r\n\r\n') \
+                .encode('ascii')
             try:
                 self.conn.wfile.write(msg)
             except socket.error as ex:
