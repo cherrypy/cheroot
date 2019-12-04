@@ -823,7 +823,9 @@ class HTTPRequest:
 
             # `urlsplit()` above parses "example.com:3128" as path part of URI.
             # this is a workaround, which makes it detect netloc correctly
-            uri_split = urllib.parse.urlsplit('//{}'.format(uri).encode('ascii'))
+            uri_split = urllib.parse.urlsplit( \
+                                    '//{}'.format(uri) \
+                                    .encode('ascii'))
             _scheme, _authority, _path, _qs, _fragment = uri_split
             _port = EMPTY
             try:
@@ -1038,7 +1040,9 @@ class HTTPRequest:
             # Don't use simple_response here, because it emits headers
             # we don't want. See
             # https://github.com/cherrypy/cherrypy/issues/951
-            msg = '{} {}'.format(self.server.protocol, '100 Continue\r\n\r\n').encode('ascii')
+            msg = '{} {}'.format(self.server.protocol,
+                                 '100 Continue\r\n\r\n') \
+                                 .encode('ascii')
             try:
                 self.conn.wfile.write(msg)
             except socket.error as ex:
