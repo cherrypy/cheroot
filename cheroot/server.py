@@ -156,7 +156,7 @@ EMPTY = b''
 ASTERISK = b'*'
 FORWARD_SLASH = b'/'
 QUOTED_SLASH = b'%2F'
-QUOTED_SLASH_REGEX = re.compile(b'(?i)%s' % (QUOTED_SLASH))
+QUOTED_SLASH_REGEX = re.compile(b''.join([b'(?i)', QUOTED_SLASH]))
 
 
 comma_separated_headers = [
@@ -467,8 +467,8 @@ class ChunkedRFile:
             chunk_size = line.pop(0)
             chunk_size = int(chunk_size, 16)
         except ValueError:
-            raise ValueError('Bad chunked transfer size: %s'
-                             % (repr(chunk_size)))
+            raise ValueError('Bad chunked transfer size: {}'
+                             .format(repr(chunk_size)))
 
         if chunk_size <= 0:
             self.closed = True
@@ -1500,7 +1500,7 @@ class HTTPServer:
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
 
-    version = 'Cheroot/%s' % (__version__)
+    version = 'Cheroot/{}'.format(__version__)
     """A version string for the HTTPServer."""
 
     software = None
@@ -1806,7 +1806,7 @@ class HTTPServer:
             traceback (bool): add traceback to output or not
         """
         # Override this in subclasses as desired
-        sys.stderr.write('%s\n' % (msg))
+        sys.stderr.write('{}\n'.format(msg))
         sys.stderr.flush()
         if traceback:
             tblines = traceback_.format_exc()

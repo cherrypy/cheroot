@@ -189,7 +189,7 @@ def test_ssl_adapters(
     )
 
     resp = requests.get(
-        'https://%s:%s/' % (interface, port),
+        'https://{}:{}/'.format(interface, port),
         verify=tls_ca_certificate_pem_path,
     )
 
@@ -274,7 +274,7 @@ def test_tls_client_auth(
 
         make_https_request = functools.partial(
             requests.get,
-            'https://%s:%s/' % (interface, port),
+            'https://{}:{}/'.format(interface, port),
 
             # Server TLS certificate verification:
             verify=tls_ca_certificate_pem_path,
@@ -482,7 +482,7 @@ def test_http_over_https_error(
         expect_fallback_response_over_plain_http = False
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
-            'http://%s:%s/' % (fqdn, port),
+            'http://{}:{}/'.format(fqdn, port),
         )
         assert resp.status_code == 400
         assert resp.text == (
@@ -493,7 +493,7 @@ def test_http_over_https_error(
 
     with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
         requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-            'http://%s:%s/' % (fqdn, port),
+            'http://{}:{}/'.format(fqdn, port),
         )
 
     if IS_LINUX:
