@@ -1038,8 +1038,10 @@ class HTTPRequest:
             # Don't use simple_response here, because it emits headers
             # we don't want. See
             # https://github.com/cherrypy/cherrypy/issues/951
-            msg = b''.join([self.server.protocol.encode('ascii'),
-                           b' 100 Contunue\r\n\r\n'])
+            msg = b'{} {}'.format(
+                                  self.server.protocol.encode('ascii'),
+                                  b'100 Continue\r\n\r\n',
+            )
             try:
                 self.conn.wfile.write(msg)
             except socket.error as ex:
