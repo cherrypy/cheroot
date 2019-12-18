@@ -58,26 +58,6 @@ object, and for that, the pool must follow an interface:
 
       Shrinks the pool by ``amount`` resources.
 
-
-Example
-
-.. code-block:: python
-
-    import dynpool
-    from example_code import SomeThreadPool, run_periodically
-
-    # A user provided thread pool that follows the interface
-    # expected by DynamicPoolResizer.
-    pool = SomeThreadPool(min=3, max=30)
-
-    # We create a thread pool monitor.
-    monitor = dynpool.DynamicPoolResizer(pool, minspare=5, maxspare=10)
-
-    # Creating a thread pool monitor does nothing. We need to
-    # call it's run() method periodically. Let's do it every second.
-    run_periodically(monitor.run, interval=1)
-
-
 """
 
 import math
