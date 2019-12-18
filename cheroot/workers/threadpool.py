@@ -3,7 +3,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-
 import collections
 import threading
 import time
@@ -14,6 +13,7 @@ from six.moves import queue
 
 from jaraco.functools import pass_none
 
+from .monitor import ThreadPoolMonitor
 
 __all__ = ('WorkerThread', 'ThreadPool')
 
@@ -52,7 +52,6 @@ class WorkerThread(threading.Thread):
     ready = False
     """A simple flag for the calling server to know when this thread
     has begun polling the Queue."""
-
     def __init__(self, server):
         """Initialize WorkerThread instance.
 
@@ -147,8 +146,13 @@ class ThreadPool:
     """
 
     def __init__(
-            self, server, min=10, max=-1, accepted_queue_size=-1,
-            accepted_queue_timeout=10,
+        self,
+        server,
+        min=10,
+        max=-1,
+        accepted_queue_size=-1,
+        accepted_queue_timeout=10,
+        logger=None,
     ):
         """Initialize HTTP requests queue instance.
 
@@ -170,6 +174,29 @@ class ThreadPool:
         self._queue_put_timeout = accepted_queue_timeout
         self.get = self._queue.get
         self._pending_shutdowns = collections.deque()
+        self.log = logger or (lambda msg: None)
+        self.monitor = None
+        self.monitor_configured = False
+
+    def configure_monitor(
+        self,
+        thread_pool,
+        monitor_freq=5,
+        minspare=5,
+        maxspare=15,
+        shrinkfreq=5,
+        logfreq=0,
+    ):
+        """Configure a threadpool monitor to grow/shrink the pool."""
+        self.monitor = ThreadPoolMonitor(monitor_freq, logger=self.log)
+        self.monitor.configure(
+            thread_pool,
+            minspare,
+            maxspare,
+            shrinkfreq,
+            logfreq,
+        )
+        self.monitor_configured = True
 
     def start(self):
         """Start the pool of threads."""
@@ -181,6 +208,8 @@ class ThreadPool:
         for worker in self._threads:
             while not worker.ready:
                 time.sleep(.1)
+        if self.monitor_configured:
+            self.monitor.start()
 
     @property
     def idle(self):  # noqa: D401; irrelevant for properties
@@ -255,6 +284,10 @@ class ThreadPool:
         Args:
             timeout (int): time to wait for threads to stop gracefully
         """
+        if self.monitor_configured:
+            # Stop the monitor before worker threads
+            self.monitor.stop()
+
         # for compatability, negative timeouts are treated like None
         # TODO: treat negative timeouts like already expired timeouts
         if timeout is not None and timeout < 0:
@@ -321,3 +354,8 @@ class ThreadPool:
     def qsize(self):
         """Return the queue size."""
         return self._queue.qsize()
+
+    @property
+    def size(self):
+        """Return the threadpool size."""
+        return len(self._threads)
