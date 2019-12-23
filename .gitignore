@@ -179,6 +179,3 @@ ENV/
 
 # pip wheel dist info
 pip-wheel-metadata/
-
-# vscode
-.vscode/

@@ -59,6 +59,7 @@ object, and for that, the pool must follow an interface:
       Shrinks the pool by ``amount`` resources.
 
 """
+__metaclass__ = type
 
 import math
 import threading
@@ -102,7 +103,7 @@ def non_repeating(method):
     return wrapper
 
 
-class DynamicPoolResizer(object):
+class DynamicPoolResizer:
     """Grow or shrink a pool of resources depending on usage patterns.
 
     :param pool: Pool object that follows the expected interface.
@@ -171,7 +172,10 @@ class DynamicPoolResizer(object):
         are the same as the last call, the behavior is bypassed.
         """
         self.log('Thread pool: [current={0}/idle={1}/queue={2}]{3}'.format(
-            pool_size, pool_idle, pool_qsize, msg,
+            pool_size,
+            pool_idle,
+            pool_qsize,
+            msg,
         ))
 
     def action_log(self, action, amount):

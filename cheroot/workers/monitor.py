@@ -1,4 +1,5 @@
 """Monitor for threadpool."""
+__metaclass__ = type
 
 import threading
 import time
@@ -28,8 +29,8 @@ class BackgroundTask(threading.Thread):
         super(BackgroundTask, self).__init__()
         self.interval = interval
         self.function = function
-        self.args = args if args else []
-        self.kwargs = kwargs if kwargs else {}
+        self.args = args if args is not None else []
+        self.kwargs = kwargs if kwargs is not None else {}
         self.running = False
         self.log = logger or (lambda msg: None)
         # default to daemonic
@@ -53,12 +54,13 @@ class BackgroundTask(threading.Thread):
                     'Error in background task thread function {}:{}.'.format(
                         self.function,
                         e,
-                    ), )
+                    ),
+                )
                 # Quit on first error to avoid massive logs.
                 raise
 
 
-class Monitor(object):
+class Monitor:
     """Monitor a BackgroundTask."""
 
     callback = None
@@ -68,8 +70,7 @@ class Monitor(object):
     """The time in seconds between callback runs."""
 
     thread = None
-    """A :class:`BackgroundTask` thread.
-    """
+    """A :class:`BackgroundTask` thread."""
     def __init__(self, callback, frequency=60, name=None, logger=None):
         """Initialize Monitor."""
         self.callback = callback
@@ -80,36 +81,36 @@ class Monitor(object):
 
     def start(self):
         """Start our callback in its own background thread."""
-        if self.frequency > 0:
-            threadname = self.name
-            if self.thread is None:
-                self.thread = BackgroundTask(
-                    self.frequency,
-                    self.callback,
-                    logger=self.log,
-                )
-                self.thread.setName(threadname)
-                self.thread.start()
-                self.log('Started monitor thread {}.'.format(threadname))
-            else:
-                self.log(
-                    'Monitor thread {} already started.'.format(threadname), )
-
-    start.priority = 70
+        if self.frequency <= 0:
+            self.log('Monitor thread recieved invalid frequency {}.'.format(
+                self.frequency,
+            ))
+            return
+        if self.thread is not None:
+            self.log('Monitor thread {} already started.'.format(self.name))
+            return
+        self.thread = BackgroundTask(
+            self.frequency,
+            self.callback,
+            logger=self.log,
+        )
+        self.thread.setName(self.name)
+        self.thread.start()
+        self.log('Started monitor thread {}.'.format(self.name))
 
     def stop(self):
         """Stop our callback's background task thread."""
         if self.thread is None:
             self.log('No thread running for {}.'.format(self.name))
-        else:
-            if self.thread is not threading.currentThread():
-                name = self.thread.getName()
-                self.thread.cancel()
-                if not self.thread.daemon:
-                    self.log('Joining {}'.format(name))
-                    self.thread.join()
-                self.log('Stopped thread {}.'.format(name))
-            self.thread = None
+            return
+        if self.thread is not threading.currentThread():
+            name = self.thread.getName()
+            self.thread.cancel()
+            if not self.thread.daemon:
+                self.log('Joining {}'.format(name))
+                self.thread.join()
+            self.log('Stopped thread {}.'.format(name))
+        self.thread = None
 
     def graceful(self):
         """Stop the callback's background task thread and restart it."""
@@ -151,5 +152,3 @@ class ThreadPoolMonitor(Monitor):
         """Stop the monitor."""
         self._run = lambda: None
         super(ThreadPoolMonitor, self).stop()
-
-    stop.priority = 10

@@ -344,11 +344,8 @@ class ThreadPool:
         """Clear self._threads and yield all joinable threads."""
         # threads = pop_all(self._threads)
         threads, self._threads[:] = self._threads[:], []
-        return (
-            thread
-            for thread in threads
-            if thread is not threading.currentThread()
-        )
+        return (thread for thread in threads
+                if thread is not threading.currentThread())
 
     @property
     def qsize(self):
