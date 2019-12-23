@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+
 import collections
 import threading
 import time
@@ -52,6 +53,7 @@ class WorkerThread(threading.Thread):
     ready = False
     """A simple flag for the calling server to know when this thread
     has begun polling the Queue."""
+
     def __init__(self, server):
         """Initialize WorkerThread instance.
 
@@ -146,13 +148,8 @@ class ThreadPool:
     """
 
     def __init__(
-        self,
-        server,
-        min=10,
-        max=-1,
-        accepted_queue_size=-1,
-        accepted_queue_timeout=10,
-        logger=None,
+        self, server, min=10, max=-1, accepted_queue_size=-1,
+            accepted_queue_timeout=10, logger=None,
     ):
         """Initialize HTTP requests queue instance.
 
@@ -179,13 +176,8 @@ class ThreadPool:
         self.monitor_configured = False
 
     def configure_monitor(
-        self,
-        thread_pool,
-        monitor_freq=5,
-        minspare=5,
-        maxspare=15,
-        shrinkfreq=5,
-        logfreq=0,
+        self, thread_pool, monitor_freq=5, minspare=5, maxspare=15,
+            shrinkfreq=5, logfreq=0,
     ):
         """Configure a threadpool monitor to grow/shrink the pool."""
         self.monitor = ThreadPoolMonitor(monitor_freq, logger=self.log)
@@ -344,8 +336,11 @@ class ThreadPool:
         """Clear self._threads and yield all joinable threads."""
         # threads = pop_all(self._threads)
         threads, self._threads[:] = self._threads[:], []
-        return (thread for thread in threads
-                if thread is not threading.currentThread())
+        return (
+            thread
+            for thread in threads
+            if thread is not threading.currentThread()
+        )
 
     @property
     def qsize(self):
