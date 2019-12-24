@@ -148,8 +148,8 @@ class ThreadPool:
     """
 
     def __init__(
-        self, server, min=10, max=-1, accepted_queue_size=-1,
-            accepted_queue_timeout=10, logger=None,
+            self, server, min=10, max=-1, accepted_queue_size=-1,
+            accepted_queue_timeout=10,
     ):
         """Initialize HTTP requests queue instance.
 
@@ -171,22 +171,20 @@ class ThreadPool:
         self._queue_put_timeout = accepted_queue_timeout
         self.get = self._queue.get
         self._pending_shutdowns = collections.deque()
-        self.log = logger or (lambda msg: None)
         self.monitor = None
         self.monitor_configured = False
 
     def configure_monitor(
-        self, thread_pool, monitor_freq=5, minspare=5, maxspare=15,
-            shrinkfreq=5, logfreq=0,
+            self, thread_pool, monitor_freq=5, minspare=5, maxspare=15,
+            shrinkfreq=5,
     ):
         """Configure a threadpool monitor to grow/shrink the pool."""
-        self.monitor = ThreadPoolMonitor(monitor_freq, logger=self.log)
+        self.monitor = ThreadPoolMonitor(monitor_freq)
         self.monitor.configure(
             thread_pool,
             minspare,
             maxspare,
             shrinkfreq,
-            logfreq,
         )
         self.monitor_configured = True
 

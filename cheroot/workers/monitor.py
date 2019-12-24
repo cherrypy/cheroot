@@ -4,7 +4,7 @@ __metaclass__ = type
 import threading
 import time
 
-from .dynpool import DynamicPoolResizer
+from dynpool import DynamicPoolResizer
 
 
 class BackgroundTask(threading.Thread):
@@ -15,16 +15,14 @@ class BackgroundTask(threading.Thread):
     self.cancel(), you'll have to wait until the sleep() call finishes before
     the thread stops. To compensate, it defaults to being daemonic, which means
     it won't delay stopping the whole process.
+
+    :param int interval: time interval between invocation of input function
+    :param function: callable that needs to be invoked
+    :param args: list of arguments to pass to the function
+    :param kwargs: dictionary of keyword args to pass to the function
     """
 
-    def __init__(
-        self,
-        interval,
-        function,
-        args=None,
-        kwargs=None,
-        logger=None,
-    ):
+    def __init__(self, interval, function, args=None, kwargs=None):
         """Initialize a BackgroundTask."""
         super(BackgroundTask, self).__init__()
         self.interval = interval
@@ -32,8 +30,6 @@ class BackgroundTask(threading.Thread):
         self.args = args if args is not None else []
         self.kwargs = kwargs if kwargs is not None else {}
         self.running = False
-        self.log = logger or (lambda msg: None)
-        # default to daemonic
         self.daemon = True
 
     def cancel(self):
@@ -41,23 +37,14 @@ class BackgroundTask(threading.Thread):
         self.running = False
 
     def run(self):
-        """Run - Invoke function every interval seconds."""
+        """Invoke the callable with the given interval."""
         self.running = True
         while self.running:
             time.sleep(self.interval)
             if not self.running:
                 return
-            try:
-                self.function(*self.args, **self.kwargs)
-            except Exception as e:
-                self.log(
-                    'Error in background task thread function {}:{}.'.format(
-                        self.function,
-                        e,
-                    ),
-                )
-                # Quit on first error to avoid massive logs.
-                raise
+            # Any error in the calling function will be raised immediatly
+            self.function(*self.args, **self.kwargs)
 
 
 class Monitor:
@@ -71,45 +58,31 @@ class Monitor:
 
     thread = None
     """A :class:`BackgroundTask` thread."""
-    def __init__(self, callback, frequency=60, name=None, logger=None):
+    def __init__(self, callback, frequency=60, name=None):
         """Initialize Monitor."""
         self.callback = callback
         self.frequency = frequency
         self.thread = None
         self.name = name or self.__class__.__name__
-        self.log = logger or (lambda msg: None)
 
     def start(self):
         """Start our callback in its own background thread."""
         if self.frequency <= 0:
-            self.log('Monitor thread recieved invalid frequency {}.'.format(
-                self.frequency,
-            ))
             return
         if self.thread is not None:
-            self.log('Monitor thread {} already started.'.format(self.name))
             return
-        self.thread = BackgroundTask(
-            self.frequency,
-            self.callback,
-            logger=self.log,
-        )
+        self.thread = BackgroundTask(self.frequency, self.callback)
         self.thread.setName(self.name)
         self.thread.start()
-        self.log('Started monitor thread {}.'.format(self.name))
 
     def stop(self):
         """Stop our callback's background task thread."""
         if self.thread is None:
-            self.log('No thread running for {}.'.format(self.name))
             return
         if self.thread is not threading.currentThread():
-            name = self.thread.getName()
             self.thread.cancel()
             if not self.thread.daemon:
-                self.log('Joining {}'.format(name))
                 self.thread.join()
-            self.log('Stopped thread {}.'.format(name))
         self.thread = None
 
     def graceful(self):
@@ -121,7 +94,7 @@ class Monitor:
 class ThreadPoolMonitor(Monitor):
     """ThreadPoolMonitor for dynamic resizing."""
 
-    def __init__(self, frequency, name=None, logger=None):
+    def __init__(self, frequency, name=None):
         """Initialize ThreadPoolMonitor."""
         self._run = lambda: None
         self._resizer = None
@@ -129,22 +102,26 @@ class ThreadPoolMonitor(Monitor):
             self.run,
             frequency=frequency,
             name=name,
-            logger=logger,
         )
 
     def run(self):
         """Run the monitor."""
         self._run()
 
-    def configure(self, thread_pool, minspare, maxspare, shrinkfreq, logfreq):
-        """Configure the pool resizer."""
+    def configure(self, thread_pool, minspare, maxspare, shrinkfreq):
+        """Configure the pool resizer.
+
+        :param thread_pool: ThreadPool object
+        :param minspare: Minimum number of idle resources available.
+        :param maxspare: Maximum number of idle resources available.
+        :param shrinkfreq: Minimum seconds between shrink operations. Set to 0
+                        to disable shrink checks.
+        """
         self._resizer = DynamicPoolResizer(
             thread_pool,
             minspare,
             maxspare,
             shrinkfreq=shrinkfreq,
-            logfreq=logfreq,
-            logger=self.log,
         )
         self._run = self._resizer.run
 
