@@ -838,7 +838,7 @@ def test_Chunked_Encoding(test_client):
 
     # Try a chunked request that exceeds server.max_request_body_size.
     # Note that the delimiters and trailer are included.
-    body = b'3e3\r\n' + (b'x' * 995) + b'\r\n0\r\n\r\n'
+    body = b'\r\n'.join((b'3e3', b'x' * 995, b'0', b'', b''))
     conn.putrequest('POST', '/upload', skip_host=True)
     conn.putheader('Host', conn.host)
     conn.putheader('Transfer-Encoding', 'chunked')
@@ -971,8 +971,8 @@ def test_No_CRLF(test_client, invalid_terminator):
     # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
 
-    # (b'%s' % b'') is not supported in Python 3.4, so just use +
-    conn.send(b'GET /hello HTTP/1.1' + invalid_terminator)
+    # (b'%s' % b'') is not supported in Python 3.4, so just use bytes.join()
+    conn.send(b''.join((b'GET /hello HTTP/1.1', invalid_terminator)))
     response = conn.response_class(conn.sock, method='GET')
     response.begin()
     actual_resp_body = response.read()
