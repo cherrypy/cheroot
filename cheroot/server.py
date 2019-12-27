@@ -156,7 +156,7 @@ EMPTY = b''
 ASTERISK = b'*'
 FORWARD_SLASH = b'/'
 QUOTED_SLASH = b'%2F'
-QUOTED_SLASH_REGEX = re.compile(b''.join([b'(?i)', QUOTED_SLASH]))
+QUOTED_SLASH_REGEX = re.compile(b''.join((b'(?i)', QUOTED_SLASH)))
 
 
 comma_separated_headers = [
@@ -467,8 +467,10 @@ class ChunkedRFile:
             chunk_size = line.pop(0)
             chunk_size = int(chunk_size, 16)
         except ValueError:
-            raise ValueError('Bad chunked transfer size: {}'
-                             .format(repr(chunk_size)))
+            raise ValueError(
+                'Bad chunked transfer size: {chunk_size!r}'.
+                format(chunk_size=chunk_size),
+            )
 
         if chunk_size <= 0:
             self.closed = True
@@ -823,9 +825,7 @@ class HTTPRequest:
 
             # `urlsplit()` above parses "example.com:3128" as path part of URI.
             # this is a workaround, which makes it detect netloc correctly
-            uri_split = urllib.parse.urlsplit(
-                '//{}'.format(uri)
-                .encode('ascii'))
+            uri_split = urllib.parse.urlsplit(b''.join((b'//', uri)))
             _scheme, _authority, _path, _qs, _fragment = uri_split
             _port = EMPTY
             try:
@@ -1040,9 +1040,10 @@ class HTTPRequest:
             # Don't use simple_response here, because it emits headers
             # we don't want. See
             # https://github.com/cherrypy/cherrypy/issues/951
-            msg = '{} {}'.format(self.server.protocol,
-                '100 Continue\r\n\r\n') \
-                .encode('ascii')
+            msg = b''.join((
+                self.server.protocol.encode('ascii'), SPACE, b'100 Continue',
+                CRLF, CRLF,
+            ))
             try:
                 self.conn.wfile.write(msg)
             except socket.error as ex:
@@ -1503,7 +1504,7 @@ class HTTPServer:
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
 
-    version = 'Cheroot/{}'.format(__version__)
+    version = 'Cheroot/{version!s}'.format(version=__version__)
     """A version string for the HTTPServer."""
 
     software = None
@@ -1809,7 +1810,7 @@ class HTTPServer:
             traceback (bool): add traceback to output or not
         """
         # Override this in subclasses as desired
-        sys.stderr.write('{}\n'.format(msg))
+        sys.stderr.write('{msg!s}\n'.format(msg=msg))
         sys.stderr.flush()
         if traceback:
             tblines = traceback_.format_exc()
