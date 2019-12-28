@@ -12,7 +12,6 @@ repos:
     args:
     # W503 ignored for https://github.com/PyCQA/pycodestyle/issues/498
     - --ignore=W503
-    exclude: cheroot/test/test_(http|config_server).py
     additional_dependencies:
     - flake8-2020==1.0.0
   - id: check-merge-conflict
@@ -21,7 +20,7 @@ repos:
   - id: name-tests-test
     args:
     - --django
-    exclude: (tests/dist-check|cheroot/test/(helper|webtest)).py
+    exclude: cheroot/test/(helper|webtest).py
     files: cheroot/test/.+\.py$
   - id: debug-statements
   - id: check-added-large-files
