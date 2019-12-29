@@ -9,9 +9,6 @@ repos:
   hooks:
   - id: trailing-whitespace
   - id: flake8
-    args:
-    # W503 ignored for https://github.com/PyCQA/pycodestyle/issues/498
-    - --ignore=W503
     additional_dependencies:
     - flake8-2020==1.0.0
   - id: check-merge-conflict
