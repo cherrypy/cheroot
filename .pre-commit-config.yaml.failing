@@ -6,3 +6,14 @@ repos:
     args:
     - --msg-template={path}:L {line:3d}:({symbol}) {msg} (C {column:2d}), ::{msg_id}
     - --output-format=colorized
+
+- repo: local
+  hooks:
+  - id: flakehell
+    name: flakehell
+    description: wemake-python-styleguide enforcement
+    entry: flakehell
+    args:
+    - lint
+    language: python
+    types: [python]
