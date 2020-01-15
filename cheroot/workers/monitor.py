@@ -22,9 +22,9 @@ class BackgroundTask(threading.Thread):
     :param kwargs: dictionary of keyword args to pass to the function
     """
 
-    def __init__(self, interval, function, args=None, kwargs=None):
+    def __init__(self, interval, function, name=None, args=None, kwargs=None):
         """Initialize a BackgroundTask."""
-        super(BackgroundTask, self).__init__()
+        super(BackgroundTask, self).__init__(name=name)
         self.interval = interval
         self.function = function
         self.args = args if args is not None else []
@@ -40,11 +40,9 @@ class BackgroundTask(threading.Thread):
         """Invoke the callable with the given interval."""
         self.running = True
         while self.running:
-            time.sleep(self.interval)
-            if not self.running:
-                return
-            # Any error in the calling function will be raised immediatly
+            # Any error in the calling function will be raised immediately
             self.function(*self.args, **self.kwargs)
+            time.sleep(self.interval)
 
 
 class Monitor:
@@ -58,6 +56,7 @@ class Monitor:
 
     thread = None
     """A :class:`BackgroundTask` thread."""
+
     def __init__(self, callback, frequency=60, name=None):
         """Initialize Monitor."""
         self.callback = callback
@@ -68,11 +67,16 @@ class Monitor:
     def start(self):
         """Start our callback in its own background thread."""
         if self.frequency <= 0:
-            return
+            raise RuntimeError('The frequency must be a positive number')
+
         if self.thread is not None:
-            return
-        self.thread = BackgroundTask(self.frequency, self.callback)
-        self.thread.setName(self.name)
+            raise RuntimeError('Only one background task can be monitored')
+
+        self.thread = BackgroundTask(
+            self.frequency,
+            self.callback,
+            name=self.name,
+        )
         self.thread.start()
 
     def stop(self):
