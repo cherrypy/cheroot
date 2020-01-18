@@ -1,14 +1,19 @@
 ---
 name: "\U0001F680 Feature request"
 about: Suggest an idea for this project
+labels: enhancement, triage
 
 ---
 
 <!--
+**** DELETE THIS BLOCK ****
+
 Thanks for filing an issue!  Please keep keep issues limited to bug reports,
 feature requests, and other general issues. For support questions, please feel
 free to reach out on stackoverflow:
 https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
+
+**** /DELETE THIS BLOCK ****
 -->
 
 ❓ **I'm submitting a ...**
