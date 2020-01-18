@@ -896,7 +896,7 @@ def test_Content_Length_not_int(test_client):
 
 
 @pytest.mark.parametrize(
-    'uri,expected_resp_status,expected_resp_body',
+    ('uri', 'expected_resp_status', 'expected_resp_body'),
     (
         (
             '/wrong_cl_buffered', 500,

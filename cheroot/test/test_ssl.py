@@ -205,7 +205,7 @@ def test_ssl_adapters(
     ),
 )
 @pytest.mark.parametrize(
-    'is_trusted_cert,tls_client_identity',
+    ('is_trusted_cert', 'tls_client_identity'),
     (
         (True, 'localhost'), (True, '127.0.0.1'),
         (True, '*.localhost'), (True, 'not_localhost'),

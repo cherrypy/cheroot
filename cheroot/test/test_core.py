@@ -298,7 +298,7 @@ def test_large_request(test_client_with_defaults):
 
 
 @pytest.mark.parametrize(
-    'request_line,status_code,expected_body',
+    ('request_line', 'status_code', 'expected_body'),
     (
         (
             b'GET /',  # missing proto

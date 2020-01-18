@@ -11,7 +11,7 @@ from cheroot._compat import extract_bytes, memoryview, ntob, ntou, bton
 
 
 @pytest.mark.parametrize(
-    'func,inp,out',
+    ('func', 'inp', 'out'),
     [
         (ntob, 'bar', b'bar'),
         (ntou, 'bar', u'bar'),
@@ -25,10 +25,10 @@ def test_compat_functions_positive(func, inp, out):
 
 @pytest.mark.parametrize(
     'func',
-    [
+    (
         ntob,
         ntou,
-    ],
+    ),
 )
 def test_compat_functions_negative_nonnative(func):
     """Check that compatibility functions fail loudly for incorrect input."""
@@ -45,7 +45,7 @@ def test_ntou_escape():
 
 
 @pytest.mark.parametrize(
-    'input_argument,expected_result',
+    ('input_argument', 'expected_result'),
     [
         (b'qwerty', b'qwerty'),
         (memoryview(b'asdfgh'), b'asdfgh'),

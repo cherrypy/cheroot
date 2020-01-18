@@ -8,7 +8,7 @@ from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
 
 
 @pytest.mark.parametrize(
-    'err_names,err_nums',
+    ('err_names', 'err_nums'),
     (
         (('', 'some-nonsense-name'), []),
         (

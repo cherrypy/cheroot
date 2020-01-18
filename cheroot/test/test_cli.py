@@ -13,7 +13,8 @@ from cheroot.cli import (
 
 
 @pytest.mark.parametrize(
-    'raw_bind_addr, expected_bind_addr', (
+    ('raw_bind_addr', 'expected_bind_addr'),
+    (
         # tcp/ip
         ('192.168.1.1:80', ('192.168.1.1', 80)),
         # ipv6 ips has to be enclosed in brakets when specified in url form
@@ -74,7 +75,8 @@ def wsgi_app(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    'app_name, app_method', (
+    ('app_name', 'app_method'),
+    (
         (None, 'application',),
         ('application', 'application',),
         ('main', 'main',),
