@@ -75,6 +75,7 @@ import logging
 import platform
 import contextlib
 import threading
+import h11
 
 try:
     from functools import lru_cache
@@ -359,18 +360,45 @@ class RFile:
         self.rfile.close()
 
 class HyperRFile(RFile):
+
     def __init__(self, rfile, conn):
         super(HyperRFile, self).__init__(rfile)
         self.conn = conn
 
     def read(self, size=None):
-        raise NotImplementedError
+        if self.conn.their_state != h11.SEND_BODY or size == 0:
+            return b""
+        event = self.conn.next_event()
+        if event is h11.NEED_DATA:
+            self.conn.receive_data(self.rfile.read(size))
+            event = self.conn.next_event()
+        assert isinstance(event, h11.Data)
+        return event.data
 
     def readline(self, size=None):
-        raise NotImplementedError
+        if self.conn.their_state != h11.SEND_BODY or size == 0:
+            return b""
+        event = self.conn.next_event()
+        if event is h11.NEED_DATA:
+            self.conn.receive_data(self.rfile.readline(size))
+            event = self.conn.next_event()
+        assert isinstance(event, h11.Data)
+        return event.data
 
     def readlines(self, sizehint=None):
-        raise NotImplementedError
+        if self.conn.their_state != h11.SEND_BODY:
+            return b""
+        lines = []
+        line = self.rfile.readline()
+        while line:
+            event = self.conn.next_event()
+            if event is h11.NEED_DATA:
+                line = self.rfile.readline()
+                self.conn.receive_data(line)
+                event = self.conn.next_event()
+                assert isinstance(event, h11.Data)
+                lines.append(event.data)
+        return lines
 
 
 class KnownLengthRFile(RFile):
@@ -497,14 +525,14 @@ class ChunkedRFile(RFile):
         except ValueError:
             raise ValueError(
                 'Bad chunked transfer size: {chunk_size!r}'.
-                format(chunk_size=chunk_size),
-            )
+                    format(chunk_size=chunk_size),
+                    )
 
         if chunk_size <= 0:
             self.closed = True
             return
 
-#            if line: chunk_extension = line[0]
+        #            if line: chunk_extension = line[0]
 
         if self.maxlen and self.bytes_read + chunk_size > self.maxlen:
             raise IOError('Request Entity Too Large')
@@ -518,7 +546,7 @@ class ChunkedRFile(RFile):
             raise ValueError(
                 "Bad chunked transfer coding (expected '\\r\\n', "
                 'got ' + repr(crlf) + ')',
-            )
+                )
 
     def read(self, size=None):
         """Read a chunk from ``rfile`` buffer and return it.
@@ -862,9 +890,9 @@ class HTTPRequest:
             # invalid URIs without raising errors
             # https://tools.ietf.org/html/rfc7230#section-5.3.3
             invalid_path = (
-                _authority != uri
-                or not _port
-                or any((_scheme, _path, _qs, _fragment))
+                    _authority != uri
+                    or not _port
+                    or any((_scheme, _path, _qs, _fragment))
             )
             if invalid_path:
                 self.simple_response(
@@ -878,9 +906,9 @@ class HTTPRequest:
             scheme = qs = fragment = EMPTY
         else:
             disallowed_absolute = (
-                self.strict_mode
-                and not self.proxy_mode
-                and uri_is_absolute_form
+                    self.strict_mode
+                    and not self.proxy_mode
+                    and uri_is_absolute_form
             )
             if disallowed_absolute:
                 # https://tools.ietf.org/html/rfc7230#section-5.3.2
@@ -893,9 +921,9 @@ class HTTPRequest:
                 return False
 
             invalid_path = (
-                self.strict_mode
-                and not uri.startswith(FORWARD_SLASH)
-                and not uri_is_absolute_form
+                    self.strict_mode
+                    and not uri.startswith(FORWARD_SLASH)
+                    and not uri_is_absolute_form
             )
             if invalid_path:
                 # https://tools.ietf.org/html/rfc7230#section-5.3.1
@@ -1170,8 +1198,8 @@ class HTTPRequest:
                 pass
             else:
                 needs_chunked = (
-                    self.response_protocol == 'HTTP/1.1'
-                    and self.method != b'HEAD'
+                        self.response_protocol == 'HTTP/1.1'
+                        and self.method != b'HEAD'
                 )
                 if needs_chunked:
                     # Use the chunked transfer-coding
@@ -1232,8 +1260,6 @@ class HTTPRequest:
             buf.append(k + COLON + SPACE + v + CRLF)
         buf.append(CRLF)
         self.conn.wfile.write(EMPTY.join(buf))
-
-import h11
 
 
 class HyperHTTPRequest(HTTPRequest):
@@ -1337,13 +1363,7 @@ class HyperHTTPRequest(HTTPRequest):
     def respond(self):
         """Call the gateway and write its iterable output."""
         mrbs = self.server.max_request_body_size
-        buffer =
-        while True:
-            self._next_event()
-
-        if self.chunked_read:
-            self.rfile = ChunkedRFile(self.conn.rfile, mrbs)
-        else:
+        if not self.chunked_read:
             cl = int(self.inheaders.get(b'Content-Length', 0))
             if mrbs and mrbs < cl:
                 if not self.sent_headers:
@@ -1353,24 +1373,18 @@ class HyperHTTPRequest(HTTPRequest):
                         'maximum allowed bytes.',
                     )
                 return
-            self.rfile = KnownLengthRFile(self.conn.rfile, cl)
+        self.rfile = HyperRFile(self.conn, self.h_conn)
 
         self.server.gateway(self).respond()
         self.ready and self.ensure_headers_sent()
-
-        if self.chunked_write:
-            self.conn.wfile.write(b'0\r\n\r\n')
 
     def simple_response(self, status, msg=''):
         """Write a simple response back to the client."""
         status = str(status)
         proto_status = '%s %s\r\n' % (self.server.protocol, status)
-        content_length = 'Content-Length: %s\r\n' % len(msg)
-        content_type = 'Content-Type: text/plain\r\n'
-        buf = [
-            proto_status.encode('ISO-8859-1'),
-            content_length.encode('ISO-8859-1'),
-            content_type.encode('ISO-8859-1'),
+        headers = [
+            'Content-Length: %s\r\n' % len(msg),
+            'Content-Type: text/plain\r\n'
         ]
 
         if status[:3] in ('413', '414'):
@@ -1380,23 +1394,12 @@ class HyperHTTPRequest(HTTPRequest):
                 # This will not be true for 414, since read_request_line
                 # usually raises 414 before reading the whole line, and we
                 # therefore cannot know the proper response_protocol.
-                buf.append(b'Connection: close\r\n')
-            else:
-                # HTTP/1.0 had no 413/414 status nor Connection header.
-                # Emit 400 instead and trust the message body is enough.
-                status = '400 Bad Request'
+                headers.append(b'Connection: close\r\n')
 
-        buf.append(CRLF)
+        self.outheaders = headers
+        self.send_headers()
         if msg:
-            if isinstance(msg, six.text_type):
-                msg = msg.encode('ISO-8859-1')
-            buf.append(msg)
-
-        try:
-            self.conn.wfile.write(EMPTY.join(buf))
-        except socket.error as ex:
-            if ex.args[0] not in errors.socket_errors_to_ignore:
-                raise
+            self.write(msg)
 
     def ensure_headers_sent(self):
         """Ensure headers are sent to the client if not already sent."""
@@ -1406,12 +1409,9 @@ class HyperHTTPRequest(HTTPRequest):
 
     def write(self, chunk):
         """Write unbuffered data to the client."""
-        if self.chunked_write and chunk:
-            chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
-            buf = [chunk_size_hex, CRLF, chunk, CRLF]
-            self.conn.wfile.write(EMPTY.join(buf))
-        else:
-            self.conn.wfile.write(chunk)
+        event = h11.Data(data=chunk)
+        bytes_out = self.h_conn.send(event)
+        self.conn.wfile.write(bytes_out)
 
     def send_headers(self):
         """Assert, process, and send the HTTP response message-headers.
@@ -1422,73 +1422,23 @@ class HyperHTTPRequest(HTTPRequest):
         hkeys = [key.lower() for key, value in self.outheaders]
         status = int(self.status[:3])
 
-        if status == 413:
-            # Request Entity Too Large. Close conn to avoid garbage.
-            self.close_connection = True
-        elif b'content-length' not in hkeys:
-            # "All 1xx (informational), 204 (no content),
-            # and 304 (not modified) responses MUST NOT
-            # include a message-body." So no point chunking.
-            if status < 200 or status in (204, 205, 304):
-                pass
-            else:
-                needs_chunked = (
-                    self.response_protocol == 'HTTP/1.1'
-                    and self.method != b'HEAD'
-                )
-                if needs_chunked:
-                    # Use the chunked transfer-coding
-                    self.chunked_write = True
-                    self.outheaders.append((b'Transfer-Encoding', b'chunked'))
-                else:
-                    # Closing the conn is the only way to determine len.
-                    self.close_connection = True
-
-        if b'connection' not in hkeys:
-            if self.response_protocol == 'HTTP/1.1':
-                # Both server and client are HTTP/1.1 or better
-                if self.close_connection:
-                    self.outheaders.append((b'Connection', b'close'))
-            else:
-                # Server and/or client are HTTP/1.0
-                if not self.close_connection:
-                    self.outheaders.append((b'Connection', b'Keep-Alive'))
-
-        if (not self.close_connection) and (not self.chunked_read):
-            # Read any remaining request body data on the socket.
-            # "If an origin server receives a request that does not include an
-            # Expect request-header field with the "100-continue" expectation,
-            # the request includes a request body, and the server responds
-            # with a final status code before reading the entire request body
-            # from the transport connection, then the server SHOULD NOT close
-            # the transport connection until it has read the entire request,
-            # or until the client closes the connection. Otherwise, the client
-            # might not reliably receive the response message. However, this
-            # requirement is not be construed as preventing a server from
-            # defending itself against denial-of-service attacks, or from
-            # badly broken client implementations."
-            remaining = getattr(self.rfile, 'remaining', 0)
-            if remaining > 0:
-                self.rfile.read(remaining)
-
         if b'date' not in hkeys:
             self.outheaders.append((
-                b'Date',
+                b'date',
                 email.utils.formatdate(usegmt=True).encode('ISO-8859-1'),
             ))
 
         if b'server' not in hkeys:
             self.outheaders.append((
-                b'Server',
+                b'server',
                 self.server.server_name.encode('ISO-8859-1'),
             ))
 
-        proto = self.server.protocol.encode('ascii')
-        buf = [proto + SPACE + self.status + CRLF]
-        for k, v in self.outheaders:
-            buf.append(k + COLON + SPACE + v + CRLF)
-        buf.append(CRLF)
-        self.conn.wfile.write(EMPTY.join(buf))
+        res = h11.Response(status_code=status, headers=self.outheaders,
+                           http_version=self.response_protocol, reason=self.status[3:])
+        res_bytes = self.h_conn.send(res)
+        self.conn.wfile.write(res_bytes)
+
 
 
 class HTTPConnection:
@@ -1499,7 +1449,7 @@ class HTTPConnection:
     ssl_env = None
     rbufsize = io.DEFAULT_BUFFER_SIZE
     wbufsize = io.DEFAULT_BUFFER_SIZE
-    RequestHandlerClass = HTTPRequest
+    RequestHandlerClass = HyperHTTPRequest
     peercreds_enabled = False
     peercreds_resolve_enabled = False
 
@@ -1571,7 +1521,7 @@ class HTTPConnection:
                 self.server.error_log(
                     'socket.error %s' % repr(errnum),
                     level=logging.WARNING, traceback=True,
-                )
+                    )
                 self._conditional_error(req, '500 Internal Server Error')
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -1840,9 +1790,9 @@ class HTTPServer:
     Default is 10. Set to None to have unlimited connections."""
 
     def __init__(
-        self, bind_addr, gateway,
-        minthreads=10, maxthreads=-1, server_name=None,
-        peercreds_enabled=False, peercreds_resolve_enabled=False,
+            self, bind_addr, gateway,
+            minthreads=10, maxthreads=-1, server_name=None,
+            peercreds_enabled=False, peercreds_resolve_enabled=False,
     ):
         """Initialize HTTPServer instance.
 
@@ -1867,7 +1817,7 @@ class HTTPServer:
         self.server_name = server_name
         self.peercreds_enabled = peercreds_enabled
         self.peercreds_resolve_enabled = (
-            peercreds_resolve_enabled and peercreds_enabled
+                peercreds_resolve_enabled and peercreds_enabled
         )
         self.clear_stats()
 
@@ -2159,7 +2109,7 @@ class HTTPServer:
                     not in err_msg
                     and 'embedded NUL character' not in err_msg  # py34
                     and 'argument must be a '
-                    'string without NUL characters' not in err_msg  # pypy2
+                        'string without NUL characters' not in err_msg  # pypy2
             ):
                 raise
         except ValueError as val_err:
@@ -2169,7 +2119,7 @@ class HTTPServer:
                     'character in path' not in err_msg
                     and 'embedded null byte' not in err_msg
                     and 'argument must be a '
-                    'string without NUL characters' not in err_msg  # pypy3
+                        'string without NUL characters' not in err_msg  # pypy3
             ):
                 raise
 
@@ -2250,9 +2200,9 @@ class HTTPServer:
         # activate dual-stack. See
         # https://github.com/cherrypy/cherrypy/issues/871.
         listening_ipv6 = (
-            hasattr(socket, 'AF_INET6')
-            and family == socket.AF_INET6
-            and host in ('::', '::0', '::0.0.0.0')
+                hasattr(socket, 'AF_INET6')
+                and family == socket.AF_INET6
+                and host in ('::', '::0', '::0.0.0.0')
         )
         if listening_ipv6:
             try:
@@ -2279,9 +2229,9 @@ class HTTPServer:
         # is different in case of ephemeral port 0)
         bind_addr = socket_.getsockname()
         if socket_.family in (
-            # Windows doesn't have socket.AF_UNIX, so not using it in check
-            socket.AF_INET,
-            socket.AF_INET6,
+                # Windows doesn't have socket.AF_UNIX, so not using it in check
+                socket.AF_INET,
+                socket.AF_INET6,
         ):
             """UNIX domain sockets are strings or bytes.
 
@@ -2349,8 +2299,8 @@ class HTTPServer:
                     # localhost won't work if we've bound to a public IP,
                     # but it will if we bound to '0.0.0.0' (INADDR_ANY).
                     for res in socket.getaddrinfo(
-                        host, port, socket.AF_UNSPEC,
-                        socket.SOCK_STREAM,
+                            host, port, socket.AF_UNSPEC,
+                            socket.SOCK_STREAM,
                     ):
                         af, socktype, proto, canonname, sa = res
                         s = None
