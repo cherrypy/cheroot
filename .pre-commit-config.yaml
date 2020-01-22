@@ -43,8 +43,8 @@ repos:
   - id: detect-private-key
   - id: requirements-txt-fixer
 
-- repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
-  rev: v2.1.1
+- repo: git://github.com/PyCQA/pydocstyle.git
+  rev: 5.0.2
   hooks:
   - id: pydocstyle
 
