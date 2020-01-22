@@ -5,6 +5,11 @@ repos:
   hooks:
   - id: add-trailing-comma
 
+- repo: git://github.com/Lucas-C/pre-commit-hooks
+  rev: v1.1.7
+  hooks:
+  - id: remove-tabs
+
 - repo: git://github.com/Lucas-C/pre-commit-hooks-markup
   rev: v1.0.0
   hooks:
@@ -47,11 +52,6 @@ repos:
   rev: 5.0.2
   hooks:
   - id: pydocstyle
-
-- repo: git://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.6
-  hooks:
-  - id: remove-tabs
 
 - repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
   rev: v1.1.0
