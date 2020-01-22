@@ -340,8 +340,38 @@ class SizeCheckWrapper:
 
     next = __next__
 
+class RFile:
+    def __init__(self, rfile):
+        self.rfile = rfile
 
-class KnownLengthRFile:
+    def read(self, size=None):
+        raise NotImplementedError
+
+    def readline(self, size=None):
+        raise NotImplementedError
+
+    def readlines(self, sizehint=None):
+        raise NotImplementedError
+
+    def close(self):
+        self.rfile.close()
+
+class HyperRFile(RFile):
+    def __init__(self, rfile, conn):
+        super(HyperRFile, self).__init__(rfile)
+        self.conn = conn
+
+    def read(self, size=None):
+        raise NotImplementedError
+
+    def readline(self, size=None):
+        raise NotImplementedError
+
+    def readlines(self, sizehint=None):
+        raise NotImplementedError
+
+
+class KnownLengthRFile(RFile):
     """Wraps a file-like object, returning an empty string when exhausted.
 
     :param rfile: ``file`` of a known size
@@ -350,7 +380,7 @@ class KnownLengthRFile:
 
     def __init__(self, rfile, content_length):
         """Initialize KnownLengthRFile instance."""
-        self.rfile = rfile
+        super(KnownLengthRFile, self).__init__(rfile)
         self.remaining = content_length
 
     def read(self, size=None):
@@ -411,10 +441,6 @@ class KnownLengthRFile:
             line = self.readline(sizehint)
         return lines
 
-    def close(self):
-        """Release resources allocated for ``rfile``."""
-        self.rfile.close()
-
     def __iter__(self):
         """Return file iterator."""
         return self
@@ -428,7 +454,7 @@ class KnownLengthRFile:
     next = __next__
 
 
-class ChunkedRFile:
+class ChunkedRFile(RFile):
     """Wraps a file-like object, returning an empty string when exhausted.
 
     This class is intended to provide a conforming wsgi.input value for
@@ -442,7 +468,7 @@ class ChunkedRFile:
 
     def __init__(self, rfile, maxlen, bufsize=8192):
         """Initialize ChunkedRFile instance."""
-        self.rfile = rfile
+        super(ChunkedRFile, self).__init__(rfile)
         self.maxlen = maxlen
         self.bytes_read = 0
         self.buffer = EMPTY
@@ -613,10 +639,6 @@ class ChunkedRFile:
                 raise ValueError('HTTP requires CRLF terminators')
 
             yield line
-
-    def close(self):
-        """Release resources allocated for ``rfile``."""
-        self.rfile.close()
 
 
 class HTTPRequest:
@@ -1307,6 +1329,10 @@ class HyperHTTPRequest(HTTPRequest):
     def respond(self):
         """Call the gateway and write its iterable output."""
         mrbs = self.server.max_request_body_size
+        buffer =
+        while True:
+            self._next_event()
+
         if self.chunked_read:
             self.rfile = ChunkedRFile(self.conn.rfile, mrbs)
         else:
