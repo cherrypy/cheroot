@@ -20,22 +20,20 @@ repos:
 - repo: git://github.com/pre-commit/pre-commit-hooks
   rev: v2.3.0
   hooks:
+  # Side-effects:
   - id: trailing-whitespace
-  - id: flake8
-    additional_dependencies:
-    - flake8-2020==1.0.0
-    - flake8-pytest-style
   - id: check-merge-conflict
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
+  - id: requirements-txt-fixer
+
+  # Non-modifying checks:
   - id: name-tests-test
     args:
     - --django
     exclude: cheroot/test/(helper|webtest).py
     files: cheroot/test/.+\.py$
-  - id: debug-statements
   - id: check-added-large-files
-  - id: check-ast
   - id: check-byte-order-marker
   - id: check-case-conflict
   # disabled due to pre-commit/pre-commit-hooks#159
@@ -46,7 +44,14 @@ repos:
     args:
     - --unsafe
   - id: detect-private-key
-  - id: requirements-txt-fixer
+
+  # Heavy checks:
+  - id: check-ast
+  - id: debug-statements
+  - id: flake8
+    additional_dependencies:
+    - flake8-2020==1.0.0
+    - flake8-pytest-style
 
 - repo: git://github.com/PyCQA/pydocstyle.git
   rev: 5.0.2
