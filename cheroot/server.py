@@ -1343,10 +1343,16 @@ class HyperHTTPRequest(HTTPRequest):
         if isinstance(req_line, h11.Request):
             self.started_request = True
             self.uri = req_line.target
+            scheme, netloc, path, query, fragment = urllib.parse.urlsplit(self.uri)
+            self.path = path
+            self.qs = query
             self.method = req_line.method
-            self.request_protocol = "HTTP/%s" % req_line.http_version
-            self.response_protocol = "HTTP/%s" % req_line.http_version
-            self.inheaders = req_line.headers
+            self.request_protocol = b"HTTP/%s" % req_line.http_version
+            self.response_protocol = b"HTTP/%s" % req_line.http_version
+            # TODO: oneliner-ify this
+            self.inheaders = {}
+            for header in req_line.headers:
+                self.inheaders[header[0]] = header[1]
             self.ready = True
         else:
             # TODO
@@ -1373,11 +1379,10 @@ class HyperHTTPRequest(HTTPRequest):
     def simple_response(self, status, msg=''):
         """Write a simple response back to the client."""
         status = str(status)
-        proto_status = '%s %s\r\n' % (self.server.protocol, status)
-        headers = [
-            'Content-Length: %s\r\n' % len(msg),
-            'Content-Type: text/plain\r\n'
-        ]
+        headers = {
+            'Content-Length': len(msg),
+            'Content-Type': 'text/plain'
+        }
 
         if status[:3] in ('413', '414'):
             # Request Entity Too Large / Request-URI Too Long
@@ -1386,7 +1391,7 @@ class HyperHTTPRequest(HTTPRequest):
                 # This will not be true for 414, since read_request_line
                 # usually raises 414 before reading the whole line, and we
                 # therefore cannot know the proper response_protocol.
-                headers.append(b'Connection: close\r\n')
+                headers['Connection'] = 'close'
 
         self.outheaders = headers
         self.send_headers()
