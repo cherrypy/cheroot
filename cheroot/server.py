@@ -1211,6 +1211,259 @@ class HTTPRequest:
         buf.append(CRLF)
         self.conn.wfile.write(EMPTY.join(buf))
 
+import h11
+
+
+class HyperHTTPRequest(HTTPRequest):
+    """An HTTP Request (and response).
+
+    A single HTTP connection may consist of multiple request/response pairs.
+    """
+
+    server = None
+    """The HTTPServer object which is receiving this request."""
+
+    conn = None
+    """The HTTPConnection object on which this request connected."""
+
+    inheaders = {}
+    """A dict of request headers."""
+
+    outheaders = []
+    """A list of header tuples to write in the response."""
+
+    ready = False
+    """When True, the request has been parsed and is ready to begin generating
+    the response. When False, signals the calling Connection that the response
+    should not be generated and the connection should close."""
+
+    close_connection = False
+    """Signals the calling Connection that the request should close. This does
+    not imply an error! The client and/or server may each request that the
+    connection be closed."""
+
+    chunked_write = False
+    """If True, output will be encoded with the "chunked" transfer-coding.
+
+    This value is set automatically inside send_headers."""
+
+    header_reader = HeaderReader()
+    """
+    A HeaderReader instance or compatible reader.
+    """
+
+    def __init__(self, server, conn, proxy_mode=False, strict_mode=True):
+        """Initialize HTTP request container instance.
+
+        Args:
+            server (HTTPServer): web server object receiving this request
+            conn (HTTPConnection): HTTP connection object for this request
+            proxy_mode (bool): whether this HTTPServer should behave as a PROXY
+            server for certain requests
+            strict_mode (bool): whether we should return a 400 Bad Request when
+            we encounter a request that a HTTP compliant client should not be
+            making
+        """
+        self.server = server
+        self.conn = conn
+        self.h_conn = h11.Connection(h11.SERVER)
+        self.ready = False
+        self.started_request = False
+        self.scheme = b'http'
+        if self.server.ssl_adapter is not None:
+            self.scheme = b'https'
+        # Use the lowest-common protocol in case read_request_line errors.
+        self.response_protocol = 'HTTP/1.0'
+        self.inheaders = {}
+
+        self.status = ''
+        self.outheaders = []
+        self.sent_headers = False
+        self.close_connection = self.__class__.close_connection
+        self.chunked_read = False
+        self.chunked_write = self.__class__.chunked_write
+        self.proxy_mode = proxy_mode
+        self.strict_mode = strict_mode
+
+    def _next_event(self):
+        while True:
+            event = self.h_conn.next_event()
+            if event is h11.NEED_DATA:
+                if self.h_conn.they_are_waiting_for_100_continue:
+                    go_ahead = h11.InformationalResponse(status_code=100)
+                    bytes_out = self.h_conn.send(go_ahead)
+                    self.conn.wfile.write(bytes_out)
+                self.h_conn.receive_data(self.conn.rfile.readline())
+                continue
+            return event
+
+    def parse_request(self):
+        """Parse the next HTTP request start-line and message-headers."""
+        req_line = self._next_event()
+        if isinstance(req_line, h11.Request):
+            self.started_request = True
+            self.uri = req_line.target
+            self.method = req_line.method
+            self.request_protocol = "HTTP/%s" % req_line.http_version
+            self.response_protocol = "HTTP/%s" % req_line.http_version
+            self.inheaders = req_line.headers
+            self.ready = True
+        else:
+            # TODO
+            raise NotImplementedError("Only expecting Request object here")
+
+    def respond(self):
+        """Call the gateway and write its iterable output."""
+        mrbs = self.server.max_request_body_size
+        if self.chunked_read:
+            self.rfile = ChunkedRFile(self.conn.rfile, mrbs)
+        else:
+            cl = int(self.inheaders.get(b'Content-Length', 0))
+            if mrbs and mrbs < cl:
+                if not self.sent_headers:
+                    self.simple_response(
+                        '413 Request Entity Too Large',
+                        'The entity sent with the request exceeds the '
+                        'maximum allowed bytes.',
+                    )
+                return
+            self.rfile = KnownLengthRFile(self.conn.rfile, cl)
+
+        self.server.gateway(self).respond()
+        self.ready and self.ensure_headers_sent()
+
+        if self.chunked_write:
+            self.conn.wfile.write(b'0\r\n\r\n')
+
+    def simple_response(self, status, msg=''):
+        """Write a simple response back to the client."""
+        status = str(status)
+        proto_status = '%s %s\r\n' % (self.server.protocol, status)
+        content_length = 'Content-Length: %s\r\n' % len(msg)
+        content_type = 'Content-Type: text/plain\r\n'
+        buf = [
+            proto_status.encode('ISO-8859-1'),
+            content_length.encode('ISO-8859-1'),
+            content_type.encode('ISO-8859-1'),
+        ]
+
+        if status[:3] in ('413', '414'):
+            # Request Entity Too Large / Request-URI Too Long
+            self.close_connection = True
+            if self.response_protocol == 'HTTP/1.1':
+                # This will not be true for 414, since read_request_line
+                # usually raises 414 before reading the whole line, and we
+                # therefore cannot know the proper response_protocol.
+                buf.append(b'Connection: close\r\n')
+            else:
+                # HTTP/1.0 had no 413/414 status nor Connection header.
+                # Emit 400 instead and trust the message body is enough.
+                status = '400 Bad Request'
+
+        buf.append(CRLF)
+        if msg:
+            if isinstance(msg, six.text_type):
+                msg = msg.encode('ISO-8859-1')
+            buf.append(msg)
+
+        try:
+            self.conn.wfile.write(EMPTY.join(buf))
+        except socket.error as ex:
+            if ex.args[0] not in errors.socket_errors_to_ignore:
+                raise
+
+    def ensure_headers_sent(self):
+        """Ensure headers are sent to the client if not already sent."""
+        if not self.sent_headers:
+            self.sent_headers = True
+            self.send_headers()
+
+    def write(self, chunk):
+        """Write unbuffered data to the client."""
+        if self.chunked_write and chunk:
+            chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
+            buf = [chunk_size_hex, CRLF, chunk, CRLF]
+            self.conn.wfile.write(EMPTY.join(buf))
+        else:
+            self.conn.wfile.write(chunk)
+
+    def send_headers(self):
+        """Assert, process, and send the HTTP response message-headers.
+
+        You must set ``self.status``, and :py:attr:`self.outheaders
+        <HTTPRequest.outheaders>` before calling this.
+        """
+        hkeys = [key.lower() for key, value in self.outheaders]
+        status = int(self.status[:3])
+
+        if status == 413:
+            # Request Entity Too Large. Close conn to avoid garbage.
+            self.close_connection = True
+        elif b'content-length' not in hkeys:
+            # "All 1xx (informational), 204 (no content),
+            # and 304 (not modified) responses MUST NOT
+            # include a message-body." So no point chunking.
+            if status < 200 or status in (204, 205, 304):
+                pass
+            else:
+                needs_chunked = (
+                    self.response_protocol == 'HTTP/1.1'
+                    and self.method != b'HEAD'
+                )
+                if needs_chunked:
+                    # Use the chunked transfer-coding
+                    self.chunked_write = True
+                    self.outheaders.append((b'Transfer-Encoding', b'chunked'))
+                else:
+                    # Closing the conn is the only way to determine len.
+                    self.close_connection = True
+
+        if b'connection' not in hkeys:
+            if self.response_protocol == 'HTTP/1.1':
+                # Both server and client are HTTP/1.1 or better
+                if self.close_connection:
+                    self.outheaders.append((b'Connection', b'close'))
+            else:
+                # Server and/or client are HTTP/1.0
+                if not self.close_connection:
+                    self.outheaders.append((b'Connection', b'Keep-Alive'))
+
+        if (not self.close_connection) and (not self.chunked_read):
+            # Read any remaining request body data on the socket.
+            # "If an origin server receives a request that does not include an
+            # Expect request-header field with the "100-continue" expectation,
+            # the request includes a request body, and the server responds
+            # with a final status code before reading the entire request body
+            # from the transport connection, then the server SHOULD NOT close
+            # the transport connection until it has read the entire request,
+            # or until the client closes the connection. Otherwise, the client
+            # might not reliably receive the response message. However, this
+            # requirement is not be construed as preventing a server from
+            # defending itself against denial-of-service attacks, or from
+            # badly broken client implementations."
+            remaining = getattr(self.rfile, 'remaining', 0)
+            if remaining > 0:
+                self.rfile.read(remaining)
+
+        if b'date' not in hkeys:
+            self.outheaders.append((
+                b'Date',
+                email.utils.formatdate(usegmt=True).encode('ISO-8859-1'),
+            ))
+
+        if b'server' not in hkeys:
+            self.outheaders.append((
+                b'Server',
+                self.server.server_name.encode('ISO-8859-1'),
+            ))
+
+        proto = self.server.protocol.encode('ascii')
+        buf = [proto + SPACE + self.status + CRLF]
+        for k, v in self.outheaders:
+            buf.append(k + COLON + SPACE + v + CRLF)
+        buf.append(CRLF)
+        self.conn.wfile.write(EMPTY.join(buf))
+
 
 class HTTPConnection:
     """An HTTP connection (active socket)."""
