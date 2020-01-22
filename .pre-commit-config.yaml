@@ -1,3 +1,4 @@
+---
 repos:
 - repo: git://github.com/asottile/add-trailing-comma
   rev: v0.7.0
