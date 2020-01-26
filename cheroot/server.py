@@ -359,8 +359,8 @@ class RFile:
     def close(self):
         self.rfile.close()
 
-class HyperRFile(RFile):
 
+class HyperRFile(RFile):
     def __init__(self, rfile, conn):
         super(HyperRFile, self).__init__(rfile)
         self.conn = conn
@@ -372,8 +372,10 @@ class HyperRFile(RFile):
         if event is h11.NEED_DATA:
             self.conn.receive_data(self.rfile.read(size))
             event = self.conn.next_event()
-        assert isinstance(event, h11.Data)
-        return event.data
+        if isinstance(event, h11.Data):
+            return event.data
+        else:
+            return b""
 
     def readline(self, size=None):
         if self.conn.their_state != h11.SEND_BODY or size == 0:
@@ -391,13 +393,11 @@ class HyperRFile(RFile):
         lines = []
         line = self.rfile.readline()
         while line:
+            self.conn.receive_data(line)
             event = self.conn.next_event()
-            if event is h11.NEED_DATA:
-                line = self.rfile.readline()
-                self.conn.receive_data(line)
-                event = self.conn.next_event()
-                assert isinstance(event, h11.Data)
-                lines.append(event.data)
+            assert isinstance(event, h11.Data)
+            lines.append(event.data)
+
         return lines
 
 
@@ -921,9 +921,9 @@ class HTTPRequest:
                 return False
 
             invalid_path = (
-                    self.strict_mode
-                    and not uri.startswith(FORWARD_SLASH)
-                    and not uri_is_absolute_form
+                self.strict_mode
+                and not uri.startswith(FORWARD_SLASH)
+                and not uri_is_absolute_form
             )
             if invalid_path:
                 # https://tools.ietf.org/html/rfc7230#section-5.3.1
@@ -1263,42 +1263,6 @@ class HTTPRequest:
 
 
 class HyperHTTPRequest(HTTPRequest):
-    """An HTTP Request (and response).
-
-    A single HTTP connection may consist of multiple request/response pairs.
-    """
-
-    server = None
-    """The HTTPServer object which is receiving this request."""
-
-    conn = None
-    """The HTTPConnection object on which this request connected."""
-
-    inheaders = {}
-    """A dict of request headers."""
-
-    outheaders = []
-    """A list of header tuples to write in the response."""
-
-    ready = False
-    """When True, the request has been parsed and is ready to begin generating
-    the response. When False, signals the calling Connection that the response
-    should not be generated and the connection should close."""
-
-    close_connection = False
-    """Signals the calling Connection that the request should close. This does
-    not imply an error! The client and/or server may each request that the
-    connection be closed."""
-
-    chunked_write = False
-    """If True, output will be encoded with the "chunked" transfer-coding.
-
-    This value is set automatically inside send_headers."""
-
-    header_reader = HeaderReader()
-    """
-    A HeaderReader instance or compatible reader.
-    """
 
     def __init__(self, server, conn, proxy_mode=False, strict_mode=True):
         """Initialize HTTP request container instance.
@@ -1321,7 +1285,7 @@ class HyperHTTPRequest(HTTPRequest):
         if self.server.ssl_adapter is not None:
             self.scheme = b'https'
         # Use the lowest-common protocol in case read_request_line errors.
-        self.response_protocol = 'HTTP/1.0'
+        self.response_protocol = 'HTTP/1.1'
         self.inheaders = {}
 
         self.status = ''
@@ -1347,30 +1311,40 @@ class HyperHTTPRequest(HTTPRequest):
 
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
-        req_line = self._next_event()
-        if isinstance(req_line, h11.Request):
-            self.started_request = True
-            self.uri = req_line.target
-            scheme, netloc, path, query, fragment = urllib.parse.urlsplit(self.uri)
-            self.path = path
-            self.qs = query
-            self.method = req_line.method
-            self.request_protocol = b"HTTP/%s" % req_line.http_version
-            self.response_protocol = b"HTTP/%s" % req_line.http_version
-            # TODO: oneliner-ify this
-            self.inheaders = {}
-            for header in req_line.headers:
-                self.inheaders[header[0]] = header[1]
-            self.ready = True
-        else:
-            # TODO
-            raise NotImplementedError("Only expecting Request object here")
+        try:
+            req_line = self._next_event()
+            if isinstance(req_line, h11.Request):
+                self.started_request = True
+                self.uri = req_line.target
+                scheme, netloc, path, query, fragment = urllib.parse.urlsplit(self.uri)
+                self.path = path
+                self.qs = query
+                self.method = req_line.method
+                self.request_protocol = b"HTTP/%s" % req_line.http_version
+                self.response_protocol = b"HTTP/1.1"
+                # TODO: oneliner-ify this
+                self.inheaders = {}
+                for header in req_line.headers:
+                    self.inheaders[header[0]] = header[1]
+                self.ready = True
+            elif isinstance(req_line, h11.ConnectionClosed):
+                self.close_connection = True
+            else:
+                # TODO
+                raise NotImplementedError("Only expecting Request object here")
+        except h11.RemoteProtocolError as e:
+            # NEED INFO: Should we adjust the tests to match h11's exception text
+            # Or should we continue to shim like this:
+            if e.args[0] == "bad Content-Length":
+                self.simple_response(e.error_status_hint or 400, "Malformed Content-Length Header.")
+            else:
+                self.simple_response(e.error_status_hint or 400, str(e))
 
     def respond(self):
         """Call the gateway and write its iterable output."""
         mrbs = self.server.max_request_body_size
         if not self.chunked_read:
-            cl = int(self.inheaders.get(b'Content-Length', 0))
+            cl = int(self.inheaders.get(b'content-length', 0))
             if mrbs and mrbs < cl:
                 if not self.sent_headers:
                     self.simple_response(
@@ -1383,14 +1357,16 @@ class HyperHTTPRequest(HTTPRequest):
 
         self.server.gateway(self).respond()
         self.ready and self.ensure_headers_sent()
+        if self.h_conn.their_state is h11.MUST_CLOSE:
+            self.close_connection = True
 
     def simple_response(self, status, msg=''):
         """Write a simple response back to the client."""
         status = str(status)
-        headers = {
-            'Content-Length': len(msg),
-            'Content-Type': 'text/plain'
-        }
+        headers = [
+            ('Content-Length', str(len(msg))),
+            ('Content-Type', 'text/plain')
+        ]
 
         if status[:3] in ('413', '414'):
             # Request Entity Too Large / Request-URI Too Long
@@ -1399,12 +1375,13 @@ class HyperHTTPRequest(HTTPRequest):
                 # This will not be true for 414, since read_request_line
                 # usually raises 414 before reading the whole line, and we
                 # therefore cannot know the proper response_protocol.
-                headers['Connection'] = 'close'
+                headers.append(('Connection', 'close'))
 
         self.outheaders = headers
+        self.status = status
         self.send_headers()
         if msg:
-            self.write(msg)
+            self.write(bytes(msg, encoding="ascii"))
 
     def ensure_headers_sent(self):
         """Ensure headers are sent to the client if not already sent."""
@@ -1440,7 +1417,7 @@ class HyperHTTPRequest(HTTPRequest):
             ))
 
         res = h11.Response(status_code=status, headers=self.outheaders,
-                           http_version=self.response_protocol, reason=self.status[3:])
+                           http_version=self.response_protocol[5:], reason=self.status[3:])
         res_bytes = self.h_conn.send(res)
         self.conn.wfile.write(res_bytes)
 
