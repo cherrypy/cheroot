@@ -370,7 +370,7 @@ class HyperRFile(RFile):
             return b""
         event = self.conn.next_event()
         if event is h11.NEED_DATA:
-            self.conn.receive_data(self.rfile.read(size))
+            self.conn.receive_data(self.rfile.rfile.read(size))
             event = self.conn.next_event()
         if isinstance(event, h11.Data):
             return event.data
@@ -382,7 +382,7 @@ class HyperRFile(RFile):
             return b""
         event = self.conn.next_event()
         if event is h11.NEED_DATA:
-            self.conn.receive_data(self.rfile.readline(size))
+            self.conn.receive_data(self.rfile.rfile.readline(size))
             event = self.conn.next_event()
         assert isinstance(event, h11.Data)
         return event.data
@@ -391,12 +391,13 @@ class HyperRFile(RFile):
         if self.conn.their_state != h11.SEND_BODY:
             return b""
         lines = []
-        line = self.rfile.readline()
+        line = self.rfile.rfile.readline()
         while line:
             self.conn.receive_data(line)
             event = self.conn.next_event()
             assert isinstance(event, h11.Data)
             lines.append(event.data)
+            line = self.rfile.rfile.readline()
 
         return lines
 
@@ -1337,6 +1338,8 @@ class HyperHTTPRequest(HTTPRequest):
             # Or should we continue to shim like this:
             if e.args[0] == "bad Content-Length":
                 self.simple_response(e.error_status_hint or 400, "Malformed Content-Length Header.")
+            elif e.args[0] == "malformed data":
+                self.simple_response(e.error_status_hint or 400, 'Illegal header line.')
             else:
                 self.simple_response(e.error_status_hint or 400, str(e))
 
