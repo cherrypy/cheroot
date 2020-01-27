@@ -333,6 +333,7 @@ def test_malformed_request_line(
     c.close()
 
 
+@pytest.mark.xfail(reason="h11 normalizes the method and ignores non-capitalized methods")
 def test_malformed_http_method(test_client):
     """Test non-uppercase HTTP method."""
     c = test_client.get_connection()
