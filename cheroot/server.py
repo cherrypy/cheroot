@@ -1368,8 +1368,18 @@ class HyperHTTPRequest(HTTPRequest):
 
         self.server.gateway(self).respond()
         self.ready and self.ensure_headers_sent()
+
+        # If we haven't sent our end-of-message data (\r\n), send it now
+        if self.h_conn.our_state is not h11.DONE:
+            bytes_out = self.h_conn.send(h11.EndOfMessage())
+            self.conn.wfile.write(bytes_out)
+
         if self.h_conn.their_state is h11.MUST_CLOSE:
             self.close_connection = True
+
+        # prep for next req cycle if it's available
+        if self.h_conn.our_state == h11.DONE and self.h_conn.their_state == h11.DONE:
+            self.h_conn.start_next_cycle()
 
     def simple_response(self, status, msg=''):
         """Write a simple response back to the client."""
