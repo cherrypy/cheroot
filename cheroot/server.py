@@ -363,13 +363,22 @@ class HyperRFile(RFile):
         super(HyperRFile, self).__init__(rfile)
         self.conn = conn
 
+    def _get_event_or_send_100(self):
+        event = self.conn.next_event()
+        if self.conn.they_are_waiting_for_100_continue:
+            mini_headers = ()
+            go_ahead = h11.InformationalResponse(status_code=100, headers=mini_headers)
+            bytes_out = self.conn.send(go_ahead)
+            self.rfile.wfile.write(bytes_out)
+        return event
+
     def read(self, size=None):
         if self.conn.their_state != h11.SEND_BODY or size == 0:
             return b""
-        event = self.conn.next_event()
+        event = self._get_event_or_send_100()
         if event is h11.NEED_DATA:
             self.conn.receive_data(self.rfile.rfile.read(size))
-            event = self.conn.next_event()
+            event = self._get_event_or_send_100()
         if isinstance(event, h11.Data):
             return event.data
         else:
@@ -378,10 +387,10 @@ class HyperRFile(RFile):
     def readline(self, size=None):
         if self.conn.their_state != h11.SEND_BODY or size == 0:
             return b""
-        event = self.conn.next_event()
+        event = self._get_event_or_send_100()
         if event is h11.NEED_DATA:
             self.conn.receive_data(self.rfile.rfile.readline(size))
-            event = self.conn.next_event()
+            event = self._get_event_or_send_100()
         assert isinstance(event, h11.Data)
         return event.data
 
@@ -392,7 +401,7 @@ class HyperRFile(RFile):
         line = self.rfile.rfile.readline()
         while line:
             self.conn.receive_data(line)
-            event = self.conn.next_event()
+            event = self._get_event_or_send_100()
             assert isinstance(event, h11.Data)
             lines.append(event.data)
             line = self.rfile.rfile.readline()
@@ -1291,6 +1300,8 @@ class HyperHTTPRequest(HTTPRequest):
         self.strict_mode = strict_mode
 
     def _next_event(self):
+        # TODO: Determine if this wrapper is even needed. Apparently we don't
+        # expect 100 at this point in the req cycle
         while True:
             event = self.h_conn.next_event()
             if event is h11.NEED_DATA:
@@ -1319,6 +1330,11 @@ class HyperHTTPRequest(HTTPRequest):
                 self.inheaders = {}
                 for header in req_line.headers:
                     self.inheaders[header[0]] = header[1]
+
+                if ('transfer-encoding' in self.inheaders and
+                    self.inheaders['transfer-encoding'].lower() == b"chunked"):
+                    self.chunked_read = True
+
                 self.ready = True
             elif isinstance(req_line, h11.ConnectionClosed):
                 self.close_connection = True
@@ -1768,7 +1784,7 @@ class HTTPServer:
 
     def __init__(
             self, bind_addr, gateway,
-            minthreads=10, maxthreads=-1, server_name=None,
+            minthreads=1, maxthreads=1, server_name=None,
             peercreds_enabled=False, peercreds_resolve_enabled=False,
     ):
         """Initialize HTTPServer instance.
