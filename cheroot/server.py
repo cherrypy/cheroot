@@ -1306,7 +1306,7 @@ class HyperHTTPRequest(HTTPRequest):
             event = self.h_conn.next_event()
             if event is h11.NEED_DATA:
                 if self.h_conn.they_are_waiting_for_100_continue:
-                    go_ahead = h11.InformationalResponse(status_code=100)
+                    go_ahead = h11.InformationalResponse(status_code=100, headers=())
                     bytes_out = self.h_conn.send(go_ahead)
                     self.conn.wfile.write(bytes_out)
                 self.h_conn.receive_data(self.conn.rfile.readline())
@@ -1334,6 +1334,11 @@ class HyperHTTPRequest(HTTPRequest):
                 if ('transfer-encoding' in self.inheaders and
                     self.inheaders['transfer-encoding'].lower() == b"chunked"):
                     self.chunked_read = True
+
+                if self.h_conn.they_are_waiting_for_100_continue:
+                    go_ahead = h11.InformationalResponse(status_code=100, headers=())
+                    bytes_out = self.h_conn.send(go_ahead)
+                    self.conn.wfile.write(bytes_out)
 
                 self.ready = True
             elif isinstance(req_line, h11.ConnectionClosed):
@@ -1373,6 +1378,10 @@ class HyperHTTPRequest(HTTPRequest):
         if self.h_conn.our_state is not h11.DONE:
             bytes_out = self.h_conn.send(h11.EndOfMessage())
             self.conn.wfile.write(bytes_out)
+
+        while self.h_conn.their_state is h11.SEND_BODY:
+            # empty their buffer ?
+            self._next_event()
 
         if self.h_conn.their_state is h11.MUST_CLOSE:
             self.close_connection = True
