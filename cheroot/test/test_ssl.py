@@ -396,7 +396,7 @@ def test_tls_client_auth(
     ),
 )
 @pytest.mark.parametrize(
-    'tls_verify_mode,use_client_cert',
+    ('tls_verify_mode', 'use_client_cert'),
     (
         (ssl.CERT_NONE, False),
         (ssl.CERT_NONE, True),
