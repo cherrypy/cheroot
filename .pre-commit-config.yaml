@@ -14,6 +14,11 @@ repos:
   rev: v1.0.0
   hooks:
   - id: rst-linter
+    exclude: >-
+      (?x)
+      CHANGES.rst
+      |
+      docs/
     files: >-
       ^.*\.rst$
 
