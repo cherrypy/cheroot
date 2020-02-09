@@ -14,8 +14,13 @@
 .. image:: https://img.shields.io/appveyor/ci/cherrypy/cheroot/master.svg?label=Windows%20build%20%40%20Appveyor
    :target: https://ci.appveyor.com/project/cherrypy/cheroot/branch/master
 
-.. image:: https://img.shields.io/badge/GitHub%20Actions%20CI%2FCD-workflows-important?logo=github
-   :target: https://github.com/cherrypy/cheroot/actions
+.. image:: https://github.com/cherrypy/cheroot/workflows/Test%20suite/badge.svg
+   :target: https://github.com/cherrypy/cheroot/actions?query=workflow%3A%22Test+suite%22+branch%3Amaster
+   :alt: GitHub Actions Workflow — Test suite
+
+.. image:: https://github.com/cherrypy/cheroot/workflows/Code%20quality/badge.svg
+   :target: https://github.com/cherrypy/cheroot/actions?query=workflow%3A%22Code+quality%22+branch%3Amaster
+   :alt: GitHub Actions Workflow — Code quality
 
 .. image:: https://img.shields.io/badge/license-BSD-blue.svg?maxAge=3600
    :target: https://pypi.org/project/cheroot
