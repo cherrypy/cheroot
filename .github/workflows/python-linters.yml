@@ -43,7 +43,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pre-commit-${{ hashFiles('setup.cfg') }}-${{ hashFiles('setup.py') }}-${{ hashFiles('tox.ini') }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('.pre-commit-config.yaml') }}-${{ hashFiles('.pre-commit-config.yaml.failing') }}-${{ hashFiles('pytest.ini') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('setup.cfg') }}-${{ hashFiles('setup.py') }}-${{ hashFiles('tox.ini') }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('.pre-commit-config.yaml') }}-${{ hashFiles('.pre-commit-config.yaml.failing') }}-${{ hashFiles('pytest.ini') }}
         restore-keys: |
           ${{ runner.os }}-pip-
           ${{ runner.os }}-
