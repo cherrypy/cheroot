@@ -59,6 +59,9 @@ linkcheck_ignore = [
     r'http://localhost:\d+/',  # local URLs
     r'https://codecov\.io/gh/cherrypy/cheroot/branch/master/graph/badge\.svg',
     r'https://github\.com/cherrypy/cheroot/actions',  # 404 if no auth
+    # Requires a more liberal 'Accept: ' HTTP request header:
+    # Ref: https://github.com/sphinx-doc/sphinx/issues/7247
+    r'https://github\.com/cherrypy/cheroot/workflows/[^/]+/badge\.svg',
 ]
 linkcheck_workers = 25
 
