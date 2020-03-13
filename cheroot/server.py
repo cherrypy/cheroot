@@ -1335,6 +1335,9 @@ class HyperHTTPRequest(HTTPRequest):
                     self.inheaders['transfer-encoding'].lower() == b"chunked"):
                     self.chunked_read = True
 
+                if fragment:
+                    self.simple_response(400, "Illegal #fragment in Request-URI.")
+
                 self.ready = True
             elif isinstance(req_line, h11.ConnectionClosed):
                 self.close_connection = True
