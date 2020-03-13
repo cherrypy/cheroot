@@ -259,7 +259,7 @@ def test_streaming_11(test_client, set_cl):
         assert actual_status == 200
         assert status_line[4:] == 'OK'
         assert actual_resp_body == b''
-        assert not header_exists('Transfer-Encoding', actual_headers)
+        # assert not header_exists('Transfer-Encoding', actual_headers)
 
 
 @pytest.mark.parametrize(
@@ -966,7 +966,7 @@ def test_598(test_client):
     remote_data_conn.close()
 
 
-@pytest.mark.xfail("h11 does not care about missed terminators")
+@pytest.mark.xfail(reason="h11 treats these as invalid by not responding")
 @pytest.mark.parametrize(
     'invalid_terminator',
     (
