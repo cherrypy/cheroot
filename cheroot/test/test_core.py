@@ -170,13 +170,13 @@ def test_parse_uri_unsafe_uri(test_client):
     resource = '/\xa0Ðblah key 0 900 4 data'.encode('latin-1')
     quoted = urllib.parse.quote(resource)
     assert quoted == '/%A0%D0blah%20key%200%20900%204%20data'
-    request = 'GET {quoted} HTTP/1.1'.format(**locals())
+    request = 'GET {quoted} HTTP/1.1\r\nHost: test'.format(**locals())
     c._output(request.encode('utf-8'))
     c._send_output()
     response = _get_http_response(c, method='GET')
     response.begin()
     assert response.status == HTTP_OK
-    assert response.read(12) == b'Hello world!'
+    assert response.read() == b'Hello world!'
     c.close()
 
 
@@ -191,7 +191,8 @@ def test_parse_uri_invalid_uri(test_client):
     response = _get_http_response(c, method='GET')
     response.begin()
     assert response.status == HTTP_BAD_REQUEST
-    assert response.read(21) == b'Malformed Request-URI'
+    # TODO: h11 doesn't have this specific of messaging. See python-hyper/h11#98
+    # assert response.read(21) == b'Malformed Request-URI'
     c.close()
 
 
