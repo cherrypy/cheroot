@@ -17,6 +17,29 @@
       tox_prefer_python2: false
 
 - job:
+    name: tox-py27-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 2.7
+    parent: tox
+
+- job:
+    name: tox-py36-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.6
+      tox_prefer_python2: false
+    parent: tox
+
+- job:
+    name: tox-py37-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.7
+      tox_prefer_python2: false
+    parent: tox
+
+- job:
     name: tox-build-docs
     parent: tox
     vars:
@@ -57,7 +80,9 @@
     check:
       jobs:
       - tox-pre-commit
-      - tox-setup-check
+      - tox-py36-setup-check
+      - tox-py37-setup-check
+      - tox-py27-setup-check
       - tox-build-docs
       - tox-spellcheck-docs
       - tox-linkcheck-docs
