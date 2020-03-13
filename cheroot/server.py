@@ -1328,8 +1328,10 @@ class HyperHTTPRequest(HTTPRequest):
             if isinstance(req_line, h11.Request):
                 self.started_request = True
                 self.uri = req_line.target
+                if not self.uri.startswith(FORWARD_SLASH):
+                    self.simple_response(400, 'Request line must starting with a slash')
+                    return
                 scheme, netloc, path, query, fragment = urllib.parse.urlsplit(self.uri)
-                self.path = path
                 self.qs = query
                 self.method = req_line.method
                 self.request_protocol = b"HTTP/%s" % req_line.http_version
@@ -1347,6 +1349,20 @@ class HyperHTTPRequest(HTTPRequest):
                     go_ahead = h11.InformationalResponse(status_code=100, headers=())
                     bytes_out = self.h_conn.send(go_ahead)
                     self.conn.wfile.write(bytes_out)
+                if fragment:
+                    self.simple_response(400, "Illegal #fragment in Request-URI.")
+
+                try:
+                    # TODO: Figure out whether exception can really happen here.
+                    # It looks like it's caught on urlsplit() call above.
+                    atoms = [
+                        urllib.parse.unquote_to_bytes(x)
+                        for x in QUOTED_SLASH_REGEX.split(path)
+                    ]
+                except ValueError as ex:
+                    self.simple_response(400, ex.args[0])
+                    return False
+                self.path = QUOTED_SLASH.join(atoms)
                 self.ready = True
             elif isinstance(req_line, h11.ConnectionClosed):
                 self.close_connection = True
@@ -1377,6 +1393,8 @@ class HyperHTTPRequest(HTTPRequest):
                     )
                 return
         self.rfile = HyperRFile(self.conn, self.h_conn)
+        # client may still be in send body, lets find out and figure out what to do with that
+        # if self.h_conn.their_state == h11.SEND_BODY:
 
         self.server.gateway(self).respond()
         self.ready and self.ensure_headers_sent()
