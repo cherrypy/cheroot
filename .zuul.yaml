@@ -3,18 +3,51 @@
     parent: tox
     vars:
       tox_envlist: pre-commit
-      # NOTE(mnaser): Drop this once zuul/zuul-jobs no longer prefers
-      #               Python 2 by default.
-      tox_prefer_python2: false
-
 - job:
     name: tox-setup-check
     parent: tox
     vars:
       tox_envlist: setup-check
-      # NOTE(mnaser): Drop this once zuul/zuul-jobs no longer prefers
-      #               Python 2 by default.
-      tox_prefer_python2: false
+
+- job:
+    name: tox-py27-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 2.7
+      python_use_pyenv: false
+    parent: tox
+
+- job:
+    name: tox-py35-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.5
+      python_use_pyenv: true
+    parent: tox
+
+- job:
+    name: tox-py36-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.6
+      python_use_pyenv: true
+    parent: tox
+
+- job:
+    name: tox-py37-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.7
+      python_use_pyenv: false
+    parent: tox
+
+- job:
+    name: tox-py38-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.8
+      python_use_pyenv: true
+    parent: tox
 
 - job:
     name: tox-build-docs
@@ -57,7 +90,11 @@
     check:
       jobs:
       - tox-pre-commit
-      - tox-setup-check
+      - tox-py27-setup-check
+      - tox-py35-setup-check
+      - tox-py36-setup-check
+      - tox-py37-setup-check
+      - tox-py38-setup-check
       - tox-build-docs
       - tox-spellcheck-docs
       - tox-linkcheck-docs
