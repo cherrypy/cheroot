@@ -17,3 +17,6 @@ repos:
     - lint
     language: python
     types: [python]
+    additional_dependencies:
+    - flake8-2020==1.0.0
+    - flake8-pytest-style

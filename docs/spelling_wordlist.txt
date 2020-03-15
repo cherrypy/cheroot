@@ -43,6 +43,7 @@ submodules
 systemd
 threadpool
 Tidelift
+TLS
 tracebacks
 tuple
 tuples

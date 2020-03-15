@@ -1,3 +1,11 @@
+.. scm-version-title:: v8.3.0
+
+- :cp-issue:`910` via :pr:`243`: Provide TLS-related
+  details via WSGI environment interface.
+- :pr:`248`: Fix parsing of the ``--bind`` CLI option
+  for abstract UNIX sockets.
+
+
 .. scm-version-title:: v8.2.1
 
 - :cp-issue:`1818`: Restore support for ``None``

@@ -1,28 +1,44 @@
+---
 repos:
 - repo: git://github.com/asottile/add-trailing-comma
-  rev: v0.7.0
+  rev: v0.7.1
   hooks:
   - id: add-trailing-comma
+
+- repo: git://github.com/Lucas-C/pre-commit-hooks
+  rev: v1.1.7
+  hooks:
+  - id: remove-tabs
+
+- repo: git://github.com/Lucas-C/pre-commit-hooks-markup
+  rev: v1.0.0
+  hooks:
+  - id: rst-linter
+    exclude: >-
+      (?x)
+      CHANGES.rst
+      |
+      docs/
+    files: >-
+      ^.*\.rst$
 
 - repo: git://github.com/pre-commit/pre-commit-hooks
   rev: v2.3.0
   hooks:
+  # Side-effects:
   - id: trailing-whitespace
-  - id: flake8
-    additional_dependencies:
-    - flake8-2020==1.0.0
-    - flake8-pytest-style
   - id: check-merge-conflict
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
+  - id: requirements-txt-fixer
+
+  # Non-modifying checks:
   - id: name-tests-test
     args:
     - --django
     exclude: cheroot/test/(helper|webtest).py
     files: cheroot/test/.+\.py$
-  - id: debug-statements
   - id: check-added-large-files
-  - id: check-ast
   - id: check-byte-order-marker
   - id: check-case-conflict
   # disabled due to pre-commit/pre-commit-hooks#159
@@ -33,17 +49,19 @@ repos:
     args:
     - --unsafe
   - id: detect-private-key
-  - id: requirements-txt-fixer
 
-- repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
-  rev: v2.1.1
+  # Heavy checks:
+  - id: check-ast
+  - id: debug-statements
+  - id: flake8
+    additional_dependencies:
+    - flake8-2020==1.0.0
+    - flake8-pytest-style
+
+- repo: git://github.com/PyCQA/pydocstyle.git
+  rev: 5.0.2
   hooks:
   - id: pydocstyle
-
-- repo: git://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.6
-  hooks:
-  - id: remove-tabs
 
 - repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
   rev: v1.1.0
