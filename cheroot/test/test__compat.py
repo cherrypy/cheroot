@@ -11,7 +11,7 @@ from cheroot._compat import extract_bytes, memoryview, ntob, ntou, bton
 
 
 @pytest.mark.parametrize(
-    'func,inp,out',
+    ('func', 'inp', 'out'),
     [
         (ntob, 'bar', b'bar'),
         (ntou, 'bar', u'bar'),
@@ -19,33 +19,33 @@ from cheroot._compat import extract_bytes, memoryview, ntob, ntou, bton
     ],
 )
 def test_compat_functions_positive(func, inp, out):
-    """Check that compat functions work with correct input."""
+    """Check that compatibility functions work with correct input."""
     assert func(inp, encoding='utf-8') == out
 
 
 @pytest.mark.parametrize(
     'func',
-    [
+    (
         ntob,
         ntou,
-    ],
+    ),
 )
 def test_compat_functions_negative_nonnative(func):
-    """Check that compat functions fail loudly for incorrect input."""
-    non_native_test_str = b'bar' if six.PY3 else u'bar'
+    """Check that compatibility functions fail loudly for incorrect input."""
+    non_native_test_str = u'bar' if six.PY2 else b'bar'
     with pytest.raises(TypeError):
         func(non_native_test_str, encoding='utf-8')
 
 
 def test_ntou_escape():
-    """Check that ntou supports escape-encoding under Python 2."""
+    """Check that ``ntou`` supports escape-encoding under Python 2."""
     expected = u'hišřії'
     actual = ntou('hi\u0161\u0159\u0456\u0457', encoding='escape')
     assert actual == expected
 
 
 @pytest.mark.parametrize(
-    'input_argument,expected_result',
+    ('input_argument', 'expected_result'),
     [
         (b'qwerty', b'qwerty'),
         (memoryview(b'asdfgh'), b'asdfgh'),

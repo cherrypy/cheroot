@@ -1,6 +1,8 @@
 version: 2
 jobs:
   macos-build:
+    # Ref: https://circleci.com/docs/2.0/hello-world-macos/
+    # Ref: https://circleci.com/docs/2.0/testing-ios/#supported-xcode-versions
     macos:
       # Travis:
       # 6.4 -> 10.10
@@ -11,7 +13,10 @@ jobs:
       #xcode: "8.3.3"  # available
       #xcode: "7.3.1"  # not available
       #xcode: "9.1.0"  # available
-      xcode: "9.2.0"  # available
+      #xcode: "9.2.0"  # not available
+      #xcode: "9.3.1"  # available
+      #xcode: "11.3.0"  # not available
+      xcode: "11.2.1"  # available
 
     steps:
     - run: brew install pyenv readline xz
@@ -35,7 +40,7 @@ jobs:
     - checkout
     - run:
         name: Run tests
-        command: tox -e py27,py34,py35,py36,py37,pypy3 -- -p no:sugar
+        command: tox -e py27,py34,py35,py36,py37,pypy3 -- -p no:sugar $(circleci tests glob **/test/**.py | circleci tests split --split-by=timings | grep -v '__init__.py')
         # Environment variables for py-cryptography library
         environment:
           LDFLAGS: "-L/usr/local/opt/openssl/lib"
@@ -51,7 +56,7 @@ jobs:
     steps:
     - checkout
     - run: pip install tox
-    - run: tox -e py27,py34,py35,py36,py37
+    - run: tox -e py27,py34,py35,py36,py37 -- $(circleci tests glob **/test/**.py | circleci tests split --split-by=timings | grep -v '__init__.py')
 
 workflows:
   version: 2

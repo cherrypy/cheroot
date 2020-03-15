@@ -17,7 +17,7 @@ us able to merge your PR seamlessly.
 Submitting bug reports
 ----------------------
 
-Make sure you are on latest changes and that you re-ran this command `tox`
+Make sure you are on latest changes and that you re-ran this command ``tox``
 after updating your local repository. If you can, please provide more
 information about your environment such as browser, operating system,
 python version, and any other related software versions. It is also helpful to

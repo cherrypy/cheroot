@@ -1,4 +1,4 @@
-"""Tests for TLS/SSL support."""
+"""Tests for TLS support."""
 # -*- coding: utf-8 -*-
 # vim: set fileencoding=utf-8 :
 
@@ -6,7 +6,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import functools
+import json
+import os
 import ssl
+import subprocess
 import sys
 import threading
 import time
@@ -20,7 +23,7 @@ import trustme
 from .._compat import bton, ntob, ntou
 from .._compat import IS_ABOVE_OPENSSL10, IS_PYPY
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
-from ..server import Gateway, HTTPServer, get_ssl_adapter_class
+from ..server import HTTPServer, get_ssl_adapter_class
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -29,14 +32,25 @@ from ..testing import (
     _get_conn_data,
     _probe_ipv6_sock,
 )
+from ..wsgi import Gateway_10
 
 
+IS_GITHUB_ACTIONS_WORKFLOW = bool(os.getenv('GITHUB_WORKFLOW'))
+IS_WIN2016 = (
+    IS_WINDOWS
+    # pylint: disable=unsupported-membership-test
+    and b'Microsoft Windows Server 2016 Datacenter' in subprocess.check_output(
+        ('systeminfo', ),
+    )
+)
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
 IS_PYOPENSSL_SSL_VERSION_1_0 = (
     OpenSSL.SSL.SSLeay_version(OpenSSL.SSL.SSLEAY_VERSION).
     startswith(b'OpenSSL 1.0.')
 )
 PY27 = sys.version_info[:2] == (2, 7)
+PY34 = sys.version_info[:2] == (3, 4)
+PY3 = not six.PY2
 
 
 _stdlib_to_openssl_verify = {
@@ -48,13 +62,13 @@ _stdlib_to_openssl_verify = {
 
 
 fails_under_py3 = pytest.mark.xfail(
-    six.PY3,
-    reason='Fails under Python 3',
+    not six.PY2,
+    reason='Fails under Python 3+',
 )
 
 
 fails_under_py3_in_pypy = pytest.mark.xfail(
-    six.PY3 and IS_PYPY,
+    not six.PY2 and IS_PYPY,
     reason='Fails under PyPy3',
 )
 
@@ -68,7 +82,7 @@ missing_ipv6 = pytest.mark.skipif(
 )
 
 
-class HelloWorldGateway(Gateway):
+class HelloWorldGateway(Gateway_10):
     """Gateway responding with Hello World to root URI."""
 
     def respond(self):
@@ -80,11 +94,21 @@ class HelloWorldGateway(Gateway):
             req.ensure_headers_sent()
             req.write(b'Hello world!')
             return
+        if req_uri == '/env':
+            req.status = b'200 OK'
+            req.ensure_headers_sent()
+            env = self.get_environ()
+            # drop files so that it can be json dumped
+            env.pop('wsgi.errors')
+            env.pop('wsgi.input')
+            print(env)
+            req.write(json.dumps(env).encode('utf-8'))
+            return
         return super(HelloWorldGateway, self).respond()
 
 
-def make_tls_http_server(bind_addr, ssl_adapter):
-    """Create and start an HTTP server bound to bind_addr."""
+def make_tls_http_server(bind_addr, ssl_adapter, request):
+    """Create and start an HTTP server bound to ``bind_addr``."""
     httpserver = HTTPServer(
         bind_addr=bind_addr,
         gateway=HelloWorldGateway,
@@ -97,28 +121,15 @@ def make_tls_http_server(bind_addr, ssl_adapter):
     while not httpserver.ready:
         time.sleep(0.1)
 
+    request.addfinalizer(httpserver.stop)
+
     return httpserver
 
 
 @pytest.fixture
-def tls_http_server():
+def tls_http_server(request):
     """Provision a server creator as a fixture."""
-    def start_srv():
-        bind_addr, ssl_adapter = yield
-        httpserver = make_tls_http_server(bind_addr, ssl_adapter)
-        yield httpserver
-        yield httpserver
-
-    srv_creator = iter(start_srv())
-    next(srv_creator)
-    yield srv_creator
-    try:
-        while True:
-            httpserver = next(srv_creator)
-            if httpserver is not None:
-                httpserver.stop()
-    except StopIteration:
-        pass
+    return functools.partial(make_tls_http_server, request=request)
 
 
 @pytest.fixture
@@ -180,12 +191,7 @@ def test_ssl_adapters(
 
     tls_certificate.configure_cert(tls_adapter.context)
 
-    tlshttpserver = tls_http_server.send(
-        (
-            (interface, port),
-            tls_adapter,
-        ),
-    )
+    tlshttpserver = tls_http_server((interface, port), tls_adapter)
 
     # testclient = get_server_client(tlshttpserver)
     # testclient.get('/')
@@ -195,7 +201,7 @@ def test_ssl_adapters(
     )
 
     resp = requests.get(
-        'https://' + interface + ':' + str(port) + '/',
+        'https://{host!s}:{port!s}/'.format(host=interface, port=port),
         verify=tls_ca_certificate_pem_path,
     )
 
@@ -211,7 +217,7 @@ def test_ssl_adapters(
     ),
 )
 @pytest.mark.parametrize(
-    'is_trusted_cert,tls_client_identity',
+    ('is_trusted_cert', 'tls_client_identity'),
     (
         (True, 'localhost'), (True, '127.0.0.1'),
         (True, '*.localhost'), (True, 'not_localhost'),
@@ -274,18 +280,13 @@ def test_tls_client_auth(
         ca.configure_trust(tls_adapter.context)
         tls_certificate.configure_cert(tls_adapter.context)
 
-        tlshttpserver = tls_http_server.send(
-            (
-                (interface, port),
-                tls_adapter,
-            ),
-        )
+        tlshttpserver = tls_http_server((interface, port), tls_adapter)
 
         interface, _host, port = _get_conn_data(tlshttpserver.bind_addr)
 
         make_https_request = functools.partial(
             requests.get,
-            'https://' + interface + ':' + str(port) + '/',
+            'https://{host!s}:{port!s}/'.format(host=interface, port=port),
 
             # Server TLS certificate verification:
             verify=tls_ca_certificate_pem_path,
@@ -304,7 +305,7 @@ def test_tls_client_auth(
                     and tls_verify_mode == ssl.CERT_REQUIRED
                     and tls_client_identity == 'localhost'
                     and is_trusted_cert
-            ):
+            ) or PY34:
                 pytest.xfail(
                     'OpenSSL 1.0 has problems with verifying client certs',
                 )
@@ -312,18 +313,179 @@ def test_tls_client_auth(
             assert resp.text == 'Hello world!'
             return
 
-        with pytest.raises(requests.exceptions.SSLError) as ssl_err:
+        # xfail some flaky tests
+        # https://github.com/cherrypy/cheroot/issues/237
+        issue_237 = (
+            IS_MACOS
+            and adapter_type == 'builtin'
+            and tls_verify_mode != ssl.CERT_NONE
+        )
+        if issue_237:
+            pytest.xfail('Test sometimes fails')
+
+        expected_ssl_errors = (
+            requests.exceptions.SSLError,
+            OpenSSL.SSL.Error,
+        ) if PY34 else (
+            requests.exceptions.SSLError,
+        )
+        if IS_WINDOWS or IS_GITHUB_ACTIONS_WORKFLOW:
+            expected_ssl_errors += requests.exceptions.ConnectionError,
+        with pytest.raises(expected_ssl_errors) as ssl_err:
             make_https_request()
 
-        err_text = ssl_err.value.args[0].reason.args[0].args[0]
+        if PY34 and isinstance(ssl_err, OpenSSL.SSL.Error):
+            pytest.xfail(
+                'OpenSSL behaves wierdly under Python 3.4 '
+                'because of an outdated urllib3',
+            )
 
-        expected_substring = (
+        try:
+            err_text = ssl_err.value.args[0].reason.args[0].args[0]
+        except AttributeError:
+            if PY34:
+                pytest.xfail('OpenSSL behaves wierdly under Python 3.4')
+            elif not six.PY2 and IS_WINDOWS or IS_GITHUB_ACTIONS_WORKFLOW:
+                err_text = str(ssl_err.value)
+            else:
+                raise
+
+        expected_substrings = (
             'sslv3 alert bad certificate' if IS_LIBRESSL_BACKEND
-            else 'tlsv1 alert unknown ca'
+            else 'tlsv1 alert unknown ca',
         )
-        if IS_PYPY and six.PY3 and IS_MACOS and adapter_type == 'pyopenssl':
-            expected_substring = 'tlsv1 alert unknown ca'
-        assert expected_substring in err_text
+        if not six.PY2:
+            if IS_MACOS and IS_PYPY and adapter_type == 'pyopenssl':
+                expected_substrings = ('tlsv1 alert unknown ca', )
+        if (
+                tls_verify_mode in (
+                    ssl.CERT_REQUIRED,
+                    ssl.CERT_OPTIONAL,
+                )
+                and not is_trusted_cert
+                and tls_client_identity == 'localhost'
+        ):
+            expected_substrings += (
+                'bad handshake: '
+                "SysCallError(10054, 'WSAECONNRESET')",
+                "('Connection aborted.', "
+                'OSError("(10054, \'WSAECONNRESET\')"))',
+                "('Connection aborted.', "
+                'OSError("(10054, \'WSAECONNRESET\')",))',
+                "('Connection aborted.', "
+                'error("(10054, \'WSAECONNRESET\')",))',
+            ) if IS_WINDOWS else (
+                "('Connection aborted.', "
+                'OSError("(104, \'ECONNRESET\')"))',
+                "('Connection aborted.', "
+                'OSError("(104, \'ECONNRESET\')",))',
+                "('Connection aborted.', "
+                'error("(104, \'ECONNRESET\')",))',
+            ) if (
+                IS_GITHUB_ACTIONS_WORKFLOW
+                and IS_LINUX
+            ) else ()
+        assert any(e in err_text for e in expected_substrings)
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    (
+        'builtin',
+        'pyopenssl',
+    ),
+)
+@pytest.mark.parametrize(
+    ('tls_verify_mode', 'use_client_cert'),
+    (
+        (ssl.CERT_NONE, False),
+        (ssl.CERT_NONE, True),
+        (ssl.CERT_OPTIONAL, False),
+        (ssl.CERT_OPTIONAL, True),
+        (ssl.CERT_REQUIRED, True),
+    ),
+)
+def test_ssl_env(
+        mocker,
+        tls_http_server, adapter_type,
+        ca, tls_verify_mode, tls_certificate,
+        tls_certificate_chain_pem_path,
+        tls_certificate_private_key_pem_path,
+        tls_ca_certificate_pem_path,
+        use_client_cert,
+):
+    """Test the SSL environment generated by the SSL adapters."""
+    interface, _host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+
+    with mocker.mock_module.patch(
+        'idna.core.ulabel',
+        return_value=ntob('127.0.0.1'),
+    ):
+        client_cert = ca.issue_cert(ntou('127.0.0.1'),)
+
+    with client_cert.private_key_and_cert_chain_pem.tempfile() as cl_pem:
+        tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+        tls_adapter = tls_adapter_cls(
+            tls_certificate_chain_pem_path,
+            tls_certificate_private_key_pem_path,
+        )
+        if adapter_type == 'pyopenssl':
+            tls_adapter.context = tls_adapter.get_context()
+            tls_adapter.context.set_verify(
+                _stdlib_to_openssl_verify[tls_verify_mode],
+                lambda conn, cert, errno, depth, preverify_ok: preverify_ok,
+            )
+        else:
+            tls_adapter.context.verify_mode = tls_verify_mode
+
+        ca.configure_trust(tls_adapter.context)
+        tls_certificate.configure_cert(tls_adapter.context)
+
+        tlswsgiserver = tls_http_server((interface, port), tls_adapter)
+
+        interface, _host, port = _get_conn_data(tlswsgiserver.bind_addr)
+
+        resp = requests.get(
+            'https://' + interface + ':' + str(port) + '/env',
+            verify=tls_ca_certificate_pem_path,
+            cert=cl_pem if use_client_cert else None,
+        )
+        if PY34 and resp.status_code != 200:
+            pytest.xfail(
+                'Python 3.4 has problems with verifying client certs',
+            )
+
+        env = json.loads(resp.content.decode('utf-8'))
+
+        # hard coded env
+        assert env['wsgi.url_scheme'] == 'https'
+        assert env['HTTPS'] == 'on'
+
+        # ensure these are present
+        for key in {'SSL_VERSION_INTERFACE', 'SSL_VERSION_LIBRARY'}:
+            assert key in env
+
+        # pyOpenSSL generates the env before the handshake completes
+        if adapter_type == 'pyopenssl':
+            return
+
+        for key in {'SSL_PROTOCOL', 'SSL_CIPHER'}:
+            assert key in env
+
+        # client certificate env
+        if tls_verify_mode == ssl.CERT_NONE or not use_client_cert:
+            assert env['SSL_CLIENT_VERIFY'] == 'NONE'
+        else:
+            assert env['SSL_CLIENT_VERIFY'] == 'SUCCESS'
+
+            with open(cl_pem, 'rt') as f:
+                assert env['SSL_CLIENT_CERT'] in f.read()
+
+            for key in {
+                'SSL_CLIENT_M_VERSION', 'SSL_CLIENT_M_SERIAL',
+                'SSL_CLIENT_I_DN', 'SSL_CLIENT_S_DN',
+            }:
+                assert key in env
 
 
 @pytest.mark.parametrize(
@@ -373,6 +535,15 @@ def test_http_over_https_error(
     tls_certificate_private_key_pem_path,
 ):
     """Ensure that connecting over HTTP to HTTPS port is handled."""
+    # disable some flaky tests
+    # https://github.com/cherrypy/cheroot/issues/225
+    issue_225 = (
+        IS_MACOS
+        and adapter_type == 'builtin'
+    )
+    if issue_225:
+        pytest.xfail('Test fails in Travis-CI')
+
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
     tls_adapter = tls_adapter_cls(
         tls_certificate_chain_pem_path, tls_certificate_private_key_pem_path,
@@ -383,12 +554,7 @@ def test_http_over_https_error(
     tls_certificate.configure_cert(tls_adapter.context)
 
     interface, _host, port = _get_conn_data(ip_addr)
-    tlshttpserver = tls_http_server.send(
-        (
-            (interface, port),
-            tls_adapter,
-        ),
-    )
+    tlshttpserver = tls_http_server((interface, port), tls_adapter)
 
     interface, host, port = _get_conn_data(
         tlshttpserver.bind_addr,
@@ -400,12 +566,35 @@ def test_http_over_https_error(
 
     expect_fallback_response_over_plain_http = (
         (adapter_type == 'pyopenssl'
-         and (IS_ABOVE_OPENSSL10 or six.PY3))
+         and (IS_ABOVE_OPENSSL10 or not six.PY2))
         or PY27
+    ) or (
+        IS_GITHUB_ACTIONS_WORKFLOW
+        and IS_WINDOWS
+        and six.PY2
+        and not IS_WIN2016
     )
+    if (
+            IS_GITHUB_ACTIONS_WORKFLOW
+            and IS_WINDOWS
+            and six.PY2
+            and IS_WIN2016
+            and adapter_type == 'builtin'
+            and ip_addr is ANY_INTERFACE_IPV6
+    ):
+        expect_fallback_response_over_plain_http = True
+    if (
+            IS_GITHUB_ACTIONS_WORKFLOW
+            and IS_WINDOWS
+            and six.PY2
+            and not IS_WIN2016
+            and adapter_type == 'builtin'
+            and ip_addr is not ANY_INTERFACE_IPV6
+    ):
+        expect_fallback_response_over_plain_http = False
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
-            'http://' + fqdn + ':' + str(port) + '/',
+            'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
         )
         assert resp.status_code == 400
         assert resp.text == (
@@ -416,7 +605,7 @@ def test_http_over_https_error(
 
     with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
         requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-            'http://' + fqdn + ':' + str(port) + '/',
+            'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
         )
 
     if IS_LINUX:
@@ -435,5 +624,8 @@ def test_http_over_https_error(
 
     underlying_error = ssl_err.value.args[0].args[-1]
     err_text = str(underlying_error)
-    assert underlying_error.errno == expected_error_code
+    assert underlying_error.errno == expected_error_code, (
+        'The underlying error is {!r}'.
+        format(underlying_error)
+    )
     assert expected_error_text in err_text
