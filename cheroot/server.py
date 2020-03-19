@@ -343,9 +343,28 @@ class SizeCheckWrapper:
 
     next = __next__
 
+
 class RFile:
-    def __init__(self, rfile):
+    def __init__(self, rfile, wfile, conn):
         self.rfile = rfile
+        self.wfile = wfile
+        self.conn = conn
+
+    def _send_100_if_needed(self):
+        if self.conn.they_are_waiting_for_100_continue:
+            mini_headers = ()
+            go_ahead = h11.InformationalResponse(status_code=100, headers=mini_headers)
+            bytes_out = self.conn.send(go_ahead)
+            self.wfile.write(bytes_out)
+
+    def _get_event(self):
+        return self.conn.next_event()
+
+    def _handle_input(self, data):
+        self.conn.receive_data(data)
+        evt = self._get_event()
+        assert isinstance(evt, h11.Data)
+        return bytes(evt.data)
 
     def read(self, size=None):
         raise NotImplementedError
@@ -361,26 +380,16 @@ class RFile:
 
 
 class HyperRFile(RFile):
-    def __init__(self, rfile, conn):
+    def __init__(self, rfile):
         super(HyperRFile, self).__init__(rfile)
-        self.conn = conn
-
-    def _get_event_or_send_100(self):
-        event = self.conn.next_event()
-        if self.conn.they_are_waiting_for_100_continue:
-            mini_headers = ()
-            go_ahead = h11.InformationalResponse(status_code=100, headers=mini_headers)
-            bytes_out = self.conn.send(go_ahead)
-            self.rfile.wfile.write(bytes_out)
-        return event
 
     def read(self, size=None):
         if self.conn.their_state != h11.SEND_BODY or size == 0:
             return b""
-        event = self._get_event_or_send_100()
+        event = self._get_event()
         if event is h11.NEED_DATA:
             self.conn.receive_data(self.rfile.rfile.read(size))
-            event = self._get_event_or_send_100()
+            event = self._get_event()
         if isinstance(event, h11.Data):
             return event.data
         else:
@@ -389,10 +398,10 @@ class HyperRFile(RFile):
     def readline(self, size=None):
         if self.conn.their_state != h11.SEND_BODY or size == 0:
             return b""
-        event = self._get_event_or_send_100()
+        event = self._get_event()
         if event is h11.NEED_DATA:
             self.conn.receive_data(self.rfile.rfile.readline(size))
-            event = self._get_event_or_send_100()
+            event = self._get_event()
         assert isinstance(event, h11.Data)
         return event.data
 
@@ -403,7 +412,7 @@ class HyperRFile(RFile):
         line = self.rfile.rfile.readline()
         while line:
             self.conn.receive_data(line)
-            event = self._get_event_or_send_100()
+            event = self._get_event()
             assert isinstance(event, h11.Data)
             lines.append(event.data)
             line = self.rfile.rfile.readline()
@@ -418,9 +427,9 @@ class KnownLengthRFile(RFile):
     :param int content_length: length of the file being read
     """
 
-    def __init__(self, rfile, content_length):
+    def __init__(self, h_conn, rfile, wfile, content_length):
         """Initialize KnownLengthRFile instance."""
-        super(KnownLengthRFile, self).__init__(rfile)
+        super(KnownLengthRFile, self).__init__(rfile, wfile, h_conn)
         self.remaining = content_length
 
     def read(self, size=None):
@@ -437,8 +446,9 @@ class KnownLengthRFile(RFile):
             size = self.remaining
         else:
             size = min(size, self.remaining)
-
+        self._send_100_if_needed()
         data = self.rfile.read(size)
+        data = self._handle_input(data)
         self.remaining -= len(data)
         return data
 
@@ -457,7 +467,9 @@ class KnownLengthRFile(RFile):
         else:
             size = min(size, self.remaining)
 
+        self._send_100_if_needed()
         data = self.rfile.readline(size)
+        data = self._handle_input(data)
         self.remaining -= len(data)
         return data
 
@@ -472,9 +484,11 @@ class KnownLengthRFile(RFile):
         # Shamelessly stolen from StringIO
         total = 0
         lines = []
+        self._send_100_if_needed()
         line = self.readline(sizehint)
         while line:
-            lines.append(line)
+            data = self._handle_input(line)
+            lines.append(data)
             total += len(line)
             if 0 < sizehint <= total:
                 break
@@ -487,7 +501,9 @@ class KnownLengthRFile(RFile):
 
     def __next__(self):
         """Generate next file chunk."""
+        self._send_100_if_needed()
         data = next(self.rfile)
+        data = self._handle_input(data)
         self.remaining -= len(data)
         return data
 
@@ -506,9 +522,9 @@ class ChunkedRFile(RFile):
     :param int bufsize: size of the buffer used to read the file
     """
 
-    def __init__(self, rfile, maxlen, bufsize=8192):
+    def __init__(self, h_conn, rfile, wfile, maxlen, bufsize=8192):
         """Initialize ChunkedRFile instance."""
-        super(ChunkedRFile, self).__init__(rfile)
+        super(ChunkedRFile, self).__init__(rfile, wfile, h_conn)
         self.maxlen = maxlen
         self.bytes_read = 0
         self.buffer = EMPTY
@@ -519,7 +535,9 @@ class ChunkedRFile(RFile):
         if self.closed:
             return
 
+        self._send_100_if_needed()
         line = self.rfile.readline()
+        line = self._handle_input(line)
         self.bytes_read += len(line)
 
         if self.maxlen and self.bytes_read > self.maxlen:
@@ -542,16 +560,16 @@ class ChunkedRFile(RFile):
             self.closed = True
             return
 
-        #            if line: chunk_extension = line[0]
-
         if self.maxlen and self.bytes_read + chunk_size > self.maxlen:
             raise IOError('Request Entity Too Large')
 
         chunk = self.rfile.read(chunk_size)
+        chunk = self._handle_input(chunk)
         self.bytes_read += len(chunk)
         self.buffer += chunk
 
         crlf = self.rfile.read(2)
+        crlf = self._handle_input(crlf)
         if crlf != CRLF:
             raise ValueError(
                 "Bad chunked transfer coding (expected '\\r\\n', "
@@ -1317,7 +1335,8 @@ class HyperHTTPRequest(HTTPRequest):
                     go_ahead = h11.InformationalResponse(status_code=100, headers=())
                     bytes_out = self.h_conn.send(go_ahead)
                     self.conn.wfile.write(bytes_out)
-                self.h_conn.receive_data(self.conn.rfile.readline())
+                line = self.conn.rfile.readline()
+                self.h_conn.receive_data(line)
                 continue
             return event
 
@@ -1382,7 +1401,9 @@ class HyperHTTPRequest(HTTPRequest):
     def respond(self):
         """Call the gateway and write its iterable output."""
         mrbs = self.server.max_request_body_size
-        if not self.chunked_read:
+        if self.chunked_read:
+            self.rfile = ChunkedRFile(self.h_conn, self.conn.rfile, self.conn.wfile, mrbs)
+        else:
             cl = int(self.inheaders.get(b'content-length', 0))
             if mrbs and mrbs < cl:
                 if not self.sent_headers:
@@ -1392,14 +1413,20 @@ class HyperHTTPRequest(HTTPRequest):
                         'maximum allowed bytes.',
                     )
                 return
-        self.rfile = HyperRFile(self.conn, self.h_conn)
+            self.rfile = KnownLengthRFile(self.h_conn, self.conn.rfile, self.conn.wfile, cl)
+
         # client may still be in send body, lets find out and figure out what to do with that
         # if self.h_conn.their_state == h11.SEND_BODY:
+        if self.h_conn.client_is_waiting_for_100_continue:
+            mini_headers = ()
+            go_ahead = h11.InformationalResponse(status_code=100, headers=mini_headers)
+            bytes_out = self.h_conn.send(go_ahead)
+            self.conn.wfile.write(bytes_out)
 
         self.server.gateway(self).respond()
         self.ready and self.ensure_headers_sent()
 
-        # If we haven't sent our end-of-message data (\r\n), send it now
+        # If we haven't sent our end-of-message data, send it now
         if self.h_conn.our_state is not h11.DONE:
             bytes_out = self.h_conn.send(h11.EndOfMessage())
             self.conn.wfile.write(bytes_out)
@@ -1422,15 +1449,6 @@ class HyperHTTPRequest(HTTPRequest):
             ('Content-Length', str(len(msg))),
             ('Content-Type', 'text/plain')
         ]
-
-        if status[:3] in ('413', '414'):
-            # Request Entity Too Large / Request-URI Too Long
-            self.close_connection = True
-            if self.response_protocol == 'HTTP/1.1':
-                # This will not be true for 414, since read_request_line
-                # usually raises 414 before reading the whole line, and we
-                # therefore cannot know the proper response_protocol.
-                headers.append(('Connection', 'close'))
 
         self.outheaders = headers
         self.status = status
