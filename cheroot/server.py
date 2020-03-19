@@ -82,6 +82,7 @@ try:
 except ImportError:
     from backports.functools_lru_cache import lru_cache
 
+import h11
 import six
 from six.moves import queue
 from six.moves import urllib
@@ -377,47 +378,6 @@ class RFile:
 
     def close(self):
         self.rfile.close()
-
-
-class HyperRFile(RFile):
-    def __init__(self, rfile):
-        super(HyperRFile, self).__init__(rfile)
-
-    def read(self, size=None):
-        if self.conn.their_state != h11.SEND_BODY or size == 0:
-            return b""
-        event = self._get_event()
-        if event is h11.NEED_DATA:
-            self.conn.receive_data(self.rfile.rfile.read(size))
-            event = self._get_event()
-        if isinstance(event, h11.Data):
-            return event.data
-        else:
-            return b""
-
-    def readline(self, size=None):
-        if self.conn.their_state != h11.SEND_BODY or size == 0:
-            return b""
-        event = self._get_event()
-        if event is h11.NEED_DATA:
-            self.conn.receive_data(self.rfile.rfile.readline(size))
-            event = self._get_event()
-        assert isinstance(event, h11.Data)
-        return event.data
-
-    def readlines(self, sizehint=None):
-        if self.conn.their_state != h11.SEND_BODY:
-            return b""
-        lines = []
-        line = self.rfile.rfile.readline()
-        while line:
-            self.conn.receive_data(line)
-            event = self._get_event()
-            assert isinstance(event, h11.Data)
-            lines.append(event.data)
-            line = self.rfile.rfile.readline()
-
-        return lines
 
 
 class KnownLengthRFile(RFile):
