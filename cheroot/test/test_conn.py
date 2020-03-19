@@ -657,7 +657,7 @@ def test_100_Continue(test_client):
     conn.send(b"d'oh")
     response = conn.response_class(conn.sock, method='POST')
     version, status, reason = response._read_status()
-    assert status != 100
+    assert status == 200
     conn.close()
 
     # Now try a page with an Expect header...
