@@ -132,4 +132,6 @@ def extract_bytes(mv):
     if isinstance(mv, bytes):
         return mv
 
-    raise ValueError
+    raise ValueError(
+        'extract_bytes() only accepts bytes and memoryview/buffer',
+    )
