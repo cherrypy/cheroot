@@ -361,8 +361,10 @@ class RFile:
     def _handle_input(self, data):
         self.conn.receive_data(data)
         evt = self._get_event()
-        assert isinstance(evt, h11.Data)
-        return bytes(evt.data)
+        if isinstance(evt, h11.Data):
+            return bytes(evt.data)
+        else:
+            return b""
 
     def read(self, size=None):
         raise NotImplementedError
@@ -494,7 +496,10 @@ class ChunkedRFile(RFile):
 
         self._send_100_if_needed()
         line = self.rfile.readline()
-        line = self._handle_input(line)
+
+        # ignore handle_input output, since it won't return this data to us
+        self._handle_input(line)
+
         self.bytes_read += len(line)
 
         if self.maxlen and self.bytes_read > self.maxlen:
@@ -526,7 +531,8 @@ class ChunkedRFile(RFile):
         self.buffer += chunk
 
         crlf = self.rfile.read(2)
-        crlf = self._handle_input(crlf)
+        # see above ignore
+        self._handle_input(crlf)
         if crlf != CRLF:
             raise ValueError(
                 "Bad chunked transfer coding (expected '\\r\\n', "
@@ -1298,26 +1304,101 @@ class HyperHTTPRequest(HTTPRequest):
             if isinstance(req_line, h11.Request):
                 self.started_request = True
                 self.uri = req_line.target
-                if not self.uri.startswith(FORWARD_SLASH):
-                    self.simple_response(400, 'Request line must starting with a slash')
-                    return
-                scheme, netloc, path, query, fragment = urllib.parse.urlsplit(self.uri)
+                scheme, authority, path, query, fragment = urllib.parse.urlsplit(self.uri)
                 self.qs = query
                 self.method = req_line.method
                 self.request_protocol = b"HTTP/%s" % req_line.http_version
+                if req_line.http_version > b'1.1':
+                    self.simple_response(505, "Cannot fulfill request")
                 self.response_protocol = b"HTTP/1.1"
                 # TODO: oneliner-ify this
                 self.inheaders = {}
                 for header in req_line.headers:
                     self.inheaders[header[0]] = header[1]
 
-                if ('transfer-encoding' in self.inheaders and
-                    self.inheaders['transfer-encoding'].lower() == b"chunked"):
+                if (b'transfer-encoding' in self.inheaders and
+                    self.inheaders[b'transfer-encoding'].lower() == b"chunked"):
                     self.chunked_read = True
 
+                uri_is_absolute_form = (scheme or authority)
+
+                if self.method == b'OPTIONS':
+                    # TODO: cover this branch with tests
+                    path = (
+                        self.uri
+                        # https://tools.ietf.org/html/rfc7230#section-5.3.4
+                        if (self.proxy_mode and uri_is_absolute_form)
+                        else path
+                    )
+                elif self.method == b'CONNECT':
+                    # TODO: cover this branch with tests
+                    if not self.proxy_mode:
+                        self.simple_response('405 Method Not Allowed')
+                        return False
+
+                    # `urlsplit()` above parses "example.com:3128" as path part of URI.
+                    # this is a workaround, which makes it detect netloc correctly
+                    uri_split = urllib.parse.urlsplit(b''.join((b'//', self.uri)))
+                    _scheme, _authority, _path, _qs, _fragment = uri_split
+                    _port = EMPTY
+                    try:
+                        _port = uri_split.port
+                    except ValueError:
+                        pass
+
+                    # FIXME: use third-party validation to make checks against RFC
+                    # the validation doesn't take into account, that urllib parses
+                    # invalid URIs without raising errors
+                    # https://tools.ietf.org/html/rfc7230#section-5.3.3
+                    invalid_path = (
+                            _authority != self.uri
+                            or not _port
+                            or any((_scheme, _path, _qs, _fragment))
+                    )
+                    if invalid_path:
+                        self.simple_response(
+                            '400 Bad Request',
+                            'Invalid path in Request-URI: request-'
+                            'target must match authority-form.',
+                        )
+                        return False
+
+                    authority = path = _authority
+                    scheme = qs = fragment = EMPTY
+                else:
+                    disallowed_absolute = (
+                            self.strict_mode
+                            and not self.proxy_mode
+                            and uri_is_absolute_form
+                    )
+                    if disallowed_absolute:
+                        # https://tools.ietf.org/html/rfc7230#section-5.3.2
+                        # (absolute form)
+                        """Absolute URI is only allowed within proxies."""
+                        self.simple_response(
+                            '400 Bad Request',
+                            'Absolute URI not allowed if server is not a proxy.',
+                        )
+                        return False
+
+                    invalid_path = (
+                            self.strict_mode
+                            and not self.uri.startswith(FORWARD_SLASH)
+                            and not uri_is_absolute_form
+                    )
+                    if invalid_path:
+                        # https://tools.ietf.org/html/rfc7230#section-5.3.1
+                        # (origin_form) and
+                        """Path should start with a forward slash."""
+                        resp = (
+                            'Invalid path in Request-URI: request-target must contain '
+                            'origin-form which starts with absolute-path (URI '
+                            'starting with a slash "/").'
+                        )
+                        self.simple_response('400 Bad Request', resp)
+                        return False
                 if fragment:
                     self.simple_response(400, "Illegal #fragment in Request-URI.")
-
                 try:
                     # TODO: Figure out whether exception can really happen here.
                     # It looks like it's caught on urlsplit() call above.
@@ -1329,7 +1410,7 @@ class HyperHTTPRequest(HTTPRequest):
                     self.simple_response(400, ex.args[0])
                     return False
                 self.path = QUOTED_SLASH.join(atoms)
-
+                self.authority = authority
                 self.ready = True
             elif isinstance(req_line, h11.ConnectionClosed):
                 self.close_connection = True
@@ -1341,7 +1422,9 @@ class HyperHTTPRequest(HTTPRequest):
             # Or should we continue to shim like this:
             if e.args[0] == "bad Content-Length":
                 self.simple_response(e.error_status_hint or 400, "Malformed Content-Length Header.")
-            elif e.args[0] == "malformed data":
+            elif e.args[0] == "illegal request line":
+                self.simple_response(e.error_status_hint or 400, 'Malformed Request-Line')
+            elif e.args[0] == "illegal header line":
                 self.simple_response(e.error_status_hint or 400, 'Illegal header line.')
             else:
                 self.simple_response(e.error_status_hint or 400, str(e))
@@ -1370,9 +1453,12 @@ class HyperHTTPRequest(HTTPRequest):
             go_ahead = h11.InformationalResponse(status_code=100, headers=mini_headers)
             bytes_out = self.h_conn.send(go_ahead)
             self.conn.wfile.write(bytes_out)
-
-        self.server.gateway(self).respond()
-        self.ready and self.ensure_headers_sent()
+        try:
+            self.server.gateway(self).respond()
+            self.ready and self.ensure_headers_sent()
+        except errors.MaxSizeExceeded as e:
+            self.simple_response(413, "Request Entity Too Large")
+            self.close_connection = True
 
         # If we haven't sent our end-of-message data, send it now
         if self.h_conn.our_state is not h11.DONE:
