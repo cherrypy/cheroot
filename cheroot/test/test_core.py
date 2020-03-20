@@ -314,7 +314,7 @@ def test_large_request(test_client_with_defaults):
             HTTP_BAD_REQUEST, b'Malformed Request-Line: bad version',
         ),
         (
-            b'GET / HTTP/2.15',  # invalid ver
+            b'GET / HTTP/2.1',  # invalid ver
             HTTP_VERSION_NOT_SUPPORTED, b'Cannot fulfill request',
         ),
     ),
