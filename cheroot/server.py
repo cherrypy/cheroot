@@ -1291,12 +1291,12 @@ class HyperHTTPRequest(HTTPRequest):
         self.proxy_mode = proxy_mode
         self.strict_mode = strict_mode
 
-    def _next_event(self):
+    def _next_event(self, read_new=True):
         # TODO: Determine if this wrapper is even needed. Apparently we don't
         # expect 100 at this point in the req cycle
         while True:
             event = self.h_conn.next_event()
-            if event is h11.NEED_DATA:
+            if event is h11.NEED_DATA and read_new:
                 if self.h_conn.they_are_waiting_for_100_continue:
                     go_ahead = h11.InformationalResponse(status_code=100, headers=())
                     bytes_out = self.h_conn.send(go_ahead)
@@ -1396,21 +1396,26 @@ class HyperHTTPRequest(HTTPRequest):
             self.simple_response(413, "Request Entity Too Large")
             self.close_connection = True
 
+        while self.h_conn.their_state is h11.SEND_BODY and self.h_conn.our_state is not h11.ERROR:
+            # empty their buffer ?
+            data = self.rfile.read()
+            self._next_event(read_new=False)
+            if data == EMPTY and self.h_conn.their_state is h11.SEND_BODY:
+                # they didn't send a full body, kill connection, set our state to ERROR
+                self.h_conn.send_failed()
+
         # If we haven't sent our end-of-message data, send it now
         if self.h_conn.our_state is not h11.DONE:
             bytes_out = self.h_conn.send(h11.EndOfMessage())
             self.conn.wfile.write(bytes_out)
 
-        while self.h_conn.their_state is h11.SEND_BODY:
-            # empty their buffer ?
-            self._next_event()
-
-        if self.h_conn.their_state is h11.MUST_CLOSE:
-            self.close_connection = True
-
         # prep for next req cycle if it's available
         if self.h_conn.our_state == h11.DONE and self.h_conn.their_state == h11.DONE:
             self.h_conn.start_next_cycle()
+            self.close_connection = False
+        else:
+            # close connection if reuse unavailable
+            self.close_connection = True
 
     def simple_response(self, status, msg=''):
         """Write a simple response back to the client."""
