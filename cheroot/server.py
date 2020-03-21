@@ -61,6 +61,7 @@ True
 """
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import os
@@ -91,7 +92,6 @@ from ._compat import IS_PPC
 from .workers import threadpool
 from .makefile import MakeFile, StreamWriter
 
-
 __all__ = (
     'HTTPRequest', 'HTTPConnection', 'HTTPServer',
     'HeaderReader', 'DropUnderscoreHeaderReader',
@@ -99,10 +99,8 @@ __all__ = (
     'Gateway', 'get_ssl_adapter_class',
 )
 
-
 IS_WINDOWS = platform.system() == 'Windows'
 """Flag indicating whether the app is running under Windows."""
-
 
 IS_GAE = os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/')
 """Flag indicating whether the app is running in GAE env.
@@ -112,10 +110,8 @@ https://cloud.google.com/appengine/docs/standard/python/tools
 /using-local-server#detecting_application_runtime_environment
 """
 
-
 IS_UID_GID_RESOLVABLE = not IS_WINDOWS and not IS_GAE
 """Indicates whether UID/GID resolution's available under current platform."""
-
 
 if IS_UID_GID_RESOLVABLE:
     try:
@@ -131,13 +127,11 @@ if IS_UID_GID_RESOLVABLE:
         grp, pwd = None, None
     import struct
 
-
 if IS_WINDOWS and hasattr(socket, 'AF_INET6'):
     if not hasattr(socket, 'IPPROTO_IPV6'):
         socket.IPPROTO_IPV6 = 41
     if not hasattr(socket, 'IPV6_V6ONLY'):
         socket.IPV6_V6ONLY = 27
-
 
 if not hasattr(socket, 'SO_PEERCRED'):
     """
@@ -146,7 +140,6 @@ if not hasattr(socket, 'SO_PEERCRED'):
     specific value could be derived from platform.processor()
     """
     socket.SO_PEERCRED = 21 if IS_PPC else 17
-
 
 LF = b'\n'
 CRLF = b'\r\n'
@@ -160,7 +153,6 @@ FORWARD_SLASH = b'/'
 QUOTED_SLASH = b'%2F'
 QUOTED_SLASH_REGEX = re.compile(b''.join((b'(?i)', QUOTED_SLASH)))
 
-
 comma_separated_headers = [
     b'Accept', b'Accept-Charset', b'Accept-Encoding',
     b'Accept-Language', b'Accept-Ranges', b'Allow', b'Cache-Control',
@@ -169,7 +161,6 @@ comma_separated_headers = [
     b'Trailer', b'Transfer-Encoding', b'Upgrade', b'Vary', b'Via', b'Warning',
     b'WWW-Authenticate',
 ]
-
 
 if not hasattr(logging, 'statistics'):
     logging.statistics = {}
@@ -533,7 +524,7 @@ class ChunkedRFile(RFile):
             raise ValueError(
                 'Bad chunked transfer size: {chunk_size!r}'.
                     format(chunk_size=chunk_size),
-                    )
+            )
 
         if chunk_size <= 0:
             self._read_trailers()
@@ -555,7 +546,7 @@ class ChunkedRFile(RFile):
             raise ValueError(
                 "Bad chunked transfer coding (expected '\\r\\n', "
                 'got ' + repr(crlf) + ')',
-                )
+            )
 
     def read(self, size=None):
         """Read a chunk from ``rfile`` buffer and return it.
@@ -793,7 +784,7 @@ class HTTPRequest:
                     self.inheaders[header[0]] = header[1]
 
                 if (b'transfer-encoding' in self.inheaders and
-                    self.inheaders[b'transfer-encoding'].lower() == b"chunked"):
+                        self.inheaders[b'transfer-encoding'].lower() == b"chunked"):
                     self.chunked_read = True
 
                 uri_is_absolute_form = scheme or authority
@@ -1020,7 +1011,6 @@ class HTTPRequest:
         self.conn.wfile.write(res_bytes)
 
 
-
 class HTTPConnection:
     """An HTTP connection (active socket)."""
 
@@ -1101,7 +1091,7 @@ class HTTPConnection:
                 self.server.error_log(
                     'socket.error %s' % repr(errnum),
                     level=logging.WARNING, traceback=True,
-                    )
+                )
                 self._conditional_error(req, '500 Internal Server Error')
         except (KeyboardInterrupt, SystemExit):
             raise
