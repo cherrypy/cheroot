@@ -753,7 +753,13 @@ class HTTPRequest:
         self.proxy_mode = proxy_mode
         self.strict_mode = strict_mode
 
-    def _next_event(self, read_new=True):
+    def _process_next_h11_event(self, read_new=True):
+        """Instruct h11 to process data in its buffer and return any events it has available
+
+        :param read_new: If the method should attempt to read new lines to find an event
+        :type read_new: bool
+        :return: An h11 event
+        """
         # TODO: Determine if this wrapper is even needed. Apparently we don't
         # expect 100 at this point in the req cycle
         while True:
@@ -771,7 +777,7 @@ class HTTPRequest:
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
         try:
-            req_line = self._next_event()
+            req_line = self._process_next_h11_event()
             if isinstance(req_line, h11.Request):
                 self.started_request = True
                 self.uri = req_line.target
@@ -939,7 +945,7 @@ class HTTPRequest:
         while self.h_conn.their_state is h11.SEND_BODY and self.h_conn.our_state is not h11.ERROR:
             # empty their buffer ?
             data = self.rfile.read()
-            self._next_event(read_new=False)
+            self._process_next_h11_event(read_new=False)
             if data == EMPTY and self.h_conn.their_state is h11.SEND_BODY:
                 # they didn't send a full body, kill connection, set our state to ERROR
                 self.h_conn.send_failed()
