@@ -881,8 +881,10 @@ class HTTPRequest:
             # close connection if reuse unavailable
             self.close_connection = True
 
-    def simple_response(self, status, msg=''):
+    def simple_response(self, status, msg=None):
         """Write a simple response back to the client."""
+        if msg is None:
+            msg = ''
         status = str(status)
         headers = [
             ('Content-Type', 'text/plain')
