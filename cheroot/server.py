@@ -492,6 +492,17 @@ class ChunkedRFile(RFile):
         self.buffer = EMPTY
         self.bufsize = bufsize
         self.closed = False
+        self.has_read_trailers = False
+
+    def _read_trailers(self):
+        end_states = (h11.DONE, h11.ERROR, h11.MUST_CLOSE, h11.CLOSED)
+        while not self.has_read_trailers and self.conn.their_state not in end_states:
+            line = self.rfile.readline()
+            # TODO: We currently throw away trailing headers
+            # This is currently in line with how cheroot handles trailers, but we should
+            # create a way to return these back to the request object
+            self._handle_input(line)
+        self.has_read_trailers = True
 
     def _fetch(self):
         if self.closed:
@@ -522,6 +533,7 @@ class ChunkedRFile(RFile):
                     )
 
         if chunk_size <= 0:
+            self._read_trailers()
             self.closed = True
             return
 
@@ -1335,17 +1347,10 @@ class HyperHTTPRequest(HTTPRequest):
                     self.conn.wfile.write(bytes_out)
                 if fragment:
                     self.simple_response(400, "Illegal #fragment in Request-URI.")
-                try:
-                    # TODO: Figure out whether exception can really happen here.
-                    # It looks like it's caught on urlsplit() call above.
-                    atoms = [
-                        urllib.parse.unquote_to_bytes(x)
-                        for x in QUOTED_SLASH_REGEX.split(path)
-                    ]
-                except ValueError as ex:
-                    self.simple_response(400, ex.args[0])
-                    return False
-                self.path = QUOTED_SLASH.join(atoms)
+
+                if not path.startswith(FORWARD_SLASH):
+                    path = FORWARD_SLASH + path
+                self.path = path
                 self.authority = authority
                 self.ready = True
             elif isinstance(req_line, h11.ConnectionClosed):
@@ -1395,6 +1400,7 @@ class HyperHTTPRequest(HTTPRequest):
         except errors.MaxSizeExceeded as e:
             self.simple_response(413, "Request Entity Too Large")
             self.close_connection = True
+            return
 
         while self.h_conn.their_state is h11.SEND_BODY and self.h_conn.our_state is not h11.ERROR:
             # empty their buffer ?
@@ -1405,7 +1411,7 @@ class HyperHTTPRequest(HTTPRequest):
                 self.h_conn.send_failed()
 
         # If we haven't sent our end-of-message data, send it now
-        if self.h_conn.our_state is not h11.DONE:
+        if self.h_conn.our_state not in (h11.DONE, h11.ERROR):
             bytes_out = self.h_conn.send(h11.EndOfMessage())
             self.conn.wfile.write(bytes_out)
 
@@ -1421,7 +1427,6 @@ class HyperHTTPRequest(HTTPRequest):
         """Write a simple response back to the client."""
         status = str(status)
         headers = [
-            ('Content-Length', str(len(msg))),
             ('Content-Type', 'text/plain')
         ]
 
@@ -1430,6 +1435,10 @@ class HyperHTTPRequest(HTTPRequest):
         self.send_headers()
         if msg:
             self.write(bytes(msg, encoding="ascii"))
+
+        evt = h11.EndOfMessage()
+        bytes_out = self.h_conn.send(evt)
+        self.conn.wfile.write(bytes_out)
 
     def ensure_headers_sent(self):
         """Ensure headers are sent to the client if not already sent."""
