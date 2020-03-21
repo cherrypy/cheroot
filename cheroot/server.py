@@ -724,14 +724,16 @@ class HTTPRequest:
     def __init__(self, server, conn, proxy_mode=False, strict_mode=True):
         """Initialize HTTP request container instance.
 
-        Args:
-            server (HTTPServer): web server object receiving this request
-            conn (HTTPConnection): HTTP connection object for this request
-            proxy_mode (bool): whether this HTTPServer should behave as a PROXY
-            server for certain requests
-            strict_mode (bool): whether we should return a 400 Bad Request when
+        :param server: web server object receiving this request
+        :type server: HTTPServer
+        :param conn: HTTP connection object for this request
+        :type conn: HTTPConnection
+        :param proxy_mode: whether this HTTPServer should behave as a PROXY
+        :type proxy_mode: bool
+        :param strict_mode: whether we should return a 400 Bad Request when
             we encounter a request that a HTTP compliant client should not be
             making
+        :type strict_mode: bool
         """
         self.server = server
         self.conn = conn
