@@ -809,7 +809,7 @@ class HTTPRequest:
                 elif self.method == b'CONNECT':
                     # TODO: cover this branch with tests
                     if not self.proxy_mode:
-                        self.simple_response('405 Method Not Allowed')
+                        self.simple_response(405)
                         return False
 
                     # `urlsplit()` above parses "example.com:3128" as path part of URI.
@@ -833,7 +833,7 @@ class HTTPRequest:
                     )
                     if invalid_path:
                         self.simple_response(
-                            '400 Bad Request',
+                            400,
                             'Invalid path in Request-URI: request-'
                             'target must match authority-form.',
                         )
@@ -852,7 +852,7 @@ class HTTPRequest:
                         # (absolute form)
                         """Absolute URI is only allowed within proxies."""
                         self.simple_response(
-                            '400 Bad Request',
+                            400,
                             'Absolute URI not allowed if server is not a proxy.',
                         )
                         return False
@@ -871,7 +871,7 @@ class HTTPRequest:
                             'origin-form which starts with absolute-path (URI '
                             'starting with a slash "/").'
                         )
-                        self.simple_response('400 Bad Request', resp)
+                        self.simple_response(400, resp)
                         return False
                     try:
                         # TODO: Figure out whether exception can really happen here.
@@ -962,8 +962,10 @@ class HTTPRequest:
             # close connection if reuse unavailable
             self.close_connection = True
 
-    def simple_response(self, status, msg=''):
+    def simple_response(self, status, msg=None):
         """Write a simple response back to the client."""
+        if msg is None:
+            msg = ''
         status = str(status)
         headers = [
             ('Content-Type', 'text/plain')
