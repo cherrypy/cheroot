@@ -76,6 +76,7 @@ import platform
 import contextlib
 import threading
 import h11
+from abc import ABC, abstractmethod
 
 try:
     from functools import lru_cache
@@ -345,18 +346,20 @@ class SizeCheckWrapper:
     next = __next__
 
 
-class RFile:
+class RFile(ABC):
     def __init__(self, rfile, wfile, conn):
         self.rfile = rfile
         self.wfile = wfile
         self.conn = conn
 
     def _send_100_if_needed(self):
-        if self.conn.they_are_waiting_for_100_continue:
-            mini_headers = ()
-            go_ahead = h11.InformationalResponse(status_code=100, headers=mini_headers)
-            bytes_out = self.conn.send(go_ahead)
-            self.wfile.write(bytes_out)
+        if not self.conn.they_are_waiting_for_100_continue:
+            return
+
+        mini_headers = ()
+        go_ahead = h11.InformationalResponse(status_code=100, headers=mini_headers)
+        bytes_out = self.conn.send(go_ahead)
+        self.wfile.write(bytes_out)
 
     def _get_event(self):
         return self.conn.next_event()
@@ -369,14 +372,17 @@ class RFile:
         else:
             return b""
 
+    @abstractmethod
     def read(self, size=None):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def readline(self, size=None):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def readlines(self, sizehint=None):
-        raise NotImplementedError
+        pass
 
     def close(self):
         self.rfile.close()
