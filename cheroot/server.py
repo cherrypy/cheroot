@@ -796,7 +796,7 @@ class HTTPRequest:
                     self.inheaders[b'transfer-encoding'].lower() == b"chunked"):
                     self.chunked_read = True
 
-                uri_is_absolute_form = (scheme or authority)
+                uri_is_absolute_form = scheme or authority
 
                 if self.method == b'OPTIONS':
                     # TODO: cover this branch with tests
@@ -955,7 +955,7 @@ class HTTPRequest:
             self.conn.wfile.write(bytes_out)
 
         # prep for next req cycle if it's available
-        if self.h_conn.our_state == h11.DONE and self.h_conn.their_state == h11.DONE:
+        if self.h_conn.our_state is h11.DONE and self.h_conn.their_state is h11.DONE:
             self.h_conn.start_next_cycle()
             self.close_connection = False
         else:
