@@ -874,7 +874,7 @@ class HTTPRequest:
             self.conn.wfile.write(bytes_out)
 
         # prep for next req cycle if it's available
-        if self.h_conn.our_state == h11.DONE and self.h_conn.their_state == h11.DONE:
+        if self.h_conn.our_state is h11.DONE and self.h_conn.their_state is h11.DONE:
             self.h_conn.start_next_cycle()
             self.close_connection = False
         else:
