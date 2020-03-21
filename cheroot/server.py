@@ -765,17 +765,16 @@ class HTTPRequest:
         """
         # TODO: Determine if this wrapper is even needed. Apparently we don't
         # expect 100 at this point in the req cycle
-        while True:
+        event = self.h_conn.next_event()
+        while event is h11.NEED_DATA and read_new:
+            if self.h_conn.they_are_waiting_for_100_continue:
+                go_ahead = h11.InformationalResponse(status_code=100, headers=())
+                bytes_out = self.h_conn.send(go_ahead)
+                self.conn.wfile.write(bytes_out)
+            line = self.conn.rfile.readline()
+            self.h_conn.receive_data(line)
             event = self.h_conn.next_event()
-            if event is h11.NEED_DATA and read_new:
-                if self.h_conn.they_are_waiting_for_100_continue:
-                    go_ahead = h11.InformationalResponse(status_code=100, headers=())
-                    bytes_out = self.h_conn.send(go_ahead)
-                    self.conn.wfile.write(bytes_out)
-                line = self.conn.rfile.readline()
-                self.h_conn.receive_data(line)
-                continue
-            return event
+        return event
 
     def parse_request(self):
         """Parse the next HTTP request start-line and message-headers."""
@@ -826,7 +825,7 @@ class HTTPRequest:
                 'illegal header line': 'Illegal header line.',
             }
             err_str = [v for k, v in err_map.items() if e.args[0] in k]
-            err_str = str(e) if err_str == [] else err_str
+            err_str = str(e) if len(err_str) == 0 else err_str[0]
             self.simple_response(e.error_status_hint or 400, err_str)
 
     def respond(self):
