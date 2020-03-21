@@ -271,7 +271,7 @@ def test_streaming_11(test_client, set_cl):
 )
 
 
-@pytest.mark.xfail(reason="h11 does not support HTTP/1.0 keep-alive")
+@pytest.mark.xfail(reason='h11 does not support HTTP/1.0 keep-alive')
 def test_streaming_10(test_client, set_cl):
     """Test serving of streaming responses with HTTP/1.0 protocol."""
     original_server_protocol = test_client.server_instance.protocol
@@ -347,7 +347,7 @@ def test_streaming_10(test_client, set_cl):
 )
 
 
-@pytest.mark.xfail(reason="h11 does not support HTTP/1.0 keepalive")
+@pytest.mark.xfail(reason='h11 does not support HTTP/1.0 keepalive')
 def test_keepalive(test_client, http_server_protocol):
     """Test Keep-Alive enabled connections."""
     original_server_protocol = test_client.server_instance.protocol
@@ -397,7 +397,7 @@ def test_keepalive(test_client, http_server_protocol):
     test_client.server_instance.protocol = original_server_protocol
 
 
-@pytest.mark.xfail(reason="h11 does not handle HTTP/1.0 keepalive")
+@pytest.mark.xfail(reason='h11 does not handle HTTP/1.0 keepalive')
 def test_keepalive_conn_management(test_client):
     """Test management of Keep-Alive connections."""
     test_client.server_instance.timeout = 2
@@ -959,7 +959,7 @@ def test_598(test_client):
     remote_data_conn.close()
 
 
-@pytest.mark.xfail(reason="h11 treats these as invalid by not responding")
+@pytest.mark.xfail(reason='h11 treats these as invalid by not responding')
 @pytest.mark.parametrize(
     'invalid_terminator',
     (
