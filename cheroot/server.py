@@ -893,14 +893,14 @@ class HTTPRequest:
         except h11.RemoteProtocolError as e:
             # NEED INFO: Should we adjust the tests to match h11's exception text
             # Or should we continue to shim like this:
-            if e.args[0] == "bad Content-Length":
-                self.simple_response(e.error_status_hint or 400, "Malformed Content-Length Header.")
-            elif e.args[0] == "illegal request line":
-                self.simple_response(e.error_status_hint or 400, 'Malformed Request-Line')
-            elif e.args[0] == "illegal header line":
-                self.simple_response(e.error_status_hint or 400, 'Illegal header line.')
-            else:
-                self.simple_response(e.error_status_hint or 400, str(e))
+            err_map = {
+                'bad Content-Length': 'Malformed Content-Length Header.',
+                'illegal request line': 'Malformed Request-Line.',
+                'illegal header line': 'Illegal header line.',
+            }
+            err_str = [v for k, v in err_map.items() if e.args[0] in k]
+            err_str = str(e) if err_str == [] else err_str
+            self.simple_response(e.error_status_hint or 400, err_str)
 
     def respond(self):
         """Call the gateway and write its iterable output."""
