@@ -35,9 +35,6 @@ exclude =
 ignore =
   # W503 ignored for https://github.com/PyCQA/pycodestyle/issues/498
   W503
-  # "PT001 use @pytest.fixture() over @pytest.fixture" ignored because
-  # it doesn't look reasonable
-  PT001
   # "PT007 wrong values type in @pytest.mark.parametrize, expected list"
   # ignored until https://github.com/m-burst/flake8-pytest-style/issues/2
   # gets solved
@@ -59,3 +56,7 @@ per-file-ignores =
   # There are multiple `assert`s (S101)
   # and subprocesses (import – S404; call – S603) in tests:
   cheroot/test/test_*.py: S101, S404, S603
+
+# flake8-pytest-style
+# PT001:
+pytest-fixture-no-parentheses = true
