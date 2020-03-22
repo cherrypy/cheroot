@@ -35,10 +35,6 @@ exclude =
 ignore =
   # W503 ignored for https://github.com/PyCQA/pycodestyle/issues/498
   W503
-  # "PT007 wrong values type in @pytest.mark.parametrize, expected list"
-  # ignored until https://github.com/m-burst/flake8-pytest-style/issues/2
-  # gets solved
-  PT007
 
 # Let's not overcomplicate the code:
 # 29 is to facilitate the currently present maximum
@@ -62,3 +58,6 @@ per-file-ignores =
 pytest-fixture-no-parentheses = true
 # PT006:
 pytest-parametrize-names-type = tuple
+# PT007:
+pytest-parametrize-values-type = tuple
+pytest-parametrize-values-row-type = tuple

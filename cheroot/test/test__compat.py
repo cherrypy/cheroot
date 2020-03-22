@@ -12,11 +12,11 @@ from cheroot._compat import extract_bytes, memoryview, ntob, ntou, bton
 
 @pytest.mark.parametrize(
     ('func', 'inp', 'out'),
-    [
+    (
         (ntob, 'bar', b'bar'),
         (ntou, 'bar', u'bar'),
         (bton, b'bar', 'bar'),
-    ],
+    ),
 )
 def test_compat_functions_positive(func, inp, out):
     """Check that compatibility functions work with correct input."""
@@ -46,10 +46,10 @@ def test_ntou_escape():
 
 @pytest.mark.parametrize(
     ('input_argument', 'expected_result'),
-    [
+    (
         (b'qwerty', b'qwerty'),
         (memoryview(b'asdfgh'), b'asdfgh'),
-    ],
+    ),
 )
 def test_extract_bytes(input_argument, expected_result):
     """Check that legitimate inputs produce bytes."""
