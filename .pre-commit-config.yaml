@@ -55,8 +55,8 @@ repos:
   - id: debug-statements
   - id: flake8
     additional_dependencies:
-    - flake8-2020==1.0.0
-    - flake8-pytest-style
+    - flake8-2020>=1.6.0
+    - flake8-pytest-style>=1.0.0
 
 - repo: git://github.com/PyCQA/pydocstyle.git
   rev: 5.0.2
