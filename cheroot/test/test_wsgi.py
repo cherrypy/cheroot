@@ -1,7 +1,12 @@
 """Test wsgi."""
 
+from concurrent.futures.thread import ThreadPoolExecutor
+
 import pytest
 import portend
+import requests
+from requests_toolbelt.sessions import BaseUrlSession as Session
+from jaraco.context import ExceptionTrap
 
 from cheroot import wsgi
 
@@ -27,4 +32,23 @@ def simple_wsgi_server():
 
 def test_connection_keepalive(simple_wsgi_server):
     """Test the connection keepalive works (duh)."""
-    pass
+    session = Session(base_url=simple_wsgi_server['url'])
+    pooled = requests.adapters.HTTPAdapter(
+        pool_connections=1, pool_maxsize=1000,
+    )
+    session.mount('http://', pooled)
+
+    def do_request():
+        with ExceptionTrap(requests.exceptions.ConnectionError) as trap:
+            resp = session.get('info')
+            resp.raise_for_status()
+        return bool(trap)
+
+    with ThreadPoolExecutor(max_workers=50) as pool:
+        tasks = [
+            pool.submit(do_request)
+            for n in range(1000)
+        ]
+        failures = sum(task.result() for task in tasks)
+
+    assert not failures
