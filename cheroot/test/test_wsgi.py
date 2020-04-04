@@ -1,7 +1,5 @@
 """Test wsgi."""
 
-import threading
-
 import pytest
 import portend
 
@@ -22,12 +20,8 @@ def simple_wsgi_server():
     host = '::'
     addr = host, port
     server = wsgi.Server(addr, app)
-    server.prepare()
-    thread = threading.Thread(target=server.serve)
-    thread.setDaemon(True)
-    thread.start()
-    yield locals()
-    server.stop()
+    with server._run_in_thread() as thread:
+        yield locals()
 
 
 def test_connection_keepalive(simple_wsgi_server):
