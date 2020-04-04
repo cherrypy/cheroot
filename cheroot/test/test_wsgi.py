@@ -22,7 +22,8 @@ def simple_wsgi_server():
     host = '::'
     addr = host, port
     server = wsgi.Server(addr, app)
-    thread = threading.Thread(target=server.start)
+    server.prepare()
+    thread = threading.Thread(target=server.serve)
     thread.setDaemon(True)
     thread.start()
     yield locals()
