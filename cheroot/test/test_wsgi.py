@@ -26,8 +26,7 @@ def simple_wsgi_server():
     thread.setDaemon(True)
     thread.start()
     yield locals()
-    # would prefer to stop server, but has errors
-    # server.stop()
+    server.stop()
 
 
 def test_connection_keepalive(simple_wsgi_server):
