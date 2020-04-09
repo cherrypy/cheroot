@@ -409,7 +409,7 @@ def test_keepalive_conn_management(test_client):
         http_connection.connect()
         return http_connection
 
-    def request(conn):
+    def request(conn, keepalive=True):
         status_line, actual_headers, actual_resp_body = test_client.get(
             '/page3', headers=[('Connection', 'Keep-Alive')],
             http_conn=conn, protocol='HTTP/1.0',
@@ -418,7 +418,10 @@ def test_keepalive_conn_management(test_client):
         assert actual_status == 200
         assert status_line[4:] == 'OK'
         assert actual_resp_body == pov.encode()
-        assert header_has_value('Connection', 'Keep-Alive', actual_headers)
+        if keepalive:
+            assert header_has_value('Connection', 'Keep-Alive', actual_headers)
+        else:
+            assert not header_exists('Connection', actual_headers)
 
     disconnect_errors = (
         http_client.BadStatusLine,
@@ -437,28 +440,21 @@ def test_keepalive_conn_management(test_client):
     # Reusing the first connection should still work.
     request(c1)
 
-    # Creating a new connection should still work.
+    # Creating a new connection should still work, but we should
+    # have run out of available connections to keep alive, so the
+    # server should tell us to close.
     c3 = connection()
-    request(c3)
+    request(c3, keepalive=False)
 
-    # Allow a tick.
-    time.sleep(0.2)
-
-    # That's three connections, we should expect the one used less recently
-    # to be expired.
+    # Show that the third connection was closed.
     with pytest.raises(disconnect_errors):
-        request(c2)
-
-    # But the oldest created one should still be valid.
-    # (As well as the newest one).
-    request(c1)
-    request(c3)
+        request(c3)
 
     # Wait for some of our timeout.
-    time.sleep(1.0)
+    time.sleep(1.2)
 
-    # Refresh the third connection.
-    request(c3)
+    # Refresh the second connection.
+    request(c2)
 
     # Wait for the remainder of our timeout, plus one tick.
     time.sleep(1.2)
@@ -467,9 +463,10 @@ def test_keepalive_conn_management(test_client):
     with pytest.raises(disconnect_errors):
         request(c1)
 
-    # But the third one should still be valid.
-    request(c3)
+    # But the second one should still be valid.
+    request(c2)
 
+    # Restore original timeout.
     test_client.server_instance.timeout = timeout
 
 
