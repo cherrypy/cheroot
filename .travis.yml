@@ -225,6 +225,7 @@ jobs:
     if: tag IS present
     <<: *python_3_7_mixture
     install:
+    - python -m pip install virtualenv --upgrade
     - python -m pip install tox tox-venv
     env:
       TOXENV: release
@@ -238,6 +239,7 @@ cache:
   - $HOME/Library/Caches/Homebrew
 
 install:
+- python -m pip install virtualenv --upgrade
 - python -m pip install tox tox-venv
 - python -m tox --notest  # Pre-populate a virtualenv with dependencies
 - *python_ssl_openssl_version
