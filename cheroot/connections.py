@@ -275,5 +275,4 @@ class ConnectionManager:
     @property
     def can_add_keepalive_connection(self):
         ka_limit = self.server.keep_alive_conn_limit
-        stats = [ka_limit, len(self.connections)]
         return ka_limit is None or len(self.connections) < ka_limit
