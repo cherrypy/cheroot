@@ -1,13 +1,22 @@
 """Test wsgi."""
 
+import sys
 import threading
-from concurrent.futures.thread import ThreadPoolExecutor
 
 import pytest
 import portend
 import requests
 from requests_toolbelt.sessions import BaseUrlSession as Session
 from jaraco.context import ExceptionTrap
+
+try:
+    from concurrent.futures.thread import ThreadPoolExecutor
+except ImportError:
+    pytestmark = pytest.mark.xfail(sys.version_info[0] == 2, reason='no concurrent.futures @ py2')
+    if sys.version_info[0] != 2:
+        raise
+else:
+    pytestmark = pytest.mark.xfail(sys.version_info[0] == 2, reason='no concurrent.futures @ py2')
 
 from cheroot import wsgi
 
