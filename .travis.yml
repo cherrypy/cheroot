@@ -178,6 +178,8 @@ jobs:
     env: TOXENV=pre-commit-failing
   - <<: *pure_python_base_priority
     # mainstream here (3.7)
+  - <<: *pure_python_base_priority
+    python: nightly
   - <<: *osx_python_base
     <<: *manual_run_or_cron
     python: 2.7
