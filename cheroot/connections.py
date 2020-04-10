@@ -274,5 +274,6 @@ class ConnectionManager:
 
     @property
     def can_add_keepalive_connection(self):
+        """Flag whether it is allowed to add a new keep-alive connection."""
         ka_limit = self.server.keep_alive_conn_limit
         return ka_limit is None or len(self.connections) < ka_limit
