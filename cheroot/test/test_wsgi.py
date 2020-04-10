@@ -25,7 +25,7 @@ def simple_wsgi_server():
 
     host = '::'
     addr = host, port
-    server = wsgi.Server(addr, app)
+    server = wsgi.Server(addr, app, timeout=0, accepted_queue_timeout=0)
     thread = threading.Thread(target=server.start)
     thread.setDaemon(True)
     thread.start()
