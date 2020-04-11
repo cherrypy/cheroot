@@ -73,6 +73,8 @@ import time
 import traceback as traceback_
 import logging
 import platform
+import contextlib
+import threading
 
 try:
     from functools import lru_cache
@@ -1800,6 +1802,18 @@ class HTTPServer:
         # trap those exceptions in whatever code block calls start().
         self.prepare()
         self.serve()
+
+    @contextlib.contextmanager
+    def _run_in_thread(self):
+        """Context manager for running this server in a thread."""
+        self.prepare()
+        thread = threading.Thread(target=self.serve)
+        thread.setDaemon(True)
+        thread.start()
+        try:
+            yield thread
+        finally:
+            self.stop()
 
     def error_log(self, msg='', level=20, traceback=False):
         """Write error message to log.
