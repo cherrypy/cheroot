@@ -20,6 +20,7 @@ def simple_wsgi_server():
     host = '::'
     addr = host, port
     server = wsgi.Server(addr, app)
+    url = 'http://localhost:{port}/'.format(**locals())
     with server._run_in_thread() as thread:
         yield locals()
 
