@@ -60,14 +60,9 @@ def unix_sock_file(request, monkeypatch):
                 _noop,
                 raising=False,
             )
-        yield request.getfixturevalue('unix_abstract_sock')
-        return
-    tmp_sock_fh, tmp_sock_fname = tempfile.mkstemp()
 
-    yield tmp_sock_fname
-
-    os.close(tmp_sock_fh)
-    os.unlink(tmp_sock_fname)
+    name = 'unix_{request.param}_sock'.format(**locals())
+    return request.getfixturevalue(name)
 
 
 @pytest.fixture
@@ -82,6 +77,17 @@ def unix_abstract_sock():
         b'\x00cheroot-test-socket',
         ntob(str(uuid.uuid4())),
     )).decode()
+
+
+@pytest.fixture
+def unix_file_sock():
+    """Yield a unix file socket."""
+    tmp_sock_fh, tmp_sock_fname = tempfile.mkstemp()
+
+    yield tmp_sock_fname
+
+    os.close(tmp_sock_fh)
+    os.unlink(tmp_sock_fname)
 
 
 def test_prepare_makes_server_ready():
