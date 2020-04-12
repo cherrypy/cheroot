@@ -44,29 +44,34 @@ non_macos_sock_test = pytest.mark.skipif(
 
 
 @pytest.fixture(params=('abstract', 'file'))
-def unix_sock_file(request, monkeypatch):
+def unix_sock_file(request):
     """Check that bound UNIX socket address is stored in server."""
-    if request.param == 'abstract':
-        if IS_AT_LEAST_PY38:
-            def _noop(*args, **kwargs):
-                return
-            monkeypatch.setattr(
-                'http.client.HTTPConnection._validate_path',
-                _noop,
-                raising=False,
-            )
-            monkeypatch.setattr(
-                'http.client.HTTPConnection._validate_host',
-                _noop,
-                raising=False,
-            )
-
     name = 'unix_{request.param}_sock'.format(**locals())
     return request.getfixturevalue(name)
 
 
 @pytest.fixture
-def unix_abstract_sock():
+def _patch_URL_validation(monkeypatch):
+    """Patch URL validation (why?)."""
+    if sys.version_info < (3, 8):
+        return
+
+    def _noop(*args, **kwargs):
+        return
+    monkeypatch.setattr(
+        'http.client.HTTPConnection._validate_path',
+        _noop,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        'http.client.HTTPConnection._validate_host',
+        _noop,
+        raising=False,
+    )
+
+
+@pytest.fixture
+def unix_abstract_sock(_patch_URL_validation):
     """Return an abstract UNIX socket address."""
     if not IS_LINUX:
         pytest.skip(
