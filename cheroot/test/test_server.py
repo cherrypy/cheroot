@@ -247,9 +247,8 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
     if isinstance(bind_addr, six.binary_type):
         bind_addr = bind_addr.decode()
 
-    unix_base_uri = 'http+unix://{}'.format(
-        bind_addr.replace('\x00', '%00').replace('/', '%2F'),
-    )
+    quoted = urllib.parse.quote(bind_addr, safe='')
+    unix_base_uri = 'http+unix://{quoted}'.format(**locals())
 
     import grp
     import pwd
