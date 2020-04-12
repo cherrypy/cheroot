@@ -1,28 +1,12 @@
 """Test wsgi."""
 
-import sys
-import threading
+from concurrent.futures.thread import ThreadPoolExecutor
 
 import pytest
 import portend
 import requests
 from requests_toolbelt.sessions import BaseUrlSession as Session
 from jaraco.context import ExceptionTrap
-
-try:
-    from concurrent.futures.thread import ThreadPoolExecutor
-except ImportError:
-    pytestmark = pytest.mark.xfail(
-        sys.version_info[0] == 2,
-        reason='no concurrent.futures @ py2',
-    )
-    if sys.version_info[0] != 2:
-        raise
-else:
-    pytestmark = pytest.mark.xfail(
-        sys.version_info[0] == 2,
-        reason='no concurrent.futures @ py2',
-    )
 
 from cheroot import wsgi
 
@@ -40,14 +24,10 @@ def simple_wsgi_server():
 
     host = '::'
     addr = host, port
-    server = wsgi.Server(addr, app, timeout=0, accepted_queue_timeout=0)
-    thread = threading.Thread(target=server.start)
-    thread.setDaemon(True)
-    thread.start()
+    server = wsgi.Server(addr, app)
     url = 'http://localhost:{port}/'.format(**locals())
-    yield locals()
-    # would prefer to stop server, but has errors
-    # server.stop()
+    with server._run_in_thread() as thread:
+        yield locals()
 
 
 def test_connection_keepalive(simple_wsgi_server):

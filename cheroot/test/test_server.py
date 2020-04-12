@@ -7,6 +7,7 @@ __metaclass__ = type
 
 import os
 import socket
+import sys
 import tempfile
 import threading
 import uuid
@@ -27,6 +28,9 @@ from ..testing import (
 )
 
 
+IS_AT_LEAST_PY38 = sys.version_info >= (3, 8)
+
+
 unix_only_sock_test = pytest.mark.skipif(
     not hasattr(socket, 'AF_UNIX'),
     reason='UNIX domain sockets are only available under UNIX-based OS',
@@ -40,9 +44,22 @@ non_macos_sock_test = pytest.mark.skipif(
 
 
 @pytest.fixture(params=('abstract', 'file'))
-def unix_sock_file(request):
+def unix_sock_file(request, monkeypatch):
     """Check that bound UNIX socket address is stored in server."""
     if request.param == 'abstract':
+        if IS_AT_LEAST_PY38:
+            def _noop(*args, **kwargs):
+                return
+            monkeypatch.setattr(
+                'http.client.HTTPConnection._validate_path',
+                _noop,
+                raising=False,
+            )
+            monkeypatch.setattr(
+                'http.client.HTTPConnection._validate_host',
+                _noop,
+                raising=False,
+            )
         yield request.getfixturevalue('unix_abstract_sock')
         return
     tmp_sock_fh, tmp_sock_fname = tempfile.mkstemp()
