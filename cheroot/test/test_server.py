@@ -7,7 +7,6 @@ __metaclass__ = type
 
 import os
 import socket
-import sys
 import tempfile
 import threading
 import uuid
@@ -26,11 +25,7 @@ from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
     EPHEMERAL_PORT,
-    get_server_client,
 )
-
-
-IS_AT_LEAST_PY38 = sys.version_info >= (3, 8)
 
 
 unix_only_sock_test = pytest.mark.skipif(
@@ -53,27 +48,7 @@ def unix_sock_file(request):
 
 
 @pytest.fixture
-def _patch_URL_validation(monkeypatch):
-    """Patch URL validation (why?)."""
-    if sys.version_info < (3, 8):
-        return
-
-    def _noop(*args, **kwargs):
-        return
-    monkeypatch.setattr(
-        'http.client.HTTPConnection._validate_path',
-        _noop,
-        raising=False,
-    )
-    monkeypatch.setattr(
-        'http.client.HTTPConnection._validate_host',
-        _noop,
-        raising=False,
-    )
-
-
-@pytest.fixture
-def unix_abstract_sock(_patch_URL_validation):
+def unix_abstract_sock():
     """Return an abstract UNIX socket address."""
     if not IS_LINUX:
         pytest.skip(
@@ -197,19 +172,19 @@ class _TestGateway(Gateway):
 
 
 @pytest.fixture
-def peercreds_enabled_server_and_client(http_server, unix_sock_file):
+def peercreds_enabled_server(http_server, unix_sock_file):
     """Construct a test server with ``peercreds_enabled``."""
     httpserver = http_server.send(unix_sock_file)
     httpserver.gateway = _TestGateway
     httpserver.peercreds_enabled = True
-    return httpserver, get_server_client(httpserver)
+    return httpserver
 
 
 @unix_only_sock_test
 @non_macos_sock_test
-def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
+def test_peercreds_unix_sock(peercreds_enabled_server):
     """Check that ``PEERCRED`` lookup works when enabled."""
-    httpserver, testclient = peercreds_enabled_server_and_client
+    httpserver = peercreds_enabled_server
     bind_addr = httpserver.bind_addr
 
     if isinstance(bind_addr, six.binary_type):
@@ -237,9 +212,9 @@ def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
 )
 @unix_only_sock_test
 @non_macos_sock_test
-def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
+def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     """Check that ``PEERCRED`` resolution works when enabled."""
-    httpserver, testclient = peercreds_enabled_server_and_client
+    httpserver = peercreds_enabled_server
     httpserver.peercreds_resolve_enabled = True
 
     bind_addr = httpserver.bind_addr
