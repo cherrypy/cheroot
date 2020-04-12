@@ -28,7 +28,7 @@ from cheroot.cli import (
         ('/tmp/cheroot.sock', '/tmp/cheroot.sock'),
         ('/tmp/some-random-file-name', '/tmp/some-random-file-name'),
         # abstract sockets
-        ('@cheroot', '\0cheroot'),
+        ('@cheroot', '\x00cheroot'),
     ),
 )
 def test_parse_wsgi_bind_addr(raw_bind_addr, expected_bind_addr):

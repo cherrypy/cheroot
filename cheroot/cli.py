@@ -67,7 +67,7 @@ class AbstractSocket(BindLocation):
 
     def __init__(self, abstract_socket):
         """Initialize."""
-        self.bind_addr = '\0{}'.format(abstract_socket)
+        self.bind_addr = '\x00{}'.format(abstract_socket)
 
 
 class Application:
