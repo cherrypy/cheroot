@@ -7,7 +7,6 @@ __metaclass__ = type
 
 import os
 import socket
-import sys
 import tempfile
 import threading
 import uuid
@@ -26,9 +25,6 @@ from ..testing import (
     EPHEMERAL_PORT,
     get_server_client,
 )
-
-
-IS_AT_LEAST_PY38 = sys.version_info >= (3, 8)
 
 
 unix_only_sock_test = pytest.mark.skipif(
@@ -51,27 +47,7 @@ def unix_sock_file(request):
 
 
 @pytest.fixture
-def _patch_URL_validation(monkeypatch):
-    """Patch URL validation (why?)."""
-    if sys.version_info < (3, 8):
-        return
-
-    def _noop(*args, **kwargs):
-        return
-    monkeypatch.setattr(
-        'http.client.HTTPConnection._validate_path',
-        _noop,
-        raising=False,
-    )
-    monkeypatch.setattr(
-        'http.client.HTTPConnection._validate_host',
-        _noop,
-        raising=False,
-    )
-
-
-@pytest.fixture
-def unix_abstract_sock(_patch_URL_validation):
+def unix_abstract_sock():
     """Return an abstract UNIX socket address."""
     if not IS_LINUX:
         pytest.skip(
