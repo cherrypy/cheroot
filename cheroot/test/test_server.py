@@ -214,7 +214,7 @@ def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
         bind_addr = bind_addr.decode()
 
     unix_base_uri = 'http+unix://{}'.format(
-        bind_addr.replace('\0', '%00').replace('/', '%2F'),
+        bind_addr.replace('\x00', '%00').replace('/', '%2F'),
     )
 
     expected_peercreds = os.getpid(), os.getuid(), os.getgid()
@@ -247,7 +247,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server_and_client):
         bind_addr = bind_addr.decode()
 
     unix_base_uri = 'http+unix://{}'.format(
-        bind_addr.replace('\0', '%00').replace('/', '%2F'),
+        bind_addr.replace('\x00', '%00').replace('/', '%2F'),
     )
 
     import grp
