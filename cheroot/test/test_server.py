@@ -17,6 +17,8 @@ import requests
 import requests_unixsocket
 import six
 
+from six.moves import urllib
+
 from .._compat import bton, ntob
 from .._compat import IS_LINUX, IS_MACOS, SYS_PLATFORM
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
@@ -213,9 +215,8 @@ def test_peercreds_unix_sock(peercreds_enabled_server_and_client):
     if isinstance(bind_addr, six.binary_type):
         bind_addr = bind_addr.decode()
 
-    unix_base_uri = 'http+unix://{}'.format(
-        bind_addr.replace('\x00', '%00').replace('/', '%2F'),
-    )
+    quoted = urllib.parse.quote(bind_addr, safe='')
+    unix_base_uri = 'http+unix://{quoted}'.format(**locals())
 
     expected_peercreds = os.getpid(), os.getuid(), os.getgid()
     expected_peercreds = '|'.join(map(str, expected_peercreds))
