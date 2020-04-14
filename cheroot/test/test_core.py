@@ -278,7 +278,6 @@ def test_content_length_required(test_client):
     assert actual_status == HTTP_LENGTH_REQUIRED
 
 
-@pytest.mark.xfail(reason='https://github.com/cherrypy/cheroot/issues/106')
 def test_large_request(test_client_with_defaults):
     """Test GET query with maliciously large Content-Length."""
     # If the server's max_request_body_size is not set (i.e. is set to 0)
