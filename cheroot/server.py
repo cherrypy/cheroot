@@ -1175,6 +1175,11 @@ class HTTPRequest:
                 if not self.close_connection:
                     self.outheaders.append((b'Connection', b'Keep-Alive'))
 
+        self.outheaders.append((
+            b'Keep-Alive',
+            "timeout={}".format(self.server.timeout).encode('ISO-8859-1'),
+        ))
+
         if (not self.close_connection) and (not self.chunked_read):
             # Read any remaining request body data on the socket.
             # "If an origin server receives a request that does not include an
