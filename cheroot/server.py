@@ -2024,7 +2024,7 @@ class HTTPServer:
                 # Just drop the conn. TODO: write 503 back?
                 conn.close()
 
-        #self.connections.expire()
+        self.connections.expire()
 
     @property
     def interrupt(self):
