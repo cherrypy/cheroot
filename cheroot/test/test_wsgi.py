@@ -30,7 +30,7 @@ def simple_wsgi_server():
         yield locals()
 
 
-@pytest.mark.xfail(reason='#263')
+# @pytest.mark.xfail(reason='#263')
 def test_connection_keepalive(simple_wsgi_server):
     """Test the connection keepalive works (duh)."""
     session = Session(base_url=simple_wsgi_server['url'])
