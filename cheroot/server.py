@@ -1001,6 +1001,9 @@ class HTTPRequest:
             if self.inheaders.get(b'Connection', b'') != b'Keep-Alive':
                 self.close_connection = True
 
+        if not self.server.connections.can_add_keepalive_connection:
+            self.close_connection = True
+
         # Transfer-Encoding support
         te = None
         if self.response_protocol == 'HTTP/1.1':
