@@ -62,20 +62,25 @@ def _loopback_for_cert(certificate, private_key, certificate_chain):
     # Python 3+ Unix, Python 3.5+ Windows
     client, server = socket.socketpair()
     try:
-        # ssl handshake is blocking and needs to happen on
-        # both ends at the same time so use a thread
+        # `wrap_socket` will block until the ssl handshake is complete.
+        # it must be called on both ends at the same time -> thread
+        # openssl will cache the peer's cert during a successful handshake
+        # and return it via `getpeercert` even after the socket is closed.
+        # when `close` is called, the SSL shutdown notice will be sent
+        # and then python will wait to receive the corollary shutdown.
         thread = threading.Thread(
             target=lambda: context.wrap_socket(
                 server, do_handshake_on_connect=True,
                 server_side=True,
-            ),
+            ).close(),
         )
         try:
             thread.start()
-            return context.wrap_socket(
-                client, do_handshake_on_connect=True,
-                server_side=False,
-            ).getpeercert()
+            with context.wrap_socket(
+                    client, do_handshake_on_connect=True,
+                    server_side=False,
+            ) as ssl_sock:
+                return ssl_sock.getpeercert()
         finally:
             thread.join()
     finally:
