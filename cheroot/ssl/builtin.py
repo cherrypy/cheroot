@@ -68,14 +68,15 @@ def _loopback_for_cert(certificate, private_key, certificate_chain):
             target=lambda: context.wrap_socket(
                 server, do_handshake_on_connect=True,
                 server_side=True,
-            ),
+            ).close(),
         )
         try:
             thread.start()
-            return context.wrap_socket(
-                client, do_handshake_on_connect=True,
-                server_side=False,
-            ).getpeercert()
+            with context.wrap_socket(
+                    client, do_handshake_on_connect=True,
+                    server_side=False,
+            ) as ssl_sock:
+                return ssl_sock.getpeercert()
         finally:
             thread.join()
     finally:
