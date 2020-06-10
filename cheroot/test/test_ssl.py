@@ -495,15 +495,20 @@ def test_ssl_env(
         if not issubclass(warn.category, ResourceWarning):
             continue
 
-        # the tests can sporadically generate resource warnings due to timing issues
+        # the tests can sporadically generate resource warnings
+        # due to timing issues
         # all of these sporadic warnings appear to be about socket.socket
         # and have been observed to come from requests connection pool
         msg = str(warn.message)
         if 'socket.socket' in msg:
             pytest.xfail(
-                'Sometimes this test fails due to a socket.socket ResourceWarning:\n' + msg,
+                '\n'.join((
+                    'Sometimes this test fails due to '
+                    'a socket.socket ResourceWarning:',
+                    msg,
+                )),
             )
-        assert False, msg
+        pytest.fail(reason=msg)
 
 
 @pytest.mark.parametrize(
