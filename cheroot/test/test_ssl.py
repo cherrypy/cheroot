@@ -508,7 +508,7 @@ def test_ssl_env(
                     msg,
                 )),
             )
-        pytest.fail(reason=msg)
+        pytest.fail(reason=msg)  # noqa: PT016
 
 
 @pytest.mark.parametrize(
