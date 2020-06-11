@@ -406,6 +406,7 @@ def test_tls_client_auth(
     ),
 )
 def test_ssl_env(
+        recwarn,
         mocker,
         tls_http_server, adapter_type,
         ca, tls_verify_mode, tls_certificate,
@@ -486,6 +487,28 @@ def test_ssl_env(
                 'SSL_CLIENT_I_DN', 'SSL_CLIENT_S_DN',
             }:
                 assert key in env
+
+    # builtin ssl environment generation may use a loopback socket
+    # ensure no ResourceWarning was raised during the test
+    # NOTE: python 2.7 does not emit ResourceWarning for ssl sockets
+    for warn in recwarn:
+        if not issubclass(warn.category, ResourceWarning):
+            continue
+
+        # the tests can sporadically generate resource warnings
+        # due to timing issues
+        # all of these sporadic warnings appear to be about socket.socket
+        # and have been observed to come from requests connection pool
+        msg = str(warn.message)
+        if 'socket.socket' in msg:
+            pytest.xfail(
+                '\n'.join((
+                    'Sometimes this test fails due to '
+                    'a socket.socket ResourceWarning:',
+                    msg,
+                )),
+            )
+        pytest.fail(msg)
 
 
 @pytest.mark.parametrize(
