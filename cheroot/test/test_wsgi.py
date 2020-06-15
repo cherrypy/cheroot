@@ -37,6 +37,7 @@ def test_connection_keepalive(simple_wsgi_server):
     session = Session(base_url=simple_wsgi_server['url'])
     pooled = requests.adapters.HTTPAdapter(
         pool_connections=1, pool_maxsize=1000,
+        max_retries=1
     )
     session.mount('http://', pooled)
 
