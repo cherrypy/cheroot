@@ -79,3 +79,8 @@ nitpick_ignore = [
 # Ref:
 # * https://github.com/djungelorm/sphinx-tabs/issues/26#issuecomment-422160463
 sphinx_tabs_valid_builders = ['linkcheck']  # prevent linkcheck warning
+
+
+# Ref: https://github.com/python-attrs/attrs/pull/571/files\
+#      #diff-85987f48f1258d9ee486e3191495582dR82
+default_role = 'any'

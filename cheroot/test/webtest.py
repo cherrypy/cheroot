@@ -178,7 +178,9 @@ class WebCase(unittest.TestCase):
         self, url, headers=None, method='GET', body=None,
         protocol=None, raise_subcls=(),
     ):
-        """Open the url with debugging support. Return status, headers, body.
+        """Open the url with debugging support.
+
+        Return status, headers, body.
 
         url should be the identifier passed to the server, typically a
         server-absolute path and query string (sent between method and
@@ -195,7 +197,7 @@ class WebCase(unittest.TestCase):
             ...             *args, **kwargs
             ...         )
 
-        `raise_subcls` is passed through to :py:func:`openURL`.
+        ``raise_subcls`` is passed through to :py:func:`openURL`.
         """
         ServerError.on = False
 
@@ -489,7 +491,7 @@ def openURL(*args, **kwargs):
     """
     Open a URL, retrying when it fails.
 
-    Specify `raise_subcls` (class or tuple of classes) to exclude
+    Specify ``raise_subcls`` (class or tuple of classes) to exclude
     those socket.error subclasses from being suppressed and retried.
     """
     raise_subcls = kwargs.pop('raise_subcls', ())
