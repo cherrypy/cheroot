@@ -321,8 +321,11 @@ class pyOpenSSLAdapter(Adapter):
 
         if self.certificate:
             # Server certificate attributes
-            cert = open(self.certificate, 'rb').read()
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert)
+            with open(self.certificate, 'rb') as cert_file:
+                cert = crypto.load_certificate(
+                    crypto.FILETYPE_PEM, cert_file.read(),
+                )
+
             ssl_environ.update({
                 'SSL_SERVER_M_VERSION': cert.get_version(),
                 'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
