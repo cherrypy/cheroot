@@ -350,6 +350,9 @@ def test_tls_client_auth(
             else:
                 raise
 
+        if isinstance(err_text, int):
+            err_text = str(ssl_err.value)
+
         expected_substrings = (
             'sslv3 alert bad certificate' if IS_LIBRESSL_BACKEND
             else 'tlsv1 alert unknown ca',
@@ -374,6 +377,10 @@ def test_tls_client_auth(
                 'OSError("(10054, \'WSAECONNRESET\')",))',
                 "('Connection aborted.', "
                 'error("(10054, \'WSAECONNRESET\')",))',
+                "('Connection aborted.', "
+                'ConnectionResetError(10054, '
+                "'An existing connection was forcibly closed "
+                "by the remote host', None, 10054, None))",
             ) if IS_WINDOWS else (
                 "('Connection aborted.', "
                 'OSError("(104, \'ECONNRESET\')"))',
@@ -381,6 +388,10 @@ def test_tls_client_auth(
                 'OSError("(104, \'ECONNRESET\')",))',
                 "('Connection aborted.', "
                 'error("(104, \'ECONNRESET\')",))',
+                "('Connection aborted.', "
+                "ConnectionResetError(104, 'Connection reset by peer'))",
+                "('Connection aborted.', "
+                "error(104, 'Connection reset by peer'))",
             ) if (
                 IS_GITHUB_ACTIONS_WORKFLOW
                 and IS_LINUX
