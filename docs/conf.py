@@ -82,6 +82,15 @@ linkcheck_ignore = [
     r'http://localhost:\d+/',  # local URLs
     r'https://codecov\.io/gh/cherrypy/cheroot/branch/master/graph/badge\.svg',
     r'https://github\.com/cherrypy/cheroot/actions',  # 404 if no auth
+
+    # Too many links to GitHub so they cause
+    # "429 Client Error: too many requests for url"
+    # Ref: https://github.com/sphinx-doc/sphinx/issues/7388
+    r'https://github\.com/cherrypy/cheroot/issues',
+    r'https://github\.com/cherrypy/cheroot/pull',
+    r'https://github\.com/cherrypy/cherrypy/issues',
+    r'https://github\.com/cherrypy/cherrypy/pull',
+
     # Requires a more liberal 'Accept: ' HTTP request header:
     # Ref: https://github.com/sphinx-doc/sphinx/issues/7247
     r'https://github\.com/cherrypy/cheroot/workflows/[^/]+/badge\.svg',
