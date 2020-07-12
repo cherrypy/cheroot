@@ -168,6 +168,7 @@ jobs:
   fast_finish: true
   allow_failures:
   - env: TOXENV=pre-commit-failing
+  - python: nightly
   include:
   - python: *pypy2
     env:
@@ -195,6 +196,8 @@ jobs:
     <<: *python_3_7_mixture
     name: Check links in docs
     env: TOXENV=linkcheck-docs
+  - <<: *pure_python_base_priority
+    python: 3.8
   - <<: *pure_python_base_priority
     # mainstream here (3.7)
   - <<: *pure_python_base_priority
