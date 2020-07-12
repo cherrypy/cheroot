@@ -502,6 +502,10 @@ def test_ssl_env(
     # builtin ssl environment generation may use a loopback socket
     # ensure no ResourceWarning was raised during the test
     # NOTE: python 2.7 does not emit ResourceWarning for ssl sockets
+    if IS_PYPY:
+        # NOTE: PyPy doesn't have ResourceWarning
+        # Ref: https://doc.pypy.org/en/latest/cpython_differences.html
+        return
     for warn in recwarn:
         if not issubclass(warn.category, ResourceWarning):
             continue
