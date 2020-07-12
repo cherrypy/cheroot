@@ -3,7 +3,15 @@
 # pylint: disable=invalid-name
 """Configuration of Sphinx documentation generator."""
 
+from pathlib import Path
 import sys
+
+
+# Make in-tree extension importable in non-tox setups/envs, like RTD.
+# Refs:
+# https://github.com/readthedocs/readthedocs.org/issues/6311
+# https://github.com/readthedocs/readthedocs.org/issues/7182
+sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
 
 # Refs:
