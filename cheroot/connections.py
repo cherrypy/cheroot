@@ -91,12 +91,6 @@ class ConnectionManager:
         if conn.closeable:
             return
 
-        # Too many connections?
-        ka_limit = self.server.keep_alive_conn_limit
-        if ka_limit is not None and len(self.connections) > ka_limit:
-            conn.closeable = True
-            return
-
         # Connection too old?
         if (conn.last_used + self.server.timeout) < time.time():
             conn.closeable = True
@@ -277,3 +271,9 @@ class ConnectionManager:
         for conn in self.connections[:]:
             conn.close()
         self.connections = []
+
+    @property
+    def can_add_keepalive_connection(self):
+        """Flag whether it is allowed to add a new keep-alive connection."""
+        ka_limit = self.server.keep_alive_conn_limit
+        return ka_limit is None or len(self.connections) < ka_limit

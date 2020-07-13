@@ -9,6 +9,10 @@ from requests_toolbelt.sessions import BaseUrlSession as Session
 from jaraco.context import ExceptionTrap
 
 from cheroot import wsgi
+from cheroot._compat import IS_MACOS, IS_WINDOWS
+
+
+IS_SLOW_ENV = IS_MACOS or IS_WINDOWS
 
 
 @pytest.fixture
@@ -24,13 +28,12 @@ def simple_wsgi_server():
 
     host = '::'
     addr = host, port
-    server = wsgi.Server(addr, app)
+    server = wsgi.Server(addr, app, timeout=600 if IS_SLOW_ENV else 20)
     url = 'http://localhost:{port}/'.format(**locals())
     with server._run_in_thread() as thread:
         yield locals()
 
 
-@pytest.mark.xfail(reason='#263')
 def test_connection_keepalive(simple_wsgi_server):
     """Test the connection keepalive works (duh)."""
     session = Session(base_url=simple_wsgi_server['url'])
@@ -45,10 +48,10 @@ def test_connection_keepalive(simple_wsgi_server):
             resp.raise_for_status()
         return bool(trap)
 
-    with ThreadPoolExecutor(max_workers=50) as pool:
+    with ThreadPoolExecutor(max_workers=10 if IS_SLOW_ENV else 50) as pool:
         tasks = [
             pool.submit(do_request)
-            for n in range(1000)
+            for n in range(250 if IS_SLOW_ENV else 1000)
         ]
         failures = sum(task.result() for task in tasks)
 

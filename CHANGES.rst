@@ -1,3 +1,8 @@
+.. scm-version-title:: v8.3.1
+
+- Made terminating keep-alive connections more graceful
+  (:issue:`263` via :pr:`277`).
+
 .. scm-version-title:: v8.3.0
 
 - :cp-issue:`910` via :pr:`243`: Provide TLS-related
