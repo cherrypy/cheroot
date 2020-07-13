@@ -285,6 +285,7 @@ def test_content_length_required(test_client):
 @pytest.mark.xfail(
     IS_CIRCLE_CI_ENV,
     reason='https://github.com/cherrypy/cheroot/issues/106',
+    strict=False,  # sometimes it passes
 )
 def test_large_request(test_client_with_defaults):
     """Test GET query with maliciously large Content-Length."""
