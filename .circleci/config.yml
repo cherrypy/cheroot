@@ -79,7 +79,7 @@ jobs:
     - run:
         name: Initialize tox envs
         command: >-
-          tox --parallel auto --parallel-live
+          tox --parallel 2 --parallel-live
           --notest -vv
         environment:
           TOX_PARALLEL_NO_SPINNER: "1"
@@ -87,8 +87,9 @@ jobs:
     - run:
         name: Run tests
         command: >-
-          tox --parallel auto --parallel-live
+          tox --parallel 2 --parallel-live
           --
+          -n 2
           -p no:sugar
           $(circleci tests glob **/test/**.py |
           circleci tests split --split-by=timings |
