@@ -19,7 +19,9 @@ jobs:
       xcode: "11.2.1"  # available
 
     steps:
-    - run: brew install pyenv readline xz
+    - run: >-
+        brew install pyenv readline xz ||
+        brew upgrade pyenv readline xz
 
     - run: |-
         # https://circleci.com/docs/2.0/env-vars/#interpolating-environment-variables-to-set-other-environment-variables
