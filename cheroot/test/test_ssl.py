@@ -554,7 +554,14 @@ def test_https_over_http_error(http_server, ip_addr):
 @pytest.mark.parametrize(
     'adapter_type',
     (
-        'builtin',
+        pytest.param(
+            'builtin',
+            marks=pytest.mark.xfail(
+                IS_WINDOWS and six.PY2,
+                reason='Stdlib `ssl` module behaves weirdly '
+                'on Windows under Python 2',
+            ),
+        ),
         'pyopenssl',
     ),
 )
