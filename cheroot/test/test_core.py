@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import errno
+import os
 import socket
 
 import pytest
@@ -13,6 +14,9 @@ import six
 from six.moves import urllib
 
 from cheroot.test import helper
+
+
+IS_CIRCLE_CI_ENV = 'CIRCLECI' in os.environ
 
 
 HTTP_BAD_REQUEST = 400
@@ -278,7 +282,10 @@ def test_content_length_required(test_client):
     assert actual_status == HTTP_LENGTH_REQUIRED
 
 
-@pytest.mark.xfail(reason='https://github.com/cherrypy/cheroot/issues/106')
+@pytest.mark.xfail(
+    IS_CIRCLE_CI_ENV,
+    reason='https://github.com/cherrypy/cheroot/issues/106',
+)
 def test_large_request(test_client_with_defaults):
     """Test GET query with maliciously large Content-Length."""
     # If the server's max_request_body_size is not set (i.e. is set to 0)
