@@ -1,5 +1,7 @@
 .. scm-version-title:: v8.3.1
 
+- Fixed TLS socket related unclosed resource warnings
+  (:pr:`291` and :pr:`298`).
 - Made terminating keep-alive connections more graceful
   (:issue:`263` via :pr:`277`).
 
