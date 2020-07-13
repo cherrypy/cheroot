@@ -48,6 +48,7 @@ tracebacks
 tuple
 tuples
 unbuffered
+unclosed
 uri
 url
 username
