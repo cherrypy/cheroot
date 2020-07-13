@@ -31,23 +31,41 @@ jobs:
         ' >> $BASH_ENV
 
     - run: |-
-        for py_ver in 2.7.14 3.7.0 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
+        for py_ver in 3.8.3 3.7.8 3.6.11 3.5.9 pypy3.6-7.3.1 3.4.10 2.7.18
         do
           pyenv install "$py_ver" &
         done
         wait
-    - run: pyenv global 2.7.14 3.7.0 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
+    - run: pyenv global 3.8.3 3.7.8 3.6.11 3.5.9 pypy3.6-7.3.1 3.4.10 2.7.18
 
     - run: pip install tox tox-pyenv
     - checkout
     - run:
-        name: Run tests
-        command: tox -e py27,py34,py35,py36,py37,pypy3 -- -p no:sugar $(circleci tests glob **/test/**.py | circleci tests split --split-by=timings | grep -v '__init__.py')
-        # Environment variables for py-cryptography library
+        name: Initialize tox envs
+        command: >-
+          tox --parallel auto --parallel-live
+          --notest -vv
         environment:
+          # Environment variables for py-cryptography library:
           LDFLAGS: "-L/usr/local/opt/openssl/lib"
           CPPFLAGS: "-I/usr/local/opt/openssl/include"
           PKG_CONFIG_PATH: "/usr/local/opt/openssl/lib/pkgconfig"
+          # Tox env vars:
+          TOX_PARALLEL_NO_SPINNER: "1"
+          TOXENV: py38,py37,py36,py35,pypy3,py34,py27
+    - run:
+        name: Run tests
+        command: >-
+          tox --parallel auto --parallel-live
+          --
+          -p no:sugar
+          $(circleci tests glob **/test/**.py |
+          circleci tests split --split-by=timings |
+          grep -v '__init__.py')
+        environment:
+          # Tox env vars:
+          TOX_PARALLEL_NO_SPINNER: "1"
+          TOXENV: py38,py37,py36,py35,pypy3,py34,py27
 
   linux-build:
     parallelism: 4
