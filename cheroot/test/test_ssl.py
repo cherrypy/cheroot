@@ -560,6 +560,7 @@ def test_https_over_http_error(http_server, ip_addr):
                 IS_WINDOWS and six.PY2,
                 reason='Stdlib `ssl` module behaves weirdly '
                 'on Windows under Python 2',
+                strict=False,
             ),
         ),
         'pyopenssl',
