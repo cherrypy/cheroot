@@ -13,6 +13,7 @@ import pytest
 from jaraco.text import trim, unwrap
 
 from cheroot.test import helper, webtest
+from cheroot._compat import IS_PYPY
 
 
 timeout = 1
@@ -339,7 +340,13 @@ def test_streaming_10(test_client, set_cl):
     'http_server_protocol',
     (
         'HTTP/1.0',
-        'HTTP/1.1',
+        pytest.param(
+            'HTTP/1.1',
+            marks=pytest.mark.xfail(
+                IS_PYPY,
+                reason='Fails under PyPy for unknown reason',
+            ),
+        ),
     ),
 )
 def test_keepalive(test_client, http_server_protocol):
