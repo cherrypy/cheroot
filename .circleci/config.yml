@@ -76,7 +76,26 @@ jobs:
     steps:
     - checkout
     - run: pip install tox
-    - run: tox -e py27,py34,py35,py36,py37 -- $(circleci tests glob **/test/**.py | circleci tests split --split-by=timings | grep -v '__init__.py')
+    - run:
+        name: Initialize tox envs
+        command: >-
+          tox --parallel auto --parallel-live
+          --notest -vv
+        environment:
+          TOX_PARALLEL_NO_SPINNER: "1"
+          TOXENV: py38,py37,py36,py35,py34,py27
+    - run:
+        name: Run tests
+        command: >-
+          tox --parallel auto --parallel-live
+          --
+          -p no:sugar
+          $(circleci tests glob **/test/**.py |
+          circleci tests split --split-by=timings |
+          grep -v '__init__.py')
+        environment:
+          TOX_PARALLEL_NO_SPINNER: "1"
+          TOXENV: py38,py37,py36,py35,py34,py27
 
 workflows:
   version: 2
