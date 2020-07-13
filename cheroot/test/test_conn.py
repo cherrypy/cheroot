@@ -343,7 +343,7 @@ def test_streaming_10(test_client, set_cl):
         pytest.param(
             'HTTP/1.1',
             marks=pytest.mark.xfail(
-                IS_PYPY,
+                IS_PYPY and not six.PY2,
                 reason='Fails under PyPy for unknown reason',
             ),
         ),
