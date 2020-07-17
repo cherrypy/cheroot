@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import os
+import resource
 import socket
 import tempfile
 import threading
@@ -244,40 +245,42 @@ def test_high_number_of_file_descriptors():
     This test should cause a server crash, as the server will try to
     select() a file-descriptor higher than 1024.
     """
+    # Get current resource limits to restore them later
+    (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
     increased_nofile_limit = 2048
-    sockets = []
-    try:
-        import resource
-        import socket
 
+    # Create our server
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
+    )
+    # Hoard a lot of file descriptors by opening and storing a lot of sockets
+    test_sockets = []
+
+    try:
         # We have to increase the nofile limit above 1024
         # Otherwise we see a 'Too many files open' error, instead of
         # an error due to the file descriptor number being too high
-        (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
         resource.setrlimit(
             resource.RLIMIT_NOFILE,
             (increased_nofile_limit, increased_nofile_limit),
         )
 
-        # Hold a bunch of open file descriptors, so the next ones the server
+        # Open a lot of file descriptors, so the next ones the server
         # opens are higher than 1024
         for i in range(1024):
-            new_socket = socket.socket()
-            sockets.append(new_socket)
+            test_sockets.append(socket.socket())
 
-        # Create our server
-        httpserver = HTTPServer(
-            bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
-        )
         httpserver.prepare()
         # This will trigger a crash if select() is used in the implementation
         httpserver.tick()
 
     finally:
-        # Stop our server, and close our open resources
+        # Close our open resources
+        for test_socket in test_sockets:
+            test_socket.close()
+
+        # Stop our server
         httpserver.stop()
-        for socket in sockets:
-            socket.close()
 
         # Reset the limit back to the soft limit
         # (setting the hard_limit is an error)
