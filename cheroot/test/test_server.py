@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+from contextlib import closing
 import os
 import socket
 import tempfile
@@ -284,11 +285,8 @@ def test_high_number_of_file_descriptors():
         # This will trigger a crash if select() is used in the implementation
         httpserver.tick()
 
-        sock = socket.socket()
-        try:
+        with closing(socket.socket()) as sock:
             assert sock.fileno() >= 1024
-        finally:
-            sock.close()
 
     finally:
         # Close our open resources
