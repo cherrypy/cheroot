@@ -239,6 +239,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
         assert peercreds_text_resp.text == expected_textcreds
 
 
+@unix_only_sock_test
 def test_high_number_of_file_descriptors():
     """Test the server does not crash with a high file-descriptor value.
 
