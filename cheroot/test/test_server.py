@@ -269,10 +269,13 @@ def test_high_number_of_file_descriptors():
         # opens are higher than 1024
         for i in range(1024):
             test_sockets.append(socket.socket())
+        assert test_sockets[-1].fileno() >= 1024
 
         httpserver.prepare()
         # This will trigger a crash if select() is used in the implementation
         httpserver.tick()
+        with socket.socket() as sock:
+            assert sock.fileno() >= 1024
 
     finally:
         # Close our open resources
