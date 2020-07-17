@@ -262,7 +262,7 @@ def test_high_number_of_file_descriptors():
         # an error due to the file descriptor number being too high
         resource.setrlimit(
             resource.RLIMIT_NOFILE,
-            (increased_nofile_limit, increased_nofile_limit),
+            (increased_nofile_limit, hard_limit),
         )
 
         # Open a lot of file descriptors, so the next ones the server
@@ -284,4 +284,4 @@ def test_high_number_of_file_descriptors():
 
         # Reset the limit back to the soft limit
         # (setting the hard_limit is an error)
-        resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, soft_limit))
+        resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
