@@ -274,8 +274,12 @@ def test_high_number_of_file_descriptors():
         httpserver.prepare()
         # This will trigger a crash if select() is used in the implementation
         httpserver.tick()
-        with socket.socket() as sock:
+
+        sock = socket.socket()
+        try:
             assert sock.fileno() >= 1024
+        finally:
+            sock.close()
 
     finally:
         # Close our open resources
