@@ -5,7 +5,10 @@ __metaclass__ = type
 
 import io
 import os
-import select
+try:
+    import selectors
+except ImportError:
+    import selectors2 as selectors
 import socket
 import time
 
@@ -62,6 +65,7 @@ class ConnectionManager:
         """
         self.server = server
         self.connections = []
+        self._selector = selectors.DefaultSelector()
 
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
@@ -133,10 +137,9 @@ class ConnectionManager:
         ss_fileno = server_socket.fileno()
         socket_dict[ss_fileno] = server_socket
         try:
-            rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
-            # No available socket.
-            if not rlist:
-                return None
+            for sock in socket_dict:
+                self._selector.register(sock, selectors.EVENT_READ)
+            key_events = self._selector.select(timeout=0.1)
         except OSError:
             # Mark any connection which no longer appears valid.
             for fno, conn in list(socket_dict.items()):
@@ -155,15 +158,29 @@ class ConnectionManager:
 
             # Wait for the next tick to occur.
             return None
+        finally:
+            for sock in socket_dict:
+                self._selector.unregister(sock)
 
-        try:
-            # See if we have a new connection coming in.
-            rlist.remove(ss_fileno)
-        except ValueError:
-            # No new connection, but reuse existing socket.
-            conn = socket_dict[rlist.pop()]
-        else:
-            conn = server_socket
+        # See if we have a new connection coming in.
+        new_connection = False
+        rlist = []
+        for key, event in key_events:
+            if key.fd == ss_fileno:
+                # If we have a new connection, reuse the server socket
+                new_connection = True
+                conn = server_socket
+            else:
+                # Make a list of all the other sockets ready to read
+                rlist.append(key.fd)
+
+        if new_connection is False:
+            if len(rlist) == 0:
+                # If we didn't get any readable sockets, wait for the next tick
+                return None
+            else:
+                # No new connection, but reuse existing socket.
+                conn = socket_dict[rlist.pop()]
 
         # All remaining connections in rlist should be marked as ready.
         for fno in rlist:
