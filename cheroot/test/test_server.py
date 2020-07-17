@@ -236,3 +236,49 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
         peercreds_text_resp = requests.get(unix_base_uri + PEERCRED_TEXTS_URI)
         peercreds_text_resp.raise_for_status()
         assert peercreds_text_resp.text == expected_textcreds
+
+
+def test_high_number_of_file_descriptors():
+    """Test the server does not crash with a high file-descriptor value.
+
+    This test should cause a server crash, as the server will try to
+    select() a file-descriptor higher than 1024.
+    """
+    increased_nofile_limit = 2048
+    sockets = []
+    try:
+        import resource
+        import socket
+
+        # We have to increase the nofile limit above 1024
+        # Otherwise we see a 'Too many files open' error, instead of
+        # an error due to the file descriptor number being too high
+        (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
+        resource.setrlimit(
+            resource.RLIMIT_NOFILE,
+            (increased_nofile_limit, increased_nofile_limit),
+        )
+
+        # Hold a bunch of open file descriptors, so the next ones the server
+        # opens are higher than 1024
+        for i in range(1024):
+            new_socket = socket.socket()
+            sockets.append(new_socket)
+
+        # Create our server
+        httpserver = HTTPServer(
+            bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
+        )
+        httpserver.prepare()
+        # This will trigger a crash if select() is used in the implementation
+        httpserver.tick()
+
+    finally:
+        # Stop our server, and close our open resources
+        httpserver.stop()
+        for socket in sockets:
+            socket.close()
+
+        # Reset the limit back to the soft limit
+        # (setting the hard_limit is an error)
+        resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, soft_limit))
