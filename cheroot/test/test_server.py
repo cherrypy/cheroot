@@ -6,7 +6,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import os
-import resource
 import socket
 import tempfile
 import threading
@@ -20,7 +19,7 @@ import six
 from six.moves import urllib
 
 from .._compat import bton, ntob
-from .._compat import IS_LINUX, IS_MACOS, SYS_PLATFORM
+from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
@@ -239,13 +238,22 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
         assert peercreds_text_resp.text == expected_textcreds
 
 
-@unix_only_sock_test
+@pytest.mark.skipif(
+    IS_WINDOWS,
+    reason=(
+        'This regression test is for a Linux bug, and the resource module '
+        'is not available on Windows.'
+    ),
+)
 def test_high_number_of_file_descriptors():
     """Test the server does not crash with a high file-descriptor value.
 
     This test should cause a server crash, as the server will try to
     select() a file-descriptor higher than 1024.
     """
+    # Imported here, as it is not available on Windows
+    import resource
+
     # Get current resource limits to restore them later
     (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
     increased_nofile_limit = 2048
