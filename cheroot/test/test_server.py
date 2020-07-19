@@ -253,8 +253,10 @@ def test_high_number_of_file_descriptors(http_server):
     This test should cause a server crash, as the server will try to
     select() a file-descriptor higher than 1024.
     """
-    # Imported here, as it is not available on Windows
-    import resource
+    resource = pytest.importorskip(
+        'resource',
+        reason='The "resource" module is Unix-specific',
+    )
 
     # Get current resource limits to restore them later
     (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
