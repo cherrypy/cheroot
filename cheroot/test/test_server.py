@@ -258,12 +258,18 @@ def test_high_number_of_file_descriptors(http_server):
         reason='The "resource" module is Unix-specific',
     )
 
+    # We want to force the server to use a file-descriptor with a number above
+    # this value
+    high_fd_no = 1024
+
     # Get current resource limits to restore them later
     (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
-    increased_nofile_limit = 2048
 
     # Create our server
-    httpserver = http_server.send((ANY_INTERFACE_IPV4, EPHEMERAL_PORT))
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
+    )
+    httpserver.prepare()
     # Hoard a lot of file descriptors by opening and storing a lot of sockets
     test_sockets = []
 
@@ -273,21 +279,27 @@ def test_high_number_of_file_descriptors(http_server):
         # an error due to the file descriptor number being too high
         resource.setrlimit(
             resource.RLIMIT_NOFILE,
-            (increased_nofile_limit, hard_limit),
+            (high_fd_no * 2, hard_limit),
         )
 
-        # Open a lot of file descriptors, so the next ones the server
-        # opens are higher than 1024
-        for i in range(1024):
-            test_sockets.append(socket.socket())
-        assert test_sockets[-1].fileno() >= 1024
+        # Open a lot of file descriptors, so the next one the server opens is
+        # a hight number
+        for i in range(high_fd_no):
+            sock = socket.socket()
+            test_sockets.append(sock)
+            # If we reach a high enough number, we don't need to open more
+            if sock.fileno() >= high_fd_no:
+                break
+        # Check we opened enough descriptors to reach a high number
+        assert test_sockets[-1].fileno() >= high_fd_no
 
-        httpserver.prepare()
         # This will trigger a crash if select() is used in the implementation
         httpserver.tick()
 
-        with closing(socket.socket()) as sock:  # closing is here for py2-compat
-            assert sock.fileno() >= 1024
+        # We use closing here for py2-compat
+        with closing(socket.socket()) as sock:
+            # Check new sockets created are still above our target number
+            assert sock.fileno() >= high_fd_no
 
     finally:
         # Close our open resources
@@ -297,6 +309,5 @@ def test_high_number_of_file_descriptors(http_server):
         # Stop our server
         httpserver.stop()
 
-        # Reset the limit back to the soft limit
-        # (setting the hard_limit is an error)
+        # Reset the resource limit back to the original soft limit
         resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
