@@ -178,9 +178,9 @@ class ConnectionManager:
             if len(rlist) == 0:
                 # If we didn't get any readable sockets, wait for the next tick
                 return None
-            else:
-                # No new connection, but reuse existing socket.
-                conn = socket_dict[rlist.pop()]
+
+            # No new connection, but reuse the existing socket.
+            conn = socket_dict[rlist.pop()]
 
         # All remaining connections in rlist should be marked as ready.
         for fno in rlist:
