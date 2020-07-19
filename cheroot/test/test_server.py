@@ -246,7 +246,8 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
         'is not available on Windows.'
     ),
 )
-def test_high_number_of_file_descriptors():
+@pytest.mark.forked
+def test_high_number_of_file_descriptors(http_server):
     """Test the server does not crash with a high file-descriptor value.
 
     This test should cause a server crash, as the server will try to
