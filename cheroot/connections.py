@@ -134,9 +134,12 @@ class ConnectionManager:
         ss_fileno = server_socket.fileno()
         socket_dict[ss_fileno] = server_socket
         try:
-            for sock in socket_dict:
-                self._selector.register(sock, selectors.EVENT_READ)
-            key_events = [key.fd for key, _event self._selector.select(timeout=0.1)]
+            for fno in socket_dict:
+                self._selector.register(fno, selectors.EVENT_READ)
+            rlist = [
+                key.fd for key, _event
+                in self._selector.select(timeout=0.1)
+            ]
         except OSError:
             # Mark any connection which no longer appears valid.
             for fno, conn in list(socket_dict.items()):
@@ -156,29 +159,22 @@ class ConnectionManager:
             # Wait for the next tick to occur.
             return None
         finally:
-            for sock in socket_dict:
-                self._selector.unregister(sock)
+            for fno in socket_dict:
+                self._selector.unregister(fno)
 
-        # See if we have a new connection coming in.
         try:
-            key_events.pop(ss_fileno)
-        except KeyError:
-                new_connection = False
-        else:
-                new_connection = True
-                # If we have a new connection, reuse the server socket
-                conn = server_socket
-
-        # Make a list of all the other sockets ready to read
-        rlist = list(key_events.keys())
-
-        if not new_connection:
+            # See if we have a new connection coming in.
+            rlist.remove(ss_fileno)
+        except ValueError:
+            # If we didn't get any readable sockets, wait for the next tick
             if not rlist:
-                # If we didn't get any readable sockets, wait for the next tick
                 return None
 
-            # No new connection, but reuse the existing socket.
+            # No new connection, but reuse an existing socket.
             conn = socket_dict[rlist.pop()]
+        else:
+            # If we have a new connection, reuse the server socket
+            conn = server_socket
 
         # All remaining connections in rlist should be marked as ready.
         for fno in rlist:
