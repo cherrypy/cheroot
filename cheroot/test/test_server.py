@@ -243,7 +243,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     IS_WINDOWS,
     reason=(
         'This regression test is for a Linux bug, and the resource module '
-        'is not available on Windows.'
+        'is not available on Windows'
     ),
 )
 @pytest.mark.forked
