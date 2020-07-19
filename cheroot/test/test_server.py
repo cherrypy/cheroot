@@ -250,8 +250,11 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
 def test_high_number_of_file_descriptors(http_server):
     """Test the server does not crash with a high file-descriptor value.
 
-    This test should cause a server crash, as the server will try to
-    select() a file-descriptor higher than 1024.
+    This test shouldn't cause a server crash when trying to access
+    file-descriptor higher than 1024.
+
+    The earlier implementation used to rely on `select()` syscall that
+    doesn't support file descriptors with numbers higher than 1024.
     """
     resource = pytest.importorskip(
         'resource',
