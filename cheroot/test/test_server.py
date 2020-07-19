@@ -247,7 +247,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     ),
 )
 @pytest.mark.forked
-def test_high_number_of_file_descriptors(http_server):
+def test_high_number_of_file_descriptors():
     """Test the server does not crash with a high file-descriptor value.
 
     This test shouldn't cause a server crash when trying to access
@@ -269,7 +269,9 @@ def test_high_number_of_file_descriptors(http_server):
     (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
 
     # Create our server
-    httpserver = http_server.send((ANY_INTERFACE_IPV4, EPHEMERAL_PORT))
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
+    )
     httpserver.prepare()
     # Hoard a lot of file descriptors by opening and storing a lot of sockets
     test_sockets = []
