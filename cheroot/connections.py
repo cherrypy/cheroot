@@ -174,7 +174,7 @@ class ConnectionManager:
                 # Make a list of all the other sockets ready to read
                 rlist.append(key.fd)
 
-        if new_connection is False:
+        if not new_connection:
             if len(rlist) == 0:
                 # If we didn't get any readable sockets, wait for the next tick
                 return None
