@@ -139,7 +139,7 @@ class ConnectionManager:
         try:
             for sock in socket_dict:
                 self._selector.register(sock, selectors.EVENT_READ)
-            key_events = self._selector.select(timeout=0.1)
+            key_events = [key.fd for key, _event self._selector.select(timeout=0.1)]
         except OSError:
             # Mark any connection which no longer appears valid.
             for fno, conn in list(socket_dict.items()):
@@ -163,19 +163,20 @@ class ConnectionManager:
                 self._selector.unregister(sock)
 
         # See if we have a new connection coming in.
-        new_connection = False
-        rlist = []
-        for key, event in key_events:
-            if key.fd == ss_fileno:
-                # If we have a new connection, reuse the server socket
+        try:
+            key_events.pop(ss_fileno)
+        except KeyError:
+                new_connection = False
+        else:
                 new_connection = True
+                # If we have a new connection, reuse the server socket
                 conn = server_socket
-            else:
-                # Make a list of all the other sockets ready to read
-                rlist.append(key.fd)
+
+        # Make a list of all the other sockets ready to read
+        rlist = list(key_events.keys())
 
         if not new_connection:
-            if len(rlist) == 0:
+            if not rlist:
                 # If we didn't get any readable sockets, wait for the next tick
                 return None
 
