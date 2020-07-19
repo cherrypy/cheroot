@@ -5,14 +5,11 @@ __metaclass__ = type
 
 import io
 import os
-try:
-    import selectors
-except ImportError:
-    import selectors2 as selectors
 import socket
 import time
 
 from . import errors
+from ._compat import selectors
 from .makefile import MakeFile
 
 import six
