@@ -261,9 +261,7 @@ def test_high_number_of_file_descriptors(http_server):
     increased_nofile_limit = 2048
 
     # Create our server
-    httpserver = HTTPServer(
-        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
-    )
+    httpserver = http_server.send((ANY_INTERFACE_IPV4, EPHEMERAL_PORT))
     # Hoard a lot of file descriptors by opening and storing a lot of sockets
     test_sockets = []
 
