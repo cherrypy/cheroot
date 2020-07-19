@@ -8,11 +8,10 @@ import re
 
 import six
 
-# Not used in this file, imported elsewhere as 'from ._compat import selectors'
 try:
-    import selectors
+    import selectors  # lgtm [py/unused-import]
 except ImportError:
-    import selectors2 as selectors  # noqa: F401
+    import selectors2 as selectors  # noqa: F401  # lgtm [py/unused-import]
 
 try:
     import ssl
