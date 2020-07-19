@@ -285,7 +285,7 @@ def test_high_number_of_file_descriptors():
         # This will trigger a crash if select() is used in the implementation
         httpserver.tick()
 
-        with closing(socket.socket()) as sock:
+        with closing(socket.socket()) as sock:  # closing is here for py2-compat
             assert sock.fileno() >= 1024
 
     finally:
