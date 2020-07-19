@@ -8,6 +8,12 @@ import re
 
 import six
 
+# Not used in this file, imported elsewhere as 'from ._compat import selectors'
+try:
+    import selectors
+except ImportError:
+    import selectors2 as selectors  # noqa: F401
+
 try:
     import ssl
     IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
