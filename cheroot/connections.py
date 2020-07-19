@@ -139,7 +139,7 @@ class ConnectionManager:
         try:
             for sock in socket_dict:
                 self._selector.register(sock, selectors.EVENT_READ)
-            key_events = [key.fd for key, _event self._selector.select(timeout=0.1)]
+            key_events = [key.fd for key, _event in self._selector.select(timeout=0.1)]
         except OSError:
             # Mark any connection which no longer appears valid.
             for fno, conn in list(socket_dict.items()):
