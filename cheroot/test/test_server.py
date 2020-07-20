@@ -244,7 +244,6 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     reason='This regression test is for a Linux bug, '
     'and the resource module is not available on Windows',
 )
-@pytest.mark.forked
 @pytest.mark.parametrize(
     'resource_limit',
     (
@@ -285,6 +284,12 @@ def test_high_number_of_file_descriptors(resource_limit):
     finally:
         # Stop our server
         httpserver.stop()
+
+
+if not IS_WINDOWS:
+    test_high_number_of_file_descriptors = pytest.mark.forked(
+        test_high_number_of_file_descriptors,
+    )
 
 
 @pytest.fixture
