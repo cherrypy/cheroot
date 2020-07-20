@@ -45,6 +45,7 @@ ssl
 stdout
 subclasses
 submodules
+syscall
 systemd
 threadpool
 Tidelift
