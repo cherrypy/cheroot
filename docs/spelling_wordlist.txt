@@ -2,12 +2,14 @@ AppVeyor
 Args
 backports
 builtin
+b'xb
 compat
 config
 conftest
 conn
 chunked
 docstrings
+ef
 environ
 Faux
 Fortran
@@ -20,6 +22,7 @@ linux
 localhost
 macOS
 makefile
+memoryview
 metaclass
 multi
 namespace
@@ -29,12 +32,14 @@ pipelining
 positionally
 pytest
 pythonic
+readonly
 rebase
 Refactor
 Refactored
 refactoring
 refactorings
 Sep
+sep
 signalling
 ssl
 stdout
@@ -54,3 +59,4 @@ url
 username
 webtest
 wsgi
+xef
