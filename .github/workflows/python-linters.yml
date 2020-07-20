@@ -15,7 +15,7 @@ jobs:
       # max-parallel: 5
       matrix:
         python-version:
-        - 3.7
+        - 3.8
         os:
         - ubuntu-latest
         env:
@@ -28,11 +28,11 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Pre-commit cache
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ~/.cache/pre-commit
         key: ${{ runner.os }}-pre-commit-${{ hashFiles('setup.cfg') }}-${{ hashFiles('setup.py') }}-${{ hashFiles('tox.ini') }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('.pre-commit-config.yaml') }}-${{ hashFiles('.pre-commit-config.yaml.failing') }}-${{ hashFiles('pytest.ini') }}
@@ -40,7 +40,7 @@ jobs:
           ${{ runner.os }}-pre-commit-
           ${{ runner.os }}-
     - name: Pip cache
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('setup.cfg') }}-${{ hashFiles('setup.py') }}-${{ hashFiles('tox.ini') }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('.pre-commit-config.yaml') }}-${{ hashFiles('.pre-commit-config.yaml.failing') }}-${{ hashFiles('pytest.ini') }}
