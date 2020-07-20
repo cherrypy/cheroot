@@ -40,7 +40,7 @@ IS_WIN2016 = (
     IS_WINDOWS
     # pylint: disable=unsupported-membership-test
     and b'Microsoft Windows Server 2016 Datacenter' in subprocess.check_output(
-        ('systeminfo', ),
+        ('systeminfo',),
     )
 )
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
@@ -149,7 +149,7 @@ def tls_ca_certificate_pem_path(ca):
 def tls_certificate(ca):
     """Provide a leaf certificate via fixture."""
     interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
-    return ca.issue_server_cert(ntou(interface), )
+    return ca.issue_server_cert(ntou(interface))
 
 
 @pytest.fixture
@@ -359,7 +359,7 @@ def test_tls_client_auth(
         )
         if not six.PY2:
             if IS_MACOS and IS_PYPY and adapter_type == 'pyopenssl':
-                expected_substrings = ('tlsv1 alert unknown ca', )
+                expected_substrings = ('tlsv1 alert unknown ca',)
         if (
                 tls_verify_mode in (
                     ssl.CERT_REQUIRED,
@@ -433,7 +433,7 @@ def test_ssl_env(
         'idna.core.ulabel',
         return_value=ntob('127.0.0.1'),
     ):
-        client_cert = ca.issue_cert(ntou('127.0.0.1'),)
+        client_cert = ca.issue_cert(ntou('127.0.0.1'))
 
     with client_cert.private_key_and_cert_chain_pem.tempfile() as cl_pem:
         tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
@@ -612,8 +612,10 @@ def test_http_over_https_error(
         fqdn = '[{}]'.format(fqdn)
 
     expect_fallback_response_over_plain_http = (
-        (adapter_type == 'pyopenssl'
-         and (IS_ABOVE_OPENSSL10 or not six.PY2))
+        (
+            adapter_type == 'pyopenssl'
+            and (IS_ABOVE_OPENSSL10 or not six.PY2)
+        )
         or PY27
     ) or (
         IS_GITHUB_ACTIONS_WORKFLOW

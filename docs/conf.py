@@ -31,7 +31,7 @@ IN_TREE_EXTENSIONS = (
 CONDITIONAL_EXTENSIONS = ()
 
 if IS_SPELLCHECK_BUILD:
-    CONDITIONAL_EXTENSIONS += ('sphinxcontrib.spelling', )
+    CONDITIONAL_EXTENSIONS += ('sphinxcontrib.spelling',)
 
 
 extensions = [

@@ -36,7 +36,7 @@ def _get_scm_timestamp_for(commitish, *, scm=None):
 
     try:
         ts = subprocess.check_output(
-            _SCM_COMMANDS[scm] + (commitish, ),
+            _SCM_COMMANDS[scm] + (commitish,),
             stderr=subprocess.DEVNULL,
             text=True,
         ).strip()

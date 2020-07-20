@@ -1620,12 +1620,16 @@ class HTTPServer:
                 [w['Work Time'](w) for w in s['Worker Threads'].values()], 0,
             ),
             'Read Throughput': lambda s: (not s['Enabled']) and -1 or sum(
-                [w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
-                 for w in s['Worker Threads'].values()], 0,
+                [
+                    w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
+                    for w in s['Worker Threads'].values()
+                ], 0,
             ),
             'Write Throughput': lambda s: (not s['Enabled']) and -1 or sum(
-                [w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
-                 for w in s['Worker Threads'].values()], 0,
+                [
+                    w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
+                    for w in s['Worker Threads'].values()
+                ], 0,
             ),
             'Worker Threads': {},
         }
@@ -2134,7 +2138,9 @@ def get_ssl_adapter_class(name='builtin'):
         try:
             adapter = getattr(mod, attr_name)
         except AttributeError:
-            raise AttributeError("'%s' object has no attribute '%s'"
-                                 % (mod_path, attr_name))
+            raise AttributeError(
+                "'%s' object has no attribute '%s'"
+                % (mod_path, attr_name),
+            )
 
     return adapter

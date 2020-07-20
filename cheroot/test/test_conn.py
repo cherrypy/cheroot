@@ -45,8 +45,10 @@ class Controller(helper.Controller):
     def upload(req, resp):
         """Process file upload and render thank."""
         if not req.environ['REQUEST_METHOD'] == 'POST':
-            raise AssertionError("'POST' != request.method %r" %
-                                 req.environ['REQUEST_METHOD'])
+            raise AssertionError(
+                "'POST' != request.method %r" %
+                req.environ['REQUEST_METHOD'],
+            )
         return "thanks for '%s'" % req.environ['wsgi.input'].read()
 
     def custom_204(req, resp):
@@ -805,11 +807,13 @@ def test_No_Message_Body(test_client):
 
 
 @pytest.mark.xfail(
-    reason=unwrap(trim("""
+    reason=unwrap(
+        trim("""
         Headers from earlier request leak into the request
         line for a subsequent request, resulting in 400
         instead of 413. See cherrypy/cheroot#69 for details.
-        """)),
+        """),
+    ),
 )
 def test_Chunked_Encoding(test_client):
     """Test HTTP uploads with chunked transfer-encoding."""

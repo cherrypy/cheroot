@@ -77,9 +77,9 @@ def wsgi_app(monkeypatch):
 @pytest.mark.parametrize(
     ('app_name', 'app_method'),
     (
-        (None, 'application',),
-        ('application', 'application',),
-        ('main', 'main',),
+        (None, 'application'),
+        ('application', 'application'),
+        ('main', 'main'),
     ),
 )
 def test_Aplication_resolve(app_name, app_method, wsgi_app):

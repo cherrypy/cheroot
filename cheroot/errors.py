@@ -29,7 +29,7 @@ def plat_specific_errors(*errnames):
     depending on the specific platform (OS). This function will return
     the list of numeric values for a given list of potential names.
     """
-    missing_attr = set([None, ])
+    missing_attr = set([None])
     unique_nums = set(getattr(errno, k, None) for k in errnames)
     return list(unique_nums - missing_attr)
 
