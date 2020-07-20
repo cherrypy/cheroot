@@ -18,13 +18,18 @@ jobs:
         - 3.8
         os:
         - ubuntu-latest
-        env:
-        - TOXENV: pre-commit
-        # - TOXENV: pre-commit-failing
-        - TOXENV: setup-check
-        - TOXENV: build-docs
-        - TOXENV: spellcheck-docs
-        - TOXENV: linkcheck-docs
+        toxenv:
+        - pre-commit
+        # - pre-commit-failing
+        - setup-check
+        - build-docs
+        - spellcheck-docs
+        - linkcheck-docs
+
+    env:
+      TOX_PARALLEL_NO_SPINNER: 1
+      TOXENV: ${{ matrix.toxenv }}
+
     steps:
     - uses: actions/checkout@master
     - name: Set up Python ${{ matrix.python-version }}
@@ -51,14 +56,22 @@ jobs:
       run: |
         python -m pip install --upgrade tox
     - name: 'Initialize tox envs: ${{ matrix.env.TOXENV }}'
-      run: |
-        python -m tox --parallel auto --notest
-      env: ${{ matrix.env }}
+      run: >-
+        python -m
+        tox
+        --parallel auto
+        --parallel-live
+        -vv
+        --skip-missing-interpreters false
+        --notest
     - name: Initialize pre-commit envs if needed
       run: |
         test -d .tox/pre-commit && .tox/pre-commit/bin/python -m pre_commit install-hooks || :
         test -d .tox/pre-commit-failing && .tox/pre-commit-failing/bin/python -m pre_commit install-hooks || :
     - name: Test with tox
-      run: |
-        python -m tox --parallel 0
-      env: ${{ matrix.env }}
+      run: >-
+        python -m
+        tox
+        --parallel auto
+        --parallel-live
+        -vv
