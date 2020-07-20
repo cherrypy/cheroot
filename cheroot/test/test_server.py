@@ -241,13 +241,20 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
 
 @pytest.mark.skipif(
     IS_WINDOWS,
-    reason=(
-        'This regression test is for a Linux bug, and the resource module '
-        'is not available on Windows'
-    ),
+    reason='This regression test is for a Linux bug, '
+    'and the resource module is not available on Windows',
 )
 @pytest.mark.forked
-def test_high_number_of_file_descriptors():
+@pytest.mark.parametrize(
+    'resource_limit',
+    (
+        1024,
+        2048,
+    ),
+    indirect=('resource_limit', ),
+)
+@pytest.mark.usefixtures('many_open_sockets')
+def test_high_number_of_file_descriptors(resource_limit):
     """Test the server does not crash with a high file-descriptor value.
 
     This test shouldn't cause a server crash when trying to access
@@ -256,61 +263,75 @@ def test_high_number_of_file_descriptors():
     The earlier implementation used to rely on `select()` syscall that
     doesn't support file descriptors with numbers higher than 1024.
     """
-    resource = pytest.importorskip(
-        'resource',
-        reason='The "resource" module is Unix-specific',
-    )
-
-    # We want to force the server to use a file-descriptor with a number above
-    # this value
-    high_fd_no = 1024
-
-    # Get current resource limits to restore them later
-    (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
+    # We want to force the server to use a file-descriptor with
+    # a number above resource_limit
 
     # Create our server
     httpserver = HTTPServer(
         bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
     )
     httpserver.prepare()
-    # Hoard a lot of file descriptors by opening and storing a lot of sockets
-    test_sockets = []
 
     try:
-        # We have to increase the nofile limit above 1024
-        # Otherwise we see a 'Too many files open' error, instead of
-        # an error due to the file descriptor number being too high
-        resource.setrlimit(
-            resource.RLIMIT_NOFILE,
-            (high_fd_no * 2, hard_limit),
-        )
-
-        # Open a lot of file descriptors, so the next one the server opens is
-        # a hight number
-        for i in range(high_fd_no):
-            sock = socket.socket()
-            test_sockets.append(sock)
-            # If we reach a high enough number, we don't need to open more
-            if sock.fileno() >= high_fd_no:
-                break
-        # Check we opened enough descriptors to reach a high number
-        assert test_sockets[-1].fileno() >= high_fd_no
-
         # This will trigger a crash if select() is used in the implementation
         httpserver.tick()
-
+    except:  # noqa: E722
+        raise  # only needed for `else` to work
+    else:
         # We use closing here for py2-compat
         with closing(socket.socket()) as sock:
             # Check new sockets created are still above our target number
-            assert sock.fileno() >= high_fd_no
+            assert sock.fileno() >= resource_limit
+    finally:
+        # Stop our server
+        httpserver.stop()
 
+
+@pytest.fixture
+def resource_limit(request):
+    """Set the resource limit two times bigger then requested."""
+    resource = pytest.importorskip(
+        'resource',
+        reason='The "resource" module is Unix-specific',
+    )
+
+    # Get current resource limits to restore them later
+    soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
+
+    # We have to increase the nofile limit above 1024
+    # Otherwise we see a 'Too many files open' error, instead of
+    # an error due to the file descriptor number being too high
+    resource.setrlimit(
+        resource.RLIMIT_NOFILE,
+        (request.param * 2, hard_limit),
+    )
+
+    try:  # noqa: WPS501
+        yield request.param
+    finally:
+        # Reset the resource limit back to the original soft limit
+        resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
+
+
+@pytest.fixture
+def many_open_sockets(resource_limit):
+    """Allocate a lot of file descriptors by opening dummy sockets."""
+    # Hoard a lot of file descriptors by opening and storing a lot of sockets
+    test_sockets = []
+    # Open a lot of file descriptors, so the next one the server
+    # opens is a high number
+    try:
+        for i in range(resource_limit):
+            sock = socket.socket()
+            test_sockets.append(sock)
+            # If we reach a high enough number, we don't need to open more
+            if sock.fileno() >= resource_limit:
+                break
+        # Check we opened enough descriptors to reach a high number
+        the_highest_fileno = test_sockets[-1].fileno()
+        assert the_highest_fileno >= resource_limit
+        yield the_highest_fileno
     finally:
         # Close our open resources
         for test_socket in test_sockets:
             test_socket.close()
-
-        # Stop our server
-        httpserver.stop()
-
-        # Reset the resource limit back to the original soft limit
-        resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
