@@ -251,7 +251,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
         1024,
         2048,
     ),
-    indirect=('resource_limit', ),
+    indirect=('resource_limit',),
 )
 @pytest.mark.usefixtures('many_open_sockets')
 def test_high_number_of_file_descriptors(resource_limit):
