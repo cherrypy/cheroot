@@ -260,7 +260,7 @@ def test_high_number_of_file_descriptors(resource_limit):
     This test shouldn't cause a server crash when trying to access
     file-descriptor higher than 1024.
 
-    The earlier implementation used to rely on `select()` syscall that
+    The earlier implementation used to rely on ``select()`` syscall that
     doesn't support file descriptors with numbers higher than 1024.
     """
     # We want to force the server to use a file-descriptor with
