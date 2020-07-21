@@ -395,7 +395,10 @@ def test_tls_client_auth(
             ) if (
                 IS_GITHUB_ACTIONS_WORKFLOW
                 and IS_LINUX
-            ) else ()
+            ) else (
+                "('Connection aborted.', "
+                "BrokenPipeError(32, 'Broken pipe'))",
+            )
         assert any(e in err_text for e in expected_substrings)
 
 
