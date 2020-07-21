@@ -12,10 +12,7 @@ import six
 try:
     import selectors  # lgtm [py/unused-import]
 except ImportError:
-    try:
-        import selectors2 as selectors  # noqa: F401  # lgtm [py/unused-import]
-    except ImportError:
-        import selectors34 as selectors  # noqa: F401 # lgtm [py/unused-import]
+    import selectors2 as selectors  # noqa: F401  # lgtm [py/unused-import]
 
 try:
     import ssl
