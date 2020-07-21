@@ -71,6 +71,7 @@
     name: tox-linkcheck-docs
     parent: tox
     vars:
+      tox_envlist: linkcheck-docs
       python_version: 3.8
       python_use_pyenv: true
 
