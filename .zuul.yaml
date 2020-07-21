@@ -3,6 +3,8 @@
     parent: tox
     vars:
       tox_envlist: pre-commit
+      python_version: 3.8
+      python_use_pyenv: true
 - job:
     name: tox-setup-check
     parent: tox
@@ -54,27 +56,23 @@
     parent: tox
     vars:
       tox_envlist: build-docs
-      # NOTE(mnaser): Drop this once zuul/zuul-jobs no longer prefers
-      #               Python 2 by default.
-      tox_prefer_python2: false
+      python_version: 3.8
+      python_use_pyenv: true
 
 - job:
     name: tox-spellcheck-docs
     parent: tox
     vars:
       tox_envlist: spellcheck-docs
-      # NOTE(mnaser): Drop this once zuul/zuul-jobs no longer prefers
-      #               Python 2 by default.
-      tox_prefer_python2: false
+      python_version: 3.8
+      python_use_pyenv: true
 
 - job:
     name: tox-linkcheck-docs
     parent: tox
     vars:
-      tox_envlist: linkcheck-docs
-      # NOTE(mnaser): Drop this once zuul/zuul-jobs no longer prefers
-      #               Python 2 by default.
-      tox_prefer_python2: false
+      python_version: 3.8
+      python_use_pyenv: true
 
 - job:
     name: tox-pre-commit-failing
@@ -82,9 +80,8 @@
     voting: false
     vars:
       tox_envlist: pre-commit-failing
-      # NOTE(mnaser): Drop this once zuul/zuul-jobs no longer prefers
-      #               Python 2 by default.
-      tox_prefer_python2: false
+      python_version: 3.8
+      python_use_pyenv: true
 
 - project:
     check:
