@@ -1,3 +1,4 @@
+# pylint: disable=unused-import
 """Compatibility code for using Cheroot with various versions of Python."""
 
 from __future__ import absolute_import, division, print_function
@@ -11,7 +12,10 @@ import six
 try:
     import selectors  # lgtm [py/unused-import]
 except ImportError:
-    import selectors2 as selectors  # noqa: F401  # lgtm [py/unused-import]
+    try:
+        import selectors2 as selectors  # noqa: F401  # lgtm [py/unused-import]
+    except ImportError:
+        import selectors34 as selectors  # noqa: F401 # lgtm [py/unused-import]
 
 try:
     import ssl
