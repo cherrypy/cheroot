@@ -4,6 +4,7 @@
     vars:
       tox_envlist: pre-commit
       python_version: 3.8
+      python_use_pyenv: true
 - job:
     name: tox-setup-check
     parent: tox
@@ -56,6 +57,7 @@
     vars:
       tox_envlist: build-docs
       python_version: 3.8
+      python_use_pyenv: true
 
 - job:
     name: tox-spellcheck-docs
@@ -63,12 +65,14 @@
     vars:
       tox_envlist: spellcheck-docs
       python_version: 3.8
+      python_use_pyenv: true
 
 - job:
     name: tox-linkcheck-docs
     parent: tox
     vars:
       python_version: 3.8
+      python_use_pyenv: true
 
 - job:
     name: tox-pre-commit-failing
@@ -77,6 +81,7 @@
     vars:
       tox_envlist: pre-commit-failing
       python_version: 3.8
+      python_use_pyenv: true
 
 - project:
     check:
