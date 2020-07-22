@@ -5,11 +5,11 @@ __metaclass__ = type
 
 import io
 import os
-import select
 import socket
 import time
 
 from . import errors
+from ._compat import selectors
 from .makefile import MakeFile
 
 import six
@@ -62,6 +62,7 @@ class ConnectionManager:
         """
         self.server = server
         self.connections = []
+        self._selector = selectors.DefaultSelector()
 
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
@@ -133,10 +134,12 @@ class ConnectionManager:
         ss_fileno = server_socket.fileno()
         socket_dict[ss_fileno] = server_socket
         try:
-            rlist, _, _ = select.select(list(socket_dict), [], [], 0.1)
-            # No available socket.
-            if not rlist:
-                return None
+            for fno in socket_dict:
+                self._selector.register(fno, selectors.EVENT_READ)
+            rlist = [
+                key.fd for key, _event
+                in self._selector.select(timeout=0.1)
+            ]
         except OSError:
             # Mark any connection which no longer appears valid.
             for fno, conn in list(socket_dict.items()):
@@ -155,14 +158,22 @@ class ConnectionManager:
 
             # Wait for the next tick to occur.
             return None
+        finally:
+            for fno in socket_dict:
+                self._selector.unregister(fno)
 
         try:
             # See if we have a new connection coming in.
             rlist.remove(ss_fileno)
         except ValueError:
-            # No new connection, but reuse existing socket.
+            # If we didn't get any readable sockets, wait for the next tick
+            if not rlist:
+                return None
+
+            # No new connection, but reuse an existing socket.
             conn = socket_dict[rlist.pop()]
         else:
+            # If we have a new connection, reuse the server socket
             conn = server_socket
 
         # All remaining connections in rlist should be marked as ready.
