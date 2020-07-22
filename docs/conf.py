@@ -67,6 +67,7 @@ github_repo_name = 'cheroot'
 github_repo_slug = f'{github_repo_org}/{github_repo_name}'
 github_repo_url = f'{github_url}/{github_repo_slug}'
 cp_github_repo_url = f'{github_url}/{github_repo_org}/cherrypy'
+github_sponsors_url = 'https://github.com/sponsors'
 
 extlinks = {
     'issue': (f'{github_repo_url}/issues/%s', '#'),
@@ -75,6 +76,7 @@ extlinks = {
     'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #'),
     'cp-pr': (f'{cp_github_repo_url}/pull/%s', 'CherryPy PR #'),
     'gh': (f'{github_url}/%s', 'GitHub: '),
+    'user': (f'{github_sponsors_url}/%s', '@'),
 }
 
 intersphinx_mapping = {
