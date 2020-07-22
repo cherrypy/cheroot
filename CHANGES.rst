@@ -1,3 +1,12 @@
+.. scm-version-title:: v8.4.0
+
+- Converted management from low-level :py:func:`~select.select` to
+  high-level :py:mod:`selectors` (:issue:`249` via :pr:`301`)
+  - by :user:`tommilligan`.
+
+  This change also introduces a conditional dependency on
+  ``selectors2`` as a fall-back for legacy Python interpreters.
+
 .. scm-version-title:: v8.3.1
 
 - Fixed TLS socket related unclosed resource warnings
