@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 
 import OpenSSL.SSL
 import pytest
@@ -164,6 +165,43 @@ def tls_certificate_private_key_pem_path(tls_certificate):
     """Provide a certificate private key PEM file path via fixture."""
     with tls_certificate.private_key_pem.tempfile() as cert_key_pem:
         yield cert_key_pem
+
+
+def _thread_except_hook(exceptions, args):
+    """Append uncaught exception ``args`` in threads to ``exceptions``."""
+    if args.exc_type == SystemExit:
+        return
+    # cannot store the exception, it references the thread's stack
+    exceptions.append((
+        args.exc_type,
+        str(args.exc_value),
+        ''.join(
+            traceback.format_exception(
+                args.exc_type, args.exc_value, args.exc_traceback,
+            ),
+        ),
+    ))
+
+
+@pytest.fixture
+def thread_exceptions():
+    """Provide a list of uncaught exceptions from threads via a fixture.
+
+    Only catches exceptions on Python 3.8+.
+    The list contains: ``(type, str(value), str(traceback))``
+    """
+    exceptions = []
+    # Python 3.8+
+    orig_hook = getattr(threading, 'excepthook', None)
+    if orig_hook is not None:
+        threading.excepthook = functools.partial(
+            _thread_except_hook, exceptions,
+        )
+    try:
+        yield exceptions
+    finally:
+        if orig_hook is not None:
+            threading.excepthook = orig_hook
 
 
 @pytest.mark.parametrize(
@@ -420,6 +458,7 @@ def test_tls_client_auth(
     ),
 )
 def test_ssl_env(
+        thread_exceptions,
         recwarn,
         mocker,
         tls_http_server, adapter_type,
@@ -527,6 +566,15 @@ def test_ssl_env(
                 )),
             )
         pytest.fail(msg)
+
+    # to perform the ssl handshake over that loopback socket,
+    # the builtin ssl environment generation uses a thread
+    if thread_exceptions:
+        for _, _, trace in thread_exceptions:
+            print(trace, file=sys.stderr)
+        pytest.fail(
+            thread_exceptions[0][0].__name__ + ': ' + thread_exceptions[0][1],
+        )
 
 
 @pytest.mark.parametrize(
