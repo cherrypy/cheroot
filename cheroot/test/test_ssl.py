@@ -169,7 +169,7 @@ def tls_certificate_private_key_pem_path(tls_certificate):
 
 def _thread_except_hook(exceptions, args):
     """Append uncaught exception ``args`` in threads to ``exceptions``."""
-    if args.exc_type == SystemExit:
+    if issubclass(args.exc_type, SystemExit):
         return
     # cannot store the exception, it references the thread's stack
     exceptions.append((
@@ -569,12 +569,12 @@ def test_ssl_env(
 
     # to perform the ssl handshake over that loopback socket,
     # the builtin ssl environment generation uses a thread
-    if thread_exceptions:
-        for _, _, trace in thread_exceptions:
-            print(trace, file=sys.stderr)
-        pytest.fail(
-            thread_exceptions[0][0].__name__ + ': ' + thread_exceptions[0][1],
-        )
+    for _, _, trace in thread_exceptions:
+        print(trace, file=sys.stderr)
+    assert not thread_exceptions, ': '.join((
+        thread_exceptions[0][0].__name__,
+        thread_exceptions[0][1],
+    ))
 
 
 @pytest.mark.parametrize(

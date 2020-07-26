@@ -56,7 +56,8 @@ def _loopback_for_cert_thread(context, server):
     """Wrap a socket in ssl and perform the server-side handshake."""
     # As we only care about parsing the certificate, the failure of
     # which will cause an exception in ``_loopback_for_cert``,
-    # we can safely ignore connection and ssl related exceptions.
+    # we can safely ignore connection and ssl related exceptions. Ref:
+    # https://github.com/cherrypy/cheroot/issues/302#issuecomment-662592030
     with suppress(ssl.SSLError, OSError):
         with context.wrap_socket(
                 server, do_handshake_on_connect=True, server_side=True,
