@@ -1,3 +1,10 @@
+.. scm-version-title:: v8.4.1
+
+- Prevent :py:exc:`ConnectionAbortedError` traceback from being
+  printed out to the terminal output during the app start-up on
+  Windows when built-in TLS adapter is used (:issue:`302` via
+  :pr:`306`) - by :user:`mxii-ca`.
+
 .. scm-version-title:: v8.4.0
 
 - Converted management from low-level :py:func:`~select.select` to
