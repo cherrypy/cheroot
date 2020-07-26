@@ -136,11 +136,11 @@ class ConnectionManager:
         try:
             for fno in socket_dict:
                 self._selector.register(fno, selectors.EVENT_READ)
-            # The timeout value impacts performance and should be carefully 
+            # The timeout value impacts performance and should be carefully
             # chosen (issue #305)
             rlist = [
                 key.fd for key, _event
-                in self._selector.select(timeout=0.01)  
+                in self._selector.select(timeout=0.01)
             ]
         except OSError:
             # Mark any connection which no longer appears valid.
