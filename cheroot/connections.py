@@ -137,7 +137,7 @@ class ConnectionManager:
             for fno in socket_dict:
                 self._selector.register(fno, selectors.EVENT_READ)
             # The timeout value impacts performance and should be carefully
-            # chosen chosen. Ref:
+            # chosen. Ref:
             # github.com/cherrypy/cheroot/issues/305#issuecomment-663985165
             rlist = [
                 key.fd for key, _event
