@@ -141,7 +141,7 @@ class ConnectionManager:
             # github.com/cherrypy/cheroot/issues/305#issuecomment-663985165
             rlist = [
                 key.fd for key, _event
-                in self._selector.select(timeout=0.01)  
+                in self._selector.select(timeout=0.01)
             ]
         except OSError:
             # Mark any connection which no longer appears valid.
