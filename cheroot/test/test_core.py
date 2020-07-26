@@ -1,782 +1,458 @@
-# coding: utf-8
+"""Tests for managing HTTP issues (malformed requests, etc)."""
+# -*- coding: utf-8 -*-
+# vim: set fileencoding=utf-8 :
 
-"""Basic tests for the CherryPy core: request handling."""
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
+import errno
 import os
-import sys
-import types
+import socket
 
-import cherrypy
-from cherrypy._cpcompat import itervalues, ntob, ntou
-from cherrypy import _cptools, tools
-from cherrypy.lib import httputil, static
+import pytest
+import six
+from six.moves import urllib
 
-from cherrypy.test._test_decorators import ExposeExamples
-from cherrypy.test import helper
+from cheroot.test import helper
 
 
-localDir = os.path.dirname(__file__)
-favicon_path = os.path.join(os.getcwd(), localDir, '../favicon.ico')
+IS_CIRCLE_CI_ENV = 'CIRCLECI' in os.environ
 
-#                             Client-side code                             #
 
+HTTP_BAD_REQUEST = 400
+HTTP_LENGTH_REQUIRED = 411
+HTTP_NOT_FOUND = 404
+HTTP_REQUEST_ENTITY_TOO_LARGE = 413
+HTTP_OK = 200
+HTTP_VERSION_NOT_SUPPORTED = 505
 
-class CoreRequestHandlingTest(helper.CPWebCase):
 
-    @staticmethod
-    def setup_server():
-        class Root:
+class HelloController(helper.Controller):
+    """Controller for serving WSGI apps."""
 
-            @cherrypy.expose
-            def index(self):
-                return 'hello'
+    def hello(req, resp):
+        """Render Hello world."""
+        return 'Hello world!'
 
-            favicon_ico = tools.staticfile.handler(filename=favicon_path)
-
-            @cherrypy.expose
-            def defct(self, newct):
-                newct = 'text/%s' % newct
-                cherrypy.config.update({'tools.response_headers.on': True,
-                                        'tools.response_headers.headers':
-                                        [('Content-Type', newct)]})
-
-            @cherrypy.expose
-            def baseurl(self, path_info, relative=None):
-                return cherrypy.url(path_info, relative=bool(relative))
-
-        root = Root()
-        root.expose_dec = ExposeExamples()
-
-        class TestType(type):
-
-            """Metaclass which automatically exposes all functions in each
-            subclass, and adds an instance of the subclass as an attribute
-            of root.
-            """
-            def __init__(cls, name, bases, dct):
-                type.__init__(cls, name, bases, dct)
-                for value in itervalues(dct):
-                    if isinstance(value, types.FunctionType):
-                        value.exposed = True
-                setattr(root, name.lower(), cls())
-        Test = TestType('Test', (object, ), {})
-
-        @cherrypy.config(**{'tools.trailing_slash.on': False})
-        class URL(Test):
-
-            def index(self, path_info, relative=None):
-                if relative != 'server':
-                    relative = bool(relative)
-                return cherrypy.url(path_info, relative=relative)
-
-            def leaf(self, path_info, relative=None):
-                if relative != 'server':
-                    relative = bool(relative)
-                return cherrypy.url(path_info, relative=relative)
-
-        def log_status():
-            Status.statuses.append(cherrypy.response.status)
-        cherrypy.tools.log_status = cherrypy.Tool(
-            'on_end_resource', log_status)
-
-        class Status(Test):
-
-            def index(self):
-                return 'normal'
-
-            def blank(self):
-                cherrypy.response.status = ''
-
-            # According to RFC 2616, new status codes are OK as long as they
-            # are between 100 and 599.
-
-            # Here is an illegal code...
-            def illegal(self):
-                cherrypy.response.status = 781
-                return 'oops'
-
-            # ...and here is an unknown but legal code.
-            def unknown(self):
-                cherrypy.response.status = '431 My custom error'
-                return 'funky'
-
-            # Non-numeric code
-            def bad(self):
-                cherrypy.response.status = 'error'
-                return 'bad news'
-
-            statuses = []
-
-            @cherrypy.config(**{'tools.log_status.on': True})
-            def on_end_resource_stage(self):
-                return repr(self.statuses)
-
-        class Redirect(Test):
-
-            @cherrypy.config(**{
-                'tools.err_redirect.on': True,
-                'tools.err_redirect.url': '/errpage',
-                'tools.err_redirect.internal': False,
-            })
-            class Error:
-                @cherrypy.expose
-                def index(self):
-                    raise NameError('redirect_test')
-
-            error = Error()
-
-            def index(self):
-                return 'child'
-
-            def custom(self, url, code):
-                raise cherrypy.HTTPRedirect(url, code)
-
-            @cherrypy.config(**{'tools.trailing_slash.extra': True})
-            def by_code(self, code):
-                raise cherrypy.HTTPRedirect('somewhere%20else', code)
-
-            def nomodify(self):
-                raise cherrypy.HTTPRedirect('', 304)
-
-            def proxy(self):
-                raise cherrypy.HTTPRedirect('proxy', 305)
-
-            def stringify(self):
-                return str(cherrypy.HTTPRedirect('/'))
-
-            def fragment(self, frag):
-                raise cherrypy.HTTPRedirect('/some/url#%s' % frag)
-
-            def url_with_quote(self):
-                raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
-
-            def url_with_unicode(self):
-                raise cherrypy.HTTPRedirect(ntou('тест', 'utf-8'))
-
-        def login_redir():
-            if not getattr(cherrypy.request, 'login', None):
-                raise cherrypy.InternalRedirect('/internalredirect/login')
-        tools.login_redir = _cptools.Tool('before_handler', login_redir)
-
-        def redir_custom():
-            raise cherrypy.InternalRedirect('/internalredirect/custom_err')
-
-        class InternalRedirect(Test):
-
-            def index(self):
-                raise cherrypy.InternalRedirect('/')
-
-            @cherrypy.expose
-            @cherrypy.config(**{'hooks.before_error_response': redir_custom})
-            def choke(self):
-                return 3 / 0
-
-            def relative(self, a, b):
-                raise cherrypy.InternalRedirect('cousin?t=6')
-
-            def cousin(self, t):
-                assert cherrypy.request.prev.closed
-                return cherrypy.request.prev.query_string
-
-            def petshop(self, user_id):
-                if user_id == 'parrot':
-                    # Trade it for a slug when redirecting
-                    raise cherrypy.InternalRedirect(
-                        '/image/getImagesByUser?user_id=slug')
-                elif user_id == 'terrier':
-                    # Trade it for a fish when redirecting
-                    raise cherrypy.InternalRedirect(
-                        '/image/getImagesByUser?user_id=fish')
-                else:
-                    # This should pass the user_id through to getImagesByUser
-                    raise cherrypy.InternalRedirect(
-                        '/image/getImagesByUser?user_id=%s' % str(user_id))
-
-            # We support Python 2.3, but the @-deco syntax would look like
-            # this:
-            # @tools.login_redir()
-            def secure(self):
-                return 'Welcome!'
-            secure = tools.login_redir()(secure)
-            # Since calling the tool returns the same function you pass in,
-            # you could skip binding the return value, and just write:
-            # tools.login_redir()(secure)
-
-            def login(self):
-                return 'Please log in'
-
-            def custom_err(self):
-                return 'Something went horribly wrong.'
-
-            @cherrypy.config(**{'hooks.before_request_body': redir_custom})
-            def early_ir(self, arg):
-                return 'whatever'
-
-        class Image(Test):
-
-            def getImagesByUser(self, user_id):
-                return '0 images for %s' % user_id
-
-        class Flatten(Test):
-
-            def as_string(self):
-                return 'content'
-
-            def as_list(self):
-                return ['con', 'tent']
-
-            def as_yield(self):
-                yield ntob('content')
-
-            @cherrypy.config(**{'tools.flatten.on': True})
-            def as_dblyield(self):
-                yield self.as_yield()
-
-            def as_refyield(self):
-                for chunk in self.as_yield():
-                    yield chunk
-
-        class Ranges(Test):
-
-            def get_ranges(self, bytes):
-                return repr(httputil.get_ranges('bytes=%s' % bytes, 8))
-
-            def slice_file(self):
-                path = os.path.join(os.getcwd(), os.path.dirname(__file__))
-                return static.serve_file(
-                    os.path.join(path, 'static/index.html'))
-
-        class Cookies(Test):
-
-            def single(self, name):
-                cookie = cherrypy.request.cookie[name]
-                # Python2's SimpleCookie.__setitem__ won't take unicode keys.
-                cherrypy.response.cookie[str(name)] = cookie.value
-
-            def multiple(self, names):
-                list(map(self.single, names))
-
-        def append_headers(header_list, debug=False):
-            if debug:
-                cherrypy.log(
-                    'Extending response headers with %s' % repr(header_list),
-                    'TOOLS.APPEND_HEADERS')
-            cherrypy.serving.response.header_list.extend(header_list)
-        cherrypy.tools.append_headers = cherrypy.Tool(
-            'on_end_resource', append_headers)
-
-        class MultiHeader(Test):
-
-            def header_list(self):
-                pass
-            header_list = cherrypy.tools.append_headers(header_list=[
-                (ntob('WWW-Authenticate'), ntob('Negotiate')),
-                (ntob('WWW-Authenticate'), ntob('Basic realm="foo"')),
-            ])(header_list)
-
-            def commas(self):
-                cherrypy.response.headers[
-                    'WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
-
-        cherrypy.tree.mount(root)
-
-    def testStatus(self):
-        self.getPage('/status/')
-        self.assertBody('normal')
-        self.assertStatus(200)
-
-        self.getPage('/status/blank')
-        self.assertBody('')
-        self.assertStatus(200)
-
-        self.getPage('/status/illegal')
-        self.assertStatus(500)
-        msg = 'Illegal response status from server (781 is out of range).'
-        self.assertErrorPage(500, msg)
-
-        if not getattr(cherrypy.server, 'using_apache', False):
-            self.getPage('/status/unknown')
-            self.assertBody('funky')
-            self.assertStatus(431)
-
-        self.getPage('/status/bad')
-        self.assertStatus(500)
-        msg = "Illegal response status from server ('error' is non-numeric)."
-        self.assertErrorPage(500, msg)
-
-    def test_on_end_resource_status(self):
-        self.getPage('/status/on_end_resource_stage')
-        self.assertBody('[]')
-        self.getPage('/status/on_end_resource_stage')
-        self.assertBody(repr(['200 OK']))
-
-    def testSlashes(self):
-        # Test that requests for index methods without a trailing slash
-        # get redirected to the same URI path with a trailing slash.
-        # Make sure GET params are preserved.
-        self.getPage('/redirect?id=3')
-        self.assertStatus(301)
-        self.assertMatchesBody('<a href=([\'"])%s/redirect/[?]id=3\\1>'
-                          '%s/redirect/[?]id=3</a>' % (self.base(), self.base()))
-
-        if self.prefix():
-            # Corner case: the "trailing slash" redirect could be tricky if
-            # we're using a virtual root and the URI is "/vroot" (no slash).
-            self.getPage('')
-            self.assertStatus(301)
-            self.assertMatchesBody("<a href=(['\"])%s/\\1>%s/</a>" %
-                              (self.base(), self.base()))
-
-        # Test that requests for NON-index methods WITH a trailing slash
-        # get redirected to the same URI path WITHOUT a trailing slash.
-        # Make sure GET params are preserved.
-        self.getPage('/redirect/by_code/?code=307')
-        self.assertStatus(301)
-        self.assertMatchesBody("<a href=(['\"])%s/redirect/by_code[?]code=307\\1>"
-                          '%s/redirect/by_code[?]code=307</a>'
-                          % (self.base(), self.base()))
-
-        # If the trailing_slash tool is off, CP should just continue
-        # as if the slashes were correct. But it needs some help
-        # inside cherrypy.url to form correct output.
-        self.getPage('/url?path_info=page1')
-        self.assertBody('%s/url/page1' % self.base())
-        self.getPage('/url/leaf/?path_info=page1')
-        self.assertBody('%s/url/page1' % self.base())
-
-    def testRedirect(self):
-        self.getPage('/redirect/')
-        self.assertBody('child')
-        self.assertStatus(200)
-
-        self.getPage('/redirect/by_code?code=300')
-        self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
-        self.assertStatus(300)
-
-        self.getPage('/redirect/by_code?code=301')
-        self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
-        self.assertStatus(301)
-
-        self.getPage('/redirect/by_code?code=302')
-        self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
-        self.assertStatus(302)
-
-        self.getPage('/redirect/by_code?code=303')
-        self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
-        self.assertStatus(303)
-
-        self.getPage('/redirect/by_code?code=307')
-        self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
-        self.assertStatus(307)
-
-        self.getPage('/redirect/nomodify')
-        self.assertBody('')
-        self.assertStatus(304)
-
-        self.getPage('/redirect/proxy')
-        self.assertBody('')
-        self.assertStatus(305)
-
-        # HTTPRedirect on error
-        self.getPage('/redirect/error/')
-        self.assertStatus(('302 Found', '303 See Other'))
-        self.assertInBody('/errpage')
-
-        # Make sure str(HTTPRedirect()) works.
-        self.getPage('/redirect/stringify', protocol='HTTP/1.0')
-        self.assertStatus(200)
-        self.assertBody("(['%s/'], 302)" % self.base())
-        if cherrypy.server.protocol_version == 'HTTP/1.1':
-            self.getPage('/redirect/stringify', protocol='HTTP/1.1')
-            self.assertStatus(200)
-            self.assertBody("(['%s/'], 303)" % self.base())
-
-        # check that #fragments are handled properly
-        # http://skrb.org/ietf/http_errata.html#location-fragments
-        frag = 'foo'
-        self.getPage('/redirect/fragment/%s' % frag)
-        self.assertMatchesBody(
-            r"<a href=(['\"])(.*)\/some\/url\#%s\1>\2\/some\/url\#%s</a>" % (
-                frag, frag))
-        loc = self.assertHeader('Location')
-        assert loc.endswith('#%s' % frag)
-        self.assertStatus(('302 Found', '303 See Other'))
-
-        # check injection protection
-        # See https://github.com/cherrypy/cherrypy/issues/1003
-        self.getPage(
-            '/redirect/custom?'
-            'code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval')
-        self.assertStatus(303)
-        loc = self.assertHeader('Location')
-        assert 'Set-Cookie' in loc
-        self.assertNoHeader('Set-Cookie')
-
-        def assertValidXHTML():
-            from xml.etree import ElementTree
-            try:
-                ElementTree.fromstring('<html><body>%s</body></html>' % self.body)
-            except ElementTree.ParseError as e:
-                self._handlewebError('automatically generated redirect '
-                    'did not generate well-formed html')
-
-        # check redirects to URLs generated valid HTML - we check this
-        # by seeing if it appears as valid XHTML.
-        self.getPage('/redirect/by_code?code=303')
-        self.assertStatus(303)
-        assertValidXHTML()
-
-        # do the same with a url containing quote characters.
-        self.getPage('/redirect/url_with_quote')
-        self.assertStatus(303)
-        assertValidXHTML()
-
-    def test_redirect_with_unicode(self):
-        """
-        A redirect to a URL with Unicode should return a Location
-        header containing that Unicode URL.
-        """
-        # test disabled due to #1440
-        return
-        self.getPage('/redirect/url_with_unicode')
-        self.assertStatus(303)
-        loc = self.assertHeader('Location')
-        assert ntou('тест', encoding='utf-8') in loc
-
-    def test_InternalRedirect(self):
-        # InternalRedirect
-        self.getPage('/internalredirect/')
-        self.assertBody('hello')
-        self.assertStatus(200)
-
-        # Test passthrough
-        self.getPage(
-            '/internalredirect/petshop?user_id=Sir-not-appearing-in-this-film')
-        self.assertBody('0 images for Sir-not-appearing-in-this-film')
-        self.assertStatus(200)
-
-        # Test args
-        self.getPage('/internalredirect/petshop?user_id=parrot')
-        self.assertBody('0 images for slug')
-        self.assertStatus(200)
-
-        # Test POST
-        self.getPage('/internalredirect/petshop', method='POST',
-                     body='user_id=terrier')
-        self.assertBody('0 images for fish')
-        self.assertStatus(200)
-
-        # Test ir before body read
-        self.getPage('/internalredirect/early_ir', method='POST',
-                     body='arg=aha!')
-        self.assertBody('Something went horribly wrong.')
-        self.assertStatus(200)
-
-        self.getPage('/internalredirect/secure')
-        self.assertBody('Please log in')
-        self.assertStatus(200)
-
-        # Relative path in InternalRedirect.
-        # Also tests request.prev.
-        self.getPage('/internalredirect/relative?a=3&b=5')
-        self.assertBody('a=3&b=5')
-        self.assertStatus(200)
-
-        # InternalRedirect on error
-        self.getPage('/internalredirect/choke')
-        self.assertStatus(200)
-        self.assertBody('Something went horribly wrong.')
-
-    def testFlatten(self):
-        for url in ['/flatten/as_string', '/flatten/as_list',
-                    '/flatten/as_yield', '/flatten/as_dblyield',
-                    '/flatten/as_refyield']:
-            self.getPage(url)
-            self.assertBody('content')
-
-    def testRanges(self):
-        self.getPage('/ranges/get_ranges?bytes=3-6')
-        self.assertBody('[(3, 7)]')
-
-        # Test multiple ranges and a suffix-byte-range-spec, for good measure.
-        self.getPage('/ranges/get_ranges?bytes=2-4,-1')
-        self.assertBody('[(2, 5), (7, 8)]')
-
-        # Test a suffix-byte-range longer than the content
-        # length. Note that in this test, the content length
-        # is 8 bytes.
-        self.getPage('/ranges/get_ranges?bytes=-100')
-        self.assertBody('[(0, 8)]')
-
-        # Get a partial file.
-        if cherrypy.server.protocol_version == 'HTTP/1.1':
-            self.getPage('/ranges/slice_file', [('Range', 'bytes=2-5')])
-            self.assertStatus(206)
-            self.assertHeader('Content-Type', 'text/html;charset=utf-8')
-            self.assertHeader('Content-Range', 'bytes 2-5/14')
-            self.assertBody('llo,')
-
-            # What happens with overlapping ranges (and out of order, too)?
-            self.getPage('/ranges/slice_file', [('Range', 'bytes=4-6,2-5')])
-            self.assertStatus(206)
-            ct = self.assertHeader('Content-Type')
-            expected_type = 'multipart/byteranges; boundary='
-            self.assert_(ct.startswith(expected_type))
-            boundary = ct[len(expected_type):]
-            expected_body = ('\r\n--%s\r\n'
-                             'Content-type: text/html\r\n'
-                             'Content-range: bytes 4-6/14\r\n'
-                             '\r\n'
-                             'o, \r\n'
-                             '--%s\r\n'
-                             'Content-type: text/html\r\n'
-                             'Content-range: bytes 2-5/14\r\n'
-                             '\r\n'
-                             'llo,\r\n'
-                             '--%s--\r\n' % (boundary, boundary, boundary))
-            self.assertBody(expected_body)
-            self.assertHeader('Content-Length')
-
-            # Test "416 Requested Range Not Satisfiable"
-            self.getPage('/ranges/slice_file', [('Range', 'bytes=2300-2900')])
-            self.assertStatus(416)
-            # "When this status code is returned for a byte-range request,
-            # the response SHOULD include a Content-Range entity-header
-            # field specifying the current length of the selected resource"
-            self.assertHeader('Content-Range', 'bytes */14')
-        elif cherrypy.server.protocol_version == 'HTTP/1.0':
-            # Test Range behavior with HTTP/1.0 request
-            self.getPage('/ranges/slice_file', [('Range', 'bytes=2-5')])
-            self.assertStatus(200)
-            self.assertBody('Hello, world\r\n')
-
-    def testFavicon(self):
-        # favicon.ico is served by staticfile.
-        icofilename = os.path.join(localDir, '../favicon.ico')
-        icofile = open(icofilename, 'rb')
-        data = icofile.read()
-        icofile.close()
-
-        self.getPage('/favicon.ico')
-        self.assertBody(data)
-
-    def skip_if_bad_cookies(self):
-        """
-        cookies module fails to reject invalid cookies
-        https://github.com/cherrypy/cherrypy/issues/1405
-        """
-        cookies = sys.modules.get('http.cookies')
-        _is_legal_key = getattr(cookies, '_is_legal_key', lambda x: False)
-        if not _is_legal_key(','):
+    def body_required(req, resp):
+        """Render Hello world or set 411."""
+        if req.environ.get('Content-Length', None) is None:
+            resp.status = '411 Length Required'
             return
-        issue = 'http://bugs.python.org/issue26302'
-        tmpl = 'Broken cookies module ({issue})'
-        self.skip(tmpl.format(**locals()))
+        return 'Hello world!'
 
-    def testCookies(self):
-        self.skip_if_bad_cookies()
+    def query_string(req, resp):
+        """Render QUERY_STRING value."""
+        return req.environ.get('QUERY_STRING', '')
 
-        self.getPage('/cookies/single?name=First',
-                     [('Cookie', 'First=Dinsdale;')])
-        self.assertHeader('Set-Cookie', 'First=Dinsdale')
+    def asterisk(req, resp):
+        """Render request method value."""
+        method = req.environ.get('REQUEST_METHOD', 'NO METHOD FOUND')
+        tmpl = 'Got asterisk URI path with {method} method'
+        return tmpl.format(**locals())
 
-        self.getPage('/cookies/multiple?names=First&names=Last',
-                     [('Cookie', 'First=Dinsdale; Last=Piranha;'),
-                      ])
-        self.assertHeader('Set-Cookie', 'First=Dinsdale')
-        self.assertHeader('Set-Cookie', 'Last=Piranha')
+    def _munge(string):
+        """Encode PATH_INFO correctly depending on Python version.
 
-        self.getPage('/cookies/single?name=Something-With%2CComma',
-                     [('Cookie', 'Something-With,Comma=some-value')])
-        self.assertStatus(400)
-
-    def testDefaultContentType(self):
-        self.getPage('/')
-        self.assertHeader('Content-Type', 'text/html;charset=utf-8')
-        self.getPage('/defct/plain')
-        self.getPage('/')
-        self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
-        self.getPage('/defct/html')
-
-    def test_multiple_headers(self):
-        self.getPage('/multiheader/header_list')
-        self.assertEqual(
-            [(k, v) for k, v in self.headers if k == 'WWW-Authenticate'],
-            [('WWW-Authenticate', 'Negotiate'),
-             ('WWW-Authenticate', 'Basic realm="foo"'),
-             ])
-        self.getPage('/multiheader/commas')
-        self.assertHeader('WWW-Authenticate', 'Negotiate,Basic realm="foo"')
-
-    def test_cherrypy_url(self):
-        # Input relative to current
-        self.getPage('/url/leaf?path_info=page1')
-        self.assertBody('%s/url/page1' % self.base())
-        self.getPage('/url/?path_info=page1')
-        self.assertBody('%s/url/page1' % self.base())
-        # Other host header
-        host = 'www.mydomain.example'
-        self.getPage('/url/leaf?path_info=page1',
-                     headers=[('Host', host)])
-        self.assertBody('%s://%s/url/page1' % (self.scheme, host))
-
-        # Input is 'absolute'; that is, relative to script_name
-        self.getPage('/url/leaf?path_info=/page1')
-        self.assertBody('%s/page1' % self.base())
-        self.getPage('/url/?path_info=/page1')
-        self.assertBody('%s/page1' % self.base())
-
-        # Single dots
-        self.getPage('/url/leaf?path_info=./page1')
-        self.assertBody('%s/url/page1' % self.base())
-        self.getPage('/url/leaf?path_info=other/./page1')
-        self.assertBody('%s/url/other/page1' % self.base())
-        self.getPage('/url/?path_info=/other/./page1')
-        self.assertBody('%s/other/page1' % self.base())
-
-        # Double dots
-        self.getPage('/url/leaf?path_info=../page1')
-        self.assertBody('%s/page1' % self.base())
-        self.getPage('/url/leaf?path_info=other/../page1')
-        self.assertBody('%s/url/page1' % self.base())
-        self.getPage('/url/leaf?path_info=/other/../page1')
-        self.assertBody('%s/page1' % self.base())
-
-        # Output relative to current path or script_name
-        self.getPage('/url/?path_info=page1&relative=True')
-        self.assertBody('page1')
-        self.getPage('/url/leaf?path_info=/page1&relative=True')
-        self.assertBody('../page1')
-        self.getPage('/url/leaf?path_info=page1&relative=True')
-        self.assertBody('page1')
-        self.getPage('/url/leaf?path_info=leaf/page1&relative=True')
-        self.assertBody('leaf/page1')
-        self.getPage('/url/leaf?path_info=../page1&relative=True')
-        self.assertBody('../page1')
-        self.getPage('/url/?path_info=other/../page1&relative=True')
-        self.assertBody('page1')
-
-        # Output relative to /
-        self.getPage('/baseurl?path_info=ab&relative=True')
-        self.assertBody('ab')
-        # Output relative to /
-        self.getPage('/baseurl?path_info=/ab&relative=True')
-        self.assertBody('ab')
-
-        # absolute-path references ("server-relative")
-        # Input relative to current
-        self.getPage('/url/leaf?path_info=page1&relative=server')
-        self.assertBody('/url/page1')
-        self.getPage('/url/?path_info=page1&relative=server')
-        self.assertBody('/url/page1')
-        # Input is 'absolute'; that is, relative to script_name
-        self.getPage('/url/leaf?path_info=/page1&relative=server')
-        self.assertBody('/page1')
-        self.getPage('/url/?path_info=/page1&relative=server')
-        self.assertBody('/page1')
-
-    def test_expose_decorator(self):
-        # Test @expose
-        self.getPage('/expose_dec/no_call')
-        self.assertStatus(200)
-        self.assertBody('Mr E. R. Bradshaw')
-
-        # Test @expose()
-        self.getPage('/expose_dec/call_empty')
-        self.assertStatus(200)
-        self.assertBody('Mrs. B.J. Smegma')
-
-        # Test @expose("alias")
-        self.getPage('/expose_dec/call_alias')
-        self.assertStatus(200)
-        self.assertBody('Mr Nesbitt')
-        # Does the original name work?
-        self.getPage('/expose_dec/nesbitt')
-        self.assertStatus(200)
-        self.assertBody('Mr Nesbitt')
-
-        # Test @expose(["alias1", "alias2"])
-        self.getPage('/expose_dec/alias1')
-        self.assertStatus(200)
-        self.assertBody('Mr Ken Andrews')
-        self.getPage('/expose_dec/alias2')
-        self.assertStatus(200)
-        self.assertBody('Mr Ken Andrews')
-        # Does the original name work?
-        self.getPage('/expose_dec/andrews')
-        self.assertStatus(200)
-        self.assertBody('Mr Ken Andrews')
-
-        # Test @expose(alias="alias")
-        self.getPage('/expose_dec/alias3')
-        self.assertStatus(200)
-        self.assertBody('Mr. and Mrs. Watson')
-
-
-class ErrorTests(helper.CPWebCase):
-
-    @staticmethod
-    def setup_server():
-        def break_header():
-            # Add a header after finalize that is invalid
-            cherrypy.serving.response.header_list.append((2, 3))
-        cherrypy.tools.break_header = cherrypy.Tool(
-            'on_end_resource', break_header)
-
-        class Root:
-
-            @cherrypy.expose
-            def index(self):
-                return 'hello'
-
-            @cherrypy.config(**{'tools.break_header.on': True})
-            def start_response_error(self):
-                return 'salud!'
-
-            @cherrypy.expose
-            def stat(self, path):
-                with cherrypy.HTTPError.handle(OSError, 404):
-                    st = os.stat(path)
-
-        root = Root()
-
-        cherrypy.tree.mount(root)
-
-    def test_start_response_error(self):
-        self.getPage('/start_response_error')
-        self.assertStatus(500)
-        self.assertInBody(
-            'TypeError: response.header_list key 2 is not a byte string.')
-
-    def test_contextmanager(self):
-        self.getPage('/stat/missing')
-        self.assertStatus(404)
-        body_text = self.body.decode('utf-8')
-        assert (
-            'No such file or directory' in body_text or
-            'cannot find the file specified' in body_text
-        )
-
-
-class TestBinding:
-    def test_bind_ephemeral_port(self):
+        WSGI 1.0 is a mess around unicode. Create endpoints
+        that match the PATH_INFO that it produces.
         """
-        A server configured to bind to port 0 will bind to an ephemeral
-        port and indicate that port number on startup.
-        """
-        cherrypy.config.reset()
-        bind_ephemeral_conf = {
-            'server.socket_port': 0,
-        }
-        cherrypy.config.update(bind_ephemeral_conf)
-        cherrypy.engine.start()
-        assert cherrypy.server.bound_addr != cherrypy.server.bind_addr
-        _host, port = cherrypy.server.bound_addr
-        assert port > 0
-        cherrypy.engine.stop()
-        assert cherrypy.server.bind_addr == cherrypy.server.bound_addr
+        if six.PY2:
+            return string
+        return string.encode('utf-8').decode('latin-1')
+
+    handlers = {
+        '/hello': hello,
+        '/no_body': hello,
+        '/body_required': body_required,
+        '/query_string': query_string,
+        _munge('/привіт'): hello,
+        _munge('/Юххууу'): hello,
+        '/\xa0Ðblah key 0 900 4 data': hello,
+        '/*': asterisk,
+    }
+
+
+def _get_http_response(connection, method='GET'):
+    c = connection
+    kwargs = {'strict': c.strict} if hasattr(c, 'strict') else {}
+    # Python 3.2 removed the 'strict' feature, saying:
+    # "http.client now always assumes HTTP/1.x compliant servers."
+    return c.response_class(c.sock, method=method, **kwargs)
+
+
+@pytest.fixture
+def testing_server(wsgi_server_client):
+    """Attach a WSGI app to the given server and preconfigure it."""
+    wsgi_server = wsgi_server_client.server_instance
+    wsgi_server.wsgi_app = HelloController()
+    wsgi_server.max_request_body_size = 30000000
+    wsgi_server.server_client = wsgi_server_client
+    return wsgi_server
+
+
+@pytest.fixture
+def test_client(testing_server):
+    """Get and return a test client out of the given server."""
+    return testing_server.server_client
+
+
+@pytest.fixture
+def testing_server_with_defaults(wsgi_server_client):
+    """Attach a WSGI app to the given server and preconfigure it."""
+    wsgi_server = wsgi_server_client.server_instance
+    wsgi_server.wsgi_app = HelloController()
+    wsgi_server.server_client = wsgi_server_client
+    return wsgi_server
+
+
+@pytest.fixture
+def test_client_with_defaults(testing_server_with_defaults):
+    """Get and return a test client out of the given server."""
+    return testing_server_with_defaults.server_client
+
+
+def test_http_connect_request(test_client):
+    """Check that CONNECT query results in Method Not Allowed status."""
+    status_line = test_client.connect('/anything')[0]
+    actual_status = int(status_line[:3])
+    assert actual_status == 405
+
+
+def test_normal_request(test_client):
+    """Check that normal GET query succeeds."""
+    status_line, _, actual_resp_body = test_client.get('/hello')
+    actual_status = int(status_line[:3])
+    assert actual_status == HTTP_OK
+    assert actual_resp_body == b'Hello world!'
+
+
+def test_query_string_request(test_client):
+    """Check that GET param is parsed well."""
+    status_line, _, actual_resp_body = test_client.get(
+        '/query_string?test=True',
+    )
+    actual_status = int(status_line[:3])
+    assert actual_status == HTTP_OK
+    assert actual_resp_body == b'test=True'
+
+
+@pytest.mark.parametrize(
+    'uri',
+    (
+        '/hello',  # plain
+        '/query_string?test=True',  # query
+        '/{0}?{1}={2}'.format(  # quoted unicode
+            *map(urllib.parse.quote, ('Юххууу', 'ї', 'йо'))
+        ),
+    ),
+)
+def test_parse_acceptable_uri(test_client, uri):
+    """Check that server responds with OK to valid GET queries."""
+    status_line = test_client.get(uri)[0]
+    actual_status = int(status_line[:3])
+    assert actual_status == HTTP_OK
+
+
+@pytest.mark.xfail(six.PY2, reason='Fails on Python 2')
+def test_parse_uri_unsafe_uri(test_client):
+    """Test that malicious URI does not allow HTTP injection.
+
+    This effectively checks that sending GET request with URL
+
+    /%A0%D0blah%20key%200%20900%204%20data
+
+    is not converted into
+
+    GET /
+    blah key 0 900 4 data
+    HTTP/1.1
+
+    which would be a security issue otherwise.
+    """
+    c = test_client.get_connection()
+    resource = '/\xa0Ðblah key 0 900 4 data'.encode('latin-1')
+    quoted = urllib.parse.quote(resource)
+    assert quoted == '/%A0%D0blah%20key%200%20900%204%20data'
+    request = 'GET {quoted} HTTP/1.1'.format(**locals())
+    c._output(request.encode('utf-8'))
+    c._send_output()
+    response = _get_http_response(c, method='GET')
+    response.begin()
+    assert response.status == HTTP_OK
+    assert response.read(12) == b'Hello world!'
+    c.close()
+
+
+def test_parse_uri_invalid_uri(test_client):
+    """Check that server responds with Bad Request to invalid GET queries.
+
+    Invalid request line test case: it should only contain US-ASCII.
+    """
+    c = test_client.get_connection()
+    c._output(u'GET /йопта! HTTP/1.1'.encode('utf-8'))
+    c._send_output()
+    response = _get_http_response(c, method='GET')
+    response.begin()
+    assert response.status == HTTP_BAD_REQUEST
+    assert response.read(21) == b'Malformed Request-URI'
+    c.close()
+
+
+@pytest.mark.parametrize(
+    'uri',
+    (
+        'hello',  # ascii
+        'привіт',  # non-ascii
+    ),
+)
+def test_parse_no_leading_slash_invalid(test_client, uri):
+    """Check that server responds with Bad Request to invalid GET queries.
+
+    Invalid request line test case: it should have leading slash (be absolute).
+    """
+    status_line, _, actual_resp_body = test_client.get(
+        urllib.parse.quote(uri),
+    )
+    actual_status = int(status_line[:3])
+    assert actual_status == HTTP_BAD_REQUEST
+    assert b'starting with a slash' in actual_resp_body
+
+
+def test_parse_uri_absolute_uri(test_client):
+    """Check that server responds with Bad Request to Absolute URI.
+
+    Only proxy servers should allow this.
+    """
+    status_line, _, actual_resp_body = test_client.get('http://google.com/')
+    actual_status = int(status_line[:3])
+    assert actual_status == HTTP_BAD_REQUEST
+    expected_body = b'Absolute URI not allowed if server is not a proxy.'
+    assert actual_resp_body == expected_body
+
+
+def test_parse_uri_asterisk_uri(test_client):
+    """Check that server responds with OK to OPTIONS with "*" Absolute URI."""
+    status_line, _, actual_resp_body = test_client.options('*')
+    actual_status = int(status_line[:3])
+    assert actual_status == HTTP_OK
+    expected_body = b'Got asterisk URI path with OPTIONS method'
+    assert actual_resp_body == expected_body
+
+
+def test_parse_uri_fragment_uri(test_client):
+    """Check that server responds with Bad Request to URI with fragment."""
+    status_line, _, actual_resp_body = test_client.get(
+        '/hello?test=something#fake',
+    )
+    actual_status = int(status_line[:3])
+    assert actual_status == HTTP_BAD_REQUEST
+    expected_body = b'Illegal #fragment in Request-URI.'
+    assert actual_resp_body == expected_body
+
+
+def test_no_content_length(test_client):
+    """Test POST query with an empty body being successful."""
+    # "The presence of a message-body in a request is signaled by the
+    # inclusion of a Content-Length or Transfer-Encoding header field in
+    # the request's message-headers."
+    #
+    # Send a message with neither header and no body.
+    c = test_client.get_connection()
+    c.request('POST', '/no_body')
+    response = c.getresponse()
+    actual_resp_body = response.read()
+    actual_status = response.status
+    assert actual_status == HTTP_OK
+    assert actual_resp_body == b'Hello world!'
+
+
+def test_content_length_required(test_client):
+    """Test POST query with body failing because of missing Content-Length."""
+    # Now send a message that has no Content-Length, but does send a body.
+    # Verify that CP times out the socket and responds
+    # with 411 Length Required.
+
+    c = test_client.get_connection()
+    c.request('POST', '/body_required')
+    response = c.getresponse()
+    response.read()
+
+    actual_status = response.status
+    assert actual_status == HTTP_LENGTH_REQUIRED
+
+
+@pytest.mark.xfail(
+    IS_CIRCLE_CI_ENV,
+    reason='https://github.com/cherrypy/cheroot/issues/106',
+    strict=False,  # sometimes it passes
+)
+def test_large_request(test_client_with_defaults):
+    """Test GET query with maliciously large Content-Length."""
+    # If the server's max_request_body_size is not set (i.e. is set to 0)
+    # then this will result in an `OverflowError: Python int too large to
+    # convert to C ssize_t` in the server.
+    # We expect that this should instead return that the request is too
+    # large.
+    c = test_client_with_defaults.get_connection()
+    c.putrequest('GET', '/hello')
+    c.putheader('Content-Length', str(2**64))
+    c.endheaders()
+
+    response = c.getresponse()
+    actual_status = response.status
+
+    assert actual_status == HTTP_REQUEST_ENTITY_TOO_LARGE
+
+
+@pytest.mark.parametrize(
+    ('request_line', 'status_code', 'expected_body'),
+    (
+        (
+            b'GET /',  # missing proto
+            HTTP_BAD_REQUEST, b'Malformed Request-Line',
+        ),
+        (
+            b'GET / HTTPS/1.1',  # invalid proto
+            HTTP_BAD_REQUEST, b'Malformed Request-Line: bad protocol',
+        ),
+        (
+            b'GET / HTTP/1',  # invalid version
+            HTTP_BAD_REQUEST, b'Malformed Request-Line: bad version',
+        ),
+        (
+            b'GET / HTTP/2.15',  # invalid ver
+            HTTP_VERSION_NOT_SUPPORTED, b'Cannot fulfill request',
+        ),
+    ),
+)
+def test_malformed_request_line(
+    test_client, request_line,
+    status_code, expected_body,
+):
+    """Test missing or invalid HTTP version in Request-Line."""
+    c = test_client.get_connection()
+    c._output(request_line)
+    c._send_output()
+    response = _get_http_response(c, method='GET')
+    response.begin()
+    assert response.status == status_code
+    assert response.read(len(expected_body)) == expected_body
+    c.close()
+
+
+def test_malformed_http_method(test_client):
+    """Test non-uppercase HTTP method."""
+    c = test_client.get_connection()
+    c.putrequest('GeT', '/malformed_method_case')
+    c.putheader('Content-Type', 'text/plain')
+    c.endheaders()
+
+    response = c.getresponse()
+    actual_status = response.status
+    assert actual_status == HTTP_BAD_REQUEST
+    actual_resp_body = response.read(21)
+    assert actual_resp_body == b'Malformed method name'
+
+
+def test_malformed_header(test_client):
+    """Check that broken HTTP header results in Bad Request."""
+    c = test_client.get_connection()
+    c.putrequest('GET', '/')
+    c.putheader('Content-Type', 'text/plain')
+    # See https://www.bitbucket.org/cherrypy/cherrypy/issue/941
+    c._output(b'Re, 1.2.3.4#015#012')
+    c.endheaders()
+
+    response = c.getresponse()
+    actual_status = response.status
+    assert actual_status == HTTP_BAD_REQUEST
+    actual_resp_body = response.read(20)
+    assert actual_resp_body == b'Illegal header line.'
+
+
+def test_request_line_split_issue_1220(test_client):
+    """Check that HTTP request line of exactly 256 chars length is OK."""
+    Request_URI = (
+        '/hello?'
+        'intervenant-entreprise-evenement_classaction='
+        'evenement-mailremerciements'
+        '&_path=intervenant-entreprise-evenement'
+        '&intervenant-entreprise-evenement_action-id=19404'
+        '&intervenant-entreprise-evenement_id=19404'
+        '&intervenant-entreprise_id=28092'
+    )
+    assert len('GET %s HTTP/1.1\r\n' % Request_URI) == 256
+
+    actual_resp_body = test_client.get(Request_URI)[2]
+    assert actual_resp_body == b'Hello world!'
+
+
+def test_garbage_in(test_client):
+    """Test that server sends an error for garbage received over TCP."""
+    # Connect without SSL regardless of server.scheme
+
+    c = test_client.get_connection()
+    c._output(b'gjkgjklsgjklsgjkljklsg')
+    c._send_output()
+    response = c.response_class(c.sock, method='GET')
+    try:
+        response.begin()
+        actual_status = response.status
+        assert actual_status == HTTP_BAD_REQUEST
+        actual_resp_body = response.read(22)
+        assert actual_resp_body == b'Malformed Request-Line'
+        c.close()
+    except socket.error as ex:
+        # "Connection reset by peer" is also acceptable.
+        if ex.errno != errno.ECONNRESET:
+            raise
+
+
+class CloseController:
+    """Controller for testing the close callback."""
+
+    def __call__(self, environ, start_response):
+        """Get the req to know header sent status."""
+        self.req = start_response.__self__.req
+        resp = CloseResponse(self.close)
+        start_response(resp.status, resp.headers.items())
+        return resp
+
+    def close(self):
+        """Close, writing hello."""
+        self.req.write(b'hello')
+
+
+class CloseResponse:
+    """Dummy empty response to trigger the no body status."""
+
+    def __init__(self, close):
+        """Use some defaults to ensure we have a header."""
+        self.status = '200 OK'
+        self.headers = {'Content-Type': 'text/html'}
+        self.close = close
+
+    def __getitem__(self, index):
+        """Ensure we don't have a body."""
+        raise IndexError()
+
+    def output(self):
+        """Return self to hook the close method."""
+        return self
+
+
+@pytest.fixture
+def testing_server_close(wsgi_server_client):
+    """Attach a WSGI app to the given server and preconfigure it."""
+    wsgi_server = wsgi_server_client.server_instance
+    wsgi_server.wsgi_app = CloseController()
+    wsgi_server.max_request_body_size = 30000000
+    wsgi_server.server_client = wsgi_server_client
+    return wsgi_server
+
+
+def test_send_header_before_closing(testing_server_close):
+    """Test we are actually sending the headers before calling 'close'."""
+    _, _, resp_body = testing_server_close.server_client.get('/')
+    assert resp_body == b'hello'

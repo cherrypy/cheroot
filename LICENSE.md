@@ -1,6 +1,6 @@
-**Copyright &copy; 2004-2016, CherryPy Team (team@cherrypy.org)**
+Copyright © 2004-2020, CherryPy Team (team@cherrypy.org)
 
-**All rights reserved.**
+All rights reserved.
 
 * * *
 

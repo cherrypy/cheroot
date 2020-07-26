@@ -1,0 +1,106 @@
+version: 2
+jobs:
+  macos-build:
+    # Ref: https://circleci.com/docs/2.0/hello-world-macos/
+    # Ref: https://circleci.com/docs/2.0/testing-ios/#supported-xcode-versions
+    macos:
+      # Travis:
+      # 6.4 -> 10.10
+      # 7.3 -> 10.11
+      # 8.1 -> 10.12
+      #xcode: "9.2"  # not available
+      #xcode: "9.0"  # available
+      #xcode: "8.3.3"  # available
+      #xcode: "7.3.1"  # not available
+      #xcode: "9.1.0"  # available
+      #xcode: "9.2.0"  # not available
+      #xcode: "9.3.1"  # available
+      #xcode: "11.3.0"  # not available
+      xcode: "11.2.1"  # available
+
+    steps:
+    - run: >-
+        brew install pyenv readline xz ||
+        brew upgrade pyenv readline xz
+
+    - run: |-
+        # https://circleci.com/docs/2.0/env-vars/#interpolating-environment-variables-to-set-other-environment-variables
+        echo '
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PATH"
+        ' >> $BASH_ENV
+
+    - run: |-
+        for py_ver in 3.8.3 3.7.7 3.6.10 3.5.9 pypy3.6-7.3.1 2.7.18
+        do
+          pyenv install "$py_ver" &
+        done
+        wait
+    - run: pyenv global 3.8.3 3.7.7 3.6.10 3.5.9 pypy3.6-7.3.1 2.7.18
+
+    - run: pip install tox tox-pyenv
+    - checkout
+    - run:
+        name: Initialize tox envs
+        command: >-
+          tox --parallel auto --parallel-live
+          --notest -vv
+        environment:
+          # Environment variables for py-cryptography library:
+          LDFLAGS: "-L/usr/local/opt/openssl/lib"
+          CPPFLAGS: "-I/usr/local/opt/openssl/include"
+          PKG_CONFIG_PATH: "/usr/local/opt/openssl/lib/pkgconfig"
+          # Tox env vars:
+          TOX_PARALLEL_NO_SPINNER: "1"
+          TOXENV: py38,py37,py36,py35,pypy3,py27
+    - run:
+        name: Run tests
+        command: >-
+          tox --parallel auto --parallel-live
+          --
+          -p no:sugar
+          $(circleci tests glob **/test/**.py |
+          circleci tests split --split-by=timings |
+          grep -v '__init__.py')
+        environment:
+          # Tox env vars:
+          TOX_PARALLEL_NO_SPINNER: "1"
+          TOXENV: py38,py37,py36,py35,pypy3,py27
+
+  linux-build:
+    parallelism: 4
+
+    docker:
+    - image: randomknowledge/docker-pyenv-tox
+
+    steps:
+    - checkout
+    - run: pip install tox
+    - run:
+        name: Initialize tox envs
+        command: >-
+          tox --parallel 2 --parallel-live
+          --notest -vv
+        environment:
+          TOX_PARALLEL_NO_SPINNER: "1"
+          TOXENV: py38,py37,py36,py35,py34,py27
+    - run:
+        name: Run tests
+        command: >-
+          tox --parallel 2 --parallel-live
+          --
+          -n 2
+          -p no:sugar
+          $(circleci tests glob **/test/**.py |
+          circleci tests split --split-by=timings |
+          grep -v '__init__.py')
+        environment:
+          TOX_PARALLEL_NO_SPINNER: "1"
+          TOXENV: py38,py37,py36,py35,py34,py27
+
+workflows:
+  version: 2
+  test-linux-and-macos:
+    jobs:
+    - macos-build
+    - linux-build

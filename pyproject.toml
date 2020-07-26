@@ -1,0 +1,39 @@
+[build-system]
+requires = [
+    # Essentials
+    "setuptools>=34.4",
+    "wheel",
+
+    # Plugins
+    "setuptools_scm>=1.15",
+    "setuptools_scm_git_archive>=1.0",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.flakehell]
+# optionally inherit from remote config (or local if you want)
+#base = "https://raw.githubusercontent.com/life4/flakehell/master/pyproject.toml"
+config = ".flake8"
+# specify any flake8 options. For example, exclude "example.py":
+exclude = [
+    ".eggs/",
+    ".tox/",
+    #"cheroot/test",
+]
+# make output nice
+format = "grouped"
+# don't limit yourself
+#max_line_length = 120
+# show line of source code in output
+show_source = true
+
+# list of plugins and rules for them
+[tool.flakehell.plugins]
+# include everything in pyflakes except F401
+pyflakes = ["+*", "-F401"]
+## enable only codes from S100 to S199
+#flake8-bandit = ["-*", "+S1??"]
+# enable everything that starts from `flake8-`
+"flake8-*" = ["+*"]
+## explicitly disable plugin
+#flake8-docstrings = ["-*"]
