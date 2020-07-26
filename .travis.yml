@@ -209,11 +209,6 @@ jobs:
       PYTHON_VERSION: 2.7
   - <<: *osx_python_base
     <<: *manual_run_or_cron
-    python: 3.4
-    env:
-      PYTHON_VERSION: 3.4
-  - <<: *osx_python_base
-    <<: *manual_run_or_cron
     python: 3.5
     env:
       PYTHON_VERSION: 3.5
