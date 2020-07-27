@@ -1,3 +1,12 @@
+.. scm-version-title:: v8.4.2
+
+- Fixed a significant performance regression introduced in
+  v8.1.0 (:issue:`305` via :pr:`308`) - by :user:`mar10`.
+
+  The issue turned out to add 0.1s delay on new incoming
+  connection processing. We've lowered that delay to mitigate
+  the problem short-term, better fix is yet to come.
+
 .. scm-version-title:: v8.4.1
 
 - Prevent :py:exc:`ConnectionAbortedError` traceback from being
