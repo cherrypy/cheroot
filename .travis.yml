@@ -243,7 +243,7 @@ jobs:
     <<: *python_3_7_mixture
     install:
     - python -m pip install --upgrade virtualenv
-    - python -m pip install tox tox-venv
+    - python -m pip install tox
     env:
       TOXENV: release
 
@@ -257,7 +257,7 @@ cache:
 
 install:
 - python -m pip install --upgrade virtualenv
-- python -m pip install tox tox-venv
+- python -m pip install tox
 - python -m tox --notest  # Pre-populate a virtualenv with dependencies
 - *python_ssl_openssl_version
 - >-
