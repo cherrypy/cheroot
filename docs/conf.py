@@ -14,34 +14,14 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
 
-# Refs:
-# * https://github.com/sphinx-contrib/spelling/pull/54
-# * https://github.com/sphinx-contrib/spelling/issues/55
-IS_SPELLCHECK_BUILD = any(
-    opt_name == '-b' and opt_val == 'spelling'
-    for opt_name, opt_val in zip(sys.argv[1:], sys.argv[2:])
-)
-
-
-IN_TREE_EXTENSIONS = (
-    'scm_tag_titles_ext',
-)
-
-
-CONDITIONAL_EXTENSIONS = ()
-
-if IS_SPELLCHECK_BUILD:
-    CONDITIONAL_EXTENSIONS += ('sphinxcontrib.spelling',)
-
-
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'jaraco.packaging.sphinx',
     'sphinx_tabs.tabs',
-    *CONDITIONAL_EXTENSIONS,
-    *IN_TREE_EXTENSIONS,
+    'sphinxcontrib.spelling',
+    'scm_tag_titles_ext',
 ]
 
 master_doc = 'index'
