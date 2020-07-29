@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import collections
 import io
 import os
 import socket
@@ -61,8 +62,10 @@ class ConnectionManager:
                 that uses this ConnectionManager instance.
         """
         self.server = server
-        self.connections = []
+        self._readable_conns = collections.deque()
         self._selector = selectors.DefaultSelector()
+
+        self._selector.register(server.socket.fileno(), selectors.EVENT_READ, data=server)
 
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
@@ -72,8 +75,12 @@ class ConnectionManager:
                 to be managed.
         """
         conn.last_used = time.time()
-        conn.ready_with_data = conn.rfile.has_data()
-        self.connections.append(conn)
+        # if this conn doesn't have any more data waiting to be read,
+        # register it with the selector.
+        if conn.rfile.has_data():
+            self._readable_conns.append(conn)
+        else:
+            self._selector.register(conn.socket.fileno(), selectors.EVENT_READ, data=conn)
 
     def expire(self):
         """Expire least recently used connections.
@@ -83,21 +90,20 @@ class ConnectionManager:
 
         This should be called periodically.
         """
-        if not self.connections:
-            return
 
-        # Look at the first connection - if it can be closed, then do
-        # that, and wait for get_conn to return it.
-        conn = self.connections[0]
-        if conn.closeable:
-            return
+        # find any connections still registered with the selector
+        # that have not been active recently enough.
+        now = time.time()
+        for _, key in self._selector.get_map().items():
+            if key.data == self.server:
+                continue
 
-        # Connection too old?
-        if (conn.last_used + self.server.timeout) < time.time():
-            conn.closeable = True
-            return
+            conn = key.data
+            if (conn.last_used + self.server.timeout) < now:
+                self._selector.unregister(key.fd)
+                conn.close()
 
-    def get_conn(self, server_socket):
+    def get_conn(self):
         """Return a HTTPConnection object which is ready to be handled.
 
         A connection returned by this method should be ready for a worker
@@ -107,88 +113,60 @@ class ConnectionManager:
         Any connection returned by this method will need to be `put`
         back if it should be examined again for another request.
 
-        Args:
-            server_socket (socket.socket): Socket to listen to for new
-            connections.
         Returns:
             cheroot.server.HTTPConnection instance, or None.
 
         """
         # Grab file descriptors from sockets, but stop if we find a
         # connection which is already marked as ready.
-        socket_dict = {}
-        for conn in self.connections:
-            if conn.closeable or conn.ready_with_data:
-                break
-            socket_dict[conn.socket.fileno()] = conn
-        else:
-            # No ready connection.
-            conn = None
 
-        # We have a connection ready for use.
-        if conn:
-            self.connections.remove(conn)
-            return conn
+        try:
+            return self._readable_conns.popleft()
+        except IndexError:
+            pass
 
         # Will require a select call.
-        ss_fileno = server_socket.fileno()
-        socket_dict[ss_fileno] = server_socket
         try:
-            for fno in socket_dict:
-                self._selector.register(fno, selectors.EVENT_READ)
             # The timeout value impacts performance and should be carefully
             # chosen. Ref:
             # github.com/cherrypy/cheroot/issues/305#issuecomment-663985165
             rlist = [
-                key.fd for key, _event
+                key for key, _
                 in self._selector.select(timeout=0.01)
             ]
         except OSError:
-            # Mark any connection which no longer appears valid.
-            for fno, conn in list(socket_dict.items()):
+            # Mark any connection which no longer appears valid
+            for _, key in self._selector.get_map().items():
                 # If the server socket is invalid, we'll just ignore it and
                 # wait to be shutdown.
-                if fno == ss_fileno:
+                if key.data == self.server:
                     continue
+
                 try:
-                    os.fstat(fno)
+                    os.fstat(key.fd)
                 except OSError:
-                    # Socket is invalid, close the connection, insert at
-                    # the front.
-                    self.connections.remove(conn)
-                    self.connections.insert(0, conn)
-                    conn.closeable = True
+                    # Socket is invalid, close the connection
+                    self._selector.unregister(key.fd)
+                    conn.close()
 
             # Wait for the next tick to occur.
             return None
-        finally:
-            for fno in socket_dict:
-                self._selector.unregister(fno)
+
+        for key in rlist:
+            if key.data is self.server:
+                # New connection
+                return self._from_server_socket(self.server.socket)
+
+            conn = key.data
+            # unregister connection from the selector until the server
+            # has read from it and returned it via put()
+            self._selector.unregister(key.fd)
+            self._readable_conns.append(conn)
 
         try:
-            # See if we have a new connection coming in.
-            rlist.remove(ss_fileno)
-        except ValueError:
-            # If we didn't get any readable sockets, wait for the next tick
-            if not rlist:
-                return None
-
-            # No new connection, but reuse an existing socket.
-            conn = socket_dict[rlist.pop()]
-        else:
-            # If we have a new connection, reuse the server socket
-            conn = server_socket
-
-        # All remaining connections in rlist should be marked as ready.
-        for fno in rlist:
-            socket_dict[fno].ready_with_data = True
-
-        # New connection.
-        if conn is server_socket:
-            return self._from_server_socket(server_socket)
-
-        self.connections.remove(conn)
-        return conn
+            return self._readable_conns.popleft()
+        except IndexError:
+            return None
 
     def _from_server_socket(self, server_socket):
         try:
@@ -282,12 +260,27 @@ class ConnectionManager:
 
     def close(self):
         """Close all monitored connections."""
-        for conn in self.connections[:]:
+        for conn in self._readable_conns:
             conn.close()
-        self.connections = []
+        self._readable_conns.clear()
+
+        for _, key in self._selector.get_map().items():
+            if key.data != self.server: # server closes its own socket
+                key.data.socket.close()
+
+        self._selector.close()
+
+    def _num_connections(self):
+        """Return the current number of connections.
+
+        Includes any in the readable list or registered with the selector,
+        minus one for the server socket, which is always registered
+        with the selector.
+        """
+        return len(self._readable_conns) + len(self._selector.get_map()) - 1
 
     @property
     def can_add_keepalive_connection(self):
         """Flag whether it is allowed to add a new keep-alive connection."""
         ka_limit = self.server.keep_alive_conn_limit
-        return ka_limit is None or len(self.connections) < ka_limit
+        return ka_limit is None or self._num_connections() < ka_limit

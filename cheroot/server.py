@@ -1225,9 +1225,7 @@ class HTTPConnection:
     peercreds_resolve_enabled = False
 
     # Fields set by ConnectionManager.
-    closeable = False
     last_used = None
-    ready_with_data = False
 
     def __init__(self, server, sock, makefile=MakeFile):
         """Initialize HTTPConnection instance.
@@ -1581,7 +1579,7 @@ class HTTPServer:
         self.requests = threadpool.ThreadPool(
             self, min=minthreads or 1, max=maxthreads,
         )
-        self.connections = connections.ConnectionManager(self)
+        self.serving = False
 
         if not server_name:
             server_name = self.version
@@ -1775,6 +1773,8 @@ class HTTPServer:
         self.socket.settimeout(1)
         self.socket.listen(self.request_queue_size)
 
+        self.connections = connections.ConnectionManager(self)
+
         # Create worker threads
         self.requests.start()
 
@@ -1783,6 +1783,7 @@ class HTTPServer:
 
     def serve(self):
         """Serve requests, after invoking :func:`prepare()`."""
+        self.serving = True
         while self.ready:
             try:
                 self.tick()
@@ -1794,12 +1795,7 @@ class HTTPServer:
                     traceback=True,
                 )
 
-            if self.interrupt:
-                while self.interrupt is True:
-                    # Wait for self.stop() to complete. See _set_interrupt.
-                    time.sleep(0.1)
-                if self.interrupt:
-                    raise self.interrupt
+        self.serving = False
 
     def start(self):
         """Run the server forever.
@@ -2017,10 +2013,7 @@ class HTTPServer:
 
     def tick(self):
         """Accept a new connection and put it on the Queue."""
-        if not self.ready:
-            return
-
-        conn = self.connections.get_conn(self.socket)
+        conn = self.connections.get_conn()
         if conn:
             try:
                 self.requests.put(conn)
@@ -2041,6 +2034,8 @@ class HTTPServer:
         self._interrupt = True
         self.stop()
         self._interrupt = interrupt
+        if self._interrupt:
+            raise self.interrupt
 
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
@@ -2048,6 +2043,10 @@ class HTTPServer:
         if self._start_time is not None:
             self._run_time += (time.time() - self._start_time)
         self._start_time = None
+
+        # ensure serve is no longer accessing socket, connections
+        while self.serving:
+            time.sleep(0.1)
 
         sock = getattr(self, 'socket', None)
         if sock:

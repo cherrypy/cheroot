@@ -111,11 +111,6 @@ class WorkerThread(threading.Thread):
                 if conn is _SHUTDOWNREQUEST:
                     return
 
-                # Just close the connection and move on.
-                if conn.closeable:
-                    conn.close()
-                    continue
-
                 self.conn = conn
                 is_stats_enabled = self.server.stats['Enabled']
                 if is_stats_enabled:
