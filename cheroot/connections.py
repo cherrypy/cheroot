@@ -65,7 +65,10 @@ class ConnectionManager:
         self._readable_conns = collections.deque()
         self._selector = selectors.DefaultSelector()
 
-        self._selector.register(server.socket.fileno(), selectors.EVENT_READ, data=server)
+        self._selector.register(
+            server.socket.fileno(),
+            selectors.EVENT_READ, data=server,
+        )
 
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
@@ -80,7 +83,9 @@ class ConnectionManager:
         if conn.rfile.has_data():
             self._readable_conns.append(conn)
         else:
-            self._selector.register(conn.socket.fileno(), selectors.EVENT_READ, data=conn)
+            self._selector.register(
+                conn.socket.fileno(), selectors.EVENT_READ, data=conn,
+            )
 
     def expire(self):
         """Expire least recently used connections.
@@ -147,6 +152,7 @@ class ConnectionManager:
                 except OSError:
                     # Socket is invalid, close the connection
                     self._selector.unregister(key.fd)
+                    conn = key.data
                     conn.close()
 
             # Wait for the next tick to occur.
@@ -265,7 +271,7 @@ class ConnectionManager:
         self._readable_conns.clear()
 
         for _, key in self._selector.get_map().items():
-            if key.data != self.server: # server closes its own socket
+            if key.data != self.server:  # server closes its own socket
                 key.data.socket.close()
 
         self._selector.close()
