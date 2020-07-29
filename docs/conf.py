@@ -47,7 +47,7 @@ github_repo_name = 'cheroot'
 github_repo_slug = f'{github_repo_org}/{github_repo_name}'
 github_repo_url = f'{github_url}/{github_repo_slug}'
 cp_github_repo_url = f'{github_url}/{github_repo_org}/cherrypy'
-github_sponsors_url = 'https://github.com/sponsors'
+github_sponsors_url = f'{github_url}/sponsors'
 
 extlinks = {
     'issue': (f'{github_repo_url}/issues/%s', '#'),
