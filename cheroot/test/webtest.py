@@ -1,12 +1,14 @@
 """Extensions to unittest for web frameworks.
 
-Use the WebCase.getPage method to request a page from your HTTP server.
+Use the :py:meth:`WebCase.getPage` method to request a page
+from your HTTP server.
+
 Framework Integration
 =====================
 If you have control over your server process, you can handle errors
 in the server-side of the HTTP conversation a bit better. You must run
-both the client (your WebCase tests) and the server in the same process
-(but in separate threads, obviously).
+both the client (your :py:class:`WebCase` tests) and the server in the
+same process (but in separate threads, obviously).
 When an error occurs in the framework, call server_error. It will print
 the traceback to stdout, and keep any assertions you have from running
 (the assumption is that, if the server errors, the page output will not
@@ -26,11 +28,13 @@ import os
 import json
 import unittest
 import warnings
+import functools
 
-from six.moves import range, http_client, map, urllib_parse
+from six.moves import http_client, map, urllib_parse
 import six
 
 from more_itertools.more import always_iterable
+import jaraco.functools
 
 
 def interface(host):
@@ -154,8 +158,8 @@ class WebCase(unittest.TestCase):
         )
 
     @property
-    def persistent(self):  # noqa: D401; irrelevant for properties
-        """Presense of the persistent HTTP connection."""
+    def persistent(self):
+        """Presence of the persistent HTTP connection."""
         return hasattr(self.HTTP_CONN, '__class__')
 
     @persistent.setter
@@ -172,9 +176,11 @@ class WebCase(unittest.TestCase):
 
     def getPage(
         self, url, headers=None, method='GET', body=None,
-        protocol=None, raise_subcls=None,
+        protocol=None, raise_subcls=(),
     ):
-        """Open the url with debugging support. Return status, headers, body.
+        """Open the url with debugging support.
+
+        Return status, headers, body.
 
         url should be the identifier passed to the server, typically a
         server-absolute path and query string (sent between method and
@@ -182,19 +188,16 @@ class WebCase(unittest.TestCase):
         enabled in the server.
 
         If the application under test generates absolute URIs, be sure
-        to wrap them first with strip_netloc::
+        to wrap them first with :py:func:`strip_netloc`::
 
-            class MyAppWebCase(WebCase):
-                def getPage(url, *args, **kwargs):
-                    super(MyAppWebCase, self).getPage(
-                        cheroot.test.webtest.strip_netloc(url),
-                        *args, **kwargs
-                    )
+            >>> class MyAppWebCase(WebCase):
+            ...     def getPage(url, *args, **kwargs):
+            ...         super(MyAppWebCase, self).getPage(
+            ...             cheroot.test.webtest.strip_netloc(url),
+            ...             *args, **kwargs
+            ...         )
 
-        `raise_subcls` must be a tuple with the exceptions classes
-        or a single exception class that are not going to be considered
-        a socket.error regardless that they were are subclass of a
-        socket.error and therefore not considered for a connection retry.
+        ``raise_subcls`` is passed through to :py:func:`openURL`.
         """
         ServerError.on = False
 
@@ -203,13 +206,17 @@ class WebCase(unittest.TestCase):
         if isinstance(body, six.text_type):
             body = body.encode('utf-8')
 
+        # for compatibility, support raise_subcls is None
+        raise_subcls = raise_subcls or ()
+
         self.url = url
         self.time = None
         start = time.time()
         result = openURL(
             url, headers, method, body, self.HOST, self.PORT,
             self.HTTP_CONN, protocol or self.PROTOCOL,
-            raise_subcls, ssl_context=self.ssl_context,
+            raise_subcls=raise_subcls,
+            ssl_context=self.ssl_context,
         )
         self.time = time.time() - start
         self.status, self.headers, self.body = result
@@ -455,89 +462,92 @@ def cleanHeaders(headers, method, body, host, port):
 
 def shb(response):
     """Return status, headers, body the way we like from a response."""
-    if six.PY3:
-        h = response.getheaders()
-    else:
-        h = []
-        key, value = None, None
-        for line in response.msg.headers:
-            if line:
-                if line[0] in ' \t':
-                    value += line.strip()
-                else:
-                    if key and value:
-                        h.append((key, value))
-                    key, value = line.split(':', 1)
-                    key = key.strip()
-                    value = value.strip()
-        if key and value:
-            h.append((key, value))
+    resp_status_line = '%s %s' % (response.status, response.reason)
 
-    return '%s %s' % (response.status, response.reason), h, response.read()
+    if not six.PY2:
+        return resp_status_line, response.getheaders(), response.read()
+
+    h = []
+    key, value = None, None
+    for line in response.msg.headers:
+        if line:
+            if line[0] in ' \t':
+                value += line.strip()
+            else:
+                if key and value:
+                    h.append((key, value))
+                key, value = line.split(':', 1)
+                key = key.strip()
+                value = value.strip()
+    if key and value:
+        h.append((key, value))
+
+    return resp_status_line, h, response.read()
 
 
-def openURL(
+# def openURL(*args, raise_subcls=(), **kwargs):
+# py27 compatible signature:
+def openURL(*args, **kwargs):
+    """
+    Open a URL, retrying when it fails.
+
+    Specify ``raise_subcls`` (class or tuple of classes) to exclude
+    those socket.error subclasses from being suppressed and retried.
+    """
+    raise_subcls = kwargs.pop('raise_subcls', ())
+    opener = functools.partial(_open_url_once, *args, **kwargs)
+
+    def on_exception():
+        type_, exc = sys.exc_info()[:2]
+        if isinstance(exc, raise_subcls):
+            raise
+        time.sleep(0.5)
+
+    # Try up to 10 times
+    return jaraco.functools.retry_call(
+        opener,
+        retries=9,
+        cleanup=on_exception,
+        trap=socket.error,
+    )
+
+
+def _open_url_once(
     url, headers=None, method='GET', body=None,
     host='127.0.0.1', port=8000, http_conn=http_client.HTTPConnection,
-    protocol='HTTP/1.1', raise_subcls=None, ssl_context=None,
+    protocol='HTTP/1.1', ssl_context=None,
 ):
-    """
-    Open the given HTTP resource and return status, headers, and body.
-
-    `raise_subcls` must be a tuple with the exceptions classes
-    or a single exception class that are not going to be considered
-    a socket.error regardless that they were are subclass of a
-    socket.error and therefore not considered for a connection retry.
-    """
+    """Open the given HTTP resource and return status, headers, and body."""
     headers = cleanHeaders(headers, method, body, host, port)
 
-    # Trying 10 times is simply in case of socket errors.
-    # Normal case--it should run once.
-    for trial in range(10):
-        try:
-            # Allow http_conn to be a class or an instance
-            if hasattr(http_conn, 'host'):
-                conn = http_conn
-            else:
-                kw = {}
-                if ssl_context:
-                    kw['context'] = ssl_context
-                conn = http_conn(interface(host), port, **kw)
-
-            conn._http_vsn_str = protocol
-            conn._http_vsn = int(''.join([x for x in protocol if x.isdigit()]))
-
-            if six.PY3 and isinstance(url, bytes):
-                url = url.decode()
-            conn.putrequest(
-                method.upper(), url, skip_host=True,
-                skip_accept_encoding=True,
-            )
-
-            for key, value in headers:
-                conn.putheader(key, value.encode('Latin-1'))
-            conn.endheaders()
-
-            if body is not None:
-                conn.send(body)
-
-            # Handle response
-            response = conn.getresponse()
-
-            s, h, b = shb(response)
-
-            if not hasattr(http_conn, 'host'):
-                # We made our own conn instance. Close it.
-                conn.close()
-
-            return s, h, b
-        except socket.error as e:
-            if raise_subcls is not None and isinstance(e, raise_subcls):
-                raise
-            else:
-                time.sleep(0.5)
-                if trial == 9:
-                    raise
+    # Allow http_conn to be a class or an instance
+    if hasattr(http_conn, 'host'):
+        conn = http_conn
+    else:
+        kw = {}
+        if ssl_context:
+            kw['context'] = ssl_context
+        conn = http_conn(interface(host), port, **kw)
+    conn._http_vsn_str = protocol
+    conn._http_vsn = int(''.join([x for x in protocol if x.isdigit()]))
+    if not six.PY2 and isinstance(url, bytes):
+        url = url.decode()
+    conn.putrequest(
+        method.upper(), url, skip_host=True,
+        skip_accept_encoding=True,
+    )
+    for key, value in headers:
+        conn.putheader(key, value.encode('Latin-1'))
+    conn.endheaders()
+    if body is not None:
+        conn.send(body)
+    # Handle response
+    response = conn.getresponse()
+    s, h, b = shb(response)
+    if not hasattr(http_conn, 'host'):
+        # We made our own conn instance. Close it.
+        conn.close()
+    return s, h, b
 
 
 def strip_netloc(url):
@@ -547,7 +557,7 @@ def strip_netloc(url):
     server-absolute portion.
 
     Useful for wrapping an absolute-URI for which only the
-    path is expected (such as in calls to getPage).
+    path is expected (such as in calls to :py:meth:`WebCase.getPage`).
 
     >>> strip_netloc('https://google.com/foo/bar?bing#baz')
     '/foo/bar?bing'

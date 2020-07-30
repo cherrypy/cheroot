@@ -5,10 +5,10 @@ First-time setup
 ~~~~~~~~~~~~~~~~
 
 - You need to install `Python`_ 3 which is required for building docs.
-For example, Python 3.7.
+  For example, Python 3.7.
 
-Then, `create and activate a virtual environment`_.
-And install `tox`_.
+  Then, `create and activate a virtual environment`_.
+  And install `tox`_.
 
 - `Install git`_
 
@@ -69,8 +69,8 @@ Run one test with Python3.6::
 
     $ tox -e py36 -- cheroot/test/test_name.py
 
-**`tox`** — Run all tests using the Python version where `python` command
-currently points to which is specified in tox settings::
+**``tox``** — Run all tests using the Python version where `python` command
+currently points to which is specified in ``tox`` settings::
 
     envlist = python
     minversion = 3.5.3
@@ -108,17 +108,21 @@ Open the documentation:
 
 .. tabs::
 
-   .. tab:: GNU/linux
+   .. tab:: GNU/Linux
 
-      $ xdg-open build/html/index.html
+      ::
+
+          $ xdg-open build/html/index.html
 
    .. tab:: macOS
 
-      $ open build/html/index.html
+      ::
+
+          $ open build/html/index.html
 
    .. tab:: Windows
 
-      Please, open build/html/index.html in your browser.
+      Please, open ``build/html/index.html`` in your browser.
 
 Also, one can serve docs using a built-in static files server.
 This is preferable because of possible CSRF issues.::

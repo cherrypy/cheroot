@@ -23,13 +23,13 @@ class FatalSSLAlert(Exception):
 
 
 def plat_specific_errors(*errnames):
-    """Return error numbers for all errors in errnames on this platform.
+    """Return error numbers for all errors in ``errnames`` on this platform.
 
-    The 'errno' module contains different global constants depending on
-    the specific platform (OS). This function will return the list of
-    numeric values for a given list of potential names.
+    The :py:mod:`errno` module contains different global constants
+    depending on the specific platform (OS). This function will return
+    the list of numeric values for a given list of potential names.
     """
-    missing_attr = set([None, ])
+    missing_attr = set([None])
     unique_nums = set(getattr(errno, k, None) for k in errnames)
     return list(unique_nums - missing_attr)
 

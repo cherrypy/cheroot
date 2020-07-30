@@ -25,12 +25,12 @@ import argparse
 from importlib import import_module
 import os
 import sys
-import contextlib
 
 import six
 
 from . import server
 from . import wsgi
+from ._compat import suppress
 
 
 __metaclass__ = type
@@ -49,6 +49,7 @@ class TCPSocket(BindLocation):
         Args:
             address (str): Host name or IP address
             port (int): TCP port number
+
         """
         self.bind_addr = address, port
 
@@ -64,9 +65,9 @@ class UnixSocket(BindLocation):
 class AbstractSocket(BindLocation):
     """AbstractSocket."""
 
-    def __init__(self, addr):
+    def __init__(self, abstract_socket):
         """Initialize."""
-        self.bind_addr = '\0{}'.format(self.abstract_socket)
+        self.bind_addr = '\x00{}'.format(abstract_socket)
 
 
 class Application:
@@ -77,8 +78,8 @@ class Application:
         """Read WSGI app/Gateway path string and import application module."""
         mod_path, _, app_path = full_path.partition(':')
         app = getattr(import_module(mod_path), app_path or 'application')
-
-        with contextlib.suppress(TypeError):
+        # suppress the `TypeError` exception, just in case `app` is not a class
+        with suppress(TypeError):
             if issubclass(app, server.Gateway):
                 return GatewayYo(app)
 
@@ -128,6 +129,13 @@ class GatewayYo:
 
 def parse_wsgi_bind_location(bind_addr_string):
     """Convert bind address string to a BindLocation."""
+    # if the string begins with an @ symbol, use an abstract socket,
+    # this is the first condition to verify, otherwise the urlparse
+    # validation would detect //@<value> as a valid url with a hostname
+    # with value: "<value>" and port: None
+    if bind_addr_string.startswith('@'):
+        return AbstractSocket(bind_addr_string[1:])
+
     # try and match for an IP/hostname and port
     match = six.moves.urllib.parse.urlparse('//{}'.format(bind_addr_string))
     try:
@@ -139,9 +147,6 @@ def parse_wsgi_bind_location(bind_addr_string):
         pass
 
     # else, assume a UNIX socket path
-    # if the string begins with an @ symbol, use an abstract socket
-    if bind_addr_string.startswith('@'):
-        return AbstractSocket(bind_addr_string[1:])
     return UnixSocket(path=bind_addr_string)
 
 

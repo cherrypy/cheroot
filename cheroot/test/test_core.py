@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import errno
+import os
 import socket
 
 import pytest
@@ -15,9 +16,13 @@ from six.moves import urllib
 from cheroot.test import helper
 
 
+IS_CIRCLE_CI_ENV = 'CIRCLECI' in os.environ
+
+
 HTTP_BAD_REQUEST = 400
 HTTP_LENGTH_REQUIRED = 411
 HTTP_NOT_FOUND = 404
+HTTP_REQUEST_ENTITY_TOO_LARGE = 413
 HTTP_OK = 200
 HTTP_VERSION_NOT_SUPPORTED = 505
 
@@ -52,9 +57,9 @@ class HelloController(helper.Controller):
         WSGI 1.0 is a mess around unicode. Create endpoints
         that match the PATH_INFO that it produces.
         """
-        if six.PY3:
-            return string.encode('utf-8').decode('latin-1')
-        return string
+        if six.PY2:
+            return string
+        return string.encode('utf-8').decode('latin-1')
 
     handlers = {
         '/hello': hello,
@@ -78,7 +83,7 @@ def _get_http_response(connection, method='GET'):
 
 @pytest.fixture
 def testing_server(wsgi_server_client):
-    """Attach a WSGI app to the given server and pre-configure it."""
+    """Attach a WSGI app to the given server and preconfigure it."""
     wsgi_server = wsgi_server_client.server_instance
     wsgi_server.wsgi_app = HelloController()
     wsgi_server.max_request_body_size = 30000000
@@ -90,6 +95,21 @@ def testing_server(wsgi_server_client):
 def test_client(testing_server):
     """Get and return a test client out of the given server."""
     return testing_server.server_client
+
+
+@pytest.fixture
+def testing_server_with_defaults(wsgi_server_client):
+    """Attach a WSGI app to the given server and preconfigure it."""
+    wsgi_server = wsgi_server_client.server_instance
+    wsgi_server.wsgi_app = HelloController()
+    wsgi_server.server_client = wsgi_server_client
+    return wsgi_server
+
+
+@pytest.fixture
+def test_client_with_defaults(testing_server_with_defaults):
+    """Get and return a test client out of the given server."""
+    return testing_server_with_defaults.server_client
 
 
 def test_http_connect_request(test_client):
@@ -160,7 +180,7 @@ def test_parse_uri_unsafe_uri(test_client):
     response = _get_http_response(c, method='GET')
     response.begin()
     assert response.status == HTTP_OK
-    assert response.fp.read(12) == b'Hello world!'
+    assert response.read(12) == b'Hello world!'
     c.close()
 
 
@@ -175,7 +195,7 @@ def test_parse_uri_invalid_uri(test_client):
     response = _get_http_response(c, method='GET')
     response.begin()
     assert response.status == HTTP_BAD_REQUEST
-    assert response.fp.read(21) == b'Malformed Request-URI'
+    assert response.read(21) == b'Malformed Request-URI'
     c.close()
 
 
@@ -241,7 +261,7 @@ def test_no_content_length(test_client):
     c = test_client.get_connection()
     c.request('POST', '/no_body')
     response = c.getresponse()
-    actual_resp_body = response.fp.read()
+    actual_resp_body = response.read()
     actual_status = response.status
     assert actual_status == HTTP_OK
     assert actual_resp_body == b'Hello world!'
@@ -256,14 +276,37 @@ def test_content_length_required(test_client):
     c = test_client.get_connection()
     c.request('POST', '/body_required')
     response = c.getresponse()
-    response.fp.read()
+    response.read()
 
     actual_status = response.status
     assert actual_status == HTTP_LENGTH_REQUIRED
 
 
+@pytest.mark.xfail(
+    IS_CIRCLE_CI_ENV,
+    reason='https://github.com/cherrypy/cheroot/issues/106',
+    strict=False,  # sometimes it passes
+)
+def test_large_request(test_client_with_defaults):
+    """Test GET query with maliciously large Content-Length."""
+    # If the server's max_request_body_size is not set (i.e. is set to 0)
+    # then this will result in an `OverflowError: Python int too large to
+    # convert to C ssize_t` in the server.
+    # We expect that this should instead return that the request is too
+    # large.
+    c = test_client_with_defaults.get_connection()
+    c.putrequest('GET', '/hello')
+    c.putheader('Content-Length', str(2**64))
+    c.endheaders()
+
+    response = c.getresponse()
+    actual_status = response.status
+
+    assert actual_status == HTTP_REQUEST_ENTITY_TOO_LARGE
+
+
 @pytest.mark.parametrize(
-    'request_line,status_code,expected_body',
+    ('request_line', 'status_code', 'expected_body'),
     (
         (
             b'GET /',  # missing proto
@@ -272,6 +315,10 @@ def test_content_length_required(test_client):
         (
             b'GET / HTTPS/1.1',  # invalid proto
             HTTP_BAD_REQUEST, b'Malformed Request-Line: bad protocol',
+        ),
+        (
+            b'GET / HTTP/1',  # invalid version
+            HTTP_BAD_REQUEST, b'Malformed Request-Line: bad version',
         ),
         (
             b'GET / HTTP/2.15',  # invalid ver
@@ -290,7 +337,7 @@ def test_malformed_request_line(
     response = _get_http_response(c, method='GET')
     response.begin()
     assert response.status == status_code
-    assert response.fp.read(len(expected_body)) == expected_body
+    assert response.read(len(expected_body)) == expected_body
     c.close()
 
 
@@ -304,7 +351,7 @@ def test_malformed_http_method(test_client):
     response = c.getresponse()
     actual_status = response.status
     assert actual_status == HTTP_BAD_REQUEST
-    actual_resp_body = response.fp.read(21)
+    actual_resp_body = response.read(21)
     assert actual_resp_body == b'Malformed method name'
 
 
@@ -320,7 +367,7 @@ def test_malformed_header(test_client):
     response = c.getresponse()
     actual_status = response.status
     assert actual_status == HTTP_BAD_REQUEST
-    actual_resp_body = response.fp.read(20)
+    actual_resp_body = response.read(20)
     assert actual_resp_body == b'Illegal header line.'
 
 
@@ -353,7 +400,7 @@ def test_garbage_in(test_client):
         response.begin()
         actual_status = response.status
         assert actual_status == HTTP_BAD_REQUEST
-        actual_resp_body = response.fp.read(22)
+        actual_resp_body = response.read(22)
         assert actual_resp_body == b'Malformed Request-Line'
         c.close()
     except socket.error as ex:
@@ -397,7 +444,7 @@ class CloseResponse:
 
 @pytest.fixture
 def testing_server_close(wsgi_server_client):
-    """Attach a WSGI app to the given server and pre-configure it."""
+    """Attach a WSGI app to the given server and preconfigure it."""
     wsgi_server = wsgi_server_client.server_instance
     wsgi_server.wsgi_app = CloseController()
     wsgi_server.max_request_body_size = 30000000

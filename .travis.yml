@@ -8,8 +8,13 @@ python:
 - 3.4
 - 3.5
 - 3.6
-- &pypy2 pypy
 - &pypy3 pypy3
+
+env:
+  global:
+    GIT_INSTALLER_DIR_PATH: ${HOME}/.git-installers
+    GIT_VERSION: 2.20.1
+    PYTHON_INSTALLER_DIR_PATH: ${HOME}/.python-installers
 
 _base_envs:
 - &stage_lint
@@ -27,7 +32,7 @@ _base_envs:
 - &pyenv_base
   <<: *stage_test
   language: generic
-  python: *pypy2
+  python: &pypy2 pypy
   env:
   - &env_pypy2 PYTHON_VERSION=pypy2.7-7.1.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
@@ -51,8 +56,14 @@ _base_envs:
   <<: *pyenv_base
   <<: *stage_test_osx
   os: osx
+  osx_image: xcode8.3
   language: generic
-  before_install:
+  cache:
+    directories:
+    - $HOME/Library/Caches/Homebrew
+    - $PYTHON_INSTALLER_DIR_PATH
+    - $GIT_INSTALLER_DIR_PATH
+  before_install: &install-from-pyenv
   - brew install zlib readline
   - brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/pyenv.rb || brew upgrade pyenv
   - brew install openssl@1.1
@@ -62,9 +73,75 @@ _base_envs:
   - *install_python
   - *switch_python
   - *python_version
+  - python -m pip install --upgrade virtualenv
   - python -m pip install tox
   - env CRYPTOGRAPHY_SUPPRESS_LINK_FLAGS=1 LDFLAGS="$(brew --prefix openssl@1.1)/lib/libssl.a $(brew --prefix openssl@1.1)/lib/libcrypto.a" CFLAGS="-I$(brew --prefix openssl@1.1)/include" python -m tox --notest
   - *python_ssl_openssl_version
+  before_install: &install-from-python_org
+  - |
+    function probe_url() {
+      local py_ver="$1"
+      [ $(curl -I --write-out '%{http_code}' --silent --output /dev/null "https://www.python.org/ftp/python/${py_ver}/python-${py_ver}-macosx10.6.pkg") == '200' ] && return 0
+      return 1
+    }
+  - |
+    function find_last_macos_py() {
+    for py_ver in $*
+    do
+      >&2 echo Probing $py_ver
+      probe_url $py_ver && >&2 echo "Found pkg: ${py_ver}" && echo $py_ver && return 0
+    done
+    >&2 echo Failed looking up macOS pkg for $*
+    return 1
+    }
+  - export GIT_DMG_NAME="git-${GIT_VERSION}-intel-universal-mavericks.dmg"
+  - export GIT_PKG_NAME="git-${GIT_VERSION}-intel-universal-mavericks.pkg"
+  - export GIT_DMG_PATH="${GIT_INSTALLER_DIR_PATH}/${GIT_DMG_NAME}"
+  - >
+    stat "${GIT_DMG_PATH}" &>/dev/null || wget -O "${GIT_DMG_PATH}" "https://sourceforge.net/projects/git-osx-installer/files/${GIT_DMG_NAME}/download?use_mirror=autoselect"
+  - stat "${GIT_DMG_PATH}" >/dev/null
+  - sudo hdiutil attach ${GIT_DMG_PATH}
+  - hdiutil info
+  - >
+    export GIT_INSTALLER_VOLUME=$(hdiutil info | tail -n1 | sed 's#^.*\(/Volumes.*\)#\1#')
+  - >
+    export GIT_INSTALLER_PATH="${GIT_INSTALLER_VOLUME}/${GIT_PKG_NAME}"
+  - ls -alh "${GIT_INSTALLER_VOLUME}"
+  - sudo installer -verboseR -dumplog -pkg "${GIT_INSTALLER_PATH}" -target /
+  - sudo hdiutil detach "${GIT_INSTALLER_VOLUME}"
+  - export PYTHON_VERSION_LONG_SUGGESTIONS=$(git ls-remote --sort -v:refname --tags git://github.com/python/cpython.git "${PYTHON_VERSION}*" "v${PYTHON_VERSION}*" | grep -v '\^{}$' | awk '{print$2}' | sed 's#^refs/tags/##;s#^v##' | grep -v '[abcepr]')
+  - export PYTHON_VERSION_LONG=$(find_last_macos_py $PYTHON_VERSION_LONG_SUGGESTIONS)
+  - export PYTHON_VERSION_SHORT=$(echo ${PYTHON_VERSION_LONG} | awk -F. '{print$1"."$2}')
+  - echo "Selected version vars are:"
+  - echo "PYTHON_VERSION=${PYTHON_VERSION}"
+  - echo "PYTHON_VERSION_SHORT=${PYTHON_VERSION_SHORT}"
+  - echo "PYTHON_VERSION_LONG=${PYTHON_VERSION_LONG}"
+  - export PYTHON_INSTALL_PATH="/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION_SHORT}"
+  - export PYTHON_INSTALL_EXE="${PYTHON_INSTALL_PATH}/bin/python${PYTHON_VERSION_SHORT}"
+  - export PATH="${PYTHON_INSTALL_PATH}/bin:${PATH}"
+  - export PYTHON_VENV_PATH="${HOME}/virtualenv/python${PYTHON_VERSION_SHORT}"
+  - export PYTHON_INSTALLER_PATH="${PYTHON_INSTALLER_DIR_PATH}/python-${PYTHON_VERSION_LONG}.pkg"
+  - echo "PYTHON_INSTALLER_PATH=${PYTHON_INSTALLER_PATH}"
+  - env
+  - >
+    stat "${PYTHON_INSTALLER_PATH}" &>/dev/null || wget -O "${PYTHON_INSTALLER_PATH}" "https://www.python.org/ftp/python/${PYTHON_VERSION_LONG}/python-${PYTHON_VERSION_LONG}-macosx10.6.pkg"
+  - stat "${PYTHON_INSTALLER_PATH}" >/dev/null
+  - sudo installer -verboseR -dumplog -pkg "${PYTHON_INSTALLER_PATH}" -target /
+  - ls "${PYTHON_INSTALL_PATH}/bin"
+  - ls -lh "${PYTHON_INSTALL_EXE}"
+  - stat "${PYTHON_INSTALL_EXE}"
+  - /Applications/Python\ ${PYTHON_VERSION_SHORT}/Install\ Certificates.command || echo "No need to fix certificates"
+  - curl https://bootstrap.pypa.io/get-pip.py | ${PYTHON_INSTALL_EXE}
+  - >
+    "${PYTHON_INSTALL_EXE}" -m pip install -U pip
+  - >
+    "${PYTHON_INSTALL_EXE}" -m pip install -U virtualenv
+  - >
+    "${PYTHON_INSTALL_EXE}" -m virtualenv "${PYTHON_VENV_PATH}"
+  - . "${PYTHON_VENV_PATH}/bin/activate"
+  - curl https://bootstrap.pypa.io/get-pip.py | python
+  - python --version
+  - pip --version
   before_cache:
   - brew --cache
 - &python_3_7_mixture
@@ -80,12 +157,23 @@ _base_envs:
   # Some linters depend on pyyaml, which fails under Python 3.7 now:
   python: 3.6
   after_failure: skip
+- &docs_python_base
+  <<: *lint_python_base
+  addons:
+    apt:
+      packages:
+      - libenchant-dev
 
 jobs:
   fast_finish: true
   allow_failures:
   - env: TOXENV=pre-commit-failing
+  - python: nightly
   include:
+  - python: *pypy2
+    env:
+      PYTEST_ADDOPTS: >-
+        '-p no:warnings'
   - <<: *lint_python_base
     name: pre-commit.com tool linters
     env: TOXENV=pre-commit
@@ -96,6 +184,20 @@ jobs:
   - <<: *lint_python_base
     name: temporary failing pre-commit.com tool linters
     env: TOXENV=pre-commit-failing
+  - <<: *docs_python_base
+    python: 3.8
+    name: Ensure that docs get built successfully
+    env: TOXENV=build-docs
+  - <<: *docs_python_base
+    python: 3.8
+    name: Spellcheck docs
+    env: TOXENV=spellcheck-docs
+  - <<: *docs_python_base
+    python: 3.8
+    name: Check links in docs
+    env: TOXENV=linkcheck-docs
+  - <<: *pure_python_base_priority
+    python: 3.8
   - <<: *pure_python_base_priority
     # mainstream here (3.7)
   - <<: *pure_python_base_priority
@@ -104,37 +206,23 @@ jobs:
     <<: *manual_run_or_cron
     python: 2.7
     env:
-    - PYTHON_VERSION=2.7.13
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    <<: *manual_run_or_cron
-    python: 3.4
-    env:
-    - PYTHON_VERSION=3.4.6
-    - *env_pyenv
-    - *env_path
+      PYTHON_VERSION: 2.7
   - <<: *osx_python_base
     <<: *manual_run_or_cron
     python: 3.5
     env:
-    - PYTHON_VERSION=3.5.3
-    - *env_pyenv
-    - *env_path
+      PYTHON_VERSION: 3.5
   - <<: *osx_python_base
     python: 3.6
     env:
-    - PYTHON_VERSION=3.6.5
-    - *env_pyenv
-    - *env_path
+      PYTHON_VERSION: 3.6
   - <<: *osx_python_base
     python: *mainstream_python
     env:
-    - PYTHON_VERSION=3.7.0
-    - *env_pyenv
-    - *env_path
+      PYTHON_VERSION: *mainstream_python
   - <<: *osx_python_base
     <<: *manual_run_or_cron
+    before_install: *install-from-pyenv
     python: nightly
     env:
     - PYTHON_VERSION=3.8-dev
@@ -143,6 +231,7 @@ jobs:
   - <<: *osx_python_base
     <<: *manual_run_or_cron
     osx_image: xcode9.4
+    before_install: *install-from-pyenv
     python: pypy3.6-7.1.0
     env:
     - PYTHON_VERSION=pypy3.6-7.1.0
@@ -152,17 +241,11 @@ jobs:
   - <<: *stage_deploy
     if: tag IS present
     <<: *python_3_7_mixture
-    install: skip
-    script: skip
-    deploy:
-      provider: pypi
-      on:
-        all_branches: true
-      user: jaraco
-      password:
-        secure: RAfz06AINvz7bfij/YhfkAreRqamgxS8a6jSRNxntYhtJke3ZszUbIDag8+n1I+G5XT2LnMhHqPNR7Plc+AeMz7VXTuy+b81Li5kse20NYlPhd7mBVmTUpXtqYQashV5J39F4qkATBLznCOrMEomM07VTXjO/o2hmQuXniab2Uo=
-      distributions: dists
-      skip_cleanup: true
+    install:
+    - python -m pip install --upgrade virtualenv
+    - python -m pip install tox
+    env:
+      TOXENV: release
 
 cache:
   pip: true
@@ -173,7 +256,8 @@ cache:
   - $HOME/Library/Caches/Homebrew
 
 install:
-- python -m pip install tox tox-venv
+- python -m pip install --upgrade virtualenv
+- python -m pip install tox
 - python -m tox --notest  # Pre-populate a virtualenv with dependencies
 - *python_ssl_openssl_version
 - >-

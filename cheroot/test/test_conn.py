@@ -10,8 +10,10 @@ from six.moves import range, http_client, urllib
 
 import six
 import pytest
+from jaraco.text import trim, unwrap
 
 from cheroot.test import helper, webtest
+from cheroot._compat import IS_PYPY
 
 
 timeout = 1
@@ -26,7 +28,7 @@ class Controller(helper.Controller):
         return 'Hello, world!'
 
     def pov(req, resp):
-        """Render pov value."""
+        """Render ``pov`` value."""
         return pov
 
     def stream(req, resp):
@@ -43,8 +45,10 @@ class Controller(helper.Controller):
     def upload(req, resp):
         """Process file upload and render thank."""
         if not req.environ['REQUEST_METHOD'] == 'POST':
-            raise AssertionError("'POST' != request.method %r" %
-                                 req.environ['REQUEST_METHOD'])
+            raise AssertionError(
+                "'POST' != request.method %r" %
+                req.environ['REQUEST_METHOD'],
+            )
         return "thanks for '%s'" % req.environ['wsgi.input'].read()
 
     def custom_204(req, resp):
@@ -82,9 +86,9 @@ class Controller(helper.Controller):
         WSGI 1.0 is a mess around unicode. Create endpoints
         that match the PATH_INFO that it produces.
         """
-        if six.PY3:
-            return string.encode('utf-8').decode('latin-1')
-        return string
+        if six.PY2:
+            return string
+        return string.encode('utf-8').decode('latin-1')
 
     handlers = {
         '/hello': hello,
@@ -105,7 +109,7 @@ class Controller(helper.Controller):
 
 @pytest.fixture
 def testing_server(wsgi_server_client):
-    """Attach a WSGI app to the given server and pre-configure it."""
+    """Attach a WSGI app to the given server and preconfigure it."""
     app = Controller()
 
     def _timeout(req, resp):
@@ -116,6 +120,7 @@ def testing_server(wsgi_server_client):
     wsgi_server.max_request_body_size = 1001
     wsgi_server.timeout = timeout
     wsgi_server.server_client = wsgi_server_client
+    wsgi_server.keep_alive_conn_limit = 2
     return wsgi_server
 
 
@@ -337,7 +342,13 @@ def test_streaming_10(test_client, set_cl):
     'http_server_protocol',
     (
         'HTTP/1.0',
-        'HTTP/1.1',
+        pytest.param(
+            'HTTP/1.1',
+            marks=pytest.mark.xfail(
+                IS_PYPY and not six.PY2,
+                reason='Fails under PyPy for unknown reason',
+            ),
+        ),
     ),
 )
 def test_keepalive(test_client, http_server_protocol):
@@ -389,6 +400,78 @@ def test_keepalive(test_client, http_server_protocol):
     test_client.server_instance.protocol = original_server_protocol
 
 
+def test_keepalive_conn_management(test_client):
+    """Test management of Keep-Alive connections."""
+    test_client.server_instance.timeout = 2
+
+    def connection():
+        # Initialize a persistent HTTP connection
+        http_connection = test_client.get_connection()
+        http_connection.auto_open = False
+        http_connection.connect()
+        return http_connection
+
+    def request(conn, keepalive=True):
+        status_line, actual_headers, actual_resp_body = test_client.get(
+            '/page3', headers=[('Connection', 'Keep-Alive')],
+            http_conn=conn, protocol='HTTP/1.0',
+        )
+        actual_status = int(status_line[:3])
+        assert actual_status == 200
+        assert status_line[4:] == 'OK'
+        assert actual_resp_body == pov.encode()
+        if keepalive:
+            assert header_has_value('Connection', 'Keep-Alive', actual_headers)
+        else:
+            assert not header_exists('Connection', actual_headers)
+
+    disconnect_errors = (
+        http_client.BadStatusLine,
+        http_client.CannotSendRequest,
+        http_client.NotConnected,
+    )
+
+    # Make a new connection.
+    c1 = connection()
+    request(c1)
+
+    # Make a second one.
+    c2 = connection()
+    request(c2)
+
+    # Reusing the first connection should still work.
+    request(c1)
+
+    # Creating a new connection should still work, but we should
+    # have run out of available connections to keep alive, so the
+    # server should tell us to close.
+    c3 = connection()
+    request(c3, keepalive=False)
+
+    # Show that the third connection was closed.
+    with pytest.raises(disconnect_errors):
+        request(c3)
+
+    # Wait for some of our timeout.
+    time.sleep(1.2)
+
+    # Refresh the second connection.
+    request(c2)
+
+    # Wait for the remainder of our timeout, plus one tick.
+    time.sleep(1.2)
+
+    # First connection should now be expired.
+    with pytest.raises(disconnect_errors):
+        request(c1)
+
+    # But the second one should still be valid.
+    request(c2)
+
+    # Restore original timeout.
+    test_client.server_instance.timeout = timeout
+
+
 @pytest.mark.parametrize(
     'timeout_before_headers',
     (
@@ -399,7 +482,7 @@ def test_keepalive(test_client, http_server_protocol):
 def test_HTTP11_Timeout(test_client, timeout_before_headers):
     """Check timeout without sending any data.
 
-    The server will close the conn with a 408.
+    The server will close the connection with a 408.
     """
     conn = test_client.get_connection()
     conn.auto_open = False
@@ -518,7 +601,7 @@ def test_HTTP11_Timeout_after_request(test_client):
 def test_HTTP11_pipelining(test_client):
     """Test HTTP/1.1 pipelining.
 
-    httplib doesn't support this directly.
+    :py:mod:`http.client` doesn't support this directly.
     """
     conn = test_client.get_connection()
 
@@ -539,9 +622,9 @@ def test_HTTP11_pipelining(test_client):
         response = conn.response_class(conn.sock, method='GET')
         # there is a bug in python3 regarding the buffering of
         # ``conn.sock``. Until that bug get's fixed we will
-        # monkey patch the ``reponse`` instance.
+        # monkey patch the ``response`` instance.
         # https://bugs.python.org/issue23377
-        if six.PY3:
+        if not six.PY2:
             response.fp = conn.sock.makefile('rb', 0)
         response.begin()
         body = response.read(13)
@@ -563,7 +646,7 @@ def test_100_Continue(test_client):
     conn = test_client.get_connection()
 
     # Try a page without an Expect request header first.
-    # Note that httplib's response.begin automatically ignores
+    # Note that http.client's response.begin automatically ignores
     # 100 Continue responses, so we must manually check for it.
     conn.putrequest('POST', '/upload', skip_host=True)
     conn.putheader('Host', conn.host)
@@ -724,11 +807,13 @@ def test_No_Message_Body(test_client):
 
 
 @pytest.mark.xfail(
-    reason='Server does not correctly read trailers/ending of the previous '
-           'HTTP request, thus the second request fails as the server tries '
-           r"to parse b'Content-Type: application/json\r\n' as a "
-           'Request-Line. This results in HTTP status code 400, instead of 413'
-           'Ref: https://github.com/cherrypy/cheroot/issues/69',
+    reason=unwrap(
+        trim("""
+        Headers from earlier request leak into the request
+        line for a subsequent request, resulting in 400
+        instead of 413. See cherrypy/cheroot#69 for details.
+        """),
+    ),
 )
 def test_Chunked_Encoding(test_client):
     """Test HTTP uploads with chunked transfer-encoding."""
@@ -761,7 +846,7 @@ def test_Chunked_Encoding(test_client):
 
     # Try a chunked request that exceeds server.max_request_body_size.
     # Note that the delimiters and trailer are included.
-    body = b'3e3\r\n' + (b'x' * 995) + b'\r\n0\r\n\r\n'
+    body = b'\r\n'.join((b'3e3', b'x' * 995, b'0', b'', b''))
     conn.putrequest('POST', '/upload', skip_host=True)
     conn.putheader('Host', conn.host)
     conn.putheader('Transfer-Encoding', 'chunked')
@@ -819,7 +904,7 @@ def test_Content_Length_not_int(test_client):
 
 
 @pytest.mark.parametrize(
-    'uri,expected_resp_status,expected_resp_body',
+    ('uri', 'expected_resp_status', 'expected_resp_body'),
     (
         (
             '/wrong_cl_buffered', 500,
@@ -894,8 +979,8 @@ def test_No_CRLF(test_client, invalid_terminator):
     # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
 
-    # (b'%s' % b'') is not supported in Python 3.4, so just use +
-    conn.send(b'GET /hello HTTP/1.1' + invalid_terminator)
+    # (b'%s' % b'') is not supported in Python 3.4, so just use bytes.join()
+    conn.send(b''.join((b'GET /hello HTTP/1.1', invalid_terminator)))
     response = conn.response_class(conn.sock, method='GET')
     response.begin()
     actual_resp_body = response.read()

@@ -15,8 +15,9 @@ install:
   - "mklink /d \"C:\\Program Files\\Python\" %PYTHON%"
   - "SET PYTHON=\"C:\\Program Files\\Python\""
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python -m pip install --upgrade --force-reinstall virtualenv"
   - "python -m pip install tox"
-  - "python -m tox --notest"
+  - "python -m tox --notest -vv"
 
 
 before_build:
@@ -30,7 +31,7 @@ test_script:
 
 version: '{build}'
 
-after_test:
+on_finish:
   - ps: |
       $wc = New-Object 'System.Net.WebClient'
       $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\junit-test-results.xml))
