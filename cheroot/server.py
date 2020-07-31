@@ -75,7 +75,6 @@ import logging
 import platform
 import contextlib
 import threading
-import h11
 from abc import ABC, abstractmethod
 
 try:
