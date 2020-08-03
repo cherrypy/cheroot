@@ -385,9 +385,11 @@ def test_keepalive(test_client, http_server_protocol):
     assert status_line[4:] == 'OK'
     assert actual_resp_body == pov.encode()
     assert header_has_value('Connection', 'Keep-Alive', actual_headers)
-    assert header_has_value('Keep-Alive',
-                            'timeout={}'.format(test_client.server_instance.timeout),
-                            actual_headers)
+    assert header_has_value(
+        'Keep-Alive',
+        'timeout={}'.format(test_client.server_instance.timeout),
+        actual_headers,
+    )
 
     # Remove the keep-alive header again.
     status_line, actual_headers, actual_resp_body = test_client.get(
@@ -399,9 +401,11 @@ def test_keepalive(test_client, http_server_protocol):
     assert status_line[4:] == 'OK'
     assert actual_resp_body == pov.encode()
     assert not header_exists('Connection', actual_headers)
-    assert header_has_value('Keep-Alive',
-                            'timeout={}'.format(test_client.server_instance.timeout),
-                            actual_headers)
+    assert header_has_value(
+        'Keep-Alive',
+        'timeout={}'.format(test_client.server_instance.timeout),
+        actual_headers,
+    )
 
     test_client.server_instance.protocol = original_server_protocol
 
@@ -430,9 +434,11 @@ def test_keepalive_conn_management(test_client):
             assert header_has_value('Connection', 'Keep-Alive', actual_headers)
         else:
             assert not header_exists('Connection', actual_headers)
-        assert header_has_value('Keep-Alive',
-                                'timeout={}'.format(test_client.server_instance.timeout),
-                                actual_headers)
+        assert header_has_value(
+            'Keep-Alive',
+            'timeout={}'.format(test_client.server_instance.timeout),
+            actual_headers,
+        )
 
     disconnect_errors = (
         http_client.BadStatusLine,
