@@ -1337,6 +1337,8 @@ class HTTPConnection:
 
         try:
             req.simple_response(response)
+        except socket.error:
+            pass
         except errors.FatalSSLAlert:
             pass
         except errors.NoSSLError:
