@@ -387,7 +387,7 @@ def test_keepalive(test_client, http_server_protocol):
     assert header_has_value('Connection', 'Keep-Alive', actual_headers)
     assert header_has_value(
         'Keep-Alive',
-        'timeout={}'.format(test_client.server_instance.timeout),
+        'timeout={test_client.server_instance.timeout}'.format(**locals()),
         actual_headers,
     )
 
@@ -430,7 +430,9 @@ def test_keepalive_conn_management(test_client):
             assert header_has_value('Connection', 'Keep-Alive', actual_headers)
             assert header_has_value(
                 'Keep-Alive',
-                'timeout={}'.format(test_client.server_instance.timeout),
+                'timeout={test_client.server_instance.timeout}'.format(
+                    **locals(),
+                ),
                 actual_headers,
             )
         else:

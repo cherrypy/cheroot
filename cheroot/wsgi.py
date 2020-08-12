@@ -300,7 +300,11 @@ class Gateway_10(Gateway):
 
         # Request headers
         env.update(
-            ('HTTP_{!s}'.format(bton(k).upper().replace('-', '_')), bton(v))
+            (
+                'HTTP_{header_name!s}'.
+                format(header_name=bton(k).upper().replace('-', '_')),
+                bton(v),
+            )
             for k, v in req.inheaders.items()
         )
 

@@ -660,7 +660,7 @@ def test_http_over_https_error(
 
     fqdn = interface
     if ip_addr is ANY_INTERFACE_IPV6:
-        fqdn = '[{}]'.format(fqdn)
+        fqdn = '[{fqdn}]'.format(**locals())
 
     expect_fallback_response_over_plain_http = (
         (
@@ -725,7 +725,7 @@ def test_http_over_https_error(
     underlying_error = ssl_err.value.args[0].args[-1]
     err_text = str(underlying_error)
     assert underlying_error.errno == expected_error_code, (
-        'The underlying error is {!r}'.
-        format(underlying_error)
+        'The underlying error is {underlying_error!r}'.
+        format(**locals())
     )
     assert expected_error_text in err_text

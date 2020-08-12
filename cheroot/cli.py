@@ -67,7 +67,7 @@ class AbstractSocket(BindLocation):
 
     def __init__(self, abstract_socket):
         """Initialize."""
-        self.bind_addr = '\x00{}'.format(abstract_socket)
+        self.bind_addr = '\x00{sock_path}'.format(sock_path=abstract_socket)
 
 
 class Application:
@@ -137,7 +137,9 @@ def parse_wsgi_bind_location(bind_addr_string):
         return AbstractSocket(bind_addr_string[1:])
 
     # try and match for an IP/hostname and port
-    match = six.moves.urllib.parse.urlparse('//{}'.format(bind_addr_string))
+    match = six.moves.urllib.parse.urlparse(
+        '//{addr}'.format(addr=bind_addr_string),
+    )
     try:
         addr = match.hostname
         port = match.port

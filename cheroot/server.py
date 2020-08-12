@@ -1178,7 +1178,9 @@ class HTTPRequest:
         if (b'Connection', b'Keep-Alive') in self.outheaders:
             self.outheaders.append((
                 b'Keep-Alive',
-                u'timeout={}'.format(self.server.timeout).encode('ISO-8859-1'),
+                u'timeout={connection_timeout}'.
+                format(connection_timeout=self.server.timeout).
+                encode('ISO-8859-1'),
             ))
 
         if (not self.close_connection) and (not self.chunked_read):
