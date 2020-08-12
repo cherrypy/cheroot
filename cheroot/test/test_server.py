@@ -10,6 +10,7 @@ import os
 import socket
 import tempfile
 import threading
+import time
 import uuid
 
 import pytest
@@ -125,20 +126,20 @@ def test_serving_is_false_and_stop_returns_after_ctrlc():
 
     httpserver.prepare()
 
-    # Simulate a Ctrl-C on the first call to `get_conn`.
+    # Simulate a Ctrl-C on the first call to `run`.
     def raise_keyboard_interrupt(*args):
         raise KeyboardInterrupt()
 
-    httpserver._connections.get_conn = raise_keyboard_interrupt
+    httpserver._connections.run = raise_keyboard_interrupt
 
     serve_thread = threading.Thread(target=httpserver.serve)
     serve_thread.start()
 
     # The thread should exit right away due to the interrupt.
-    serve_thread.join(0.5)
+    serve_thread.join(httpserver.expiration_interval * 2)
     assert not serve_thread.is_alive()
 
-    assert not httpserver.serving
+    assert not httpserver._connections._serving
     httpserver.stop()
 
 
@@ -295,11 +296,12 @@ def test_high_number_of_file_descriptors(resource_limit):
     httpserver = HTTPServer(
         bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
     )
-    httpserver.prepare()
 
     try:
         # This will trigger a crash if select() is used in the implementation
-        httpserver.tick()
+        with httpserver._run_in_thread():
+            # allow server to run long enough to invoke select()
+            time.sleep(1.0)
     except:  # noqa: E722
         raise  # only needed for `else` to work
     else:
