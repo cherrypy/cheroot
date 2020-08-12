@@ -96,7 +96,6 @@ class ConnectionManager:
 
         This should be called periodically.
         """
-
         # find any connections still registered with the selector
         # that have not been active recently enough.
         threshold = time.time() - self.server.timeout
@@ -274,7 +273,7 @@ class ConnectionManager:
         self._selector.close()
 
     @property
-    def _num_connections(self):
+    def _num_connections(self):  # noqa: D401
         """The current number of connections.
 
         Includes any in the readable list or registered with the selector,
