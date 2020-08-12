@@ -3,7 +3,7 @@
 - :pr:`282`: Fixed a race condition happening when an HTTP
   client attempts to reuse a persistent HTTP connection after
   it's been discarded on the server in :py:class:`~cheroot.\
-  server.HTTPRequest` but no TCP FIN packet has been receiced
+  server.HTTPRequest` but no TCP FIN packet has been received
   yet over the wire -- by :user:`meaksh`.
 
   This change populates the ``Keep-Alive`` header exposing
