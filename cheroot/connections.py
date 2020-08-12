@@ -108,7 +108,7 @@ class ConnectionManager:
             self._selector.unregister(sock_fd)
             conn.close()
 
-    def get_conn(self):
+    def get_conn(self):  # noqa: C901  # FIXME
         """Return a HTTPConnection object which is ready to be handled.
 
         A connection returned by this method should be ready for a worker
@@ -170,7 +170,7 @@ class ConnectionManager:
         except IndexError:
             return None
 
-    def _from_server_socket(self, server_socket):
+    def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
         try:
             s, addr = server_socket.accept()
             if self.server.stats['Enabled']:

@@ -79,7 +79,8 @@ class SSLFileobjectMixin:
     ssl_timeout = 3
     ssl_retry = .01
 
-    def _safe_call(self, is_reader, call, *args, **kwargs):
+    # FIXME:
+    def _safe_call(self, is_reader, call, *args, **kwargs):  # noqa: C901
         """Wrap the given call with TLS error-trapping.
 
         is_reader: if False EOF errors will be raised. If True, EOF errors

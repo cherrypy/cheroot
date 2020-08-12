@@ -181,7 +181,7 @@ class HeaderReader:
     Interface and default implementation.
     """
 
-    def __call__(self, rfile, hdict=None):
+    def __call__(self, rfile, hdict=None):  # noqa: C901  # FIXME
         """
         Read headers from the given stream into the given header dict.
 
@@ -726,7 +726,7 @@ class HTTPRequest:
 
         self.ready = True
 
-    def read_request_line(self):
+    def read_request_line(self):  # noqa: C901  # FIXME
         """Read and parse first line of the HTTP request.
 
         Returns:
@@ -957,7 +957,7 @@ class HTTPRequest:
 
         return True
 
-    def read_request_headers(self):
+    def read_request_headers(self):  # noqa: C901  # FIXME
         """Read ``self.rfile`` into ``self.inheaders``.
 
         Ref: :py:attr:`self.inheaders <HTTPRequest.outheaders>`.
@@ -1128,7 +1128,7 @@ class HTTPRequest:
         else:
             self.conn.wfile.write(chunk)
 
-    def send_headers(self):
+    def send_headers(self):  # noqa: C901  # FIXME
         """Assert, process, and send the HTTP response message-headers.
 
         You must set ``self.status``, and :py:attr:`self.outheaders
@@ -1260,7 +1260,7 @@ class HTTPConnection:
             lru_cache(maxsize=1)(self.get_peer_creds)
         )
 
-    def communicate(self):
+    def communicate(self):  # noqa: C901  # FIXME
         """Read each request and respond appropriately.
 
         Returns true if the connection should be kept open.
@@ -1717,7 +1717,7 @@ class HTTPServer:
             self.stop()
             raise
 
-    def prepare(self):
+    def prepare(self):  # noqa: C901  # FIXME
         """Prepare server to serving requests.
 
         It binds a socket's port, setups the socket to ``listen()`` and does
@@ -1854,7 +1854,7 @@ class HTTPServer:
         self.bind_addr = self.resolve_real_bind_addr(sock)
         return sock
 
-    def bind_unix_socket(self, bind_addr):
+    def bind_unix_socket(self, bind_addr):  # noqa: C901  # FIXME
         """Create (or recreate) a UNIX socket object."""
         if IS_WINDOWS:
             """
@@ -2043,7 +2043,7 @@ class HTTPServer:
         if self._interrupt:
             raise self.interrupt
 
-    def stop(self):
+    def stop(self):  # noqa: C901  # FIXME
         """Gracefully shutdown a server that is serving forever."""
         self.ready = False
         if self._start_time is not None:

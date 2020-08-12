@@ -247,7 +247,7 @@ def test_ssl_adapters(
     assert resp.text == 'Hello world!'
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # noqa: C901  # FIXME
     'adapter_type',
     (
         'builtin',
@@ -440,7 +440,7 @@ def test_tls_client_auth(
         assert any(e in err_text for e in expected_substrings)
 
 
-@pytest.mark.parametrize(
+@pytest.mark.parametrize(  # noqa: C901  # FIXME
     'adapter_type',
     (
         'builtin',

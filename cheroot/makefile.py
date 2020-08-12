@@ -122,7 +122,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
     # FauxSocket is no longer needed
     del FauxSocket
 
-    if not _fileobject_uses_str_type:
+    if not _fileobject_uses_str_type:  # noqa: C901  # FIXME
         def read(self, size=-1):
             """Read data from the socket to buffer."""
             # Use max, disallow tiny reads in a loop as they are very

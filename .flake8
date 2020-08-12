@@ -32,18 +32,13 @@ exclude =
   pip-wheel-metadata,
 
 # Let's not overcomplicate the code:
-# 29 is to facilitate the currently present maximum
-max-complexity = 29
-# max-complexity = 10  # TODO: use this once possible
+max-complexity = 10
 
 # Accessibility/large fonts and PEP8 friendly:
 max-line-length = 79
 
 # Allow certain violations in certain files:
 per-file-ignores =
-  # cheroot/makefile.py:125:5: C901 'If 125' is too complex (57)
-  cheroot/makefile.py: C901
-
   # There are multiple `assert`s (S101)
   # and subprocesses (import – S404; call – S603) in tests:
   cheroot/test/test_*.py: S101, S404, S603
