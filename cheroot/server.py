@@ -8,7 +8,7 @@ sticking incoming connections onto a Queue::
     server = HTTPServer(...)
     server.start()
     ->  while True:
-            tick()
+            serve()
             # This blocks until a request comes in:
             child = socket.accept()
             conn = HTTPConnection(child, ...)
@@ -1518,6 +1518,11 @@ class HTTPServer:
     timeout = 10
     """The timeout in seconds for accepted connections (default 10)."""
 
+    expiration_interval = 0.5
+    """The interval, in seconds, at which the server checks for
+    expired connections (default 0.5).
+    """
+
     version = 'Cheroot/{version!s}'.format(version=__version__)
     """A version string for the HTTPServer."""
 
@@ -1587,7 +1592,6 @@ class HTTPServer:
         self.requests = threadpool.ThreadPool(
             self, min=minthreads or 1, max=maxthreads,
         )
-        self.serving = False
 
         if not server_name:
             server_name = self.version
@@ -1792,19 +1796,16 @@ class HTTPServer:
 
     def serve(self):
         """Serve requests, after invoking :func:`prepare()`."""
-        self.serving = True
         while self.ready:
             try:
-                self.tick()
+                self._connections.run(self.expiration_interval)
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception:
                 self.error_log(
-                    'Error in HTTPServer.tick', level=logging.ERROR,
+                    'Error in HTTPServer.serve', level=logging.ERROR,
                     traceback=True,
                 )
-
-        self.serving = False
 
     def start(self):
         """Run the server forever.
@@ -2033,17 +2034,13 @@ class HTTPServer:
 
         return bind_addr
 
-    def tick(self):
-        """Accept a new connection and put it on the Queue."""
-        conn = self._connections.get_conn()
-        if conn:
-            try:
-                self.requests.put(conn)
-            except queue.Full:
-                # Just drop the conn. TODO: write 503 back?
-                conn.close()
-
-        self._connections.expire()
+    def process_conn(self, conn):
+        """Process an incoming HTTPConnection."""
+        try:
+            self.requests.put(conn)
+        except queue.Full:
+            # Just drop the conn. TODO: write 503 back?
+            conn.close()
 
     @property
     def interrupt(self):
@@ -2061,14 +2058,15 @@ class HTTPServer:
 
     def stop(self):  # noqa: C901  # FIXME
         """Gracefully shutdown a server that is serving forever."""
+        if not self.ready:
+            return  # already stopped
+
         self.ready = False
         if self._start_time is not None:
             self._run_time += (time.time() - self._start_time)
         self._start_time = None
 
-        # ensure serve is no longer accessing socket, connections
-        while self.serving:
-            time.sleep(0.1)
+        self._connections.stop()
 
         sock = getattr(self, 'socket', None)
         if sock:

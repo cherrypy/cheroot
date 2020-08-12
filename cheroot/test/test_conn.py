@@ -1145,7 +1145,7 @@ def test_invalid_selected_connection(test_client, monkeypatch):
     # trigger the internal errors
     faux_get_map.sabotage_conn = faux_select.request_served = True
     # give time to make sure the error gets handled
-    time.sleep(0.2)
+    time.sleep(test_client.server_instance.expiration_interval * 2)
     assert faux_select.os_error_triggered
     assert faux_get_map.socket_closed
     # any error in the error handling should be catched by the
@@ -1153,5 +1153,5 @@ def test_invalid_selected_connection(test_client, monkeypatch):
 
     if six.PY2:
         test_client.server_instance.error_log.ignored_msgs.append(
-            'Error in HTTPServer.tick',
+            'Error in HTTPServer.serve',
         )
