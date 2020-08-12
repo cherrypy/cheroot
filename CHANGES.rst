@@ -1,3 +1,15 @@
+.. scm-version-title:: v8.4.4
+
+- :issue:`304` via :pr:`309`: Refactored :py:class:`~\
+  cheroot.connections.ConnectionManager` to use :py:meth:`~\
+  selectors.BaseSelector.get_map` and reorganized the
+  readable connection tracking -- by :user:`liamstask`.
+
+- :issue:`304` via :pr:`309`: Fixed the server shutdown
+  sequence to avoid race condition resulting in accepting
+  new connections while it is being terminated
+  -- by :user:`liamstask`.
+
 .. scm-version-title:: v8.4.3
 
 - :pr:`282`: Fixed a race condition happening when an HTTP
