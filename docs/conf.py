@@ -106,3 +106,6 @@ sphinx_tabs_valid_builders = ['linkcheck']  # prevent linkcheck warning
 # Ref: https://github.com/python-attrs/attrs/pull/571/files\
 #      #diff-85987f48f1258d9ee486e3191495582dR82
 default_role = 'any'
+
+
+html_theme = 'alabaster'
