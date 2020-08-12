@@ -270,7 +270,7 @@ def test_ssl_adapters(
         ssl.CERT_REQUIRED,  # server should validate if client cert CA is OK
     ),
 )
-def test_tls_client_auth(
+def test_tls_client_auth(  # noqa: C901  # FIXME
     # FIXME: remove twisted logic, separate tests
     mocker,
     tls_http_server, adapter_type,
@@ -457,7 +457,7 @@ def test_tls_client_auth(
         (ssl.CERT_REQUIRED, True),
     ),
 )
-def test_ssl_env(
+def test_ssl_env(  # noqa: C901  # FIXME
         thread_exceptions,
         recwarn,
         mocker,
