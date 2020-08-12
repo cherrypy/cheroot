@@ -1587,7 +1587,6 @@ class HTTPServer:
         self.requests = threadpool.ThreadPool(
             self, min=minthreads or 1, max=maxthreads,
         )
-        self.serving = False
 
         if not server_name:
             server_name = self.version
@@ -1791,19 +1790,15 @@ class HTTPServer:
 
     def serve(self):
         """Serve requests, after invoking :func:`prepare()`."""
-        self.serving = True
-        while self.ready:
-            try:
-                self.tick()
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except Exception:
-                self.error_log(
-                    'Error in HTTPServer.tick', level=logging.ERROR,
-                    traceback=True,
-                )
-
-        self.serving = False
+        try:
+            self.connections.run()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception:
+            self.error_log(
+                'Error in HTTPServer.serve', level=logging.ERROR,
+                traceback=True,
+            )
 
     def start(self):
         """Run the server forever.
@@ -2019,17 +2014,13 @@ class HTTPServer:
 
         return bind_addr
 
-    def tick(self):
-        """Accept a new connection and put it on the Queue."""
-        conn = self.connections.get_conn()
-        if conn:
-            try:
-                self.requests.put(conn)
-            except queue.Full:
-                # Just drop the conn. TODO: write 503 back?
-                conn.close()
-
-        self.connections.expire()
+    def process_conn(self, conn):
+        """Process an incoming HTTPConnection."""
+        try:
+            self.requests.put(conn)
+        except queue.Full:
+            # Just drop the conn. TODO: write 503 back?
+            conn.close()
 
     @property
     def interrupt(self):
@@ -2052,9 +2043,7 @@ class HTTPServer:
             self._run_time += (time.time() - self._start_time)
         self._start_time = None
 
-        # ensure serve is no longer accessing socket, connections
-        while self.serving:
-            time.sleep(0.1)
+        self.connections.stop()
 
         sock = getattr(self, 'socket', None)
         if sock:

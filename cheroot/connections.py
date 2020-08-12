@@ -3,7 +3,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-import collections
 import io
 import os
 import socket
@@ -11,7 +10,6 @@ import time
 
 from . import errors
 from ._compat import selectors
-from ._compat import suppress
 from .makefile import MakeFile
 
 import six
@@ -62,8 +60,10 @@ class ConnectionManager:
             server (cheroot.server.HTTPServer): web server object
                 that uses this ConnectionManager instance.
         """
+        self._serving = False
+        self._stop_requested = False
+
         self.server = server
-        self._readable_conns = collections.deque()
         self._selector = selectors.DefaultSelector()
 
         self._selector.register(
@@ -82,13 +82,13 @@ class ConnectionManager:
         # if this conn doesn't have any more data waiting to be read,
         # register it with the selector.
         if conn.rfile.has_data():
-            self._readable_conns.append(conn)
+            self.server.process_conn(conn)
         else:
             self._selector.register(
                 conn.socket.fileno(), selectors.EVENT_READ, data=conn,
             )
 
-    def expire(self):
+    def _expire(self):
         """Expire least recently used connections.
 
         This happens if there are either too many open connections, or if the
@@ -99,76 +99,87 @@ class ConnectionManager:
         # find any connections still registered with the selector
         # that have not been active recently enough.
         threshold = time.time() - self.server.timeout
-        timed_out_connections = (
+        timed_out_connections = [
             (sock_fd, conn)
             for _, (_, sock_fd, _, conn) in self._selector.get_map().items()
             if conn != self.server and conn.last_used < threshold
-        )
+        ]
         for sock_fd, conn in timed_out_connections:
             self._selector.unregister(sock_fd)
             conn.close()
 
-    def get_conn(self):  # noqa: C901  # FIXME
-        """Return a HTTPConnection object which is ready to be handled.
+    def stop(self):
+        """Stop the selector loop in run() synchronously.
 
-        A connection returned by this method should be ready for a worker
-        to handle it. If there are no connections ready, None will be
-        returned.
+        May take up to half a second.
+        """
+        self._stop_requested = True
+        while self._serving:
+            time.sleep(0.01)
 
-        Any connection returned by this method will need to be `put`
+    def run(self):
+        """Run the connections selector indefinitely.
+
+        Connections that are ready to process are submitted via
+        self.server.process_conn()
+
+        Connections submitted for processing must be `put()`
         back if it should be examined again for another request.
 
-        Returns:
-            cheroot.server.HTTPConnection instance, or None.
-
+        Can be shut down by calling `stop()`.
         """
-        # return a readable connection if any exist
-        with suppress(IndexError):
-            return self._readable_conns.popleft()
+        self._serving = True
+        expiration_interval = 0.5
+        last_expiration_check = time.time()
 
-        # Will require a select call.
-        try:
-            # The timeout value impacts performance and should be carefully
-            # chosen. Ref:
-            # github.com/cherrypy/cheroot/issues/305#issuecomment-663985165
-            rlist = [
-                key for key, _
-                in self._selector.select(timeout=0.01)
-            ]
-        except OSError:
-            # Mark any connection which no longer appears valid
-            for _, key in self._selector.get_map().items():
-                # If the server socket is invalid, we'll just ignore it and
-                # wait to be shutdown.
-                if key.data == self.server:
-                    continue
+        while not self._stop_requested:
+            try:
+                rlist = [
+                    key for key, _
+                    in self._selector.select(timeout=expiration_interval)
+                ]
+            except OSError:
+                self._remove_invalid_sockets()
+                continue
 
-                try:
-                    os.fstat(key.fd)
-                except OSError:
-                    # Socket is invalid, close the connection
-                    self._selector.unregister(key.fd)
+            for key in rlist:
+                if key.data is self.server:
+                    # New connection
+                    conn = self._from_server_socket(self.server.socket)
+                    self.server.process_conn(conn)
+                else:
                     conn = key.data
-                    conn.close()
+                    # unregister connection from the selector until the server
+                    # has read from it and returned it via put()
+                    self._selector.unregister(key.fd)
+                    self.server.process_conn(conn)
 
-            # Wait for the next tick to occur.
-            return None
+            now = time.time()
+            if (now - last_expiration_check) > expiration_interval:
+                self._expire()
+                last_expiration_check = now
 
-        for key in rlist:
-            if key.data is self.server:
-                # New connection
-                return self._from_server_socket(self.server.socket)
+        self._serving = False
 
-            conn = key.data
-            # unregister connection from the selector until the server
-            # has read from it and returned it via put()
+    def _remove_invalid_sockets(self):
+        # Mark any connection which no longer appears valid
+        invalid_keys = []
+        for _, key in self._selector.get_map().items():
+            # If the server socket is invalid,
+            # we'll just ignore it and shutdown.
+            if key.data == self.server:
+                self._stop_requested = True
+                continue
+
+            try:
+                os.fstat(key.fd)
+            except OSError:
+                invalid_keys.append(key)
+
+        for key in invalid_keys:
             self._selector.unregister(key.fd)
-            self._readable_conns.append(conn)
-
-        try:
-            return self._readable_conns.popleft()
-        except IndexError:
-            return None
+            conn = key.data
+            conn.close()
 
     def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
         try:
@@ -262,10 +273,6 @@ class ConnectionManager:
 
     def close(self):
         """Close all monitored connections."""
-        for conn in self._readable_conns:
-            conn.close()
-        self._readable_conns.clear()
-
         for _, key in self._selector.get_map().items():
             if key.data != self.server:  # server closes its own socket
                 key.data.socket.close()
@@ -276,11 +283,11 @@ class ConnectionManager:
     def _num_connections(self):  # noqa: D401
         """The current number of connections.
 
-        Includes any in the readable list or registered with the selector,
+        Includes all conns registered with the selector,
         minus one for the server socket, which is always registered
         with the selector.
         """
-        return len(self._readable_conns) + len(self._selector.get_map()) - 1
+        return len(self._selector.get_map()) - 1
 
     @property
     def can_add_keepalive_connection(self):

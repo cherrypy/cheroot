@@ -10,6 +10,7 @@ import os
 import socket
 import tempfile
 import threading
+import time
 import uuid
 
 import pytest
@@ -269,11 +270,12 @@ def test_high_number_of_file_descriptors(resource_limit):
     httpserver = HTTPServer(
         bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
     )
-    httpserver.prepare()
 
     try:
         # This will trigger a crash if select() is used in the implementation
-        httpserver.tick()
+        with httpserver._run_in_thread():
+            # allow server to run long enough to invoke select()
+            time.sleep(1.0)
     except:  # noqa: E722
         raise  # only needed for `else` to work
     else:
@@ -281,9 +283,6 @@ def test_high_number_of_file_descriptors(resource_limit):
         with closing(socket.socket()) as sock:
             # Check new sockets created are still above our target number
             assert sock.fileno() >= resource_limit
-    finally:
-        # Stop our server
-        httpserver.stop()
 
 
 if not IS_WINDOWS:
