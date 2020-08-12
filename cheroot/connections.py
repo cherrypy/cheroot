@@ -11,6 +11,7 @@ import time
 
 from . import errors
 from ._compat import selectors
+from ._compat import suppress
 from .makefile import MakeFile
 
 import six
@@ -98,15 +99,15 @@ class ConnectionManager:
 
         # find any connections still registered with the selector
         # that have not been active recently enough.
-        now = time.time()
-        for _, key in self._selector.get_map().items():
-            if key.data == self.server:
-                continue
-
-            conn = key.data
-            if (conn.last_used + self.server.timeout) < now:
-                self._selector.unregister(key.fd)
-                conn.close()
+        threshold = time.time() - self.server.timeout
+        timed_out_connections = (
+            (sock_fd, conn)
+            for _, (_, sock_fd, _, conn) in self._selector.get_map().items()
+            if conn != self.server and conn.last_used < threshold
+        )
+        for sock_fd, conn in timed_out_connections:
+            self._selector.unregister(sock_fd)
+            conn.close()
 
     def get_conn(self):
         """Return a HTTPConnection object which is ready to be handled.
@@ -122,13 +123,9 @@ class ConnectionManager:
             cheroot.server.HTTPConnection instance, or None.
 
         """
-        # Grab file descriptors from sockets, but stop if we find a
-        # connection which is already marked as ready.
-
-        try:
+        # return a readable connection if any exist
+        with suppress(IndexError):
             return self._readable_conns.popleft()
-        except IndexError:
-            pass
 
         # Will require a select call.
         try:
@@ -276,8 +273,9 @@ class ConnectionManager:
 
         self._selector.close()
 
+    @property
     def _num_connections(self):
-        """Return the current number of connections.
+        """The current number of connections.
 
         Includes any in the readable list or registered with the selector,
         minus one for the server socket, which is always registered
@@ -289,4 +287,4 @@ class ConnectionManager:
     def can_add_keepalive_connection(self):
         """Flag whether it is allowed to add a new keep-alive connection."""
         ka_limit = self.server.keep_alive_conn_limit
-        return ka_limit is None or self._num_connections() < ka_limit
+        return ka_limit is None or self._num_connections < ka_limit
