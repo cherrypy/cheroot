@@ -1178,7 +1178,7 @@ class HTTPRequest:
         if dict(self.outheaders).get(b'Connection', b'') == b'Keep-Alive':
             self.outheaders.append((
                 b'Keep-Alive',
-                'timeout={}'.format(self.server.timeout).encode('ISO-8859-1'),
+                u'timeout={}'.format(self.server.timeout).encode('ISO-8859-1'),
             ))
 
         if (not self.close_connection) and (not self.chunked_read):
