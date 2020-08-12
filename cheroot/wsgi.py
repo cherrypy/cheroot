@@ -119,10 +119,7 @@ class Gateway(server.Gateway):
                 corresponding class
 
         """
-        return dict(
-            (gw.version, gw)
-            for gw in cls.__subclasses__()
-        )
+        return {gw.version: gw for gw in cls.__subclasses__()}
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
