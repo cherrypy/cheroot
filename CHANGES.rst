@@ -1,3 +1,16 @@
+.. scm-version-title:: v8.4.3
+
+- :pr:`282`: Fixed a race condition happening when an HTTP
+  client attempts to reuse a persistent HTTP connection after
+  it's been discarded on the server in :py:class:`~cheroot.\
+  server.HTTPRequest` but no TCP FIN packet has been receiced
+  yet over the wire -- by :user:`meaksh`.
+
+  This change populates the ``Keep-Alive`` header exposing
+  the timeout value for persistent HTTP/1.1 connections which
+  helps mitigate such race conditions by letting the client
+  know not to reuse the connection after that time interval.
+
 .. scm-version-title:: v8.4.2
 
 - Fixed a significant performance regression introduced in
