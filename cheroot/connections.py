@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import collections
-import copy
 import io
 import os
 import socket
@@ -100,12 +99,12 @@ class ConnectionManager:
         # find any connections still registered with the selector
         # that have not been active recently enough.
         threshold = time.time() - self.server.timeout
-        timed_out_connections = (
+        timed_out_connections = [
             (sock_fd, conn)
             for _, (_, sock_fd, _, conn)
-            in copy.copy(self._selector.get_map()).items()
+            in self._selector.get_map().items()
             if conn != self.server and conn.last_used < threshold
-        )
+        ]
         for sock_fd, conn in timed_out_connections:
             self._selector.unregister(sock_fd)
             conn.close()
@@ -139,7 +138,8 @@ class ConnectionManager:
             ]
         except OSError:
             # Mark any connection which no longer appears valid
-            for _, key in copy.copy(self._selector.get_map()).items():
+            invalid_entries = []
+            for _, key in self._selector.get_map().items():
                 # If the server socket is invalid, we'll just ignore it and
                 # wait to be shutdown.
                 if key.data == self.server:
@@ -148,10 +148,11 @@ class ConnectionManager:
                 try:
                     os.fstat(key.fd)
                 except OSError:
-                    # Socket is invalid, close the connection
-                    self._selector.unregister(key.fd)
-                    conn = key.data
-                    conn.close()
+                    invalid_entries.append((key.fd, key.data))
+
+            for sock_fd, conn in invalid_entries:
+                self._selector.unregister(sock_fd)
+                conn.close()
 
             # Wait for the next tick to occur.
             return None
@@ -268,7 +269,7 @@ class ConnectionManager:
             conn.close()
         self._readable_conns.clear()
 
-        for _, key in copy.copy(self._selector.get_map()).items():
+        for _, key in self._selector.get_map().items():
             if key.data != self.server:  # server closes its own socket
                 key.data.socket.close()
 
