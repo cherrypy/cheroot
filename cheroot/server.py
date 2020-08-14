@@ -1162,7 +1162,8 @@ class HTTPRequest:
         # Override the decision to not close the connection if the connection
         # manager doesn't have space for it.
         if not self.close_connection:
-            can_keep = self.server.connections.can_add_keepalive_connection
+            can_keep = self.ready \
+                and self.server.connections.can_add_keepalive_connection
             self.close_connection = not can_keep
 
         if b'connection' not in hkeys:
