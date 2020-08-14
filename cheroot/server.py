@@ -1163,7 +1163,7 @@ class HTTPRequest:
         # manager doesn't have space for it.
         if not self.close_connection:
             can_keep = (
-                self.ready
+                self.server.ready
                 and self.server.connections.can_add_keepalive_connection
             )
             self.close_connection = not can_keep
