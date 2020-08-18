@@ -276,8 +276,8 @@ class ConnectionManager:
         self._selector.close()
 
     @property
-    def _num_connections(self):  # noqa: D401
-        """The current number of connections.
+    def _num_connections(self):
+        """Return the current number of connections.
 
         Includes any in the readable list or registered with the selector,
         minus one for the server socket, which is always registered

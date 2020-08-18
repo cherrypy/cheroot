@@ -1162,10 +1162,7 @@ class HTTPRequest:
         # Override the decision to not close the connection if the connection
         # manager doesn't have space for it.
         if not self.close_connection:
-            can_keep = (
-                self.server.ready
-                and self.server.connections.can_add_keepalive_connection
-            )
+            can_keep = self.server.can_add_keepalive_connection
             self.close_connection = not can_keep
 
         if b'connection' not in hkeys:
@@ -1784,7 +1781,8 @@ class HTTPServer:
         self.socket.settimeout(1)
         self.socket.listen(self.request_queue_size)
 
-        self.connections = connections.ConnectionManager(self)
+        # must not be accessed once stop() has been called
+        self._connections = connections.ConnectionManager(self)
 
         # Create worker threads
         self.requests.start()
@@ -1831,6 +1829,19 @@ class HTTPServer:
             yield thread
         finally:
             self.stop()
+
+    @property
+    def can_add_keepalive_connection(self):
+        """Flag whether it is allowed to add a new keep-alive connection."""
+        return self.ready and self._connections.can_add_keepalive_connection
+
+    def put_conn(self, conn):
+        """Put an idle connection back into the ConnectionManager."""
+        if self.ready:
+            self._connections.put(conn)
+        else:
+            # server is shutting down, just close it
+            conn.close()
 
     def error_log(self, msg='', level=20, traceback=False):
         """Write error message to log.
@@ -2024,7 +2035,7 @@ class HTTPServer:
 
     def tick(self):
         """Accept a new connection and put it on the Queue."""
-        conn = self.connections.get_conn()
+        conn = self._connections.get_conn()
         if conn:
             try:
                 self.requests.put(conn)
@@ -2032,7 +2043,7 @@ class HTTPServer:
                 # Just drop the conn. TODO: write 503 back?
                 conn.close()
 
-        self.connections.expire()
+        self._connections.expire()
 
     @property
     def interrupt(self):
@@ -2100,7 +2111,7 @@ class HTTPServer:
                 sock.close()
             self.socket = None
 
-        self.connections.close()
+        self._connections.close()
         self.requests.stop(self.shutdown_timeout)
 
 
