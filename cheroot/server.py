@@ -1344,6 +1344,9 @@ class HTTPConnection:
         try:
             req.simple_response(response)
         except socket.error:
+            # See #210. Prevents DOS attack via uncaught
+            # socket.error caused by silent connections
+            # lasting beyond connection timeout length.
             pass
         except errors.FatalSSLAlert:
             pass
