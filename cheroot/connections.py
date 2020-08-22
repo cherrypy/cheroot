@@ -8,6 +8,7 @@ import io
 import os
 import socket
 import time
+import threading
 
 from . import errors
 from ._compat import selectors
@@ -49,6 +50,79 @@ else:
         fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
 
 
+class _SelectorManager:
+    """Private wrapper of a selectors.DefaultSelector instance.
+
+    Manage an external set of the keys that can be copied to be
+    safely iterated, in addition it implements some convenient
+    wrappers given the use that we have in the
+    ``ConnectionManager`` class  of the ``DefaultSelector`` instance.
+
+    The locking mechanism in this class is not strictly required
+    (if we make sure we don't register/unregister any fd concurrently
+    from a copy of the internal keys), but currently is the most
+    stable approach.
+    """
+
+    def __init__(self):
+        self._selector = selectors.DefaultSelector()
+        self._selector_keys = set([])
+        # The use of the lock shouldn't be necessary...
+        # but in practice it is.
+        #
+        # TODO: make sure we have a good understanding on how the
+        # Selectors instances are meant to be managed in a
+        # threaded context.
+        #
+        # Without the lock the tests start to fail of retring to
+        # delete the same key. This could be the case if two
+        # threads having differents copies of the keys tries to
+        # unregister the same key.
+        self._register_lock = threading.Lock()
+
+    def __len__(self):
+        return len(self._selector_keys)
+
+    def __iter__(self):
+        """Return an interator over a copy of the active SelectorKeys.
+
+        Specifically we use a copy to be able to freely use
+        `register` and `unregister` while iterating over the keys.
+
+        The underlying Selectors instance doesn't provide a public
+        mapping that can be copied without iterating all over
+        the values because it implements the Mapping interface from two
+        underlying dicts.
+        """
+        return iter(self._selector_keys.copy())
+
+    @property
+    def connections(self):
+        return iter(sk.data for sk in self)
+
+    def register(self, fileobj, events, data=None):
+        with self._register_lock:
+            key = self._selector.register(fileobj, events, data)
+            self._selector_keys.add(key)
+
+    def unregister(self, fileobj):
+        with self._register_lock:
+            key = self._selector.unregister(fileobj)
+            self._selector_keys.remove(key)
+
+    def select(self, timeout=None):
+        """Return a list of the connections with events in the form:
+        (connection, socket_file_descriptor)
+        """
+        return [
+            (key.data, key.fd)
+            for key, _ in self._selector.select(timeout=timeout)
+        ]
+
+    def close(self):
+        self._selector.close()
+
+
 class ConnectionManager:
     """Class which manages HTTPConnection objects.
 
@@ -64,11 +138,11 @@ class ConnectionManager:
         """
         self.server = server
         self._readable_conns = collections.deque()
-        self._selector = selectors.DefaultSelector()
-
-        self._selector.register(
+        self._selector_mgr = _SelectorManager()
+        self._selector_mgr.register(
             server.socket.fileno(),
-            selectors.EVENT_READ, data=server,
+            selectors.EVENT_READ,
+            data=server
         )
 
     def put(self, conn):
@@ -84,7 +158,7 @@ class ConnectionManager:
         if conn.rfile.has_data():
             self._readable_conns.append(conn)
         else:
-            self._selector.register(
+            self._selector_mgr.register(
                 conn.socket.fileno(), selectors.EVENT_READ, data=conn,
             )
 
@@ -99,14 +173,10 @@ class ConnectionManager:
         # find any connections still registered with the selector
         # that have not been active recently enough.
         threshold = time.time() - self.server.timeout
-        timed_out_connections = (
-            (sock_fd, conn)
-            for _, (_, sock_fd, _, conn) in self._selector.get_map().items()
-            if conn != self.server and conn.last_used < threshold
-        )
-        for sock_fd, conn in timed_out_connections:
-            self._selector.unregister(sock_fd)
-            conn.close()
+        for (_, sock_fd, _, conn) in self._selector_mgr:
+            if conn is not self.server and conn.last_used < threshold:
+                self._selector_mgr.unregister(sock_fd)
+                conn.close()
 
     def get_conn(self):  # noqa: C901  # FIXME
         """Return a HTTPConnection object which is ready to be handled.
@@ -131,38 +201,33 @@ class ConnectionManager:
             # The timeout value impacts performance and should be carefully
             # chosen. Ref:
             # github.com/cherrypy/cheroot/issues/305#issuecomment-663985165
-            rlist = [
-                key for key, _
-                in self._selector.select(timeout=0.01)
-            ]
+            conn_ready_list = self._selector_mgr.select(timeout=0.01)
         except OSError:
             # Mark any connection which no longer appears valid
-            for _, key in self._selector.get_map().items():
+            for (_, sock_fd, _, conn) in self._selector_mgr:
                 # If the server socket is invalid, we'll just ignore it and
                 # wait to be shutdown.
-                if key.data == self.server:
+                if conn is self.server:
                     continue
 
                 try:
-                    os.fstat(key.fd)
+                    os.fstat(sock_fd)
                 except OSError:
-                    # Socket is invalid, close the connection
-                    self._selector.unregister(key.fd)
-                    conn = key.data
+                    # Unregister and close all the invalid connections.
+                    self._selector_mgr.unregister(sock_fd)
                     conn.close()
 
             # Wait for the next tick to occur.
             return None
 
-        for key in rlist:
-            if key.data is self.server:
+        for (conn, sock_fd) in conn_ready_list:
+            if conn is self.server:
                 # New connection
                 return self._from_server_socket(self.server.socket)
 
-            conn = key.data
             # unregister connection from the selector until the server
             # has read from it and returned it via put()
-            self._selector.unregister(key.fd)
+            self._selector_mgr.unregister(sock_fd)
             self._readable_conns.append(conn)
 
         try:
@@ -265,12 +330,12 @@ class ConnectionManager:
         for conn in self._readable_conns:
             conn.close()
         self._readable_conns.clear()
+        for conn in self._selector_mgr.connections:
+            # Server closes its own socket.
+            if conn is not self.server:
+                conn.socket.close()
 
-        for _, key in self._selector.get_map().items():
-            if key.data != self.server:  # server closes its own socket
-                key.data.socket.close()
-
-        self._selector.close()
+        self._selector_mgr.close()
 
     @property
     def _num_connections(self):  # noqa: D401
@@ -280,7 +345,7 @@ class ConnectionManager:
         minus one for the server socket, which is always registered
         with the selector.
         """
-        return len(self._readable_conns) + len(self._selector.get_map()) - 1
+        return len(self._readable_conns) + len(self._selector_mgr) - 1
 
     @property
     def can_add_keepalive_connection(self):

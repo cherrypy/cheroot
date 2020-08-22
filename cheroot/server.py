@@ -1796,6 +1796,9 @@ class HTTPServer:
             try:
                 self.tick()
             except (KeyboardInterrupt, SystemExit):
+                # Set self.serving to False, otherwise: safe_start() -> stop()
+                # will be blocked and never end gracefully.
+                self.serving = False
                 raise
             except Exception:
                 self.error_log(
