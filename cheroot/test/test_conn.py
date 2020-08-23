@@ -5,6 +5,9 @@ __metaclass__ = type
 
 import socket
 import time
+import logging
+import traceback as traceback_
+from collections import namedtuple
 
 from six.moves import range, http_client, urllib
 
@@ -108,7 +111,7 @@ class Controller(helper.Controller):
 
 
 @pytest.fixture
-def testing_server(wsgi_server_client):
+def testing_server(wsgi_server_client, monkeypatch):
     """Attach a WSGI app to the given server and preconfigure it."""
     app = Controller()
 
@@ -121,6 +124,27 @@ def testing_server(wsgi_server_client):
     wsgi_server.timeout = timeout
     wsgi_server.server_client = wsgi_server_client
     wsgi_server.keep_alive_conn_limit = 2
+
+    # patch the error_log calls of the server instance
+    class ErrorLog:
+        """Mock class to access the server error_log calls made by the server.
+        """
+        FuncCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
+
+        def __init__(self):
+            self.calls = []
+
+        def __call__(self, msg='', level=20, traceback=False):
+            if traceback:
+                tblines = traceback_.format_exc()
+            else:
+                tblines = ''
+            self.calls.append(
+                ErrorLog.FuncCall(msg, level, tblines)
+            )
+
+    monkeypatch.setattr(wsgi_server, 'error_log', ErrorLog())
+
     return wsgi_server
 
 
@@ -480,6 +504,17 @@ def test_keepalive_conn_management(test_client):
 
     # But the second one should still be valid.
     request(c2)
+
+    # Verify the server error log, just case something happened
+    # when expiring connections.
+    # In particular, verify that we didn't have any call with level
+    # logging.ERROR.
+    for c in test_client.server_instance.error_log.calls:
+        assert c.level != logging.ERROR, (
+            "Found error in the error log: \n"
+            "message = '{}'\n"
+            "{}".format(c.msg, c.traceback)
+        )
 
     # Restore original timeout.
     test_client.server_instance.timeout = timeout
