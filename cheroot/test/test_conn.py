@@ -128,8 +128,7 @@ def testing_server(wsgi_server_client, monkeypatch):
 
     # patch the error_log calls of the server instance
     class ErrorLog:
-        """Mock class to access the server error_log calls made by the server.
-        """
+        """Mock class to access the server error_log calls made by the server."""
         FuncCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
 
         def __init__(self):
@@ -1042,9 +1041,7 @@ def test_No_CRLF(test_client, invalid_terminator):
 
 
 def test_invalid_selected_connection(test_client, monkeypatch):
-    """
-    Test the error handling segment of
-    ``cheroot.connections.ConnectionManager.get_conn``,
+    """Test the error handling segment of ``cheroot.connections.ConnectionManager.get_conn``,
     using the new connection handling based on the selectors module.
     """
     class FaultySelect:
