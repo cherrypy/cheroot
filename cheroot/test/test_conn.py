@@ -151,13 +151,14 @@ def testing_server(wsgi_server_client, monkeypatch):
     # Teardown verification, in case that the server logged an
     # error that wasn't notified to the client or we just made a mistake.
     for c in wsgi_server.error_log.calls:
-        if c.level > logging.WARNING:
-            if c.msg not in wsgi_server.error_log.ignored_msgs:
-                raise AssertionError(
-                    'Found error in the error log: '
-                    "message = '{}', level = '{}'\n"
-                    '{}'.format(c.msg, c.level, c.traceback),
-                )
+        if c.level <= logging.WARNING:
+            continue
+
+        assert c.msg in wsgi_server.error_log.ignored_msgs, (
+            'Found error in the error log: '
+            "message = '{c.msg!s}', level = '{c.level!s}'\n"
+            '{c.traceback!s}'.format(**locals()),
+        )
 
 
 @pytest.fixture
@@ -984,7 +985,9 @@ def test_Content_Length_out(
 
     assert actual_status == expected_resp_status
     assert actual_resp_body == expected_resp_body
+
     conn.close()
+
     # the server logs the exception that we had verified from the
     # client perspective. Tell the error_log verification that
     # it can ignore that message.
@@ -1043,9 +1046,10 @@ def test_No_CRLF(test_client, invalid_terminator):
     conn.close()
 
 
-def test_invalid_selected_connection(test_client, monkeypatch):  # noqa: D200,D205,D400,E501
-    """Test the error handling segment of
-    ``cheroot.connections.ConnectionManager.get_conn``.
+def test_invalid_selected_connection(test_client, monkeypatch):
+    """Test the error handling segment of HTTP connection selection.
+
+    See ``cheroot.connections.ConnectionManager.get_conn``.
     """
     class FaultySelect:
         def __init__(self, original_select):
@@ -1057,8 +1061,8 @@ def test_invalid_selected_connection(test_client, monkeypatch):  # noqa: D200,D2
             if self.request_served:
                 self.os_error_triggered = True
                 raise OSError('Error while selecting the client socket.')
-            else:
-                return self.original_select(timeout)
+
+            return self.original_select(timeout)
 
     class FaultyGetMap:
         def __init__(self, original_get_map):
