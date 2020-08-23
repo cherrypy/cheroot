@@ -142,9 +142,7 @@ def testing_server(wsgi_server_client, monkeypatch):
                 tblines = traceback_.format_exc()
             else:
                 tblines = ''
-            self.calls.append(
-                ErrorLog.FuncCall(msg, level, tblines)
-            )
+            self.calls.append(ErrorLog.FuncCall(msg, level, tblines))
 
     monkeypatch.setattr(wsgi_server, 'error_log', ErrorLog())
     yield wsgi_server
@@ -154,9 +152,9 @@ def testing_server(wsgi_server_client, monkeypatch):
         if c.level > logging.WARNING:
             if c.msg not in wsgi_server.error_log.ignored_msgs:
                 raise AssertionError(
-                    "Found error in the error log: "
+                    'Found error in the error log: '
                     "message = '{}', level = '{}'\n"
-                    "{}".format(c.msg, c.level, c.traceback)
+                    '{}'.format(c.msg, c.level, c.traceback),
                 )
 
 
@@ -989,7 +987,7 @@ def test_Content_Length_out(
     # client perspective. Tell the error_log verification that
     # it can ignore that message.
     test_client.server_instance.error_log.ignored_msgs.append(
-        "ValueError('Response body exceeds the declared Content-Length.')"
+        "ValueError('Response body exceeds the declared Content-Length.')",
     )
 
 
@@ -1058,7 +1056,7 @@ def test_invalid_selected_connection(test_client, monkeypatch):
         def __call__(self, timeout):
             if self.request_served:
                 self.os_error_triggered = True
-                raise OSError("Error while selecting the client socket.")
+                raise OSError('Error while selecting the client socket.')
             else:
                 return self.original_select(timeout)
 
@@ -1079,29 +1077,29 @@ def test_invalid_selected_connection(test_client, monkeypatch):
 
     # patch the select method
     faux_select = FaultySelect(
-        test_client.server_instance.connections._selector.select
+        test_client.server_instance.connections._selector.select,
     )
     monkeypatch.setattr(
         test_client.server_instance.connections._selector,
         'select',
-        faux_select
+        faux_select,
     )
 
     # patch the get_map method
     faux_get_map = FaultyGetMap(
-        test_client.server_instance.connections._selector.get_map
+        test_client.server_instance.connections._selector.get_map,
     )
 
     monkeypatch.setattr(
         test_client.server_instance.connections._selector,
         'get_map',
-        faux_get_map
+        faux_get_map,
     )
 
     # request a page with connection keep-alive to make sure
     # we'll have a connection to be modified.
     resp_status, resp_headers, resp_body = test_client.request(
-        "/page1", headers=[('Connection', 'Keep-Alive'), ],
+        '/page1', headers=[('Connection', 'Keep-Alive')],
     )
 
     assert resp_status == '200 OK'
