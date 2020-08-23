@@ -114,7 +114,7 @@ class Controller(helper.Controller):
 class ErrorLogMonitor:
     """Mock class to access the server error_log calls made by the server."""
 
-    FuncCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
+    ErrorLogCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
 
     def __init__(self):
         """Initialize the server error log monitor/interceptor.
@@ -132,7 +132,7 @@ class ErrorLogMonitor:
             tblines = traceback_.format_exc()
         else:
             tblines = ''
-        self.calls.append(ErrorLogMonitor.FuncCall(msg, level, tblines))
+        self.calls.append(ErrorLogMonitor.ErrorLogCall(msg, level, tblines))
 
 
 @pytest.fixture
