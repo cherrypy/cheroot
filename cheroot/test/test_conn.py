@@ -133,8 +133,10 @@ def testing_server(wsgi_server_client, monkeypatch):
 
         def __init__(self):
             self.calls = []
+            # to be used the the teardown validation
+            self.ignored_msgs = []
 
-        def __call__(self, msg='', level=20, traceback=False):
+        def __call__(self, msg='', level=logging.INFO, traceback=False):
             if traceback:
                 tblines = traceback_.format_exc()
             else:
@@ -144,8 +146,17 @@ def testing_server(wsgi_server_client, monkeypatch):
             )
 
     monkeypatch.setattr(wsgi_server, 'error_log', ErrorLog())
-
-    return wsgi_server
+    yield wsgi_server
+    # Teardown verification, in case that the server logged an
+    # error that wasn't notified to the client or we just made a mistake.
+    for c in wsgi_server.error_log.calls:
+        if c.level > logging.WARNING:
+            if c.msg not in wsgi_server.error_log.ignored_msgs:
+                raise AssertionError(
+                    "Found error in the error log: "
+                    "message = '{}', level = '{}'\n"
+                    "{}".format(c.msg, c.level, c.traceback)
+                )
 
 
 @pytest.fixture
@@ -504,17 +515,6 @@ def test_keepalive_conn_management(test_client):
 
     # But the second one should still be valid.
     request(c2)
-
-    # Verify the server error log, just case something happened
-    # when expiring connections.
-    # In particular, verify that we didn't have any call with level
-    # logging.ERROR.
-    for c in test_client.server_instance.error_log.calls:
-        assert c.level != logging.ERROR, (
-            "Found error in the error log: \n"
-            "message = '{}'\n"
-            "{}".format(c.msg, c.traceback)
-        )
 
     # Restore original timeout.
     test_client.server_instance.timeout = timeout
@@ -983,8 +983,13 @@ def test_Content_Length_out(
 
     assert actual_status == expected_resp_status
     assert actual_resp_body == expected_resp_body
-
     conn.close()
+    # the server logs the exception that we had verified from the
+    # client perspective. Tell the error_log verification that
+    # it can ignore that message.
+    test_client.server_instance.error_log.ignored_msgs.append(
+        "ValueError('Response body exceeds the declared Content-Length.')"
+    )
 
 
 @pytest.mark.xfail(
