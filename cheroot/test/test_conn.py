@@ -17,6 +17,7 @@ from jaraco.text import trim, unwrap
 
 from cheroot.test import helper, webtest
 from cheroot._compat import IS_PYPY
+import cheroot.server
 
 
 timeout = 1
@@ -1040,3 +1041,75 @@ def test_No_CRLF(test_client, invalid_terminator):
     expected_resp_body = b'HTTP requires CRLF terminators'
     assert actual_resp_body == expected_resp_body
     conn.close()
+
+
+def test_invalid_selected_connection(test_client, monkeypatch):
+    """
+    Test the error handling segment of
+    ``cheroot.connections.ConnectionManager.get_conn``,
+    using the new connection handling based on the selectors module.
+    """
+    class FaultySelect:
+        def __init__(self, original_select):
+            self.original_select = original_select
+            self.request_served = False
+            self.os_error_triggered = False
+
+        def __call__(self, timeout):
+            if self.request_served:
+                self.os_error_triggered = True
+                raise OSError("Error while selecting the client socket.")
+            else:
+                return self.original_select(timeout)
+
+    class FaultyGetMap:
+        def __init__(self, original_get_map):
+            self.original_get_map = original_get_map
+            self.sabotage_conn = False
+            self.socket_closed = False
+
+        def __call__(self):
+            if self.sabotage_conn:
+                for _, (*_, conn) in self.original_get_map().items():
+                    if isinstance(conn, cheroot.server.HTTPConnection):
+                        # close the socket to cause OSError
+                        conn.close()
+                        self.socket_closed = True
+            return self.original_get_map()
+
+    # patch the select method
+    faux_select = FaultySelect(
+        test_client.server_instance.connections._selector.select
+    )
+    monkeypatch.setattr(
+        test_client.server_instance.connections._selector,
+        'select',
+        faux_select
+    )
+
+    # patch the get_map method
+    faux_get_map = FaultyGetMap(
+        test_client.server_instance.connections._selector.get_map
+    )
+
+    monkeypatch.setattr(
+        test_client.server_instance.connections._selector,
+        'get_map',
+        faux_get_map
+    )
+
+    # request a page with connection keep-alive to make sure
+    # we'll have a connection to be modified.
+    resp_status, resp_headers, resp_body = test_client.request(
+        "/page1", headers=[('Connection', 'Keep-Alive'), ],
+    )
+
+    assert resp_status == '200 OK'
+    # trigger the internal errors
+    faux_get_map.sabotage_conn = faux_select.request_served = True
+    # give time to make sure the error gets handled
+    time.sleep(0.2)
+    assert faux_select.os_error_triggered
+    assert faux_get_map.socket_closed
+    # any error in the error handling should be catched by the
+    # teardown verification for the error_log
