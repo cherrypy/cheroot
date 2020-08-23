@@ -174,8 +174,8 @@ def testing_server(raw_testing_server, monkeypatch):
 
         assert c.msg in raw_testing_server.error_log.ignored_msgs, (
             'Found error in the error log: '
-            "message = '{c.msg!s}', level = '{c.level!s}'\n"
-            '{c.traceback!s}'.format(**locals()),
+            "message = '{c.msg}', level = '{c.level}'\n"
+            '{c.traceback}'.format(**locals()),
         )
 
 
@@ -1093,12 +1093,16 @@ class FaultyGetMap:
 
     def __call__(self):
         """Intercept the calls to selector.get_map."""
-        if self.sabotage_conn:
-            for _, (*_, conn) in self.original_get_map().items():
-                if isinstance(conn, cheroot.server.HTTPConnection):
-                    # close the socket to cause OSError
-                    conn.close()
-                    self.socket_closed = True
+        sabotage_targets = (
+            conn for _, (*_, conn) in self.original_get_map().items()
+            if isinstance(conn, cheroot.server.HTTPConnection)
+        ) if self.sabotage_conn else ()
+
+        for conn in sabotage_targets:
+            # close the socket to cause OSError
+            conn.close()
+            self.socket_closed = True
+
         return self.original_get_map()
 
 
