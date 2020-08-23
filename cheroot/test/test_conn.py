@@ -111,8 +111,32 @@ class Controller(helper.Controller):
     }
 
 
+class ErrorLogMonitor:
+    """Mock class to access the server error_log calls made by the server."""
+
+    FuncCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
+
+    def __init__(self):
+        """Initialize the server error log monitor/interceptor.
+
+        If you need to ignore a particular error message use the property
+        ``ignored_msgs` by appending to the list the expected error messages.
+        """
+        self.calls = []
+        # to be used the the teardown validation
+        self.ignored_msgs = []
+
+    def __call__(self, msg='', level=logging.INFO, traceback=False):
+        """Intercept the call to the server error_log method."""
+        if traceback:
+            tblines = traceback_.format_exc()
+        else:
+            tblines = ''
+        self.calls.append(ErrorLogMonitor.FuncCall(msg, level, tblines))
+
+
 @pytest.fixture
-def testing_server(wsgi_server_client, monkeypatch):
+def raw_testing_server(wsgi_server_client):
     """Attach a WSGI app to the given server and preconfigure it."""
     app = Controller()
 
@@ -126,35 +150,29 @@ def testing_server(wsgi_server_client, monkeypatch):
     wsgi_server.server_client = wsgi_server_client
     wsgi_server.keep_alive_conn_limit = 2
 
+    return wsgi_server
+
+
+@pytest.fixture
+def testing_server(raw_testing_server, monkeypatch):
+    """Modify the "raw" base server to monitor the error_log messages.
+
+    If you need to ignore a particular error message use the property
+    ``testing_server.error_log.ignored_msgs`` by appending to the list
+    the expected error messages.
+    """
     # patch the error_log calls of the server instance
-    class ErrorLog:  # noqa: D200
-        """
-        Mock class to access the server error_log calls made by the server.
-        """
+    monkeypatch.setattr(raw_testing_server, 'error_log', ErrorLogMonitor())
 
-        FuncCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
+    yield raw_testing_server
 
-        def __init__(self):
-            self.calls = []
-            # to be used the the teardown validation
-            self.ignored_msgs = []
-
-        def __call__(self, msg='', level=logging.INFO, traceback=False):
-            if traceback:
-                tblines = traceback_.format_exc()
-            else:
-                tblines = ''
-            self.calls.append(ErrorLog.FuncCall(msg, level, tblines))
-
-    monkeypatch.setattr(wsgi_server, 'error_log', ErrorLog())
-    yield wsgi_server
     # Teardown verification, in case that the server logged an
     # error that wasn't notified to the client or we just made a mistake.
-    for c in wsgi_server.error_log.calls:
+    for c in raw_testing_server.error_log.calls:
         if c.level <= logging.WARNING:
             continue
 
-        assert c.msg in wsgi_server.error_log.ignored_msgs, (
+        assert c.msg in raw_testing_server.error_log.ignored_msgs, (
             'Found error in the error log: '
             "message = '{c.msg!s}', level = '{c.level!s}'\n"
             '{c.traceback!s}'.format(**locals()),
@@ -1046,39 +1064,49 @@ def test_No_CRLF(test_client, invalid_terminator):
     conn.close()
 
 
+class FaultySelect:
+    """Mock class to insert errors in the selector.select method."""
+
+    def __init__(self, original_select):
+        """Initilize helper class to wrap the selector.select method."""
+        self.original_select = original_select
+        self.request_served = False
+        self.os_error_triggered = False
+
+    def __call__(self, timeout):
+        """Intercept the calls to selector.select."""
+        if self.request_served:
+            self.os_error_triggered = True
+            raise OSError('Error while selecting the client socket.')
+
+        return self.original_select(timeout)
+
+
+class FaultyGetMap:
+    """Mock class to insert errors in the selector.get_map method."""
+
+    def __init__(self, original_get_map):
+        """Initilize helper class to wrap the selector.get_map method."""
+        self.original_get_map = original_get_map
+        self.sabotage_conn = False
+        self.socket_closed = False
+
+    def __call__(self):
+        """Intercept the calls to selector.get_map."""
+        if self.sabotage_conn:
+            for _, (*_, conn) in self.original_get_map().items():
+                if isinstance(conn, cheroot.server.HTTPConnection):
+                    # close the socket to cause OSError
+                    conn.close()
+                    self.socket_closed = True
+        return self.original_get_map()
+
+
 def test_invalid_selected_connection(test_client, monkeypatch):
     """Test the error handling segment of HTTP connection selection.
 
     See ``cheroot.connections.ConnectionManager.get_conn``.
     """
-    class FaultySelect:
-        def __init__(self, original_select):
-            self.original_select = original_select
-            self.request_served = False
-            self.os_error_triggered = False
-
-        def __call__(self, timeout):
-            if self.request_served:
-                self.os_error_triggered = True
-                raise OSError('Error while selecting the client socket.')
-
-            return self.original_select(timeout)
-
-    class FaultyGetMap:
-        def __init__(self, original_get_map):
-            self.original_get_map = original_get_map
-            self.sabotage_conn = False
-            self.socket_closed = False
-
-        def __call__(self):
-            if self.sabotage_conn:
-                for _, (*_, conn) in self.original_get_map().items():
-                    if isinstance(conn, cheroot.server.HTTPConnection):
-                        # close the socket to cause OSError
-                        conn.close()
-                        self.socket_closed = True
-            return self.original_get_map()
-
     # patch the select method
     faux_select = FaultySelect(
         test_client.server_instance.connections._selector.select,
