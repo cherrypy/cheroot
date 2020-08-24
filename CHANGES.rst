@@ -1,3 +1,15 @@
+.. scm-version-title:: v8.4.5
+
+- :issue:`312` via :pr:`313`: Fixed a regression introduced
+  in the earlier refactoring in v8.4.4 via :pr:`309` that
+  caused the connection manager to modify the selector map
+  while looping over it -- by :user:`liamstask`.
+
+- :issue:`312` via :pr:`316`: Added a regression test for
+  the error handling in :py:meth:`~cheroot.connections.\
+  ConnectionManager.get_conn` to ensure more stability
+  -- by :user:`cyraxjoe`.
+
 .. scm-version-title:: v8.4.4
 
 - :issue:`304` via :pr:`309`: Refactored :py:class:`~\

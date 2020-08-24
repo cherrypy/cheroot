@@ -5,6 +5,9 @@ __metaclass__ = type
 
 import socket
 import time
+import logging
+import traceback as traceback_
+from collections import namedtuple
 
 from six.moves import range, http_client, urllib
 
@@ -14,6 +17,7 @@ from jaraco.text import trim, unwrap
 
 from cheroot.test import helper, webtest
 from cheroot._compat import IS_PYPY
+import cheroot.server
 
 
 timeout = 1
@@ -107,8 +111,32 @@ class Controller(helper.Controller):
     }
 
 
+class ErrorLogMonitor:
+    """Mock class to access the server error_log calls made by the server."""
+
+    ErrorLogCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
+
+    def __init__(self):
+        """Initialize the server error log monitor/interceptor.
+
+        If you need to ignore a particular error message use the property
+        ``ignored_msgs` by appending to the list the expected error messages.
+        """
+        self.calls = []
+        # to be used the the teardown validation
+        self.ignored_msgs = []
+
+    def __call__(self, msg='', level=logging.INFO, traceback=False):
+        """Intercept the call to the server error_log method."""
+        if traceback:
+            tblines = traceback_.format_exc()
+        else:
+            tblines = ''
+        self.calls.append(ErrorLogMonitor.ErrorLogCall(msg, level, tblines))
+
+
 @pytest.fixture
-def testing_server(wsgi_server_client):
+def raw_testing_server(wsgi_server_client):
     """Attach a WSGI app to the given server and preconfigure it."""
     app = Controller()
 
@@ -121,7 +149,34 @@ def testing_server(wsgi_server_client):
     wsgi_server.timeout = timeout
     wsgi_server.server_client = wsgi_server_client
     wsgi_server.keep_alive_conn_limit = 2
+
     return wsgi_server
+
+
+@pytest.fixture
+def testing_server(raw_testing_server, monkeypatch):
+    """Modify the "raw" base server to monitor the error_log messages.
+
+    If you need to ignore a particular error message use the property
+    ``testing_server.error_log.ignored_msgs`` by appending to the list
+    the expected error messages.
+    """
+    # patch the error_log calls of the server instance
+    monkeypatch.setattr(raw_testing_server, 'error_log', ErrorLogMonitor())
+
+    yield raw_testing_server
+
+    # Teardown verification, in case that the server logged an
+    # error that wasn't notified to the client or we just made a mistake.
+    for c in raw_testing_server.error_log.calls:
+        if c.level <= logging.WARNING:
+            continue
+
+        assert c.msg in raw_testing_server.error_log.ignored_msgs, (
+            'Found error in the error log: '
+            "message = '{c.msg}', level = '{c.level}'\n"
+            '{c.traceback}'.format(**locals()),
+        )
 
 
 @pytest.fixture
@@ -951,6 +1006,13 @@ def test_Content_Length_out(
 
     conn.close()
 
+    # the server logs the exception that we had verified from the
+    # client perspective. Tell the error_log verification that
+    # it can ignore that message.
+    test_client.server_instance.error_log.ignored_msgs.append(
+        "ValueError('Response body exceeds the declared Content-Length.')",
+    )
+
 
 @pytest.mark.xfail(
     reason='Sometimes this test fails due to low timeout. '
@@ -1000,3 +1062,88 @@ def test_No_CRLF(test_client, invalid_terminator):
     expected_resp_body = b'HTTP requires CRLF terminators'
     assert actual_resp_body == expected_resp_body
     conn.close()
+
+
+class FaultySelect:
+    """Mock class to insert errors in the selector.select method."""
+
+    def __init__(self, original_select):
+        """Initilize helper class to wrap the selector.select method."""
+        self.original_select = original_select
+        self.request_served = False
+        self.os_error_triggered = False
+
+    def __call__(self, timeout):
+        """Intercept the calls to selector.select."""
+        if self.request_served:
+            self.os_error_triggered = True
+            raise OSError('Error while selecting the client socket.')
+
+        return self.original_select(timeout)
+
+
+class FaultyGetMap:
+    """Mock class to insert errors in the selector.get_map method."""
+
+    def __init__(self, original_get_map):
+        """Initilize helper class to wrap the selector.get_map method."""
+        self.original_get_map = original_get_map
+        self.sabotage_conn = False
+        self.socket_closed = False
+
+    def __call__(self):
+        """Intercept the calls to selector.get_map."""
+        sabotage_targets = (
+            conn for _, (*_, conn) in self.original_get_map().items()
+            if isinstance(conn, cheroot.server.HTTPConnection)
+        ) if self.sabotage_conn else ()
+
+        for conn in sabotage_targets:
+            # close the socket to cause OSError
+            conn.close()
+            self.socket_closed = True
+
+        return self.original_get_map()
+
+
+def test_invalid_selected_connection(test_client, monkeypatch):
+    """Test the error handling segment of HTTP connection selection.
+
+    See :py:meth:`cheroot.connections.ConnectionManager.get_conn`.
+    """
+    # patch the select method
+    faux_select = FaultySelect(
+        test_client.server_instance._connections._selector.select,
+    )
+    monkeypatch.setattr(
+        test_client.server_instance._connections._selector,
+        'select',
+        faux_select,
+    )
+
+    # patch the get_map method
+    faux_get_map = FaultyGetMap(
+        test_client.server_instance._connections._selector.get_map,
+    )
+
+    monkeypatch.setattr(
+        test_client.server_instance._connections._selector,
+        'get_map',
+        faux_get_map,
+    )
+
+    # request a page with connection keep-alive to make sure
+    # we'll have a connection to be modified.
+    resp_status, resp_headers, resp_body = test_client.request(
+        '/page1', headers=[('Connection', 'Keep-Alive')],
+    )
+
+    assert resp_status == '200 OK'
+    # trigger the internal errors
+    faux_get_map.sabotage_conn = faux_select.request_served = True
+    # give time to make sure the error gets handled
+    time.sleep(0.2)
+    assert faux_select.os_error_triggered
+    assert faux_get_map.socket_closed
+    # any error in the error handling should be catched by the
+    # teardown verification for the error_log

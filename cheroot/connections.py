@@ -99,11 +99,12 @@ class ConnectionManager:
         # find any connections still registered with the selector
         # that have not been active recently enough.
         threshold = time.time() - self.server.timeout
-        timed_out_connections = (
+        timed_out_connections = [
             (sock_fd, conn)
-            for _, (_, sock_fd, _, conn) in self._selector.get_map().items()
+            for _, (_, sock_fd, _, conn)
+            in self._selector.get_map().items()
             if conn != self.server and conn.last_used < threshold
-        )
+        ]
         for sock_fd, conn in timed_out_connections:
             self._selector.unregister(sock_fd)
             conn.close()
@@ -137,6 +138,7 @@ class ConnectionManager:
             ]
         except OSError:
             # Mark any connection which no longer appears valid
+            invalid_entries = []
             for _, key in self._selector.get_map().items():
                 # If the server socket is invalid, we'll just ignore it and
                 # wait to be shutdown.
@@ -146,10 +148,11 @@ class ConnectionManager:
                 try:
                     os.fstat(key.fd)
                 except OSError:
-                    # Socket is invalid, close the connection
-                    self._selector.unregister(key.fd)
-                    conn = key.data
-                    conn.close()
+                    invalid_entries.append((key.fd, key.data))
+
+            for sock_fd, conn in invalid_entries:
+                self._selector.unregister(sock_fd)
+                conn.close()
 
             # Wait for the next tick to occur.
             return None
@@ -273,8 +276,8 @@ class ConnectionManager:
         self._selector.close()
 
     @property
-    def _num_connections(self):  # noqa: D401
-        """The current number of connections.
+    def _num_connections(self):
+        """Return the current number of connections.
 
         Includes any in the readable list or registered with the selector,
         minus one for the server socket, which is always registered

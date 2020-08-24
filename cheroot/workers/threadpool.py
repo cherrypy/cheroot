@@ -120,7 +120,7 @@ class WorkerThread(threading.Thread):
                     keep_conn_open = conn.communicate()
                 finally:
                     if keep_conn_open:
-                        self.server.connections.put(conn)
+                        self.server.put_conn(conn)
                     else:
                         conn.close()
                     if is_stats_enabled:

@@ -93,6 +93,8 @@ nitpicky = True
 # Ref: https://stackoverflow.com/a/30624034/595220
 nitpick_ignore = [
     ('py:class', 'cheroot.connections.ConnectionManager'),
+    ('py:meth', 'cheroot.connections.ConnectionManager.get_conn'),
+
     ('py:const', 'socket.SO_PEERCRED'),
     ('py:class', '_pyio.BufferedWriter'),
     ('py:class', '_pyio.BufferedReader'),
