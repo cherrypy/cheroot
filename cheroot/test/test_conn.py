@@ -168,14 +168,14 @@ def testing_server(raw_testing_server, monkeypatch):
 
     # Teardown verification, in case that the server logged an
     # error that wasn't notified to the client or we just made a mistake.
-    for c in raw_testing_server.error_log.calls:
-        if c.level <= logging.WARNING:
+    for c_msg, c_level, c_traceback in raw_testing_server.error_log.calls:
+        if c_level <= logging.WARNING:
             continue
 
-        assert c.msg in raw_testing_server.error_log.ignored_msgs, (
+        assert c_msg in raw_testing_server.error_log.ignored_msgs, (
             'Found error in the error log: '
-            "message = '{c.msg}', level = '{c.level}'\n"
-            '{c.traceback}'.format(**locals()),
+            "message = '{c_msg}', level = '{c_level}'\n"
+            '{c_traceback}'.format(**locals()),
         )
 
 
