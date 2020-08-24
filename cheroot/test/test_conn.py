@@ -1009,9 +1009,12 @@ def test_Content_Length_out(
     # the server logs the exception that we had verified from the
     # client perspective. Tell the error_log verification that
     # it can ignore that message.
-    test_client.server_instance.error_log.ignored_msgs.append(
+    test_client.server_instance.error_log.ignored_msgs.extend((
+        # Python 3.7+:
         "ValueError('Response body exceeds the declared Content-Length.')",
-    )
+        # Python 2.7-3.6 (macOS?):
+        "ValueError('Response body exceeds the declared Content-Length.',)",
+    ))
 
 
 @pytest.mark.xfail(
