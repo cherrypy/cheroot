@@ -1094,7 +1094,7 @@ class FaultyGetMap:
     def __call__(self):
         """Intercept the calls to selector.get_map."""
         sabotage_targets = (
-            conn for _, (*_, conn) in self.original_get_map().items()
+            conn for _, (_, _, _, conn) in self.original_get_map().items()
             if isinstance(conn, cheroot.server.HTTPConnection)
         ) if self.sabotage_conn else ()
 
