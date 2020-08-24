@@ -1150,3 +1150,8 @@ def test_invalid_selected_connection(test_client, monkeypatch):
     assert faux_get_map.socket_closed
     # any error in the error handling should be catched by the
     # teardown verification for the error_log
+
+    if six.PY2:
+        test_client.server_instance.error_log.ignored_msgs.append(
+            'Error in HTTPServer.tick',
+        )
