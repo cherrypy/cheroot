@@ -1067,37 +1067,30 @@ def test_No_CRLF(test_client, invalid_terminator):
     conn.close()
 
 
-class FaultySelect:
-    """Mock class to insert errors in the selector.select method."""
+class FaultySelectorManager:
+    """Mock class to insert errors in the selector.get_map method."""
 
-    def __init__(self, original_select):
-        """Initilize helper class to wrap the selector.select method."""
-        self.original_select = original_select
+    def __init__(self, orig_select_mgr):
+        self.orig_select_mgr = orig_select_mgr
+        self.sabotage_conn = False
+        self.socket_closed = False
+        # flags for select intervention
         self.request_served = False
         self.os_error_triggered = False
 
-    def __call__(self, timeout):
-        """Intercept the calls to selector.select."""
-        if self.request_served:
-            self.os_error_triggered = True
-            raise OSError('Error while selecting the client socket.')
+    def __getattr__(self, attr):
+        """Pass any other attribute lookup to the original SelectorManager."""
+        return getattr(self.orig_select_mgr, attr)
 
-        return self.original_select(timeout)
+    def __len__(self):
+        """Define a transparent __len__ method."""
+        return len(self.orig_select_mgr)
 
-
-class FaultyGetMap:
-    """Mock class to insert errors in the selector.get_map method."""
-
-    def __init__(self, original_get_map):
-        """Initilize helper class to wrap the selector.get_map method."""
-        self.original_get_map = original_get_map
-        self.sabotage_conn = False
-        self.socket_closed = False
-
-    def __call__(self):
-        """Intercept the calls to selector.get_map."""
+    def __iter__(self):
+        """Intercept the calls to SelectorManager iterator."""
+        result = tuple(self.orig_select_mgr)
         sabotage_targets = (
-            conn for _, (_, _, _, conn) in self.original_get_map().items()
+            conn for _, _, _, conn in result
             if isinstance(conn, cheroot.server.HTTPConnection)
         ) if self.sabotage_conn else ()
 
@@ -1106,7 +1099,14 @@ class FaultyGetMap:
             conn.close()
             self.socket_closed = True
 
-        return self.original_get_map()
+        return iter(result)
+
+    def select(self, timeout):
+        """Intercept the calls to selector.select."""
+        if self.request_served:
+            self.os_error_triggered = True
+            raise OSError('Error while selecting the client socket.')
+        return self.orig_select_mgr.select(timeout)
 
 
 def test_invalid_selected_connection(test_client, monkeypatch):
@@ -1114,25 +1114,13 @@ def test_invalid_selected_connection(test_client, monkeypatch):
 
     See :py:meth:`cheroot.connections.ConnectionManager.get_conn`.
     """
-    # patch the select method
-    faux_select = FaultySelect(
-        test_client.server_instance._connections._selector.select,
+    faux_select_mgr = FaultySelectorManager(
+        test_client.server_instance._connections._selector_mgr,
     )
     monkeypatch.setattr(
-        test_client.server_instance._connections._selector,
-        'select',
-        faux_select,
-    )
-
-    # patch the get_map method
-    faux_get_map = FaultyGetMap(
-        test_client.server_instance._connections._selector.get_map,
-    )
-
-    monkeypatch.setattr(
-        test_client.server_instance._connections._selector,
-        'get_map',
-        faux_get_map,
+        test_client.server_instance._connections,
+        '_selector_mgr',
+        faux_select_mgr,
     )
 
     # request a page with connection keep-alive to make sure
@@ -1143,15 +1131,15 @@ def test_invalid_selected_connection(test_client, monkeypatch):
 
     assert resp_status == '200 OK'
     # trigger the internal errors
-    faux_get_map.sabotage_conn = faux_select.request_served = True
+    faux_select_mgr.sabotage_conn = faux_select_mgr.request_served = True
     # give time to make sure the error gets handled
     time.sleep(0.2)
-    assert faux_select.os_error_triggered
-    assert faux_get_map.socket_closed
+    assert faux_select_mgr.os_error_triggered
+    assert faux_select_mgr.socket_closed
     # any error in the error handling should be catched by the
     # teardown verification for the error_log
 
-    if six.PY2:
-        test_client.server_instance.error_log.ignored_msgs.append(
-            'Error in HTTPServer.tick',
-        )
+    #if six.PY2:
+    #test_client.server_instance.error_log.ignored_msgs.append(
+    #'Error in HTTPServer.tick',
+    #)
