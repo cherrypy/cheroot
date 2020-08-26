@@ -171,7 +171,27 @@ class ConnectionManager:
                 self._selector_mgr.unregister(sock_fd)
                 conn.close()
 
-    def get_conn(self):  # noqa: C901  # FIXME
+    def _handle_invalid_connections(self):
+        """Unregister and close invalid connections in ``_selector_mgr``."""
+        for (_, sock_fd, _, conn) in self._selector_mgr:
+            # If the server socket is invalid, we'll just ignore it and
+            # wait to be shutdown.
+            if conn is self.server:
+                continue
+
+            try:
+                os.fstat(sock_fd)
+            except OSError:
+                # Unregister and close all the invalid connections.
+                self._selector_mgr.unregister(sock_fd)
+                # One of the reason on why a socket could cause an error
+                # is that the socket is already closed, ignore the
+                # socket error if we try to close it at this point.
+                # This is equivalent to OSError in Py3
+                with suppress(socket.error):
+                    conn.close()
+
+    def get_conn(self):
         """Return a HTTPConnection object which is ready to be handled.
 
         A connection returned by this method should be ready for a worker
@@ -196,25 +216,7 @@ class ConnectionManager:
             # github.com/cherrypy/cheroot/issues/305#issuecomment-663985165
             conn_ready_list = self._selector_mgr.select(timeout=0.01)
         except OSError:
-            # Mark any connection which no longer appears valid
-            for (_, sock_fd, _, conn) in self._selector_mgr:
-                # If the server socket is invalid, we'll just ignore it and
-                # wait to be shutdown.
-                if conn is self.server:
-                    continue
-
-                try:
-                    os.fstat(sock_fd)
-                except OSError:
-                    # Unregister and close all the invalid connections.
-                    self._selector_mgr.unregister(sock_fd)
-                    # One of the reason on why a socket could cause an error
-                    # is that the socket is already closed, ignore the
-                    # socket error if we try to close it at this point.
-                    # This is equivalent to OSError in Py3
-                    with suppress(socket.error):
-                        conn.close()
-
+            self._handle_invalid_connections()
             # Wait for the next tick to occur.
             return None
 
