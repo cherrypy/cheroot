@@ -68,7 +68,7 @@ class Controller(helper.Controller):
 
     def one_megabyte_of_a(req, resp):
         """Render 1MB response."""
-        return ['a' * 1024] * 1024
+        return 'a' * 1024 * 1024
 
     def wrong_cl_buffered(req, resp):
         """Render buffered response with invalid length value."""
@@ -963,12 +963,11 @@ def test_Content_Length_out(
     ))
 
 
-@pytest.mark.xfail(
-    reason='Sometimes this test fails due to low timeout. '
-           'Ref: https://github.com/cherrypy/cherrypy/issues/598',
-)
 def test_598(test_client):
-    """Test serving large file with a read timeout in place."""
+    """Test serving large file with a read timeout in place.
+
+    Ref: https://github.com/cherrypy/cherrypy/issues/598
+    """
     # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
     remote_data_conn = urllib.request.urlopen(
