@@ -1017,11 +1017,15 @@ class FaultySelectorManager:
     """Mock class to insert errors in the selector.get_map method."""
 
     def __init__(self, orig_select_mgr):
+        """Mock the connections._SelectorManager to intervene the execution."""
         self.orig_select_mgr = orig_select_mgr
+        # flag to trigger a fault on the iteration of connections
         self.sabotage_conn = False
+        # flag that marks when the explicit closing has been done
         self.conn_closed = False
-        # flags for select intervention
+        # flag to trigger the fault in the select call
         self.request_served = False
+        # flog to notify that the error has been rised for the select call
         self.os_error_triggered = False
 
     def __getattr__(self, attr):

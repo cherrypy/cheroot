@@ -102,8 +102,10 @@ class _SelectorManager:
             self._selector_keys.remove(key)
 
     def select(self, timeout=None):
-        """Return a list of the connections with events in the form:
-        (connection, socket_file_descriptor)
+        """Wrap the selectors.select call.
+
+        Returns a list of the connections with events in the form:
+            (connection, socket_file_descriptor)
         """
         return [
             (key.data, key.fd)
@@ -133,7 +135,7 @@ class ConnectionManager:
         self._selector_mgr.register(
             server.socket.fileno(),
             selectors.EVENT_READ,
-            data=server
+            data=server,
         )
 
     def put(self, conn):
