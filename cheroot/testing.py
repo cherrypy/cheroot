@@ -3,11 +3,14 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-from contextlib import closing
 import errno
 import socket
 import threading
 import time
+import logging
+import traceback as traceback_
+from contextlib import closing
+from collections import namedtuple
 
 import pytest
 from six.moves import http_client
@@ -151,3 +154,44 @@ def _get_conn_data(bind_addr):
 def get_server_client(server):
     """Create and return a test client for the given server."""
     return _TestClient(server)
+
+
+class ErrorLogMonitor:
+    """Mock class to access the server error_log calls made by the server."""
+
+    ErrorLogCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
+
+    def __init__(self):
+        """Initialize the server error log monitor/interceptor.
+
+        If you need to ignore a particular error message use the property
+        ``ignored_msgs` by appending to the list the expected error messages.
+        """
+        self.calls = []
+        # to be used the the teardown validation
+        self.ignored_msgs = []
+
+    def __call__(self, msg='', level=logging.INFO, traceback=False):
+        """Intercept the call to the server error_log method."""
+        if traceback:
+            tblines = traceback_.format_exc()
+        else:
+            tblines = ''
+        self.calls.append(ErrorLogMonitor.ErrorLogCall(msg, level, tblines))
+
+    def _teardown_verification(self):
+        # Teardown verification, in case that the server logged an
+        # error that wasn't notified to the client or we just made a mistake.
+        for c_msg, c_level, c_traceback in self.calls:
+            if c_level < logging.WARNING:
+                continue
+            if c_msg in self.ignored_msgs:
+                continue
+            # raise the explicit AssertionError, instead of the
+            # assert statement, it provides a default behavior
+            # that will show the full traceback to debug.
+            raise AssertionError(
+                'Found error in the error log: '
+                "message = '{c_msg}', level = '{c_level}'\n"
+                '{c_traceback}'.format(**locals()),
+            )

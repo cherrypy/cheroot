@@ -75,6 +75,7 @@ import logging
 import platform
 import contextlib
 import threading
+import errno
 
 try:
     from functools import lru_cache
@@ -1353,7 +1354,25 @@ class HTTPConnection:
         self.rfile.close()
 
         if not self.linger:
-            self._close_kernel_socket()
+            try:
+                # Make sure we terminate the connection at the transport level.
+                if hasattr(self.socket, 'sock_shutdown'):
+                    # The special method sock_shutdown is used for
+                    # the PyOpenSSL connections that can could be used
+                    # as socket.
+                    self.socket.sock_shutdown(socket.SHUT_RDWR)
+                else:
+                    self.socket.shutdown(socket.SHUT_RDWR)
+            except socket.error as e:
+                # raise the error if the error is
+                # other than the client is no longer
+                # connected.
+                if e.errno != errno.ENOTCONN:
+                    raise e
+
+            # close the socket file descriptor
+            # (will be closed in the OS if there is no
+            # other reference to the underlying socket)
             self.socket.close()
         else:
             # On the other hand, sometimes we want to hang around for a bit
@@ -1463,20 +1482,6 @@ class HTTPConnection:
         """Return the group of the connected peer process."""
         _, group = self.resolve_peer_creds()
         return group
-
-    def _close_kernel_socket(self):
-        """Close kernel socket in outdated Python versions.
-
-        On old Python versions,
-        Python's socket module does NOT call close on the kernel
-        socket when you call socket.close(). We do so manually here
-        because we want this server to send a FIN TCP segment
-        immediately. Note this must be called *before* calling
-        socket.close(), because the latter drops its reference to
-        the kernel socket.
-        """
-        if six.PY2 and hasattr(self.socket, '_sock'):
-            self.socket._sock.close()
 
 
 class HTTPServer:

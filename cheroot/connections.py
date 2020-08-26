@@ -67,17 +67,6 @@ class _SelectorManager:
     def __init__(self):
         self._selector = selectors.DefaultSelector()
         self._selector_keys = set([])
-        # The use of the lock shouldn't be necessary...
-        # but in practice it is.
-        #
-        # TODO: make sure we have a good understanding on how the
-        # Selectors instances are meant to be managed in a
-        # threaded context.
-        #
-        # Without the lock the tests start to fail of retring to
-        # delete the same key. This could be the case if two
-        # threads having differents copies of the keys tries to
-        # unregister the same key.
         self._register_lock = threading.Lock()
 
     def __len__(self):
@@ -94,9 +83,7 @@ class _SelectorManager:
         the values because it implements the Mapping interface from two
         underlying dicts.
         """
-        with self._register_lock:
-            keys = self._selector_keys.copy()
-        return iter(keys)
+        return iter(self._selector_keys.copy())
 
     @property
     def connections(self):
@@ -219,7 +206,12 @@ class ConnectionManager:
                 except OSError:
                     # Unregister and close all the invalid connections.
                     self._selector_mgr.unregister(sock_fd)
-                    conn.close()
+                    # One of the reason on why a socket could cause an error
+                    # is that the socket is already closed, ignore the
+                    # socket error if we try to close it at this point.
+                    # This is equivalent to OSError in Py3
+                    with suppress(socket.error):
+                        conn.close()
 
             # Wait for the next tick to occur.
             return None

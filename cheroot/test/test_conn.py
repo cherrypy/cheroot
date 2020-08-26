@@ -5,15 +5,11 @@ __metaclass__ = type
 
 import socket
 import time
-import logging
-import traceback as traceback_
-from collections import namedtuple
-
-from six.moves import range, http_client, urllib
 
 import six
 import pytest
 from jaraco.text import trim, unwrap
+from six.moves import range, http_client, urllib
 
 from cheroot.test import helper, webtest
 from cheroot._compat import IS_PYPY
@@ -111,32 +107,8 @@ class Controller(helper.Controller):
     }
 
 
-class ErrorLogMonitor:
-    """Mock class to access the server error_log calls made by the server."""
-
-    ErrorLogCall = namedtuple('ErrorLogCall', ['msg', 'level', 'traceback'])
-
-    def __init__(self):
-        """Initialize the server error log monitor/interceptor.
-
-        If you need to ignore a particular error message use the property
-        ``ignored_msgs` by appending to the list the expected error messages.
-        """
-        self.calls = []
-        # to be used the the teardown validation
-        self.ignored_msgs = []
-
-    def __call__(self, msg='', level=logging.INFO, traceback=False):
-        """Intercept the call to the server error_log method."""
-        if traceback:
-            tblines = traceback_.format_exc()
-        else:
-            tblines = ''
-        self.calls.append(ErrorLogMonitor.ErrorLogCall(msg, level, tblines))
-
-
 @pytest.fixture
-def raw_testing_server(wsgi_server_client):
+def testing_server(wsgi_server_client):
     """Attach a WSGI app to the given server and preconfigure it."""
     app = Controller()
 
@@ -151,32 +123,6 @@ def raw_testing_server(wsgi_server_client):
     wsgi_server.keep_alive_conn_limit = 2
 
     return wsgi_server
-
-
-@pytest.fixture
-def testing_server(raw_testing_server, monkeypatch):
-    """Modify the "raw" base server to monitor the error_log messages.
-
-    If you need to ignore a particular error message use the property
-    ``testing_server.error_log.ignored_msgs`` by appending to the list
-    the expected error messages.
-    """
-    # patch the error_log calls of the server instance
-    monkeypatch.setattr(raw_testing_server, 'error_log', ErrorLogMonitor())
-
-    yield raw_testing_server
-
-    # Teardown verification, in case that the server logged an
-    # error that wasn't notified to the client or we just made a mistake.
-    for c_msg, c_level, c_traceback in raw_testing_server.error_log.calls:
-        if c_level <= logging.WARNING:
-            continue
-
-        assert c_msg in raw_testing_server.error_log.ignored_msgs, (
-            'Found error in the error log: '
-            "message = '{c_msg}', level = '{c_level}'\n"
-            '{c_traceback}'.format(**locals()),
-        )
 
 
 @pytest.fixture
@@ -1073,7 +1019,7 @@ class FaultySelectorManager:
     def __init__(self, orig_select_mgr):
         self.orig_select_mgr = orig_select_mgr
         self.sabotage_conn = False
-        self.socket_closed = False
+        self.conn_closed = False
         # flags for select intervention
         self.request_served = False
         self.os_error_triggered = False
@@ -1092,12 +1038,13 @@ class FaultySelectorManager:
         sabotage_targets = (
             conn for _, _, _, conn in result
             if isinstance(conn, cheroot.server.HTTPConnection)
-        ) if self.sabotage_conn else ()
+        ) if self.sabotage_conn and not self.conn_closed else ()
 
         for conn in sabotage_targets:
-            # close the socket to cause OSError
+            assert not self.conn_closed, 'The connection is already closed.'
+            # close the connection to cause OSError
             conn.close()
-            self.socket_closed = True
+            self.conn_closed = True
 
         return iter(result)
 
@@ -1135,11 +1082,6 @@ def test_invalid_selected_connection(test_client, monkeypatch):
     # give time to make sure the error gets handled
     time.sleep(0.2)
     assert faux_select_mgr.os_error_triggered
-    assert faux_select_mgr.socket_closed
+    assert faux_select_mgr.conn_closed
     # any error in the error handling should be catched by the
     # teardown verification for the error_log
-
-    #if six.PY2:
-    #test_client.server_instance.error_log.ignored_msgs.append(
-    #'Error in HTTPServer.tick',
-    #)
