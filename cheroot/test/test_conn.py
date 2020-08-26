@@ -1039,19 +1039,19 @@ class FaultyGetMap:
         """Initialize helper class to wrap the selector.get_map method."""
         self.original_get_map = original_get_map
         self.sabotage_conn = False
-        self.socket_closed = False
+        self.conn_closed = False
 
     def __call__(self):
         """Intercept the calls to selector.get_map."""
         sabotage_targets = (
             conn for _, (_, _, _, conn) in self.original_get_map().items()
             if isinstance(conn, cheroot.server.HTTPConnection)
-        ) if self.sabotage_conn else ()
+        ) if self.sabotage_conn and not self.conn_closed else ()
 
         for conn in sabotage_targets:
             # close the socket to cause OSError
             conn.close()
-            self.socket_closed = True
+            self.conn_closed = True
 
         return self.original_get_map()
 
@@ -1094,4 +1094,4 @@ def test_invalid_selected_connection(test_client, monkeypatch):
     # give time to make sure the error gets handled
     time.sleep(0.2)
     assert faux_select.os_error_triggered
-    assert faux_get_map.socket_closed
+    assert faux_get_map.conn_closed

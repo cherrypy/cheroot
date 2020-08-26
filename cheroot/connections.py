@@ -220,7 +220,12 @@ class ConnectionManager:
 
         for sock_fd, conn in invalid_conns:
             self._selector.unregister(sock_fd)
-            conn.close()
+            # One of the reason on why a socket could cause an error
+            # is that the socket is already closed, ignore the
+            # socket error if we try to close it at this point.
+            # This is equivalent to OSError in Py3
+            with suppress(socket.error):
+                conn.close()
 
     def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
         try:
