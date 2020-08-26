@@ -16,19 +16,33 @@ from ..server import Gateway, HTTPServer
 from ..testing import (  # noqa: F401
     native_server, wsgi_server,
 )
-from ..testing import get_server_client
+from ..testing import get_server_client, ErrorLogMonitor
 
 
 @pytest.fixture
-def wsgi_server_client(wsgi_server):  # noqa: F811
-    """Create a test client out of given WSGI server."""
-    return get_server_client(wsgi_server)
+def wsgi_server_client(wsgi_server, monkeypatch):  # noqa: F811
+    """Create a test client out of given WSGI server.
+
+    If you need to ignore a particular error message use the property
+    ``error_log.ignored_msgs`` by appending to the list
+    the expected error messages.
+    """
+    monkeypatch.setattr(wsgi_server, 'error_log', ErrorLogMonitor())
+    yield get_server_client(wsgi_server)
+    wsgi_server.error_log._teardown_verification()
 
 
 @pytest.fixture
-def native_server_client(native_server):  # noqa: F811
-    """Create a test client out of given HTTP server."""
-    return get_server_client(native_server)
+def native_server_client(native_server, monkeypatch):  # noqa: F811
+    """Create a test client out of given HTTP server.
+
+    If you need to ignore a particular error message use the property
+    ``error_log.ignored_msgs`` by appending to the list
+    the expected error messages.
+    """
+    monkeypatch.setattr(native_server, 'error_log', ErrorLogMonitor())
+    yield get_server_client(native_server)
+    native_server.error_log._teardown_verification()
 
 
 @pytest.fixture
