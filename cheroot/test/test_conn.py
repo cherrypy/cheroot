@@ -1015,13 +1015,13 @@ def test_No_CRLF(test_client, invalid_terminator):
 class FaultySelectorManager:
     """Mock class to insert errors in th execution.
 
-    Wraps: cheroot.connections._SelectorManager.
+    Wraps: :py:class:`!cheroot.connections._SelectorManager`.
     """
 
     def __init__(self, orig_select_mgr):
         """Prepare the wrapper to intervene the execution.
 
-        Wraps: cheroot.connections._SelectorManager.
+        Wraps: :py:class:`!cheroot.connections._SelectorManager`.
 
         Initialize the flags to trigger the errors inside the
         _SelectorManager to put to test the error handling segments
@@ -1067,7 +1067,7 @@ class FaultySelectorManager:
         return iter(result)
 
     def select(self, timeout):
-        """Intercept the calls to _SelectorManager.select."""
+        """Intercept the calls to `:py:meth:!_SelectorManager.select`."""
         if self.request_served:
             self.os_error_triggered = True
             raise OSError('Error while selecting the client socket.')
