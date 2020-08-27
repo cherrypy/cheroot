@@ -1013,10 +1013,20 @@ def test_No_CRLF(test_client, invalid_terminator):
 
 
 class FaultySelectorManager:
-    """Mock class to insert errors in the selector.get_map method."""
+    """Mock class to insert errors in a `_SelectorManager`."""
 
     def __init__(self, orig_select_mgr):
-        """Mock the connections._SelectorManager to intervene the execution."""
+        """Prepare wrapper of `_SelectorManager` to intervene the execution.
+
+        Initialize the flags to trigger the errors inside the
+        `_SelectorManager` to put to test the error handling segments
+        of `ConnectionManager`.
+
+        This class is heavily dependent on the implementation of
+        `_SelectorManager` and `ConnectionManager`, be ready to refactor
+        and adjust if the integration between those two changes.
+        """
+        # reference to the good instance
         self.orig_select_mgr = orig_select_mgr
         # flag to trigger a fault on the iteration of connections
         self.sabotage_conn = False
@@ -1028,7 +1038,7 @@ class FaultySelectorManager:
         self.os_error_triggered = False
 
     def __getattr__(self, attr):
-        """Pass any other attribute lookup to the original SelectorManager."""
+        """Pass any other attribute lookup to the original _SelectorManager."""
         return getattr(self.orig_select_mgr, attr)
 
     def __len__(self):
@@ -1036,7 +1046,7 @@ class FaultySelectorManager:
         return len(self.orig_select_mgr)
 
     def __iter__(self):
-        """Intercept the calls to SelectorManager iterator."""
+        """Intercept the calls to _SelectorManager iterator."""
         result = tuple(self.orig_select_mgr)
         sabotage_targets = (
             conn for _, _, _, conn in result
@@ -1052,7 +1062,7 @@ class FaultySelectorManager:
         return iter(result)
 
     def select(self, timeout):
-        """Intercept the calls to selector.select."""
+        """Intercept the calls to _SelectorManager.select."""
         if self.request_served:
             self.os_error_triggered = True
             raise OSError('Error while selecting the client socket.')
