@@ -1013,17 +1013,22 @@ def test_No_CRLF(test_client, invalid_terminator):
 
 
 class FaultySelectorManager:
-    """Mock class to insert errors in a `_SelectorManager`."""
+    """Mock class to insert errors in th execution.
+
+    Wraps: `cheroot.connections._SelectorManager`.
+    """
 
     def __init__(self, orig_select_mgr):
-        """Prepare wrapper of `_SelectorManager` to intervene the execution.
+        """Prepare the wrapper to intervene the execution.
+
+        Wraps: `cheroot.connections._SelectorManager`.
 
         Initialize the flags to trigger the errors inside the
-        `_SelectorManager` to put to test the error handling segments
-        of `ConnectionManager`.
+        _SelectorManager to put to test the error handling segments
+        of ConnectionManager.
 
         This class is heavily dependent on the implementation of
-        `_SelectorManager` and `ConnectionManager`, be ready to refactor
+        _SelectorManager and ConnectionManager, be ready to refactor
         and adjust if the integration between those two changes.
         """
         # reference to the good instance
