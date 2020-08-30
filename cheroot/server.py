@@ -1804,6 +1804,8 @@ class HTTPServer:
                     traceback=True,
                 )
 
+        # ensure self._connections is closed from the serve() thread.
+        self._connections.close()
         self.serving = False
 
     def start(self):
@@ -2111,7 +2113,6 @@ class HTTPServer:
                 sock.close()
             self.socket = None
 
-        self._connections.close()
         self.requests.stop(self.shutdown_timeout)
 
 
