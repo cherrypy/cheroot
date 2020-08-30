@@ -7,6 +7,7 @@ import collections
 import io
 import os
 import socket
+import threading
 import time
 
 from . import errors
@@ -55,6 +56,8 @@ class ConnectionManager:
     This is for connections which are being kept-alive for follow-up requests.
     """
 
+    _CTRL_MSG_PUT = b'P'
+
     def __init__(self, server):
         """Initialize ConnectionManager object.
 
@@ -64,12 +67,21 @@ class ConnectionManager:
         """
         self.server = server
         self._readable_conns = collections.deque()
+        self._put_q = collections.deque()
         self._selector = selectors.DefaultSelector()
 
         self._selector.register(
             server.socket.fileno(),
             selectors.EVENT_READ, data=server,
         )
+
+        self._ctrl_rx, self._ctrl_tx = socket.socketpair()
+        self._selector.register(
+            self._ctrl_rx.fileno(),
+            selectors.EVENT_READ, data=self._ctrl_rx,
+        )
+        # protects writes to self._ctrl_tx
+        self._ctrl_lock = threading.Lock()
 
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
@@ -84,9 +96,15 @@ class ConnectionManager:
         if conn.rfile.has_data():
             self._readable_conns.append(conn)
         else:
-            self._selector.register(
-                conn.socket.fileno(), selectors.EVENT_READ, data=conn,
-            )
+            self._put_q.append(conn)
+            with self._ctrl_lock:
+                self._ctrl_tx.send(self._CTRL_MSG_PUT)
+
+    def _selector_conns(self):
+        # helper to retrieve conns registered with the selector
+        for _, (_, sock_fd, _, conn) in self._selector.get_map().items():
+            if conn != self.server and conn != self._ctrl_rx:
+                yield (sock_fd, conn)
 
     def expire(self):
         """Expire least recently used connections.
@@ -101,15 +119,15 @@ class ConnectionManager:
         threshold = time.time() - self.server.timeout
         timed_out_connections = [
             (sock_fd, conn)
-            for _, (_, sock_fd, _, conn)
-            in self._selector.get_map().items()
-            if conn != self.server and conn.last_used < threshold
+            for (sock_fd, conn)
+            in self._selector_conns()
+            if conn.last_used < threshold
         ]
         for sock_fd, conn in timed_out_connections:
             self._selector.unregister(sock_fd)
             conn.close()
 
-    def get_conn(self):  # noqa: C901  # FIXME
+    def get_conn(self):
         """Return a HTTPConnection object which is ready to be handled.
 
         A connection returned by this method should be ready for a worker
@@ -137,27 +155,15 @@ class ConnectionManager:
                 in self._selector.select(timeout=0.01)
             ]
         except OSError:
-            # Mark any connection which no longer appears valid
-            invalid_entries = []
-            for _, key in self._selector.get_map().items():
-                # If the server socket is invalid, we'll just ignore it and
-                # wait to be shutdown.
-                if key.data == self.server:
-                    continue
-
-                try:
-                    os.fstat(key.fd)
-                except OSError:
-                    invalid_entries.append((key.fd, key.data))
-
-            for sock_fd, conn in invalid_entries:
-                self._selector.unregister(sock_fd)
-                conn.close()
-
+            self._remove_invalid_sockets()
             # Wait for the next tick to occur.
             return None
 
         for key in rlist:
+            if key.data is self._ctrl_rx:
+                self._process_ctrl_msg()
+                continue
+
             if key.data is self.server:
                 # New connection
                 return self._from_server_socket(self.server.socket)
@@ -172,6 +178,35 @@ class ConnectionManager:
             return self._readable_conns.popleft()
         except IndexError:
             return None
+
+    def _process_ctrl_msg(self):
+        msg = self._ctrl_rx.recv(1)
+
+        if msg == self._CTRL_MSG_PUT:
+            conn = self._put_q.popleft()
+            self._selector.register(
+                conn.socket.fileno(), selectors.EVENT_READ, data=conn,
+            )
+
+    def _remove_invalid_sockets(self):
+        # Mark any connection which no longer appears valid
+        invalid_keys = []
+        for _, key in self._selector.get_map().items():
+            # If the server or ctrl sockets are invalid,
+            # we'll just shutdown.
+            if key.data == self.server or key.data == self._ctrl_rx:
+                self._stop_requested = True
+                continue
+
+            try:
+                os.fstat(key.fd)
+            except OSError:
+                invalid_keys.append(key)
+
+        for key in invalid_keys:
+            self._selector.unregister(key.fd)
+            conn = key.data
+            conn.close()
 
     def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
         try:
@@ -269,10 +304,12 @@ class ConnectionManager:
             conn.close()
         self._readable_conns.clear()
 
-        for _, key in self._selector.get_map().items():
-            if key.data != self.server:  # server closes its own socket
-                key.data.socket.close()
+        for _, conn in self._selector_conns():
+            conn.close()
 
+        # server closes its own socket
+        self._ctrl_tx.close()
+        self._ctrl_rx.close()
         self._selector.close()
 
     @property
@@ -280,10 +317,10 @@ class ConnectionManager:
         """Return the current number of connections.
 
         Includes any in the readable list or registered with the selector,
-        minus one for the server socket, which is always registered
-        with the selector.
+        minus two for the server socket and control socket,
+        which are always registered with the selector.
         """
-        return len(self._readable_conns) + len(self._selector.get_map()) - 1
+        return len(self._readable_conns) + len(self._selector.get_map()) - 2
 
     @property
     def can_add_keepalive_connection(self):
