@@ -15,6 +15,14 @@ except ImportError:
     import selectors2 as selectors  # noqa: F401  # lgtm [py/unused-import]
 
 try:
+    import socket  # noqa: F401  # lgtm [py/unused-import]
+    import backports.socketpair  # noqa: F401  # lgtm [py/unused-import]
+except ImportError:
+    pass
+
+from socket import socketpair  # noqa: F401  # lgtm [py/unused-import]
+
+try:
     import ssl
     IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
     del ssl
