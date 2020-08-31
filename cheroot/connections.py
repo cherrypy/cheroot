@@ -105,7 +105,7 @@ class ConnectionManager:
             in self._selector.get_map().items()
             if conn != self.server and conn.last_used < threshold
         ]
-        for sock_fd, conn in timed_out_connections:
+        for sock_fd, conn in list(timed_out_connections):
             self._selector.unregister(sock_fd)
             conn.close()
 
