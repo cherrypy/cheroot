@@ -74,6 +74,17 @@ class ConnectionManager:
         self._put_q = collections.deque()
         self._selector = selectors.DefaultSelector()
 
+        # _num_conns tracks the number of HTTPConnection objects
+        # being managed, which may be in one of:
+        #
+        # * _readable_conns
+        # * the selector
+        # * _put_q
+        #
+        # it is tracked independently of those containers to ensure a stable
+        # count, even as conns are transferred between them
+        self._num_conns = 0
+
         self._selector.register(
             server.socket.fileno(),
             selectors.EVENT_READ, data=server,
@@ -87,6 +98,16 @@ class ConnectionManager:
         # protects writes to self._ctrl_tx
         self._ctrl_lock = threading.Lock()
 
+    def _pop_readable_conn(self):
+        conn = self._readable_conns.popleft()
+        self._num_conns -= 1
+        return conn
+
+    def _remove_conn(self, sock_fd, conn):
+        self._selector.unregister(sock_fd)
+        conn.close()
+        self._num_conns -= 1
+
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
 
@@ -94,9 +115,11 @@ class ConnectionManager:
             conn (cheroot.server.HTTPConnection): HTTP connection
                 to be managed.
         """
+        self._num_conns += 1
         conn.last_used = time.time()
-        # if this conn doesn't have any more data waiting to be read,
-        # register it with the selector.
+
+        # if this conn has more data waiting to be read,
+        # store it in the readable queue.
         if conn.rfile.has_data():
             self._readable_conns.append(conn)
             return
@@ -129,8 +152,7 @@ class ConnectionManager:
             if conn.last_used < threshold
         ]
         for sock_fd, conn in timed_out_connections:
-            self._selector.unregister(sock_fd)
-            conn.close()
+            self._remove_conn(sock_fd, conn)
 
     def get_conn(self):
         """Return a HTTPConnection object which is ready to be handled.
@@ -148,7 +170,7 @@ class ConnectionManager:
         """
         # return a readable connection if any exist
         with suppress(IndexError):
-            return self._readable_conns.popleft()
+            return self._pop_readable_conn()
 
         # Will require a select call.
         try:
@@ -180,7 +202,7 @@ class ConnectionManager:
             self._readable_conns.append(conn)
 
         try:
-            return self._readable_conns.popleft()
+            return self._pop_readable_conn()
         except IndexError:
             return None
 
@@ -197,16 +219,15 @@ class ConnectionManager:
         # Mark any connection which no longer appears valid
         # If the server or ctrl sockets are invalid,
         # we'll just shutdown.
-        invalid_keys = []
+        invalid_conns = []
         for sock_fd, conn in self._get_selector_conns():
             try:
                 os.fstat(sock_fd)
             except OSError:
-                invalid_keys.append((sock_fd, conn))
+                invalid_conns.append((sock_fd, conn))
 
-        for sock_fd, conn in invalid_keys:
-            self._selector.unregister(sock_fd)
-            conn.close()
+        for sock_fd, conn in invalid_conns:
+            self._remove_conn(sock_fd, conn)
 
     def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
         try:
@@ -313,23 +334,7 @@ class ConnectionManager:
         self._selector.close()
 
     @property
-    def _num_connections(self):
-        """Return the current number of connections.
-
-        Includes any in the readable list, the put queue,
-        or registered with the selector,
-        minus two for the server socket and control socket,
-        which are always registered with the selector.
-        """
-        return (
-            len(self._readable_conns) +
-            len(self._put_q) +
-            len(self._selector.get_map())
-            - 2
-        )
-
-    @property
     def can_add_keepalive_connection(self):
         """Flag whether it is allowed to add a new keep-alive connection."""
         ka_limit = self.server.keep_alive_conn_limit
-        return ka_limit is None or self._num_connections < ka_limit
+        return ka_limit is None or self._num_conns < ka_limit
