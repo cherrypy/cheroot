@@ -9,7 +9,11 @@ Welcome to Cheroot documentation!
 
    contribute
    history
-   pkg/*
+
+.. toctree::
+   :caption: Reference
+
+   pkg/modules
 
 
 `Cheroot <https://github.com/cherrypy/cheroot>`_ is the high-performance,

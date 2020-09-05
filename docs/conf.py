@@ -20,11 +20,23 @@ extensions = [
     'sphinx.ext.intersphinx',
     'jaraco.packaging.sphinx',
     'sphinx_tabs.tabs',
+    'sphinxcontrib.apidoc',
     'sphinxcontrib.spelling',
     'scm_tag_titles_ext',
 ]
 
 master_doc = 'index'
+
+apidoc_excluded_paths = []
+apidoc_extra_args = [
+    '--implicit-namespaces',
+    '--private',  # include “_private” modules
+]
+apidoc_module_dir = '../cheroot'
+apidoc_module_first = False
+apidoc_output_dir = 'pkg'
+apidoc_separate_modules = True
+apidoc_toc_file = None
 
 spelling_ignore_acronyms = True
 spelling_ignore_importable_modules = True
@@ -92,9 +104,6 @@ nitpicky = True
 # NOTE: consider having a separate ignore file
 # Ref: https://stackoverflow.com/a/30624034/595220
 nitpick_ignore = [
-    ('py:class', 'cheroot.connections.ConnectionManager'),
-    ('py:meth', 'cheroot.connections.ConnectionManager.get_conn'),
-
     ('py:const', 'socket.SO_PEERCRED'),
     ('py:class', '_pyio.BufferedWriter'),
     ('py:class', '_pyio.BufferedReader'),
