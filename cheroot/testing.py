@@ -5,6 +5,7 @@ __metaclass__ = type
 
 from contextlib import closing
 import errno
+import logging
 import socket
 import threading
 import time
@@ -51,6 +52,7 @@ def cheroot_server(server_factory):
             break
 
     httpserver.shutdown_timeout = 0  # Speed-up tests teardown
+    httpserver.ignored_log_msgs = []  # test-only, log errors to ignore
 
     threading.Thread(target=httpserver.safe_start).start()  # spawn it
     while not httpserver.ready:  # wait until fully initialized and bound
@@ -61,18 +63,22 @@ def cheroot_server(server_factory):
     httpserver.stop()  # destroy it
 
 
-@pytest.fixture(scope='module')
-def wsgi_server():
-    """Set up and tear down a Cheroot WSGI server instance."""
-    for srv in cheroot_server(cheroot.wsgi.Server):
-        yield srv
+def check_log_messages(ignored_msgs, caplog):
+    """Assert that no unexpected errors were logged."""
+    for phase in ('setup', 'call', 'teardown'):
+        for record in caplog.get_records(when=phase):
+            if record.levelno < logging.ERROR:
+                continue
+            if record.msg in ignored_msgs:
+                continue
 
-
-@pytest.fixture(scope='module')
-def native_server():
-    """Set up and tear down a Cheroot HTTP server instance."""
-    for srv in cheroot_server(cheroot.server.HTTPServer):
-        yield srv
+            pytest.fail(
+                'Found error in the error log: '
+                "message = '{message}', level = '{level}'\n".format(
+                    message=record.message,
+                    level=record.levelname,
+                ),
+            )
 
 
 class _TestClient:

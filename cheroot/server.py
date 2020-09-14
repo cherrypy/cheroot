@@ -70,7 +70,6 @@ import email.utils
 import socket
 import sys
 import time
-import traceback as traceback_
 import logging
 import platform
 import contextlib
@@ -1295,9 +1294,9 @@ class HTTPConnection:
                 if (not request_seen) or (req and req.started_request):
                     self._conditional_error(req, '408 Request Timeout')
             elif errnum not in errors.socket_errors_to_ignore:
-                self.server.error_log(
-                    'socket.error %s' % repr(errnum),
-                    level=logging.WARNING, traceback=True,
+                self.server.log.warning(
+                    'socket.error %s' %
+                    repr(errnum), exc_info=1,
                 )
                 self._conditional_error(req, '500 Internal Server Error')
         except (KeyboardInterrupt, SystemExit):
@@ -1307,9 +1306,7 @@ class HTTPConnection:
         except errors.NoSSLError:
             self._handle_no_ssl(req)
         except Exception as ex:
-            self.server.error_log(
-                repr(ex), level=logging.ERROR, traceback=True,
-            )
+            self.server.log.exception(repr(ex))
             self._conditional_error(req, '500 Internal Server Error')
         return False
 
@@ -1584,6 +1581,8 @@ class HTTPServer:
         self.bind_addr = bind_addr
         self.gateway = gateway
 
+        self.log = logging.getLogger()
+
         self.requests = threadpool.ThreadPool(
             self, min=minthreads or 1, max=maxthreads,
         )
@@ -1711,11 +1710,11 @@ class HTTPServer:
         except (KeyboardInterrupt, IOError):
             # The time.sleep call might raise
             # "IOError: [Errno 4] Interrupted function call" on KBInt.
-            self.error_log('Keyboard Interrupt: shutting down')
+            self.log.warning('Keyboard Interrupt: shutting down')
             self.stop()
             raise
         except SystemExit:
-            self.error_log('SystemExit raised: shutting down')
+            self.log.warning('SystemExit raised: shutting down')
             self.stop()
             raise
 
@@ -1799,12 +1798,12 @@ class HTTPServer:
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception:
-                self.error_log(
-                    'Error in HTTPServer.tick', level=logging.ERROR,
-                    traceback=True,
-                )
+                self.log.exception('Error in HTTPServer.tick')
 
         self.serving = False
+
+        # ensure self._connections is closed from the serve() thread.
+        self._connections.close()
 
     def start(self):
         """Run the server forever.
@@ -1842,22 +1841,6 @@ class HTTPServer:
         else:
             # server is shutting down, just close it
             conn.close()
-
-    def error_log(self, msg='', level=20, traceback=False):
-        """Write error message to log.
-
-        Args:
-            msg (str): error message
-            level (int): logging level
-            traceback (bool): add traceback to output or not
-        """
-        # Override this in subclasses as desired
-        sys.stderr.write('{msg!s}\n'.format(msg=msg))
-        sys.stderr.flush()
-        if traceback:
-            tblines = traceback_.format_exc()
-            sys.stderr.write(tblines)
-            sys.stderr.flush()
 
     def bind(self, family, type, proto=0):
         """Create (or recreate) the actual socket object."""
@@ -1946,10 +1929,7 @@ class HTTPServer:
             pass
 
         if not FS_PERMS_SET:
-            self.error_log(
-                'Failed to set socket fs mode permissions',
-                level=logging.WARNING,
-            )
+            self.log.warning('Failed to set socket fs mode permissions')
 
         self.bind_addr = bind_addr
         self.socket = sock
@@ -2111,7 +2091,6 @@ class HTTPServer:
                 sock.close()
             self.socket = None
 
-        self._connections.close()
         self.requests.stop(self.shutdown_timeout)
 
 

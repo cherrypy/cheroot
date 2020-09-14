@@ -6,7 +6,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import errno
-import os
 import socket
 
 import pytest
@@ -14,9 +13,6 @@ import six
 from six.moves import urllib
 
 from cheroot.test import helper
-
-
-IS_CIRCLE_CI_ENV = 'CIRCLECI' in os.environ
 
 
 HTTP_BAD_REQUEST = 400
@@ -283,7 +279,6 @@ def test_content_length_required(test_client):
 
 
 @pytest.mark.xfail(
-    IS_CIRCLE_CI_ENV,
     reason='https://github.com/cherrypy/cheroot/issues/106',
     strict=False,  # sometimes it passes
 )

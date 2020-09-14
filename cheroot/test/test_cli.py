@@ -34,7 +34,7 @@ from cheroot.cli import (
 def test_parse_wsgi_bind_addr(raw_bind_addr, expected_bind_addr):
     """Check the parsing of the --bind option.
 
-    Verify some of the supported addresses and the excpected return value.
+    Verify some of the supported addresses and the expected return value.
     """
     assert parse_wsgi_bind_addr(raw_bind_addr) == expected_bind_addr
 

@@ -12,21 +12,40 @@ import time
 
 import pytest
 
+import cheroot
+
 from ..server import Gateway, HTTPServer
-from ..testing import (  # noqa: F401
-    native_server, wsgi_server,
+from ..testing import (
+    check_log_messages,
+    cheroot_server,
+    get_server_client,
 )
-from ..testing import get_server_client
 
 
 @pytest.fixture
-def wsgi_server_client(wsgi_server):  # noqa: F811
+def wsgi_server(caplog):
+    """Set up and tear down a Cheroot WSGI server instance."""
+    for srv in cheroot_server(cheroot.wsgi.Server):
+        yield srv
+    check_log_messages(srv.ignored_log_msgs, caplog)
+
+
+@pytest.fixture
+def native_server(caplog):
+    """Set up and tear down a Cheroot HTTP server instance."""
+    for srv in cheroot_server(cheroot.server.HTTPServer):
+        yield srv
+    check_log_messages(srv.ignored_log_msgs, caplog)
+
+
+@pytest.fixture
+def wsgi_server_client(wsgi_server):
     """Create a test client out of given WSGI server."""
     return get_server_client(wsgi_server)
 
 
 @pytest.fixture
-def native_server_client(native_server):  # noqa: F811
+def native_server_client(native_server):
     """Create a test client out of given HTTP server."""
     return get_server_client(native_server)
 

@@ -10,13 +10,14 @@ from jaraco.context import ExceptionTrap
 
 from cheroot import wsgi
 from cheroot._compat import IS_MACOS, IS_WINDOWS
+from cheroot.testing import check_log_messages
 
 
 IS_SLOW_ENV = IS_MACOS or IS_WINDOWS
 
 
 @pytest.fixture
-def simple_wsgi_server():
+def simple_wsgi_server(caplog):
     """Fucking simple wsgi server fixture (duh)."""
     port = portend.find_available_local_port()
 
@@ -29,9 +30,11 @@ def simple_wsgi_server():
     host = '::'
     addr = host, port
     server = wsgi.Server(addr, app, timeout=600 if IS_SLOW_ENV else 20)
+    server.ignored_log_msgs = []
     url = 'http://localhost:{port}/'.format(**locals())
     with server._run_in_thread() as thread:
         yield locals()
+    check_log_messages(server.ignored_log_msgs, caplog)
 
 
 def test_connection_keepalive(simple_wsgi_server):
