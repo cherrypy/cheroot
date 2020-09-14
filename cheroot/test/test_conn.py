@@ -1126,11 +1126,11 @@ def test_invalid_selected_connection(test_client, monkeypatch):
 
     # patch the get_map method
     faux_get_map = FaultyGetMap(
-        test_client.server_instance._connections._selector.get_map,
+        test_client.server_instance._connections._selector._selector.get_map,
     )
 
     monkeypatch.setattr(
-        test_client.server_instance._connections._selector,
+        test_client.server_instance._connections._selector._selector,
         'get_map',
         faux_get_map,
     )
