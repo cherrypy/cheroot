@@ -19,6 +19,10 @@ Basic usage::
 
     # Start a server on the abstract UNIX socket CherootServer
     cheroot myapp.wsgi --bind @CherootServer
+
+.. spelling::
+
+   cli
 """
 
 import argparse

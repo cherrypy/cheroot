@@ -124,7 +124,7 @@ class WebCase(unittest.TestCase):
     def _Conn(self):
         """Return HTTPConnection or HTTPSConnection based on self.scheme.
 
-        * from http.client.
+        * from :py:mod:`python:http.client`.
         """
         cls_name = '{scheme}Connection'.format(scheme=self.scheme.upper())
         return getattr(http_client, cls_name)

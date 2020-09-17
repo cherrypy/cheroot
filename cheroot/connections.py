@@ -74,9 +74,8 @@ class ConnectionManager:
     def put(self, conn):
         """Put idle connection into the ConnectionManager to be managed.
 
-        Args:
-            conn (cheroot.server.HTTPConnection): HTTP connection
-                to be managed.
+        :param conn: HTTP connection to be managed
+        :type conn: cheroot.server.HTTPConnection
         """
         conn.last_used = time.time()
         # if this conn doesn't have any more data waiting to be read,
@@ -119,9 +118,8 @@ class ConnectionManager:
         Any connection returned by this method will need to be `put`
         back if it should be examined again for another request.
 
-        Returns:
-            cheroot.server.HTTPConnection instance, or None.
-
+        :returns: HTTPConnection instance, or None
+        :rtype: cheroot.server.HTTPConnection
         """
         # return a readable connection if any exist
         with suppress(IndexError):
