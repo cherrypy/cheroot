@@ -116,6 +116,32 @@ def test_stop_interrupts_serve():
     assert not serve_thread.is_alive()
 
 
+def test_serving_is_false_and_stop_returns_after_ctrlc():
+    """Check that stop() interrupts running of serve()."""
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+
+    httpserver.prepare()
+
+    # Simulate a Ctrl-C on the first call to `get_conn`.
+    def raise_keyboard_interrupt(*args):
+        raise KeyboardInterrupt()
+
+    httpserver._connections.get_conn = raise_keyboard_interrupt
+
+    serve_thread = threading.Thread(target=httpserver.serve)
+    serve_thread.start()
+
+    # The thread should exit right away due to the interrupt.
+    serve_thread.join(0.5)
+    assert not serve_thread.is_alive()
+
+    assert not httpserver.serving
+    httpserver.stop()
+
+
 @pytest.mark.parametrize(
     'ip_addr',
     (
