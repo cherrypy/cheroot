@@ -150,13 +150,19 @@ class SSLFileobjectMixin:
             size,
         )
 
-    def sendall(self, *args, **kwargs):
-        """Send whole message to the socket."""
+    def read(self, *args, **kwargs):
+        """Read from the wrapped socket, with retry."""
         return self._safe_call(
-            False,
-            super(SSLFileobjectMixin, self).sendall,
+            True,
+            super(SSLFileobjectMixin, self).read,
             *args, **kwargs
         )
+
+    def sendall(self, *args, **kwargs):
+        """Send whole message to the socket - not supported due to
+        https://github.com/pyca/pyopenssl/issues/176."""
+        raise NotImplementedError("sendall() not supported on pyOpenSSL due "
+                                  "to issue #176")
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""
