@@ -159,10 +159,13 @@ class SSLFileobjectMixin:
         )
 
     def sendall(self, *args, **kwargs):
-        """Send whole message to the socket - not supported due to
-        https://github.com/pyca/pyopenssl/issues/176."""
-        raise NotImplementedError("sendall() not supported on pyOpenSSL due "
-                                  "to issue #176")
+        """Send whole message to the socket.
+
+        Not supported due to https://github.com/pyca/pyopenssl/issues/176.
+        """
+        raise NotImplementedError(
+            'sendall() not supported on pyOpenSSL due to issue #176'
+        )
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""
