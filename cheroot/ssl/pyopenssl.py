@@ -145,13 +145,23 @@ class SSLFileobjectMixin:
             size,
         )
 
-    def sendall(self, *args, **kwargs):
-        """Send whole message to the socket."""
+    def read(self, *args, **kwargs):
+        """Read from the wrapped socket, with retry."""
         return self._safe_call(
-            False,
-            super(SSLFileobjectMixin, self).sendall,
+            True,
+            super(SSLFileobjectMixin, self).read,
             *args, **kwargs
         )
+
+    def sendall(self, *args, **kwargs):
+        """Send whole message to the socket. Unsupported, do not use."""
+        # Not supported due to https://github.com/pyca/pyopenssl/issues/176.
+        # Until that bug is fixed, sendall() may throw SSL.WantWriteError, but
+        # there is no correct way to retry the call because we don't know how
+        # many bytes were already transmitted. We could work around this by
+        # reimplementing sendall() using send(), but we don't actually use
+        # sendall() anywhere.
+        raise NotImplementedError('sendall() is unsupported by pyOpenSSL')
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""

@@ -24,13 +24,22 @@ class BufferedWriter(io.BufferedWriter):
             self._flush_unlocked()
             return len(b)
 
+    def _safe_call(self, is_reader, call, *args, **kwargs):
+        """Call the supplied callable with retries, as needed.
+
+        Method to be overridden in subclasses/mix-ins.
+        """
+        return call(*args, **kwargs)
+
     def _flush_unlocked(self):
         self._checkClosed('flush of closed file')
         while self._write_buf:
             try:
                 # ssl sockets only except 'bytes', not bytearrays
                 # so perhaps we should conditionally wrap this for perf?
-                n = self.raw.write(bytes(self._write_buf))
+                n = self._safe_call(
+                    False, self.raw.write, bytes(self._write_buf),
+                )
             except io.BlockingIOError as e:
                 n = e.characters_written
             del self._write_buf[:n]
