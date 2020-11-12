@@ -8,6 +8,7 @@ __metaclass__ = type
 import functools
 import json
 import os
+import socket
 import ssl
 import subprocess
 import sys
@@ -108,11 +109,19 @@ class HelloWorldGateway(Gateway_10):
         return super(HelloWorldGateway, self).respond()
 
 
-def make_tls_http_server(bind_addr, ssl_adapter, request):
+def make_tls_http_server(
+        bind_addr,
+        ssl_adapter,
+        request,
+        minthreads=1,
+        maxthreads=-1,
+):
     """Create and start an HTTP server bound to ``bind_addr``."""
     httpserver = HTTPServer(
         bind_addr=bind_addr,
         gateway=HelloWorldGateway,
+        minthreads=minthreads,
+        maxthreads=maxthreads,
     )
     # httpserver.gateway = HelloWorldGateway
     httpserver.ssl_adapter = ssl_adapter
@@ -131,6 +140,17 @@ def make_tls_http_server(bind_addr, ssl_adapter, request):
 def tls_http_server(request):
     """Provision a server creator as a fixture."""
     return functools.partial(make_tls_http_server, request=request)
+
+
+@pytest.fixture
+def tls_single_thread_http_server(request):
+    """Provision a single-threaded server creator as a fixture."""
+    return functools.partial(
+        make_tls_http_server,
+        request=request,
+        minthreads=1,
+        maxthreads=1,
+    )
 
 
 @pytest.fixture
@@ -729,3 +749,69 @@ def test_http_over_https_error(
         format(**locals())
     )
     assert expected_error_text in err_text
+
+
+@pytest.mark.parametrize(  # noqa: C901  # FIXME
+    'adapter_type',
+    (
+        'builtin',
+        'pyopenssl',
+    ),
+)
+@pytest.mark.parametrize(
+    'ip_addr',
+    (
+        ANY_INTERFACE_IPV4,
+        pytest.param(ANY_INTERFACE_IPV6, marks=missing_ipv6),
+    ),
+)
+def test_server_timeout_before_content_error(
+    tls_single_thread_http_server, adapter_type,
+    ca, ip_addr,
+    tls_certificate,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+):
+    """Ensure connection beyond timeout without sending content is handled."""
+    # disable some flaky tests
+    # https://github.com/cherrypy/cheroot/issues/225
+    issue_225 = (
+        IS_MACOS
+        and adapter_type == 'builtin'
+    )
+    if issue_225:
+        pytest.xfail('Test fails in Travis-CI')
+
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path, tls_certificate_private_key_pem_path,
+    )
+    if adapter_type == 'pyopenssl':
+        tls_adapter.context = tls_adapter.get_context()
+
+    tls_certificate.configure_cert(tls_adapter.context)
+
+    interface, _host, port = _get_conn_data(ip_addr)
+    tlshttpserver = \
+        tls_single_thread_http_server((interface, port), tls_adapter)
+    tlshttpserver.timeout = 1
+    interface, host, port = _get_conn_data(
+        tlshttpserver.bind_addr,
+    )
+
+    fqdn = interface
+    socket_type = socket.AF_INET
+    if ip_addr is ANY_INTERFACE_IPV6:
+        fqdn = '[{fqdn}]'.format(**locals())
+        socket_type = socket.AF_INET6
+
+    s = socket.socket(socket_type, socket.SOCK_STREAM)
+    s.connect((ip_addr, port))
+    time.sleep(3)
+    s.close()
+
+    # second attempt will fail if server is dropping threads
+    s = socket.socket(socket_type, socket.SOCK_STREAM)
+    s.connect((ip_addr, port))
+    time.sleep(3)
+    s.close()
