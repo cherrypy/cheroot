@@ -1792,20 +1792,18 @@ class HTTPServer:
 
     def serve(self):
         """Serve requests, after invoking :func:`prepare()`."""
-        try:
-            self.serving = True
-            while self.ready:
-                try:
-                    self.tick()
-                except (KeyboardInterrupt, SystemExit):
-                    raise
-                except Exception:
-                    self.error_log(
-                        'Error in HTTPServer.tick', level=logging.ERROR,
-                        traceback=True,
-                    )
-        finally:
-            self.serving = False
+        self.serving = True
+        while self.ready:
+            try:
+                self.tick()
+            except (KeyboardInterrupt, SystemExit):
+                self.serving = False
+                raise
+            except Exception:
+                self.error_log(
+                    'Error in HTTPServer.tick', level=logging.ERROR,
+                    traceback=True,
+                )
 
     def start(self):
         """Run the server forever.
