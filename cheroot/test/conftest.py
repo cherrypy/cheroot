@@ -7,6 +7,7 @@ itself, useless for end-users' app testing.
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import os
 import threading
 import time
 
@@ -17,6 +18,10 @@ from ..testing import (  # noqa: F401
     native_server, wsgi_server,
 )
 from ..testing import get_server_client
+
+
+# Ref: https://github.com/pyca/cryptography/pull/5438/files
+os.putenv('CRYPTOGRAPHY_ALLOW_OPENSSL_102', '1')
 
 
 @pytest.fixture

@@ -54,6 +54,11 @@ PY34 = sys.version_info[:2] == (3, 4)
 PY3 = not six.PY2
 
 
+if IS_PYOPENSSL_SSL_VERSION_1_0:
+    # Ref: https://github.com/pyca/cryptography/pull/5438/files
+    os.setenv('CRYPTOGRAPHY_ALLOW_OPENSSL_102', '1')
+
+
 _stdlib_to_openssl_verify = {
     ssl.CERT_NONE: OpenSSL.SSL.VERIFY_NONE,
     ssl.CERT_OPTIONAL: OpenSSL.SSL.VERIFY_PEER,
