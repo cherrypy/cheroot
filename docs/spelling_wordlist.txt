@@ -30,6 +30,7 @@ netloc
 PIL
 pipelining
 positionally
+py
 pytest
 pythonic
 readonly
