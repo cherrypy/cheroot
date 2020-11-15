@@ -1,3 +1,13 @@
+.. scm-version-title:: v8.4.6
+
+- :issue:`328` via :pr:`322` and :pr:`331`: Fixed a
+  regression introduced in the earlier refactoring in v8.4.4
+  via :pr:`309` that caused the :py:meth:`~cheroot.server.\
+  HTTPRequest.serve` method to skip setting
+  ``serving=False`` on :py:data:``SIGINT`` and
+  :py:data:``SIGTERM`` -- by :user:`marc1n` and
+  :user:`cristicbz`.
+
 .. scm-version-title:: v8.4.5
 
 - :issue:`312` via :pr:`313`: Fixed a regression introduced

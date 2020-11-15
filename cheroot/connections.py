@@ -267,9 +267,13 @@ class ConnectionManager:
             conn.close()
         self._readable_conns.clear()
 
-        for _, key in self._selector.get_map().items():
-            if key.data != self.server:  # server closes its own socket
-                key.data.socket.close()
+        connections = (
+            conn.data.socket
+            for _, conn in (self._selector.get_map() or {}).items()
+            if conn.data != self.server  # server closes its own socket
+        )
+        for connection in connections:
+            connection.close()
 
         self._selector.close()
 
