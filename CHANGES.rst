@@ -1,3 +1,9 @@
+.. scm-version-title:: v8.4.7
+
+- :pr:`334`: Started filtering out TLS/SSL errors when
+  the version requested by the client is unsupported
+  -- by :user:`sanderjo` and :user:`Safihre`.
+
 .. scm-version-title:: v8.4.6
 
 - :issue:`328` via :pr:`322` and :pr:`331`: Fixed a
