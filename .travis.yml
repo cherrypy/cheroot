@@ -1,6 +1,4 @@
-conditions: v1
-
-dist: xenial
+dist: bionic
 language: python
 
 python:
