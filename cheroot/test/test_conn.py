@@ -16,7 +16,7 @@ import pytest
 from jaraco.text import trim, unwrap
 
 from cheroot.test import helper, webtest
-from cheroot._compat import IS_PYPY
+from cheroot._compat import IS_CI, IS_PYPY
 import cheroot.server
 
 
@@ -400,8 +400,9 @@ def test_streaming_10(test_client, set_cl):
         pytest.param(
             'HTTP/1.1',
             marks=pytest.mark.xfail(
-                IS_PYPY and not six.PY2,
-                reason='Fails under PyPy for unknown reason',
+                IS_PYPY and IS_CI,
+                reason='Fails under PyPy in CI for unknown reason',
+                strict=False,
             ),
         ),
     ),

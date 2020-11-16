@@ -25,8 +25,10 @@ jobs:
       matrix:
         python-version:
         - 3.9
+        - pypy2
         - 3.8
         - 3.7
+        - pypy3
         - 3.6
         - 3.5
         - 2.7
@@ -57,8 +59,23 @@ jobs:
       }}
 
     env:
+      PYTEST_ADDOPTS: >-
+        ${{
+            (
+                matrix.python-version == 'pypy2' &&
+                startsWith(matrix.os, 'ubuntu-')
+            ) &&
+            '-p no:warnings' || ''
+        }}
       PY_COLORS: 1
-      TOXENV: python
+      TOXENV: >-
+        ${{
+            (
+                contains(matrix.python-version, 'pypy') &&
+                matrix.python-version
+            ) ||
+            'python'
+        }}
       TOX_PARALLEL_NO_SPINNER: 1
 
     steps:
