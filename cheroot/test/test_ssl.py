@@ -703,10 +703,23 @@ def test_http_over_https_error(
         )
         return
 
-    with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
-        requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-            'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
-        )
+    if adapter_type == 'builtin' and six.PY2 and IS_WINDOWS:
+        try:
+            requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
+                'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
+            )
+        except requests.exceptions.ConnectionError as ssl_err:
+            pass
+        else:
+            pytest.xfail(
+                'The stdlib ssl module behavior is flaky '
+                'under Python 2 on Windows',
+            )
+    else:
+        with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
+            requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
+                'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
+            )
 
     if IS_LINUX:
         expected_error_code, expected_error_text = (
