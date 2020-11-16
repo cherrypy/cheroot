@@ -30,7 +30,7 @@ _base_envs:
 - &pyenv_base
   <<: *stage_test
   language: generic
-  python: &pypy2 pypy
+  python: &pypy2 pypy2
   env:
   - &env_pypy2 PYTHON_VERSION=pypy2.7-7.1.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
