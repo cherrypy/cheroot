@@ -738,8 +738,12 @@ def test_http_over_https_error(
             'An existing connection was forcibly closed by the remote host',
         )
 
-    underlying_error = ssl_err.value.args[0].args[-1]
-    err_text = str(underlying_error)
+    try:
+        underlying_error = ssl_err.value.args[0].args[-1]
+    except AttributeError:
+        err_text = str(ssl_err)
+    else:
+        err_text = str(underlying_error)
     assert underlying_error.errno == expected_error_code, (
         'The underlying error is {underlying_error!r}'.
         format(**locals())
