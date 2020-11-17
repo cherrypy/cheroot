@@ -711,7 +711,7 @@ def test_http_over_https_error(
             requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
                 'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
             )
-        except requests.exceptions.ConnectionError as ssl_err:
+        except requests.exceptions.ConnectionError as ssl_err:  # noqa: F841
             pass
         else:
             pytest.xfail(
