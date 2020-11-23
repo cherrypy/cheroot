@@ -135,7 +135,7 @@ def test_serving_is_false_and_stop_returns_after_ctrlc():
     serve_thread.start()
 
     # The thread should exit right away due to the interrupt.
-    serve_thread.join(0.5)
+    serve_thread.join(1.5)
     assert not serve_thread.is_alive()
 
     assert not httpserver.serving
