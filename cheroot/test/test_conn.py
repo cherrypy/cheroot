@@ -1092,19 +1092,19 @@ class FaultyGetMap:
         """Initilize helper class to wrap the selector.get_map method."""
         self.original_get_map = original_get_map
         self.sabotage_conn = False
-        self.socket_closed = False
+        self.conn_closed = False
 
     def __call__(self):
         """Intercept the calls to selector.get_map."""
         sabotage_targets = (
             conn for _, (_, _, _, conn) in self.original_get_map().items()
             if isinstance(conn, cheroot.server.HTTPConnection)
-        ) if self.sabotage_conn else ()
+        ) if self.sabotage_conn and not self.conn_closed else ()
 
         for conn in sabotage_targets:
             # close the socket to cause OSError
             conn.close()
-            self.socket_closed = True
+            self.conn_closed = True
 
         return self.original_get_map()
 
@@ -1126,11 +1126,11 @@ def test_invalid_selected_connection(test_client, monkeypatch):
 
     # patch the get_map method
     faux_get_map = FaultyGetMap(
-        test_client.server_instance._connections._selector.get_map,
+        test_client.server_instance._connections._selector._selector.get_map,
     )
 
     monkeypatch.setattr(
-        test_client.server_instance._connections._selector,
+        test_client.server_instance._connections._selector._selector,
         'get_map',
         faux_get_map,
     )
@@ -1147,11 +1147,4 @@ def test_invalid_selected_connection(test_client, monkeypatch):
     # give time to make sure the error gets handled
     time.sleep(0.2)
     assert faux_select.os_error_triggered
-    assert faux_get_map.socket_closed
-    # any error in the error handling should be catched by the
-    # teardown verification for the error_log
-
-    if six.PY2:
-        test_client.server_instance.error_log.ignored_msgs.append(
-            'Error in HTTPServer.tick',
-        )
+    assert faux_get_map.conn_closed

@@ -75,6 +75,7 @@ import logging
 import platform
 import contextlib
 import threading
+import errno
 
 try:
     from functools import lru_cache
@@ -1354,6 +1355,9 @@ class HTTPConnection:
 
         if not self.linger:
             self._close_kernel_socket()
+            # close the socket file descriptor
+            # (will be closed in the OS if there is no
+            # other reference to the underlying socket)
             self.socket.close()
         else:
             # On the other hand, sometimes we want to hang around for a bit
@@ -1465,18 +1469,19 @@ class HTTPConnection:
         return group
 
     def _close_kernel_socket(self):
-        """Close kernel socket in outdated Python versions.
+        """Terminate the connection at the transport level."""
+        # Honor ``sock_shutdown`` for PyOpenSSL connections.
+        shutdown = getattr(
+            self.socket, 'sock_shutdown',
+            self.socket.shutdown,
+        )
 
-        On old Python versions,
-        Python's socket module does NOT call close on the kernel
-        socket when you call socket.close(). We do so manually here
-        because we want this server to send a FIN TCP segment
-        immediately. Note this must be called *before* calling
-        socket.close(), because the latter drops its reference to
-        the kernel socket.
-        """
-        if six.PY2 and hasattr(self.socket, '_sock'):
-            self.socket._sock.close()
+        try:
+            shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN
+        except socket.error as e:
+            # Suppress "client is no longer connected"
+            if e.errno != errno.ENOTCONN:
+                raise
 
 
 class HTTPServer:

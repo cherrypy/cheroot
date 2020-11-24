@@ -7,6 +7,7 @@ import collections
 import io
 import os
 import socket
+import threading
 import time
 
 from . import errors
@@ -49,6 +50,68 @@ else:
         fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
 
 
+class _ThreadsafeSelector:
+    """Thread-safe wrapper around a DefaultSelector.
+
+    There are 2 thread contexts in which it may be accessed:
+    * the selector thread
+    * one of the worker threads in workers/threadpool.py
+
+    The expected read/write patterns are:
+    * :py:meth:`iter`: selector thread
+    * :py:meth:`register`: selector thread and threadpool, via put()
+    * :py:meth:`unregister`: selector thread only
+
+    Notably, this means :py:class:`_ThreadsafeSelector` never needs to worry
+    that connections will be removed behind its back.
+
+    The lock is held when iterating or modifying the selector but is not
+    required when :py:meth:`~selectors.BaseSelector.select`-ing on it.
+    """
+
+    def __init__(self):
+        self._selector = selectors.DefaultSelector()
+        self._lock = threading.Lock()
+
+    def __len__(self):
+        with self._lock:
+            return len(self._selector.get_map() or {})
+
+    @property
+    def connections(self):
+        """Retrieve connections registered with the selector."""
+        with self._lock:
+            mapping = self._selector.get_map() or {}
+            for _, (_, sock_fd, _, conn) in mapping.items():
+                yield (sock_fd, conn)
+
+    def register(self, fileobj, events, data=None):
+        """Register ``fileobj`` with the selector."""
+        with self._lock:
+            return self._selector.register(fileobj, events, data)
+
+    def unregister(self, fileobj):
+        """Unregister ``fileobj`` from the selector."""
+        with self._lock:
+            return self._selector.unregister(fileobj)
+
+    def select(self, timeout=None):
+        """Return socket fd and data pairs from selectors.select call.
+
+        Returns entries ready to read in the form:
+            (socket_file_descriptor, connection)
+        """
+        return (
+            (key.fd, key.data)
+            for key, _ in self._selector.select(timeout=timeout)
+        )
+
+    def close(self):
+        """Close the selector."""
+        with self._lock:
+            self._selector.close()
+
+
 class ConnectionManager:
     """Class which manages HTTPConnection objects.
 
@@ -64,7 +127,7 @@ class ConnectionManager:
         """
         self.server = server
         self._readable_conns = collections.deque()
-        self._selector = selectors.DefaultSelector()
+        self._selector = _ThreadsafeSelector()
 
         self._selector.register(
             server.socket.fileno(),
@@ -100,15 +163,14 @@ class ConnectionManager:
         threshold = time.time() - self.server.timeout
         timed_out_connections = [
             (sock_fd, conn)
-            for _, (_, sock_fd, _, conn)
-            in self._selector.get_map().items()
+            for (sock_fd, conn) in self._selector.connections
             if conn != self.server and conn.last_used < threshold
         ]
         for sock_fd, conn in timed_out_connections:
             self._selector.unregister(sock_fd)
             conn.close()
 
-    def get_conn(self):  # noqa: C901  # FIXME
+    def get_conn(self):
         """Return a HTTPConnection object which is ready to be handled.
 
         A connection returned by this method should be ready for a worker
@@ -130,46 +192,52 @@ class ConnectionManager:
             # The timeout value impacts performance and should be carefully
             # chosen. Ref:
             # github.com/cherrypy/cheroot/issues/305#issuecomment-663985165
-            rlist = [
-                key for key, _
-                in self._selector.select(timeout=0.01)
-            ]
+            active_list = self._selector.select(timeout=0.01)
         except OSError:
-            # Mark any connection which no longer appears valid
-            invalid_entries = []
-            for _, key in self._selector.get_map().items():
-                # If the server socket is invalid, we'll just ignore it and
-                # wait to be shutdown.
-                if key.data == self.server:
-                    continue
-
-                try:
-                    os.fstat(key.fd)
-                except OSError:
-                    invalid_entries.append((key.fd, key.data))
-
-            for sock_fd, conn in invalid_entries:
-                self._selector.unregister(sock_fd)
-                conn.close()
-
+            self._remove_invalid_sockets()
             # Wait for the next tick to occur.
             return None
 
-        for key in rlist:
-            if key.data is self.server:
+        for (sock_fd, conn) in active_list:
+            if conn is self.server:
                 # New connection
                 return self._from_server_socket(self.server.socket)
 
-            conn = key.data
             # unregister connection from the selector until the server
             # has read from it and returned it via put()
-            self._selector.unregister(key.fd)
+            self._selector.unregister(sock_fd)
             self._readable_conns.append(conn)
 
         try:
             return self._readable_conns.popleft()
         except IndexError:
             return None
+
+    def _remove_invalid_sockets(self):
+        """Clean up the resources of any broken connections.
+
+        This method attempts to detect any connections in an invalid state,
+        unregisters them from the selector and closes the file descriptors of
+        the corresponding network sockets where possible.
+        """
+        invalid_conns = []
+        for sock_fd, conn in self._selector.connections:
+            if conn is self.server:
+                continue
+
+            try:
+                os.fstat(sock_fd)
+            except OSError:
+                invalid_conns.append((sock_fd, conn))
+
+        for sock_fd, conn in invalid_conns:
+            self._selector.unregister(sock_fd)
+            # One of the reason on why a socket could cause an error
+            # is that the socket is already closed, ignore the
+            # socket error if we try to close it at this point.
+            # This is equivalent to OSError in Py3
+            with suppress(socket.error):
+                conn.close()
 
     def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
         try:
@@ -267,14 +335,9 @@ class ConnectionManager:
             conn.close()
         self._readable_conns.clear()
 
-        connections = (
-            conn.data.socket
-            for _, conn in (self._selector.get_map() or {}).items()
-            if conn.data != self.server  # server closes its own socket
-        )
-        for connection in connections:
-            connection.close()
-
+        for (_, conn) in self._selector.connections:
+            if conn is not self.server:  # server closes its own socket
+                conn.close()
         self._selector.close()
 
     @property
@@ -285,7 +348,7 @@ class ConnectionManager:
         minus one for the server socket, which is always registered
         with the selector.
         """
-        return len(self._readable_conns) + len(self._selector.get_map()) - 1
+        return len(self._readable_conns) + len(self._selector) - 1
 
     @property
     def can_add_keepalive_connection(self):
