@@ -25,13 +25,10 @@ jobs:
       matrix:
         python-version:
         - 3.9
-        - pypy2
         - 3.8
         - 3.7
         - pypy3
         - 3.6
-        - 3.5
-        - 2.7
         - 3.10.0-alpha - 3.10.0
         os:
         - ubuntu-20.04
@@ -46,10 +43,6 @@ jobs:
         # NOTE: https://github.com/tox-dev/tox/issues/1704.
         # NOTE: They should be re-added once it's fixed.
         - os: windows-latest
-          python-version: pypy2
-        - os: windows-2016
-          python-version: pypy2
-        - os: windows-latest
           python-version: pypy3
         - os: windows-2016
           python-version: pypy3
@@ -57,39 +50,18 @@ jobs:
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
         - os: macOS-11.0
-          python-version: pypy2
-        - os: macOS-latest
-          python-version: pypy2
-        - os: macOS-11.0
           python-version: pypy3
         - os: macOS-latest
           python-version: pypy3
-        include:
-        # NOTE: The only GNU/Linux CPython 3.4 available is built for Ubuntu 18
-        # https://github.com/actions/python-versions/blob/c483657/versions-manifest.json#L1228
-        - os: ubuntu-18.04
-          python-version: 3.4
 
     continue-on-error: >-
       ${{
           (
-            contains(matrix.python-version, 'alpha') ||
-            (
-              matrix.python-version == '2.7' &&
-              startsWith(matrix.os, 'windows-')
-            )
+            contains(matrix.python-version, 'alpha')
           ) && true || false
       }}
 
     env:
-      PYTEST_ADDOPTS: >-
-        ${{
-            (
-                matrix.python-version == 'pypy2' &&
-                startsWith(matrix.os, 'ubuntu-')
-            ) &&
-            '-p no:warnings' || ''
-        }}
       PY_COLORS: 1
       TOXENV: >-
         ${{
