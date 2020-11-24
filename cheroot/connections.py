@@ -51,22 +51,22 @@ else:
 
 
 class _ThreadsafeSelector:
-    """Threadsafe wrapper around a DefaultSelector.
+    """Thread-safe wrapper around a DefaultSelector.
 
     There are 2 thread contexts in which it may be accessed:
     * the selector thread
     * one of the worker threads in workers/threadpool.py
 
     The expected read/write patterns are:
-    * iter: selector thread
-    * register: selector thread and threadpool, via put()
-    * unregister: selector thread only
+    * :py:meth:`iter`: selector thread
+    * :py:meth:`register`: selector thread and threadpool, via put()
+    * :py:meth:`unregister`: selector thread only
 
-    Notably, this means _ThreadsafeSelector never needs to worry
+    Notably, this means :py:class:`_ThreadsafeSelector` never needs to worry
     that connections will be removed behind its back.
 
-    The lock is held when iterating or modifying the selector,
-    but is not required when select()ing on it.
+    The lock is held when iterating or modifying the selector but is not
+    required when :py:meth:`~selectors.BaseSelector.select`-ing on it.
     """
 
     def __init__(self):
@@ -74,11 +74,8 @@ class _ThreadsafeSelector:
         self._lock = threading.Lock()
 
     def __len__(self):
-        # NOTE: the _SelectorMapping returned by get_map()
-        # implements its own __len__ routine which does not
-        # iterate the map, so it is not required
-        # to hold the lock here.
-        return len(self._selector.get_map())
+        with self._lock:
+            return len(self._selector.get_map() or {})
 
     @property
     def connections(self):
@@ -89,17 +86,17 @@ class _ThreadsafeSelector:
                 yield (sock_fd, conn)
 
     def register(self, fileobj, events, data=None):
-        """Register fileobj with the selector."""
+        """Register ``fileobj`` with the selector."""
         with self._lock:
             return self._selector.register(fileobj, events, data)
 
     def unregister(self, fileobj):
-        """Unregister fileobj from the selector."""
+        """Unregister ``fileobj`` from the selector."""
         with self._lock:
             return self._selector.unregister(fileobj)
 
     def select(self, timeout=None):
-        """Wrap the selectors.select call.
+        """Return socket fd and data pairs from selectors.select call.
 
         Returns entries ready to read in the form:
             (socket_file_descriptor, connection)
@@ -217,8 +214,12 @@ class ConnectionManager:
             return None
 
     def _remove_invalid_sockets(self):
-        # Mark any connection which no longer appears valid
-        # If the server is invalid, we'll just shutdown.
+        """Clean up the resources of any broken connections.
+
+        This method attempts to detect any connections in an invalid state,
+        unregisters them from the selector and closes the file descriptors of
+        the corresponding network sockets where possible.
+        """
         invalid_conns = []
         for sock_fd, conn in self._selector.connections:
             if conn is self.server:
@@ -335,7 +336,7 @@ class ConnectionManager:
         self._readable_conns.clear()
 
         for (_, conn) in self._selector.connections:
-            if conn != self.server:  # server closes its own socket
+            if conn is not self.server:  # server closes its own socket
                 conn.close()
         self._selector.close()
 
