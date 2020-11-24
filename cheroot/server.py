@@ -1364,7 +1364,7 @@ class HTTPConnection:
             )
 
             try:
-                sock_shutdown(socket.SHUT_RDWR)
+                sock_shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN
             except socket.error as e:
                 # raise the error if the error is
                 # other than the client is no longer

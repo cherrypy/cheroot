@@ -57,6 +57,7 @@ tuple
 tuples
 unbuffered
 unclosed
+unregister
 uri
 url
 username
