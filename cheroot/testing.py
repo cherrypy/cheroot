@@ -1,16 +1,13 @@
 """Pytest fixtures and other helpers for doing testing by end-users."""
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
 from contextlib import closing
 import errno
 import socket
 import threading
 import time
+import http.client
 
 import pytest
-from six.moves import http_client
 
 import cheroot.server
 from cheroot.test import webtest
@@ -89,9 +86,9 @@ class _TestClient:
             port=self._port,
         )
         conn_cls = (
-            http_client.HTTPConnection
+            http.client.HTTPConnection
             if self.server_instance.ssl_adapter is None else
-            http_client.HTTPSConnection
+            http.client.HTTPSConnection
         )
         return conn_cls(name)
 
