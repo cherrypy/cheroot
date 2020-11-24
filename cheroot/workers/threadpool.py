@@ -5,17 +5,12 @@
    joinable
 """
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
-
 import collections
 import threading
 import time
 import socket
 import warnings
-
-from six.moves import queue
+import queue
 
 from jaraco.functools import pass_none
 
