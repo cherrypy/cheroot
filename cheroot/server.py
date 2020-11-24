@@ -61,9 +61,6 @@ And now for a trivial doctest to exercise the test suite
 True
 """
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
 import os
 import io
 import re
@@ -74,20 +71,14 @@ import time
 import traceback as traceback_
 import logging
 import platform
+import queue
 import contextlib
 import threading
-
-try:
-    from functools import lru_cache
-except ImportError:
-    from backports.functools_lru_cache import lru_cache
-
-import six
-from six.moves import queue
-from six.moves import urllib
+import urllib.parse
+from functools import lru_cache
 
 from . import connections, errors, __version__
-from ._compat import bton, ntou
+from ._compat import bton
 from ._compat import IS_PPC
 from .workers import threadpool
 from .makefile import MakeFile, StreamWriter
@@ -804,10 +795,6 @@ class HTTPRequest:
             return False
 
         try:
-            if six.PY2:  # FIXME: Figure out better way to do this
-                # Ref: https://stackoverflow.com/a/196392/595220 (like this?)
-                """This is a dummy check for unicode in URI."""
-                ntou(bton(uri, 'ascii'), 'ascii')
             scheme, authority, path, qs, fragment = urllib.parse.urlsplit(uri)
         except UnicodeError:
             self.simple_response('400 Bad Request', 'Malformed Request-URI')
@@ -1107,7 +1094,7 @@ class HTTPRequest:
 
         buf.append(CRLF)
         if msg:
-            if isinstance(msg, six.text_type):
+            if isinstance(msg, str):
                 msg = msg.encode('ISO-8859-1')
             buf.append(msg)
 
@@ -1409,10 +1396,7 @@ class HTTPConnection:
             https://github.com/daveti/tcpSockHack
             msdn.microsoft.com/en-us/commandline/wsl/release_notes#build-15025
             """
-            six.raise_from(  # 3.6+: raise RuntimeError from socket_err
-                RuntimeError,
-                socket_err,
-            )
+            raise RuntimeError from socket_err
         else:
             pid, uid, gid = struct.unpack(PEERCRED_STRUCT_DEF, peer_creds)
             return pid, uid, gid
@@ -1749,13 +1733,13 @@ class HTTPServer:
         if os.getenv('LISTEN_PID', None):
             # systemd socket activation
             self.socket = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
-        elif isinstance(self.bind_addr, (six.text_type, six.binary_type)):
+        elif isinstance(self.bind_addr, (str, bytes)):
             # AF_UNIX socket
             try:
                 self.bind_unix_socket(self.bind_addr)
             except socket.error as serr:
                 msg = '%s -- (%s: %s)' % (msg, self.bind_addr, serr)
-                six.raise_from(socket.error(msg), serr)
+                raise socket.error(msg) from serr
         else:
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6
@@ -1994,10 +1978,7 @@ class HTTPServer:
             * https://gavv.github.io/blog/ephemeral-port-reuse/
             """
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if nodelay and not isinstance(
-                bind_addr,
-                (six.text_type, six.binary_type),
-        ):
+        if nodelay and not isinstance(bind_addr, (str, bytes)):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
         if ssl_adapter is not None:
@@ -2046,7 +2027,7 @@ class HTTPServer:
             """
             return bind_addr[:2]
 
-        if isinstance(bind_addr, six.binary_type):
+        if isinstance(bind_addr, bytes):
             bind_addr = bton(bind_addr)
 
         return bind_addr
@@ -2096,10 +2077,7 @@ class HTTPServer:
 
         sock = getattr(self, 'socket', None)
         if sock:
-            if not isinstance(
-                    self.bind_addr,
-                    (six.text_type, six.binary_type),
-            ):
+            if not isinstance(self.bind_addr, (str, bytes)):
                 # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]
@@ -2166,7 +2144,7 @@ ssl_adapters = {
 def get_ssl_adapter_class(name='builtin'):
     """Return an SSL adapter class for the given name."""
     adapter = ssl_adapters[name.lower()]
-    if isinstance(adapter, six.string_types):
+    if isinstance(adapter, str):
         last_dot = adapter.rfind('.')
         attr_name = adapter[last_dot + 1:]
         mod_path = adapter[:last_dot]
