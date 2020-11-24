@@ -1,16 +1,10 @@
 """Tests for managing HTTP issues (malformed requests, etc)."""
-# -*- coding: utf-8 -*-
-# vim: set fileencoding=utf-8 :
-
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
 import errno
 import socket
+import urllib.parse
 
 import pytest
-import six
-from six.moves import urllib
 
 from cheroot.test import helper
 
@@ -53,8 +47,6 @@ class HelloController(helper.Controller):
         WSGI 1.0 is a mess around unicode. Create endpoints
         that match the PATH_INFO that it produces.
         """
-        if six.PY2:
-            return string
         return string.encode('utf-8').decode('latin-1')
 
     handlers = {
@@ -150,7 +142,6 @@ def test_parse_acceptable_uri(test_client, uri):
     assert actual_status == HTTP_OK
 
 
-@pytest.mark.xfail(six.PY2, reason='Fails on Python 2')
 def test_parse_uri_unsafe_uri(test_client):
     """Test that malicious URI does not allow HTTP injection.
 
