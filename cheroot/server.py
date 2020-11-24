@@ -1354,24 +1354,7 @@ class HTTPConnection:
         self.rfile.close()
 
         if not self.linger:
-            # Make sure we terminate the connection at the transport level.
-            sock_shutdown = getattr(
-                # The special method sock_shutdown is used for
-                # the PyOpenSSL connections that can be used
-                # as socket.
-                self.socket, 'sock_shutdown',
-                self.socket.shutdown,
-            )
-
-            try:
-                sock_shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN
-            except socket.error as e:
-                # raise the error if the error is
-                # other than the client is no longer
-                # connected.
-                if e.errno != errno.ENOTCONN:
-                    raise
-
+            self._close_kernel_socket()
             # close the socket file descriptor
             # (will be closed in the OS if there is no
             # other reference to the underlying socket)
@@ -1484,6 +1467,21 @@ class HTTPConnection:
         """Return the group of the connected peer process."""
         _, group = self.resolve_peer_creds()
         return group
+
+    def _close_kernel_socket(self):
+        """Terminate the connection at the transport level."""
+        # Honor ``sock_shutdown`` for PyOpenSSL connections.
+        shutdown = getattr(
+            self.socket, 'sock_shutdown',
+            self.socket.shutdown,
+        )
+
+        try:
+            shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN
+        except socket.error as e:
+            # Suppress "client is no longer connected"
+            if e.errno != errno.ENOTCONN:
+                raise
 
 
 class HTTPServer:
