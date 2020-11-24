@@ -1,3 +1,10 @@
+.. scm-version-title:: v8.4.8
+
+- :issue:`317` via :pr:`337`: Fixed a regression in
+  8.4.5 where the connections dictionary would change
+  size during iteration, leading to a RuntimeError raised
+  in the logs -- by :user:`liamstask`.
+
 .. scm-version-title:: v8.4.7
 
 - :pr:`334`: Started filtering out TLS/SSL errors when
