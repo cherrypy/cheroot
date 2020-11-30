@@ -67,7 +67,7 @@ class _ThreadsafeSelector:
     that connections will be removed behind its back.
 
     The lock is held when iterating or modifying the selector but is not
-    required when :py:meth:`~selectors.BaseSelector.select`-ing on it.
+    required when :py:meth:`select()ing <selectors.BaseSelector.select>` on it.
     """
 
     def __init__(self):
