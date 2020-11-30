@@ -1489,6 +1489,7 @@ class HTTPServer:
 
     _bind_addr = '127.0.0.1'
     _interrupt = None
+    _STOPPING_FOR_INTERRUPT = object()  # sentinel used during shutdown
 
     gateway = None
     """A Gateway instance."""
@@ -1810,6 +1811,14 @@ class HTTPServer:
                     traceback=True,
                 )
 
+            # raise exceptions reported by any worker threads,
+            # such that the exception is raised from the serve() thread.
+            if self.interrupt:
+                while self._stopping_for_interrupt:
+                    time.sleep(0.1)
+                if self.interrupt:
+                    raise self.interrupt
+
         self.serving = False
 
     def start(self):
@@ -2056,14 +2065,22 @@ class HTTPServer:
         """Flag interrupt of the server."""
         return self._interrupt
 
+    @property
+    def _stopping_for_interrupt(self):
+        """Return whether the server is responding to an interrupt."""
+        return self._interrupt is HTTPServer._STOPPING_FOR_INTERRUPT
+
     @interrupt.setter
     def interrupt(self, interrupt):
-        """Perform the shutdown of this server and save the exception."""
-        self._interrupt = True
+        """Perform the shutdown of this server and save the exception.
+
+        Typically invoked by a worker thread in threadpool.py,
+        the exception is raised from the thread running serve()
+        once self.stop() has completed.
+        """
+        self._interrupt = HTTPServer._STOPPING_FOR_INTERRUPT
         self.stop()
         self._interrupt = interrupt
-        if self._interrupt:
-            raise self.interrupt
 
     def stop(self):  # noqa: C901  # FIXME
         """Gracefully shutdown a server that is serving forever."""
