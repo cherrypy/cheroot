@@ -162,6 +162,9 @@ QUOTED_SLASH = b'%2F'
 QUOTED_SLASH_REGEX = re.compile(b''.join((b'(?i)', QUOTED_SLASH)))
 
 
+_STOPPING_FOR_INTERRUPT = object()  # sentinel used during shutdown
+
+
 comma_separated_headers = [
     b'Accept', b'Accept-Charset', b'Accept-Encoding',
     b'Accept-Language', b'Accept-Ranges', b'Allow', b'Cache-Control',
@@ -1802,7 +1805,7 @@ class HTTPServer:
 
     def serve(self):
         """Serve requests, after invoking :func:`prepare()`."""
-        while self.ready:
+        while self.ready and not self.interrupt:
             try:
                 self._connections.run(self.expiration_interval)
             except (KeyboardInterrupt, SystemExit):
@@ -1812,6 +1815,14 @@ class HTTPServer:
                     'Error in HTTPServer.serve', level=logging.ERROR,
                     traceback=True,
                 )
+
+        # raise exceptions reported by any worker threads,
+        # such that the exception is raised from the serve() thread.
+        if self.interrupt:
+            while self._stopping_for_interrupt:
+                time.sleep(0.1)
+            if self.interrupt:
+                raise self.interrupt
 
     def start(self):
         """Run the server forever.
@@ -2053,14 +2064,23 @@ class HTTPServer:
         """Flag interrupt of the server."""
         return self._interrupt
 
+    @property
+    def _stopping_for_interrupt(self):
+        """Return whether the server is responding to an interrupt."""
+        return self._interrupt is _STOPPING_FOR_INTERRUPT
+
     @interrupt.setter
     def interrupt(self, interrupt):
-        """Perform the shutdown of this server and save the exception."""
-        self._interrupt = True
+        """Perform the shutdown of this server and save the exception.
+
+        Typically invoked by a worker thread in
+        :py:mod:`~cheroot.workers.threadpool`, the exception is raised
+        from the thread running :py:meth:`serve` once :py:meth:`stop`
+        has completed.
+        """
+        self._interrupt = _STOPPING_FOR_INTERRUPT
         self.stop()
         self._interrupt = interrupt
-        if self._interrupt:
-            raise self.interrupt
 
     def stop(self):  # noqa: C901  # FIXME
         """Gracefully shutdown a server that is serving forever."""

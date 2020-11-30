@@ -18,7 +18,7 @@ import requests
 import requests_unixsocket
 import six
 
-from six.moves import urllib
+from six.moves import queue, urllib
 
 from .._compat import bton, ntob
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM
@@ -115,6 +115,39 @@ def test_stop_interrupts_serve():
 
     serve_thread.join(0.5)
     assert not serve_thread.is_alive()
+
+
+def test_server_interrupt():
+    """Check that assigning interrupt stops the server."""
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+
+    result_q = queue.Queue()
+
+    def serve_thread():
+        # ensure we catch the exception on the serve() thread
+        try:
+            httpserver.serve()
+        except RuntimeError as e:
+            if str(e) == 'should catch':
+                result_q.put('caught it')
+
+    httpserver.prepare()
+    serve_thread = threading.Thread(target=serve_thread)
+    serve_thread.start()
+
+    serve_thread.join(0.5)
+    assert serve_thread.is_alive()
+
+    # this exception is raised on the serve() thread,
+    # not in the calling context.
+    httpserver.interrupt = RuntimeError('should catch')
+
+    serve_thread.join(0.5)
+    assert not serve_thread.is_alive()
+    assert result_q.get_nowait() == 'caught it'
 
 
 def test_serving_is_false_and_stop_returns_after_ctrlc():
