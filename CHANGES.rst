@@ -2,8 +2,8 @@
 
 - :issue:`317` via :pr:`337`: Fixed a regression in
   8.4.5 where the connections dictionary would change
-  size during iteration, leading to a RuntimeError raised
-  in the logs -- by :user:`liamstask`.
+  size during iteration, leading to a :py:exc:`RuntimeError`
+  raised in the logs -- by :user:`liamstask`.
 
 .. scm-version-title:: v8.4.7
 
