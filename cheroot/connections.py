@@ -54,13 +54,13 @@ class _ThreadsafeSelector:
     """Thread-safe wrapper around a DefaultSelector.
 
     There are 2 thread contexts in which it may be accessed:
-    * the selector thread
-    * one of the worker threads in workers/threadpool.py
+      * the selector thread
+      * one of the worker threads in workers/threadpool.py
 
     The expected read/write patterns are:
-    * :py:func:`~iter`: selector thread
-    * :py:meth:`register`: selector thread and threadpool, via put()
-    * :py:meth:`unregister`: selector thread only
+      * :py:func:`~iter`: selector thread
+      * :py:meth:`register`: selector thread and threadpool, via put()
+      * :py:meth:`unregister`: selector thread only
 
     Notably, this means :py:class:`_ThreadsafeSelector` never needs to worry
     that connections will be removed behind its back.
