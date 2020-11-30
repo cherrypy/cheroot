@@ -75,7 +75,6 @@ import logging
 import platform
 import contextlib
 import threading
-import errno
 
 try:
     from functools import lru_cache
@@ -1478,9 +1477,10 @@ class HTTPConnection:
 
         try:
             shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN
+        except errors.acceptable_sock_shutdown_exceptions:
+            pass
         except socket.error as e:
-            # Suppress "client is no longer connected"
-            if e.errno != errno.ENOTCONN:
+            if e.errno not in errors.acceptable_sock_shutdown_error_codes:
                 raise
 
 
