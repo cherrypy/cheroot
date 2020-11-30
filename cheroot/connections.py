@@ -58,7 +58,7 @@ class _ThreadsafeSelector:
     * one of the worker threads in workers/threadpool.py
 
     The expected read/write patterns are:
-    * :py:meth:`iter`: selector thread
+    * :py:func:`~iter`: selector thread
     * :py:meth:`register`: selector thread and threadpool, via put()
     * :py:meth:`unregister`: selector thread only
 
