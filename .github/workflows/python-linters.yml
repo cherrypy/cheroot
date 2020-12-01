@@ -21,11 +21,19 @@ jobs:
         - ubuntu-latest
         toxenv:
         - pre-commit
-        # - pre-commit-failing
         - setup-check
         - build-docs
         - spellcheck-docs
         - linkcheck-docs
+        experimental:
+        - false
+        include:
+        - experimental: true
+          os: ubuntu-latest
+          python-version: 3.9
+          toxenv: pre-commit-failing
+
+    continue-on-error: ${{ matrix.experimental }}
 
     env:
       TOX_PARALLEL_NO_SPINNER: 1

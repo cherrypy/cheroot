@@ -11,8 +11,6 @@ python:
 - &pypy3 pypy3
 
 _base_envs:
-- &stage_lint
-  stage: &stage_lint_name lint
 - &stage_test_priority
   stage: &stage_test_priority_name test against latest Python versions first (under GNU/Linux)
 - &stage_deploy
@@ -28,19 +26,12 @@ _base_envs:
 jobs:
   fast_finish: true
   allow_failures:
-  - env: TOXENV=pre-commit-failing
   - python: nightly
   include:
   - python: pypy
     env:
       PYTEST_ADDOPTS: >-
         '-p no:warnings'
-  - <<: *stage_lint
-    name: temporary failing pre-commit.com tool linters
-    env: TOXENV=pre-commit-failing
-    # Some linters depend on pyyaml, which fails under Python 3.7 now:
-    python: 3.6
-    after_failure: skip
   - <<: *pure_python_base_priority
     python: 3.8
   - <<: *pure_python_base_priority
@@ -91,6 +82,5 @@ after_failure:
 - echo Outputting python invocation log from $py_log
 - cat $py_log
 stages:
-- *stage_lint_name
 - *stage_test_priority_name
 - name: *stage_deploy_name
