@@ -20,6 +20,7 @@ jobs:
         - 3.6
         - 3.5
         - 2.7
+        - 3.10.0-alpha - 3.10.0
         os:
         - ubuntu-20.04
         - ubuntu-18.04
@@ -28,6 +29,9 @@ jobs:
         - macOS-latest
         - windows-latest
         - windows-2016
+
+    continue-on-error: >-
+      ${{ contains(matrix.python-version, 'alpha') && true || false }}
 
     env:
       TOX_PARALLEL_NO_SPINNER: 1
