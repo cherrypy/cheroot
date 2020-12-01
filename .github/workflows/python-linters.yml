@@ -10,6 +10,7 @@ on:
 
 jobs:
   linters:
+    name: ${{ matrix.toxenv }}
     runs-on: ${{ matrix.os }}
     strategy:
       # max-parallel: 5
