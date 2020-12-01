@@ -24,17 +24,6 @@ _base_envs:
 - &pure_python_base_priority
   <<: *python_3_7_mixture
   <<: *stage_test_priority
-- &lint_python_base
-  <<: *stage_lint
-  # Some linters depend on pyyaml, which fails under Python 3.7 now:
-  python: 3.6
-  after_failure: skip
-- &docs_python_base
-  <<: *lint_python_base
-  addons:
-    apt:
-      packages:
-      - libenchant-dev
 
 jobs:
   fast_finish: true
@@ -46,28 +35,12 @@ jobs:
     env:
       PYTEST_ADDOPTS: >-
         '-p no:warnings'
-  - <<: *lint_python_base
-    name: pre-commit.com tool linters
-    env: TOXENV=pre-commit
-  - <<: *lint_python_base
-    <<: *python_3_7_mixture
-    name: setup.py check linter
-    env: TOXENV=setup-check
-  - <<: *lint_python_base
+  - <<: *stage_lint
     name: temporary failing pre-commit.com tool linters
     env: TOXENV=pre-commit-failing
-  - <<: *docs_python_base
-    python: 3.8
-    name: Ensure that docs get built successfully
-    env: TOXENV=build-docs
-  - <<: *docs_python_base
-    python: 3.8
-    name: Spellcheck docs
-    env: TOXENV=spellcheck-docs
-  - <<: *docs_python_base
-    python: 3.8
-    name: Check links in docs
-    env: TOXENV=linkcheck-docs
+    # Some linters depend on pyyaml, which fails under Python 3.7 now:
+    python: 3.6
+    after_failure: skip
   - <<: *pure_python_base_priority
     python: 3.8
   - <<: *pure_python_base_priority
