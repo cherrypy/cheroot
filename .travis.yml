@@ -4,16 +4,14 @@ dist: xenial
 language: python
 
 python:
-- 2.7
-- 3.5
-- 3.6
 - &pypy3 pypy3
 
 _base_envs:
 - &stage_test_priority
-  stage: &stage_test_priority_name test against latest Python versions first (under GNU/Linux)
 - &stage_deploy
   stage: &stage_deploy_name upload new version of python package to PYPI (only for tagged commits)
+
+stage: &stage_test_priority_name test against latest Python versions first (under GNU/Linux)
 
 jobs:
   fast_finish: true
@@ -22,10 +20,6 @@ jobs:
     env:
       PYTEST_ADDOPTS: >-
         '-p no:warnings'
-  - <<: *stage_test_priority
-    python: 3.8
-  - <<: *stage_test_priority
-    python: 3.7
   - <<: *stage_deploy
     if: tag IS present
     python: 3.7
