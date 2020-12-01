@@ -15,13 +15,6 @@ _base_envs:
   stage: &stage_test_priority_name test against latest Python versions first (under GNU/Linux)
 - &stage_deploy
   stage: &stage_deploy_name upload new version of python package to PYPI (only for tagged commits)
-- &manual_run_or_cron  # run the job only if it's a cron run or it's triggered manually
-  if: type IN (api, cron)
-- &python_3_7_mixture
-  python: &mainstream_python 3.7
-- &pure_python_base_priority
-  <<: *python_3_7_mixture
-  <<: *stage_test_priority
 
 jobs:
   fast_finish: true
@@ -32,15 +25,15 @@ jobs:
     env:
       PYTEST_ADDOPTS: >-
         '-p no:warnings'
-  - <<: *pure_python_base_priority
+  - <<: *stage_test_priority
     python: 3.8
-  - <<: *pure_python_base_priority
-    # mainstream here (3.7)
-  - <<: *pure_python_base_priority
+  - <<: *stage_test_priority
+    python: 3.7
+  - <<: *stage_test_priority
     python: nightly
   - <<: *stage_deploy
     if: tag IS present
-    <<: *python_3_7_mixture
+    python: 3.7
     install:
     - python -m pip install --upgrade virtualenv
     - python -m pip install tox
