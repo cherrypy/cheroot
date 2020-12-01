@@ -36,7 +36,15 @@ jobs:
           python-version: 3.4
 
     continue-on-error: >-
-      ${{ contains(matrix.python-version, 'alpha') && true || false }}
+      ${{
+          (
+            contains(matrix.python-version, 'alpha') ||
+            (
+              matrix.python-version === '2.7' &&
+              startsWith(matrix.os, 'windows-')
+            )
+          ) && true || false
+      }}
 
     env:
       TOX_PARALLEL_NO_SPINNER: 1
