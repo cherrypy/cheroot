@@ -50,7 +50,7 @@ jobs:
           (
             contains(matrix.python-version, 'alpha') ||
             (
-              matrix.python-version === '2.7' &&
+              matrix.python-version == '2.7' &&
               startsWith(matrix.os, 'windows-')
             )
           ) && true || false
