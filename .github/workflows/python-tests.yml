@@ -1,13 +1,23 @@
 name: Test suite
 
 on:
-  push:
+  create:  # is used for publishing to PyPI and TestPyPI
+  push:  # only publishes pushes to the main branch to TestPyPI
+    branches:  # any branch but not tag
+    - >-
+      **
+    tags-ignore:
+    - >-
+      **
   pull_request:
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
 jobs:
   tests:
+    if: >-  # https://twitter.com/webKnjaZ/status/1308803017001652225
+      github.event_name != 'create' ||
+      github.ref_type == 'tag'
     runs-on: ${{ matrix.os }}
     strategy:
       # max-parallel: 5
@@ -124,3 +134,62 @@ jobs:
         --parallel auto
         --parallel-live
         -vv
+
+  publish:
+    needs:
+    - tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # NOTE: Even though it's one job, it's easier to keep the params in one
+      # NOTE: place using a matrix:
+      matrix:
+        python-version:
+        - 3.9
+        os:
+        - ubuntu-latest
+
+    env:
+      PY_COLORS: 1
+      TOXENV: build-dists,metadata-validation
+      TOX_PARALLEL_NO_SPINNER: 1
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Pip cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('setup.cfg') }}-${{ hashFiles('setup.py') }}-${{ hashFiles('tox.ini') }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('.pre-commit-config.yaml') }}-${{ hashFiles('.pre-commit-config.yaml.failing') }}-${{ hashFiles('pytest.ini') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install tox
+      run: |
+        python -m pip install --upgrade tox
+    - name: 'Initialize tox envs: ${{ matrix.env.TOXENV }}'
+      run: >-
+        python -m
+        tox
+        --parallel auto
+        --parallel-live
+        -vv
+        --skip-missing-interpreters false
+        --notest
+    - name: Build dists with tox
+      run: >-
+        python -m
+        tox
+        --parallel auto
+        --parallel-live
+        -vv
+    - name: Publish to pypi.org
+      if: >-  # "create" workflows run separately from "push" & "pull_request"
+        github.event_name == 'create' &&
+        github.event.ref_type == 'tag'
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.pypi_password }}
