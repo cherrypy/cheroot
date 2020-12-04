@@ -355,11 +355,15 @@ def many_open_sockets(resource_limit):
         for i in range(resource_limit):
             sock = socket.socket()
             test_sockets.append(sock)
-            # If we reach a high enough number, we don't need to open more
-            if sock.fileno() >= resource_limit:
-                break
+            # NOTE: We used to interrupt the loop early but this doesn't seem
+            # NOTE: to work well in envs with indeterministic runtimes like
+            # NOTE: PyPy. It looks like sometimes it frees some file
+            # NOTE: descriptors in between running this fixture and the actual
+            # NOTE: test code so the early break has been removed to try
+            # NOTE: address that. The approach may need to be rethought if the
+            # NOTE: issue reoccurs. Another approach may be disabling the GC.
         # Check we opened enough descriptors to reach a high number
-        the_highest_fileno = test_sockets[-1].fileno()
+        the_highest_fileno = max(sock.fileno() for sock in test_sockets)
         assert the_highest_fileno >= resource_limit
         yield the_highest_fileno
     finally:
