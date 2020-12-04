@@ -2,14 +2,15 @@ Read and contribute to Cheroot
 ------------------------------
 
 Make sure you read the `README
-<https://github.com/cherrypy/cheroot/blob/master/README.rst>`_. Also **ensure
-you set up pre-commit utility correctly** and TravisCI tests pass.
+<https://github.com/cherrypy/cheroot/blob/master/README.rst>`_.
+Also **ensure you set up pre-commit utility correctly** and
+tests pass in GitHub Actions CI/CD workflows.
 
 Submitting Pull Requests
 ------------------------
 If you're changing the structure of the repository please create an issue
 first. Don't forget to write appropriate test cases, add them into CI process
-if applicable and make the TravisCI build pass.
+if applicable and make the GitHub Actions CI/CD build pass.
 
 Sync (preferably rebase) your feature branch with upstream regularly to make
 us able to merge your PR seamlessly.

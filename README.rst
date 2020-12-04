@@ -5,9 +5,6 @@
    :target: https://tidelift.com/subscription/pkg/pypi-cheroot?utm_source=pypi-cheroot&utm_medium=readme
    :alt: Cheroot is available as part of the Tidelift Subscription
 
-.. image:: https://img.shields.io/travis/com/cherrypy/cheroot/master.svg?logo=travis&label=Linux%20build%20%40%20Travis%20CI
-   :target: https://travis-ci.com/cherrypy/cheroot
-
 .. image:: https://circleci.com/gh/cherrypy/cheroot/tree/master.svg?style=svg
    :target: https://circleci.com/gh/cherrypy/cheroot/tree/master
 
@@ -53,7 +50,8 @@ Cheroot is the high-performance, pure-Python HTTP server used by CherryPy.
 Status
 ======
 
-The test suite currently relies on pytest. It's being run via Travis CI.
+The test suite currently relies on pytest. It's being run via GitHub
+Actions CI/CD workflows.
 
 For Enterprise
 ==============
