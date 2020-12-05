@@ -6,6 +6,9 @@
   waiting for a ``tick`` event, addressing performance
   degradation introduced in v8.1.0.
 
+- :issue:`341` via :pr:`342`: Suppress legitimate OS errors
+  expected on shutdown.
+
 .. scm-version-title:: v8.4.8
 
 - :issue:`317` via :pr:`337`: Fixed a regression in
