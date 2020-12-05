@@ -108,6 +108,7 @@ nitpick_ignore = [
     ('py:class', '_pyio.BufferedWriter'),
     ('py:class', '_pyio.BufferedReader'),
     ('py:class', 'unittest.case.TestCase'),
+    ('py:meth', 'cheroot.connections.ConnectionManager.get_conn'),
 ]
 
 # Ref:
