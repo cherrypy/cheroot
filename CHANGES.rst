@@ -1,3 +1,11 @@
+.. scm-version-title:: v8.5.0
+
+- :issue:`305` via :pr:`311`: In
+  :py:class:`~cheroot.connections.ConnectionManager`,
+  process connections as they become active rather than
+  waiting for a ``tick`` event, addressing performance
+  degradation introduced in v8.1.0.
+
 .. scm-version-title:: v8.4.8
 
 - :issue:`317` via :pr:`337`: Fixed a regression in
