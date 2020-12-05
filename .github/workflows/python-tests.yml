@@ -17,7 +17,7 @@ jobs:
   tests:
     if: >-  # https://twitter.com/webKnjaZ/status/1308803017001652225
       github.event_name != 'create' ||
-      github.ref_type == 'tag'
+      github.event.ref_type == 'tag'
     runs-on: ${{ matrix.os }}
     strategy:
       # max-parallel: 5
