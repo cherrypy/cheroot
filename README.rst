@@ -5,9 +5,6 @@
    :target: https://tidelift.com/subscription/pkg/pypi-cheroot?utm_source=pypi-cheroot&utm_medium=readme
    :alt: Cheroot is available as part of the Tidelift Subscription
 
-.. image:: https://circleci.com/gh/cherrypy/cheroot/tree/master.svg?style=svg
-   :target: https://circleci.com/gh/cherrypy/cheroot/tree/master
-
 .. image:: https://github.com/cherrypy/cheroot/workflows/Test%20suite/badge.svg
    :target: https://github.com/cherrypy/cheroot/actions?query=workflow%3A%22Test+suite%22+branch%3Amaster
    :alt: GitHub Actions Workflow — Test suite
