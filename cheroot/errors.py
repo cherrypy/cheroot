@@ -75,6 +75,8 @@ Ref: https://github.com/cherrypy/cheroot/issues/341#issuecomment-735884889
 """
 
 try:  # py3
-    acceptable_sock_shutdown_exceptions = (BrokenPipeError, ConnectionResetError)
+    acceptable_sock_shutdown_exceptions = (
+        BrokenPipeError, ConnectionResetError,
+    )
 except NameError:  # py2
     acceptable_sock_shutdown_exceptions = ()
