@@ -8,9 +8,6 @@
 .. image:: https://circleci.com/gh/cherrypy/cheroot/tree/master.svg?style=svg
    :target: https://circleci.com/gh/cherrypy/cheroot/tree/master
 
-.. image:: https://img.shields.io/appveyor/ci/cherrypy/cheroot/master.svg?label=Windows%20build%20%40%20Appveyor
-   :target: https://ci.appveyor.com/project/cherrypy/cheroot/branch/master
-
 .. image:: https://github.com/cherrypy/cheroot/workflows/Test%20suite/badge.svg
    :target: https://github.com/cherrypy/cheroot/actions?query=workflow%3A%22Test+suite%22+branch%3Amaster
    :alt: GitHub Actions Workflow — Test suite
