@@ -18,12 +18,23 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
+    # Third-party extensions:
     'jaraco.packaging.sphinx',
     'sphinx_tabs.tabs',
     'sphinxcontrib.apidoc',
-    'sphinxcontrib.spelling',
-    'scm_tag_titles_ext',
 ]
+
+# Conditional third-party extensions:
+try:
+    import sphinxcontrib.spelling as _sphinxcontrib_spelling
+except ImportError:
+    extensions.append('spelling_stub_ext')
+else:
+    del _sphinxcontrib_spelling
+    extensions.append('sphinxcontrib.spelling')
+
+# Tree-local extensions:
+extensions.append('scm_tag_titles_ext')
 
 master_doc = 'index'
 
