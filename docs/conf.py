@@ -36,6 +36,9 @@ else:
 # Tree-local extensions:
 extensions.append('scm_tag_titles_ext')
 
+# Add any paths that contain templates here, relative to this directory.
+templates_path = ['_templates']
+
 master_doc = 'index'
 
 apidoc_excluded_paths = []
@@ -137,3 +140,13 @@ default_role = 'any'
 
 
 html_theme = 'alabaster'
+
+# Custom sidebar templates, maps document names to template names.
+html_sidebars = {
+    'index': [
+        'about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html',
+    ],
+    '**': [
+        'about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html',
+    ],
+}
