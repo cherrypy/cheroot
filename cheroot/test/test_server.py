@@ -172,10 +172,10 @@ def test_serving_is_false_and_stop_returns_after_ctrlc():
     httpserver.prepare()
 
     # Simulate a Ctrl-C on the first call to `run`.
-    def raise_keyboard_interrupt(*args):
+    def raise_keyboard_interrupt(*args, **kwargs):
         raise KeyboardInterrupt()
 
-    httpserver._connections.run = raise_keyboard_interrupt
+    httpserver._connections._selector.select = raise_keyboard_interrupt
 
     serve_thread = threading.Thread(target=httpserver.serve)
     serve_thread.start()
