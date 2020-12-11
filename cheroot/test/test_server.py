@@ -117,7 +117,16 @@ def test_stop_interrupts_serve():
     assert not serve_thread.is_alive()
 
 
-def test_server_interrupt():
+@pytest.mark.parametrize(
+    'exc_cls',
+    (
+        IOError,
+        KeyboardInterrupt,
+        OSError,
+        RuntimeError,
+    ),
+)
+def test_server_interrupt(exc_cls):
     """Check that assigning interrupt stops the server."""
     interrupt_msg = 'should catch {uuid!s}'.format(uuid=uuid.uuid4())
     raise_marker_sentinel = object()
@@ -133,7 +142,7 @@ def test_server_interrupt():
         # ensure we catch the exception on the serve() thread
         try:
             httpserver.serve()
-        except RuntimeError as e:
+        except exc_cls as e:
             if str(e) == interrupt_msg:
                 result_q.put(raise_marker_sentinel)
 
@@ -146,7 +155,7 @@ def test_server_interrupt():
 
     # this exception is raised on the serve() thread,
     # not in the calling context.
-    httpserver.interrupt = RuntimeError(interrupt_msg)
+    httpserver.interrupt = exc_cls(interrupt_msg)
 
     serve_thread.join(0.5)
     assert not serve_thread.is_alive()
