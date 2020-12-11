@@ -56,7 +56,20 @@ jobs:
     - name: Pip cache
       uses: actions/cache@v2
       with:
-        path: ~/.cache/pip
+        path: >-
+          ${{
+            runner.os == 'Linux' &&
+            '~/.cache/pip'
+            || ''
+          }}${{
+            runner.os == 'macOS' &&
+            '~/Library/Caches/pip'
+            || ''
+          }}${{
+            runner.os == 'Windows' &&
+            '~\AppData\Local\pip\Cache'
+            || ''
+          }}
         key: ${{ runner.os }}-pip-${{ hashFiles('setup.cfg') }}-${{ hashFiles('setup.py') }}-${{ hashFiles('tox.ini') }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('.pre-commit-config.yaml') }}-${{ hashFiles('.pre-commit-config.yaml.failing') }}-${{ hashFiles('pytest.ini') }}
         restore-keys: |
           ${{ runner.os }}-pip-
