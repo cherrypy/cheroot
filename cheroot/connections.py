@@ -199,8 +199,6 @@ class ConnectionManager:
         self._serving = True
         try:
             self._run(expiration_interval)
-        except Exception:
-            raise
         finally:
             self._serving = False
 
