@@ -2,7 +2,7 @@
 
 - :cp-issue:`1873` via :pr:`340`: Resurrected an
   unintentionally removed feature of interrupting a server
-  main thread by exernally assigning an exception to the
+  main thread by externally assigning an exception to the
   :py:meth:`HTTPServer.interrupt <cheroot.server.\
   HTTPServer.interrupt>` property -- by :user:`liamstask`.
 
