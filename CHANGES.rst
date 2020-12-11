@@ -12,10 +12,10 @@
   :py:class:`~cheroot.connections.ConnectionManager`,
   process connections as they become active rather than
   waiting for a ``tick`` event, addressing performance
-  degradation introduced in v8.1.0.
+  degradation introduced in v8.1.0 -- by :user:`liamstask`.
 
 - :issue:`341` via :pr:`342`: Suppress legitimate OS errors
-  expected on shutdown.
+  expected on shutdown -- by :user:`webknjaz`.
 
 .. scm-version-title:: v8.4.8
 
