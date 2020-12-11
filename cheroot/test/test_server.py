@@ -119,6 +119,8 @@ def test_stop_interrupts_serve():
 
 def test_server_interrupt():
     """Check that assigning interrupt stops the server."""
+    raise_marker_sentinel = object()
+
     httpserver = HTTPServer(
         bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
         gateway=Gateway,
@@ -132,7 +134,7 @@ def test_server_interrupt():
             httpserver.serve()
         except RuntimeError as e:
             if str(e) == 'should catch':
-                result_q.put('caught it')
+                result_q.put(raise_marker_sentinel)
 
     httpserver.prepare()
     serve_thread = threading.Thread(target=serve_thread)
@@ -147,7 +149,7 @@ def test_server_interrupt():
 
     serve_thread.join(0.5)
     assert not serve_thread.is_alive()
-    assert result_q.get_nowait() == 'caught it'
+    assert result_q.get_nowait() is raise_marker_sentinel
 
 
 def test_serving_is_false_and_stop_returns_after_ctrlc():
