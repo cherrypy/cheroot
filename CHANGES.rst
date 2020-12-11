@@ -1,3 +1,11 @@
+.. scm-version-title:: v8.5.1
+
+- :cp-issue:`1873` via :pr:`340`: Resurrected an
+  unintentionally removed feature of interrupting a server
+  main thread by exernally assigning an exception to the
+  :py:meth:`HTTPServer.interrupt <cheroot.server.\
+  HTTPServer.interrupt>` property -- by :user:`liamstask`.
+
 .. scm-version-title:: v8.5.0
 
 - :issue:`305` via :pr:`311`: In

@@ -18,7 +18,7 @@ import requests
 import requests_unixsocket
 import six
 
-from six.moves import urllib
+from six.moves import queue, urllib
 
 from .._compat import bton, ntob
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM
@@ -115,6 +115,51 @@ def test_stop_interrupts_serve():
 
     serve_thread.join(0.5)
     assert not serve_thread.is_alive()
+
+
+@pytest.mark.parametrize(
+    'exc_cls',
+    (
+        IOError,
+        KeyboardInterrupt,
+        OSError,
+        RuntimeError,
+    ),
+)
+def test_server_interrupt(exc_cls):
+    """Check that assigning interrupt stops the server."""
+    interrupt_msg = 'should catch {uuid!s}'.format(uuid=uuid.uuid4())
+    raise_marker_sentinel = object()
+
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+
+    result_q = queue.Queue()
+
+    def serve_thread():
+        # ensure we catch the exception on the serve() thread
+        try:
+            httpserver.serve()
+        except exc_cls as e:
+            if str(e) == interrupt_msg:
+                result_q.put(raise_marker_sentinel)
+
+    httpserver.prepare()
+    serve_thread = threading.Thread(target=serve_thread)
+    serve_thread.start()
+
+    serve_thread.join(0.5)
+    assert serve_thread.is_alive()
+
+    # this exception is raised on the serve() thread,
+    # not in the calling context.
+    httpserver.interrupt = exc_cls(interrupt_msg)
+
+    serve_thread.join(0.5)
+    assert not serve_thread.is_alive()
+    assert result_q.get_nowait() is raise_marker_sentinel
 
 
 def test_serving_is_false_and_stop_returns_after_ctrlc():
