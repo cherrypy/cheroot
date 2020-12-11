@@ -197,6 +197,14 @@ class ConnectionManager:
         Can be shut down by calling `stop()`.
         """
         self._serving = True
+        try:
+            self._run(expiration_interval)
+        except Exception:
+            raise
+        finally:
+            self._serving = False
+
+    def _run(self, expiration_interval):
         last_expiration_check = time.time()
 
         while not self._stop_requested:
@@ -221,8 +229,6 @@ class ConnectionManager:
             if (now - last_expiration_check) > expiration_interval:
                 self._expire()
                 last_expiration_check = now
-
-        self._serving = False
 
     def _remove_invalid_sockets(self):
         """Clean up the resources of any broken connections.
