@@ -500,11 +500,10 @@ def test_keepalive_conn_management(test_client):
             n = test_client.server_instance._connections._num_connections
             if n == count:
                 return
-            if time.time() > deadline:
-                raise AssertionError(
-                    'idle conn count mismatch, wanted {count}, got {n}'.
-                    format(**locals()),
-                )
+            assert time.time() <= deadline, (
+                'idle conn count mismatch, wanted {count}, got {n}'.
+                format(**locals()),
+            )
 
     disconnect_errors = (
         http_client.BadStatusLine,
