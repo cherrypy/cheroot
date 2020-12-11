@@ -69,9 +69,15 @@ acceptable_sock_shutdown_error_codes = {
 * ENOTCONN — client is no longer connected
 * EPIPE — write on a pipe while the other end has been closed
 * ESHUTDOWN — write on a socket which has been shutdown for writing
-* ECONNRESET — connection is reset by the peer
+* ECONNRESET — connection is reset by the peer, we received a TCP RST packet
 
-Ref: https://github.com/cherrypy/cheroot/issues/341#issuecomment-735884889
+Refs:
+* https://github.com/cherrypy/cheroot/issues/341#issuecomment-735884889
+* https://bugs.python.org/issue30319
+* https://bugs.python.org/issue30329
+* https://github.com/python/cpython/commit/83a2c28
+* https://github.com/python/cpython/blob/c39b52f/Lib/poplib.py#L297-L302
+* https://docs.microsoft.com/windows/win32/api/winsock/nf-winsock-shutdown
 """
 
 try:  # py3

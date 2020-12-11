@@ -107,6 +107,10 @@ linkcheck_ignore = [
     # Requires a more liberal 'Accept: ' HTTP request header:
     # Ref: https://github.com/sphinx-doc/sphinx/issues/7247
     r'https://github\.com/cherrypy/cheroot/workflows/[^/]+/badge\.svg',
+
+    # Has an ephemeral anchor (line-range) but actual HTML has separate per-
+    # line anchors.
+    r'https://github.com/python/cpython/blob/c39b52f/Lib/poplib.py#L297-L302',
 ]
 linkcheck_workers = 25
 
