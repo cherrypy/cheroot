@@ -119,6 +119,7 @@ def test_stop_interrupts_serve():
 
 def test_server_interrupt():
     """Check that assigning interrupt stops the server."""
+    interrupt_msg = 'should catch {uuid!s}'.format(uuid=uuid.uuid4())
     raise_marker_sentinel = object()
 
     httpserver = HTTPServer(
@@ -133,7 +134,7 @@ def test_server_interrupt():
         try:
             httpserver.serve()
         except RuntimeError as e:
-            if str(e) == 'should catch':
+            if str(e) == interrupt_msg:
                 result_q.put(raise_marker_sentinel)
 
     httpserver.prepare()
@@ -145,7 +146,7 @@ def test_server_interrupt():
 
     # this exception is raised on the serve() thread,
     # not in the calling context.
-    httpserver.interrupt = RuntimeError('should catch')
+    httpserver.interrupt = RuntimeError(interrupt_msg)
 
     serve_thread.join(0.5)
     assert not serve_thread.is_alive()
