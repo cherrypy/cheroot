@@ -494,6 +494,17 @@ def test_keepalive_conn_management(test_client):
             assert not header_exists('Connection', actual_headers)
             assert not header_exists('Keep-Alive', actual_headers)
 
+    def check_server_idle_conn_count(count, timeout=1.0):
+        deadline = time.time() + timeout
+        while True:
+            n = test_client.server_instance._connections._num_connections
+            if n == count:
+                return
+            assert time.time() <= deadline, (
+                'idle conn count mismatch, wanted {count}, got {n}'.
+                format(**locals()),
+            )
+
     disconnect_errors = (
         http_client.BadStatusLine,
         http_client.CannotSendRequest,
@@ -503,39 +514,48 @@ def test_keepalive_conn_management(test_client):
     # Make a new connection.
     c1 = connection()
     request(c1)
+    check_server_idle_conn_count(1)
 
     # Make a second one.
     c2 = connection()
     request(c2)
+    check_server_idle_conn_count(2)
 
     # Reusing the first connection should still work.
     request(c1)
+    check_server_idle_conn_count(2)
 
     # Creating a new connection should still work, but we should
     # have run out of available connections to keep alive, so the
     # server should tell us to close.
     c3 = connection()
     request(c3, keepalive=False)
+    check_server_idle_conn_count(2)
 
     # Show that the third connection was closed.
     with pytest.raises(disconnect_errors):
         request(c3)
+    check_server_idle_conn_count(2)
 
     # Wait for some of our timeout.
     time.sleep(1.2)
 
     # Refresh the second connection.
     request(c2)
+    check_server_idle_conn_count(2)
 
     # Wait for the remainder of our timeout, plus one tick.
     time.sleep(1.2)
+    check_server_idle_conn_count(1)
 
     # First connection should now be expired.
     with pytest.raises(disconnect_errors):
         request(c1)
+    check_server_idle_conn_count(1)
 
     # But the second one should still be valid.
     request(c2)
+    check_server_idle_conn_count(1)
 
     # Restore original timeout.
     test_client.server_instance.timeout = timeout
