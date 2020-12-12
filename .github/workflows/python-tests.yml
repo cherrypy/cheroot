@@ -258,4 +258,4 @@ jobs:
         github.event.ref_type == 'tag'
       uses: pypa/gh-action-pypi-publish@master
       with:
-        password: ${{ secrets.pypi_password }}
+        password: ${{ secrets.PYPI_TOKEN }}
