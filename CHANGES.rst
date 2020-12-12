@@ -6,6 +6,12 @@
   :py:meth:`HTTPServer.interrupt <cheroot.server.\
   HTTPServer.interrupt>` property -- by :user:`liamstask`.
 
+- :pr:`350`: Fixed the incarnation of an earlier regression
+  of not resetting the serving state
+  on :py:data:``SIGINT`` originally fixed by :pr:`322` and
+  :pr:`331` but reintroduced by the changes in :pr:`311`
+  -- by :user:`liamstask`.
+
 .. scm-version-title:: v8.5.0
 
 - :issue:`305` via :pr:`311`: In
