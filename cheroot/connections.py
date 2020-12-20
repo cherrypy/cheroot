@@ -152,17 +152,18 @@ class ConnectionManager:
                 conn.socket.fileno(), selectors.EVENT_READ, data=conn,
             )
 
-    def _expire(self):
+    def _expire(self, threshold):
         """Expire least recently used connections.
 
-        This happens if there are either too many open connections, or if the
-        connections have been timed out.
+        Args:
+            threshold (float): Connections that have not been used
+                within this duration (in seconds), are considered
+                expired and are closed and removed.
 
         This should be called periodically.
         """
         # find any connections still registered with the selector
         # that have not been active recently enough.
-        threshold = time.time() - self.server.timeout
         timed_out_connections = [
             (sock_fd, conn)
             for (sock_fd, conn) in self._selector.connections
@@ -207,7 +208,9 @@ class ConnectionManager:
 
         while not self._stop_requested:
             try:
-                active_list = self._selector.select(timeout=0.01)
+                active_list = self._selector.select(
+                    timeout=expiration_interval,
+                )
             except OSError:
                 self._remove_invalid_sockets()
                 continue
@@ -225,7 +228,7 @@ class ConnectionManager:
 
             now = time.time()
             if (now - last_expiration_check) > expiration_interval:
-                self._expire()
+                self._expire(threshold=now - self.server.timeout)
                 last_expiration_check = now
 
     def _remove_invalid_sockets(self):
