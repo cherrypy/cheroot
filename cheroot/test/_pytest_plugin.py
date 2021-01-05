@@ -7,10 +7,10 @@ itself, useless for end-users' app testing.
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-from pytest import __version__
+import pytest
 
 
-pytest_version = tuple(map(int, __version__.split('.')))
+pytest_version = tuple(map(int, pytest.__version__.split('.')))
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
