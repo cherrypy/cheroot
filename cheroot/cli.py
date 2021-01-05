@@ -228,7 +228,7 @@ _arg_spec = {
         type=int,
         help='Timeout in seconds for putting requests into queue',
     ),
-}
+}  # noqa: C408
 
 
 def main():

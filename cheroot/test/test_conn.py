@@ -121,7 +121,7 @@ class ErrorLogMonitor:
         """Initialize the server error log monitor/interceptor.
 
         If you need to ignore a particular error message use the property
-        ``ignored_msgs` by appending to the list the expected error messages.
+        ``ignored_msgs`` by appending to the list the expected error messages.
         """
         self.calls = []
         # to be used the the teardown validation
