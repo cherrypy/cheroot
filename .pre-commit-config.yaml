@@ -36,7 +36,7 @@ repos:
   - id: name-tests-test
     args:
     - --django
-    exclude: cheroot/test/(helper|webtest).py
+    exclude: cheroot/test/(helper|webtest|_pytest_plugin).py
     files: cheroot/test/.+\.py$
   - id: check-added-large-files
   - id: check-byte-order-marker
