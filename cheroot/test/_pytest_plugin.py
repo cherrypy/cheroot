@@ -29,10 +29,10 @@ def pytest_load_initial_conftests(early_config, parser, args):
         'pytest.PytestUnhandledThreadExceptionWarning:_pytest.threadexception',
         'ignore:Exception ignored in. '
         '<socket.socket fd=-1, family=AddressFamily.AF_INET, '
-        'type=SocketKind.SOCK_STREAM, proto=6>:'
+        'type=SocketKind.SOCK_STREAM, proto=.:'
         'pytest.PytestUnraisableExceptionWarning:_pytest.unraisableexception',
         'ignore:Exception ignored in. '
         '<socket.socket fd=-1, family=AddressFamily.AF_INET6, '
-        'type=SocketKind.SOCK_STREAM, proto=6>:'
+        'type=SocketKind.SOCK_STREAM, proto=.:'
         'pytest.PytestUnraisableExceptionWarning:_pytest.unraisableexception',
     ))
