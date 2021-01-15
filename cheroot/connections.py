@@ -216,7 +216,8 @@ class ConnectionManager:
                 if conn is self.server:
                     # New connection
                     new_conn = self._from_server_socket(self.server.socket)
-                    self.server.process_conn(new_conn)
+                    if new_conn is not None:
+                        self.server.process_conn(new_conn)
                 else:
                     # unregister connection from the selector until the server
                     # has read from it and returned it via put()
