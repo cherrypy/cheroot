@@ -1,3 +1,11 @@
+.. scm-version-title:: v8.5.2
+
+- :issue:`358` via :pr:`359`: Fixed a regression from
+  :pr:`199` that made the worker threads exit on invalid
+  connection attempts and could make the whole server
+  unresponsive once there was no workers left.
+  -- by :user:`cameronbrunner`.
+
 .. scm-version-title:: v8.5.1
 
 - :cp-issue:`1873` via :pr:`340`: Resurrected an
