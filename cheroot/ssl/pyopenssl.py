@@ -104,8 +104,14 @@ class SSLFileobjectMixin:
             except SSL.WantWriteError:
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError as e:
-                if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return b''
+                if e.args == (-1, 'Unexpected EOF'):
+                    if is_reader:
+                        return b''
+                    else:
+                        # See #210. Prevents DOS attack caused by
+                        # silent connections lasting beyond connection
+                        # timeout length.
+                        raise errors.FatalSSLAlert(*e.args)
 
                 errnum = e.args[0]
                 if is_reader and errnum in errors.socket_errors_to_ignore:
