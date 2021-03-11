@@ -125,7 +125,7 @@ class WorkerThread(threading.Thread):
                 try:
                     keep_conn_open = conn.communicate()
                 except SSLError as ex:
-                    self.server.error_log(f'ignored extra SSLError: {repr(ex)}')
+                    self.server.error_log(f'ignored extra SSLError {repr(ex)}')
                 finally:
                     if keep_conn_open:
                         self.server.put_conn(conn)
