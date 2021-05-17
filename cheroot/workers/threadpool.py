@@ -15,6 +15,7 @@ import time
 import socket
 import warnings
 
+
 from six.moves import queue
 
 from jaraco.functools import pass_none
@@ -258,11 +259,13 @@ class ThreadPool:
     def stop(self, timeout=5):
         """Terminate all worker threads.
 
+
         Args:
             timeout (int): time to wait for threads to stop gracefully
         """
         # for compatability, negative timeouts are treated like None
         # TODO: treat negative timeouts like already expired timeouts
+        endtime=float(0)
         if timeout is not None and timeout < 0:
             timeout = None
             warnings.warning(
@@ -320,7 +323,7 @@ class ThreadPool:
         return (
             thread
             for thread in threads
-            if thread is not threading.currentThread()
+            if thread is not threading.current_thread()
         )
 
     @property
