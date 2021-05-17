@@ -265,7 +265,7 @@ class ThreadPool:
         """
         # for compatability, negative timeouts are treated like None
         # TODO: treat negative timeouts like already expired timeouts
-        endtime=float(0)
+
         if timeout is not None and timeout < 0:
             timeout = None
             warnings.warning(
