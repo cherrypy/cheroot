@@ -259,13 +259,11 @@ class ThreadPool:
     def stop(self, timeout=5):
         """Terminate all worker threads.
 
-
         Args:
             timeout (int): time to wait for threads to stop gracefully
         """
         # for compatability, negative timeouts are treated like None
         # TODO: treat negative timeouts like already expired timeouts
-
         if timeout is not None and timeout < 0:
             timeout = None
             warnings.warning(
