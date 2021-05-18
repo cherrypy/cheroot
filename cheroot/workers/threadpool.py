@@ -320,7 +320,7 @@ class ThreadPool:
         return (
             thread
             for thread in threads
-            if thread is not threading.currentThread()
+            if thread is not threading.current_thread()
         )
 
     @property
