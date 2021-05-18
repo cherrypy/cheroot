@@ -15,7 +15,6 @@ import time
 import socket
 import warnings
 
-
 from six.moves import queue
 
 from jaraco.functools import pass_none
