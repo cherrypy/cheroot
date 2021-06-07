@@ -108,7 +108,7 @@ class WorkerThread(threading.Thread):
 
         Retrieves incoming connections from thread pool.
         """
-        self.server.stats['Worker Threads'][self.get_name()] = self.stats
+        self.server.stats['Worker Threads'][self.name] = self.stats
         try:
             self.ready = True
             while True:
@@ -176,9 +176,9 @@ class ThreadPool:
         for i in range(self.min):
             self._threads.append(WorkerThread(self.server))
         for worker in self._threads:
-            worker.set_name(
+            worker.name = (
                 'CP Server {worker_name!s}'.
-                format(worker_name=worker.get_name()),
+                format(worker_name=worker.name),
             )
             worker.start()
         for worker in self._threads:
@@ -226,9 +226,9 @@ class ThreadPool:
 
     def _spawn_worker(self):
         worker = WorkerThread(self.server)
-        worker.set_name(
+        worker.name = (
             'CP Server {worker_name!s}'.
-            format(worker_name=worker.get_name()),
+            format(worker_name=worker.name),
         )
         worker.start()
         return worker
