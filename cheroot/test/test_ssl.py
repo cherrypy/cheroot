@@ -150,7 +150,7 @@ def tls_ca_certificate_pem_path(ca):
 def tls_certificate(ca):
     """Provide a leaf certificate via fixture."""
     interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
-    return ca.issue_server_cert(ntou(interface))
+    return ca.issue_cert(ntou(interface))
 
 
 @pytest.fixture
@@ -294,8 +294,7 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
         'idna.core.ulabel',
         return_value=ntob(tls_client_identity),
     ):
-        client_cert = client_cert_root_ca.issue_server_cert(
-            # FIXME: change to issue_cert once new trustme is out
+        client_cert = client_cert_root_ca.issue_cert(
             ntou(tls_client_identity),
         )
         del client_cert_root_ca
