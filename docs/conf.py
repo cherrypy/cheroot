@@ -126,7 +126,7 @@ nitpick_ignore = [
     ('py:meth', 'cheroot.connections.ConnectionManager.get_conn'),
 
     # Ref: https://github.com/pyca/pyopenssl/issues/1012
-    ('py:class', 'OpenSSL.SSL.Context'),
+    ('py:class', 'pyopenssl:OpenSSL.SSL.Context'),
 ]
 
 # Ref:
