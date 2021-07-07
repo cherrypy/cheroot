@@ -1841,7 +1841,7 @@ class HTTPServer:
         """Context manager for running this server in a thread."""
         self.prepare()
         thread = threading.Thread(target=self.serve)
-        thread.setDaemon(True)
+        thread.daemon = True
         thread.start()
         try:
             yield thread
