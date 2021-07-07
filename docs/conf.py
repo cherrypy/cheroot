@@ -124,6 +124,9 @@ nitpick_ignore = [
     ('py:class', '_pyio.BufferedReader'),
     ('py:class', 'unittest.case.TestCase'),
     ('py:meth', 'cheroot.connections.ConnectionManager.get_conn'),
+
+    # Ref: https://github.com/pyca/pyopenssl/issues/1012
+    ('py:class', 'OpenSSL.SSL.Context'),
 ]
 
 # Ref:
