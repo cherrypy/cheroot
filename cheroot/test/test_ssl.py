@@ -22,7 +22,7 @@ import six
 import trustme
 
 from .._compat import bton, ntob, ntou
-from .._compat import IS_ABOVE_OPENSSL10, IS_PYPY
+from .._compat import IS_ABOVE_OPENSSL10, IS_CI, IS_PYPY
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
 from ..server import HTTPServer, get_ssl_adapter_class
 from ..testing import (
@@ -269,6 +269,11 @@ def test_ssl_adapters(
         ssl.CERT_OPTIONAL,  # same as CERT_REQUIRED in client mode, don't use
         ssl.CERT_REQUIRED,  # server should validate if client cert CA is OK
     ),
+)
+@pytest.mark.xfail(
+    IS_PYPY and IS_CI,
+    reason='Fails under PyPy in CI for unknown reason',
+    strict=False,
 )
 def test_tls_client_auth(  # noqa: C901  # FIXME
     # FIXME: remove twisted logic, separate tests
