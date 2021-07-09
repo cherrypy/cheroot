@@ -651,9 +651,13 @@ def test_broken_connection_during_tcp_fin(
                 mocker.mock_module.Mock(side_effect=exc_instance),
             )
         _close_kernel_socket.fin_spy = mocker.spy(self.socket, 'shutdown')
-        _close_kernel_socket.exception_leaked = True
-        old_close_kernel_socket(self)
-        _close_kernel_socket.exception_leaked = False
+
+        try:
+            old_close_kernel_socket(self)
+        except simulated_exception:
+            _close_kernel_socket.exception_leaked = True
+        else:
+            _close_kernel_socket.exception_leaked = False
 
     monkeypatch.setattr(
         test_client.server_instance.ConnectionClass,
