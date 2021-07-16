@@ -552,7 +552,7 @@ jobs:
     - pre-setup  # transitive, for accessing settings
     - tests
     if: >-
-      fromJSON(needs.pre-setup.outputs.is_untagged_devel) ||
+      fromJSON(needs.pre-setup.outputs.is-untagged-devel) ||
       fromJSON(needs.pre-setup.outputs.release-requested)
     runs-on: ${{ matrix.os }}
     strategy:
@@ -590,7 +590,7 @@ jobs:
         path: dist/
     - name: Publish 🐍📦  ${{ needs.pre-setup.outputs.git_tag }}to TestPyPI
       if: >-
-        fromJSON(needs.pre-setup.outputs.is_untagged_devel) ||
+        fromJSON(needs.pre-setup.outputs.is-untagged-devel) ||
         fromJSON(needs.pre-setup.outputs.release-requested)
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
