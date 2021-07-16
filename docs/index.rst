@@ -14,7 +14,7 @@ Welcome to Cheroot documentation!
    :caption: Reference
 
    devguide
-   pkg/modules
+   Private (dev) API autodoc <pkg/modules>
 
 
 `Cheroot <https://github.com/cherrypy/cheroot>`_ is the high-performance,
