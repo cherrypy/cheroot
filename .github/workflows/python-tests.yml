@@ -274,6 +274,12 @@ jobs:
         with open('pyproject.toml') as pyproject_toml:
             pyproj = toml.load(pyproject_toml)
 
+        pyproj['tool'] = pyproj.get('tool', {})
+        pyproj['tool']['setuptools_scm'] = pyproj['tool'].get(
+            'setuptools_scm',
+            {},
+        )
+
         pyproj['tool']['setuptools_scm']['local_scheme'] = 'no-local-version'
         with open('pyproject.toml', 'w') as pyproject_toml:
             toml.dump(pyproj, pyproject_toml)
