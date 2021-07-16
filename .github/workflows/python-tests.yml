@@ -32,6 +32,102 @@ on:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
 jobs:
+  lint:
+    name: ${{ matrix.toxenv }}
+    needs:
+    - pre-setup
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        os:
+        - Ubuntu
+        python-version:
+        - 3.9
+        toxenv:
+        - pre-commit
+        - setup-check
+        - build-docs
+        - spellcheck-docs
+        - linkcheck-docs
+        experimental:
+        - false
+        include:
+        - experimental: true
+          os: Ubuntu
+          python-version: 3.9
+          toxenv: pre-commit-failing
+
+    continue-on-error: ${{ matrix.experimental }}
+
+    env:
+      PY_COLORS: 1
+      TOX_PARALLEL_NO_SPINNER: 1
+      TOXENV: ${{ matrix.toxenv }}
+
+    steps:
+    - name: >-
+        Switch to using Python v${{ matrix.python-version }}
+        by default
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: >-
+        Calculate Python interpreter version hash value
+        for use in the cache key
+      id: calc_cache_key_py
+      run: |
+        from hashlib import sha512
+        from sys import version
+
+        hash = sha512(version.encode()).hexdigest()
+        print(f'::set-output name=py_hash_key::{hash}')
+      shell: python
+    - name: Get pip cache dir
+      id: pip-cache
+      run: >-
+        echo "::set-output name=dir::$(pip cache dir)"
+    - name: Set up pip cache
+      uses: actions/cache@v2.1.5
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: >-
+          ${{ runner.os }}-pip-${{
+          steps.calc_cache_key_py.outputs.py_hash_key }}-${{
+          needs.pre-setup.outputs.cache_key_files }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{
+              steps.calc_cache_key_py.outputs.py_hash_key
+          }}-
+          ${{ runner.os }}-pip-
+    - name: Install tox
+      run: >-
+        python -m
+        pip install
+        --user
+        tox
+
+    - name: Grab the source from Git
+      uses: actions/checkout@v2
+
+    - name: Pre-populate tox env
+      run: >-
+        python -m
+        tox
+        --parallel auto
+        --parallel-live
+        --skip-missing-interpreters false
+        --notest
+    - name: Initialize pre-commit envs if needed
+      run: |
+        test -d .tox/pre-commit && .tox/pre-commit/bin/python -m pre_commit install-hooks || :
+        test -d .tox/pre-commit-failing && .tox/pre-commit-failing/bin/python -m pre_commit install-hooks || :
+    - name: Run linters
+      run: >-
+        python -m
+        tox
+        --parallel auto
+        --parallel-live
+        --skip-missing-interpreters false
 
   pre-setup:
     name: Pre-set global build settings
