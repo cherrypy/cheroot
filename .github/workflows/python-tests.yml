@@ -455,6 +455,13 @@ jobs:
           python-version: pypy-3.6
         - os: windows-2016
           python-version: pypy-3.6
+        # NOTE: Windows PyPy 3.7 jobs are excluded because of the lack
+        # NOTE: of the build deps to compile cryptography.
+        # NOTE: They should be re-added once it's fixed.
+        - os: windows-latest
+          python-version: pypy-3.7
+        - os: windows-2016
+          python-version: pypy-3.7
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
