@@ -261,9 +261,6 @@ jobs:
         --skip-missing-interpreters false
         --notest
     - name: Build dists and verify their metadata
-      env:
-        SETUPTOOLS_SCM_PRETEND_VERSION_FOR_CHEROOT: >-
-          ${{ needs.pre-setup.outputs.git-tag }}
       run: >-
         python -m
         tox
