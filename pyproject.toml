@@ -6,7 +6,7 @@ requires = [
 
     # Plugins
     "setuptools_scm>=1.15",
-    "setuptools_scm_git_archive>=1.0",
+    "setuptools_scm_git_archive>=1.1",
 ]
 build-backend = "setuptools.build_meta"
 
