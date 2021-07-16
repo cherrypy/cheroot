@@ -359,7 +359,7 @@ jobs:
       ${{
           (
             (
-              needs.pre-setup.outputs.release_requested == 'true' &&
+              needs.pre-setup.outputs.release-requested == 'true' &&
               !toJSON(github.event.inputs.YOLO)
             ) ||
             contains(matrix.python-version, 'alpha') ||
@@ -553,7 +553,7 @@ jobs:
     - tests
     if: >-
       fromJSON(needs.pre-setup.outputs.is_untagged_devel) ||
-      fromJSON(needs.pre-setup.outputs.release_requested)
+      fromJSON(needs.pre-setup.outputs.release-requested)
     runs-on: ${{ matrix.os }}
     strategy:
       # NOTE: Even though it's one job, it's easier to keep the params in one
@@ -564,12 +564,12 @@ jobs:
 
     steps:
     - name: Check out src from Git
-      if: fromJSON(needs.pre-setup.outputs.release_requested)
+      if: fromJSON(needs.pre-setup.outputs.release-requested)
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
     - name: Setup git user as [bot]
-      if: fromJSON(needs.pre-setup.outputs.release_requested)
+      if: fromJSON(needs.pre-setup.outputs.release-requested)
       run: >
         git config --local user.email
         'github-actions[bot]@users.noreply.github.com'
@@ -579,7 +579,7 @@ jobs:
     - name: >-
         Tag the release in the local Git repo
         as ${{ needs.pre-setup.outputs.git_tag }}
-      if: fromJSON(needs.pre-setup.outputs.release_requested)
+      if: fromJSON(needs.pre-setup.outputs.release-requested)
       run: >-
         git tag '${{ needs.pre-setup.outputs.git_tag }}'
         ${{ github.event.inputs.release-commitish }}
@@ -591,20 +591,20 @@ jobs:
     - name: Publish 🐍📦  ${{ needs.pre-setup.outputs.git_tag }}to TestPyPI
       if: >-
         fromJSON(needs.pre-setup.outputs.is_untagged_devel) ||
-        fromJSON(needs.pre-setup.outputs.release_requested)
+        fromJSON(needs.pre-setup.outputs.release-requested)
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.TESTPYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
     - name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git_tag }} to PyPI
-      if: fromJSON(needs.pre-setup.outputs.release_requested)
+      if: fromJSON(needs.pre-setup.outputs.release-requested)
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_TOKEN }}
     - name: >-
         Push ${{ needs.pre-setup.outputs.git_tag }} tag corresponding
         to the just published release back to GitHub
-      if: fromJSON(needs.pre-setup.outputs.release_requested)
+      if: fromJSON(needs.pre-setup.outputs.release-requested)
       run: >-
         git push --atomic origin '${{ needs.pre-setup.outputs.git_tag }}'
 ...
