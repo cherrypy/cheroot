@@ -86,7 +86,10 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'python2': ('https://docs.python.org/2', None),
     # Ref: https://github.com/cherrypy/cherrypy/issues/1872
-    'cherrypy': ('https://cherrypy.rtfd.io/en/latest', None),
+    'cherrypy': (
+        'https://cherrypy.rtfd.io/en/latest',
+        ('https://docs.cherrypy.org/en/latest', None),
+    ),
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
     'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
     'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
