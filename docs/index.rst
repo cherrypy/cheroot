@@ -13,6 +13,7 @@ Welcome to Cheroot documentation!
 .. toctree::
    :caption: Reference
 
+   devguide
    pkg/modules
 
 
