@@ -149,4 +149,4 @@ sphinx_tabs_valid_builders = ['linkcheck']  # prevent linkcheck warning
 default_role = 'any'
 
 
-html_theme = 'alabaster'
+html_theme = 'furo'
