@@ -16,6 +16,7 @@ import requests
 import requests_unixsocket
 import six
 
+from pypytools.gc.custom import DefaultGc
 from six.moves import queue, urllib
 
 from .._compat import bton, ntob
@@ -362,6 +363,13 @@ if not IS_WINDOWS:
 
 
 @pytest.fixture
+def _garbage_bin():
+    """Disable garbage collection when this fixture is in use."""
+    with DefaultGc().nogc():
+        yield
+
+
+@pytest.fixture
 def resource_limit(request):
     """Set the resource limit two times bigger then requested."""
     resource = pytest.importorskip(
@@ -388,8 +396,13 @@ def resource_limit(request):
 
 
 @pytest.fixture
-def many_open_sockets(resource_limit):
+def many_open_sockets(request, resource_limit):
     """Allocate a lot of file descriptors by opening dummy sockets."""
+    # NOTE: `@pytest.mark.usefixtures` doesn't work on fixtures which
+    # NOTE: forces us to invoke this one dynamically to avoid having an
+    # NOTE: unused argument.
+    request.getfixturevalue('_garbage_bin')
+
     # Hoard a lot of file descriptors by opening and storing a lot of sockets
     test_sockets = []
     # Open a lot of file descriptors, so the next one the server
