@@ -5,12 +5,10 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-from contextlib import closing
 import os
 import socket
 import tempfile
 import threading
-import time
 import uuid
 
 import pytest
@@ -325,7 +323,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     indirect=('resource_limit',),
 )
 @pytest.mark.usefixtures('many_open_sockets')
-def test_high_number_of_file_descriptors(resource_limit):
+def test_high_number_of_file_descriptors(native_server_client, resource_limit):
     """Test the server does not crash with a high file-descriptor value.
 
     This test shouldn't cause a server crash when trying to access
@@ -337,26 +335,24 @@ def test_high_number_of_file_descriptors(resource_limit):
     # We want to force the server to use a file-descriptor with
     # a number above resource_limit
 
-    # Create our server
-    httpserver = HTTPServer(
-        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT), gateway=Gateway,
-    )
+    # Patch the method that processes
+    _old_process_conn = native_server_client.server_instance.process_conn
 
-    try:
-        # This will trigger a crash if select() is used in the implementation
-        with httpserver._run_in_thread():
-            # allow server to run long enough to invoke select()
-            time.sleep(1.0)
-    except:  # noqa: E722
-        raise  # only needed for `else` to work
-    else:
-        # We use closing here for py2-compat
-        with closing(socket.socket()) as sock:
-            # Check new sockets created are still above our target number
-            assert sock.fileno() >= resource_limit
-    finally:
-        # Stop our server
-        httpserver.stop()
+    def native_process_conn(conn):
+        native_process_conn.filenos.add(conn.socket.fileno())
+        return _old_process_conn(conn)
+    native_process_conn.filenos = set()
+    native_server_client.server_instance.process_conn = native_process_conn
+
+    # Trigger a crash if select() is used in the implementation
+    native_server_client.connect('/')
+
+    # Ensure that at least one connection got accepted, otherwise the
+    # follow-up check wouldn't make sense
+    assert len(native_process_conn.filenos) > 0
+
+    # Check at least one of the sockets created are above the target number
+    assert any(fn >= resource_limit for fn in native_process_conn.filenos)
 
 
 if not IS_WINDOWS:
