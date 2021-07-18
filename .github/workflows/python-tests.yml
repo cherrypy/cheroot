@@ -586,13 +586,11 @@ jobs:
           }}-
           ${{ runner.os }}-pip-
     - name: Install tox
-      # Ref: https://github.com/dstanek/tox-run-command/issues/4
       run: >-
         python -m
         pip install
         --user
-        'tox<3.21.0'
-        tox-run-command
+        tox
 
     - name: Grab the source from Git
       uses: actions/checkout@v2
@@ -647,14 +645,6 @@ jobs:
         + repr(ssl.OPENSSL_VERSION_INFO)
         + '\nOPENSSL_VERSION_NUMBER: '
         + repr(ssl.OPENSSL_VERSION_NUMBER))"
-    - name: Log PyOpenSSL version
-      run: >-
-        python -m
-        tox
-        --parallel auto
-        --parallel-live
-        --run-command
-        "{envpython} -m OpenSSL.debug"
 
     - name: Run tests
       run: >-
