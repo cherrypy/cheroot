@@ -653,11 +653,8 @@ jobs:
         --parallel auto
         --parallel-live
         --skip-missing-interpreters false
-        ${{
-            matrix.python-version == '3.4'
-            && format('--installpkg ''dist/{0}''', env.ARTIFACT_NAME)
-            || '--skip-pkg-install'
-        }}
+        -vvvv
+        --installpkg 'dist/${{ env.ARTIFACT_NAME }}'
     - name: Send coverage data to Codecov
       uses: codecov/codecov-action@v1
       with:
