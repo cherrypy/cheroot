@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     # Third-party extensions:

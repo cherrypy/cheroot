@@ -49,6 +49,7 @@ jobs:
         - build-docs
         - spellcheck-docs
         - linkcheck-docs
+        - doctest-docs
         experimental:
         - false
         include:

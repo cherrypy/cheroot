@@ -57,6 +57,10 @@ will run the server forever) or use invoking :func:`prepare()
 
 And now for a trivial doctest to exercise the test suite
 
+.. testsetup::
+
+   from cheroot.server import HTTPServer
+
 >>> 'HTTPServer' in globals()
 True
 """

@@ -559,6 +559,10 @@ def strip_netloc(url):
     Useful for wrapping an absolute-URI for which only the
     path is expected (such as in calls to :py:meth:`WebCase.getPage`).
 
+    .. testsetup::
+
+       from cheroot.test.webtest import strip_netloc
+
     >>> strip_netloc('https://google.com/foo/bar?bing#baz')
     '/foo/bar?bing'
 
