@@ -7,7 +7,7 @@ read some related notes.
 The release process is fairly simple:
 
 1. Go to
-   https://github.com/cherrypy/cheroot/actions/workflows/python-tests.yml.
+   https://github.com/cherrypy/cheroot/actions/workflows/ci-cd.yml.
 
 2. Click ``Run workflow``.
 
