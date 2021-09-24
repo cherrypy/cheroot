@@ -43,3 +43,18 @@ flake8-eradicate = ["-*"]
 flake8-isort = ["+*", "-I001", "-I003", "-I004"]
 # don't fail on unknown docutils roles because sphinx knows them
 flake8-rst-docstrings = ["+*", "-RST304", "-RST303", "-RST301", "-RST203", "-RST201"]
+
+[tool.mypy]
+pretty = true
+python_version = 3.6
+show_column_numbers = true
+show_error_codes = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "cheroot.test.*"
+ignore_errors = true
