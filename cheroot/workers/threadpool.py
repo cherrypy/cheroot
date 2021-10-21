@@ -280,8 +280,9 @@ class ThreadPool:
             self._queue.put(_SHUTDOWNREQUEST)
 
         ignored_errors = (
-            # TODO: explain this exception.
-            AssertionError,
+            # Raised when start_response called >1 time w/o exc_info or
+            # wsgi write is called before start_response. See cheroot#261
+            RuntimeError,
             # Ignore repeated Ctrl-C. See cherrypy#691.
             KeyboardInterrupt,
         )
