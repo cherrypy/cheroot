@@ -31,7 +31,7 @@ try:
 except ImportError:
     extensions.append('spelling_stub_ext')
 else:
-    del _sphinxcontrib_spelling
+    del _sphinxcontrib_spelling  # noqa: WPS100
     extensions.append('sphinxcontrib.spelling')
 
 # Tree-local extensions:

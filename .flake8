@@ -43,6 +43,32 @@ per-file-ignores =
   # and subprocesses (import – S404; call – S603) in tests:
   cheroot/test/test_*.py: S101, S404, S603
 
+  # FIXME:
+  cheroot/__init__.py: WPS100
+  cheroot/__main__.py: WPS130
+  cheroot/_compat.py: WPS100, WPS123
+  cheroot/cli.py: WPS100, WPS110, WPS120, WPS130
+  cheroot/connections.py: WPS100, WPS110, WPS121, WPS122, WPS130
+  cheroot/errors.py: WPS121
+  cheroot/makefile.py: WPS100, WPS120, WPS121, WPS122, WPS123, WPS130
+  cheroot/server.py: WPS100, WPS110, WPS120, WPS121, WPS122, WPS130, WPS132
+  cheroot/ssl/builtin.py: WPS120, WPS121, WPS130
+  cheroot/ssl/pyopenssl.py: WPS100, WPS120, WPS121, WPS130
+  cheroot/test/conftest.py: WPS100, WPS130
+  cheroot/test/helper.py: WPS110, WPS121
+  cheroot/test/test_cli.py: WPS110
+  cheroot/test/test_makefile.py: WPS122
+  cheroot/test/test_wsgi.py: WPS110, WPS121
+  cheroot/test/test_core.py: WPS110, WPS121
+  cheroot/test/test_dispatch.py: WPS121
+  cheroot/test/test_ssl.py: WPS100, WPS110, WPS121, WPS130
+  cheroot/test/test_server.py: WPS110, WPS121, WPS122, WPS130
+  cheroot/test/test_conn.py: WPS100, WPS110, WPS120, WPS121, WPS122
+  cheroot/test/webtest.py: WPS100, WPS110, WPS120, WPS121, WPS122
+  cheroot/testing.py: WPS100
+  cheroot/workers/threadpool.py: WPS100, WPS121
+  cheroot/wsgi.py: WPS100, WPS110, WPS121, WPS122, WPS130
+
 # flake8-pytest-style
 # PT001:
 pytest-fixture-no-parentheses = true
