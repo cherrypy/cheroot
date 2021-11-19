@@ -84,13 +84,13 @@ jobs:
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
-      id: calc_cache_key_py
+      id: calc-cache-key-py
       run: |
         from hashlib import sha512
         from sys import version
 
         hash = sha512(version.encode()).hexdigest()
-        print(f'::set-output name=py_hash_key::{hash}')
+        print(f'::set-output name=py-hash-key::{hash}')
       shell: python
     - name: Get pip cache dir
       id: pip-cache
@@ -102,11 +102,11 @@ jobs:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: >-
           ${{ runner.os }}-pip-${{
-          steps.calc_cache_key_py.outputs.py_hash_key }}-${{
-          needs.pre-setup.outputs.cache_key_files }}
+          steps.calc-cache-key-py.outputs.py-hash-key }}-${{
+          needs.pre-setup.outputs.cache-key-files }}
         restore-keys: |
           ${{ runner.os }}-pip-${{
-              steps.calc_cache_key_py.outputs.py_hash_key
+              steps.calc-cache-key-py.outputs.py-hash-key
           }}-
           ${{ runner.os }}-pip-
     - name: Install tox
@@ -561,13 +561,13 @@ jobs:
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
-      id: calc_cache_key_py
+      id: calc-cache-key-py
       run: |
         from hashlib import sha512
         from sys import version
 
         hash = sha512(version.encode()).hexdigest()
-        print('::set-output name=py_hash_key::{hash}'.format(hash=hash))
+        print('::set-output name=py-hash-key::{hash}'.format(hash=hash))
       shell: python
     - name: Get pip cache dir
       id: pip-cache
@@ -588,11 +588,11 @@ jobs:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: >-
           ${{ runner.os }}-pip-${{
-          steps.calc_cache_key_py.outputs.py_hash_key }}-${{
-          needs.pre-setup.outputs.cache_key_files }}
+          steps.calc-cache-key-py.outputs.py-hash-key }}-${{
+          needs.pre-setup.outputs.cache-key-files }}
         restore-keys: |
           ${{ runner.os }}-pip-${{
-              steps.calc_cache_key_py.outputs.py_hash_key
+              steps.calc-cache-key-py.outputs.py-hash-key
           }}-
           ${{ runner.os }}-pip-
     - name: Install tox
@@ -707,17 +707,17 @@ jobs:
 
     - name: >-
         Tag the release in the local Git repo
-        as ${{ needs.pre-setup.outputs.git_tag }}
+        as ${{ needs.pre-setup.outputs.git-tag }}
       if: fromJSON(needs.pre-setup.outputs.release-requested)
       run: >-
-        git tag '${{ needs.pre-setup.outputs.git_tag }}'
+        git tag '${{ needs.pre-setup.outputs.git-tag }}'
         ${{ github.event.inputs.release-commitish }}
     - name: Download all the dists
       uses: actions/download-artifact@v2
       with:
         name: python-package-distributions
         path: dist/
-    - name: Publish 🐍📦  ${{ needs.pre-setup.outputs.git_tag }}to TestPyPI
+    - name: Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }}to TestPyPI
       if: >-
         fromJSON(needs.pre-setup.outputs.is-untagged-devel) ||
         fromJSON(needs.pre-setup.outputs.release-requested)
@@ -725,15 +725,15 @@ jobs:
       with:
         password: ${{ secrets.TESTPYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
-    - name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git_tag }} to PyPI
+    - name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
       if: fromJSON(needs.pre-setup.outputs.release-requested)
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_TOKEN }}
     - name: >-
-        Push ${{ needs.pre-setup.outputs.git_tag }} tag corresponding
+        Push ${{ needs.pre-setup.outputs.git-tag }} tag corresponding
         to the just published release back to GitHub
       if: fromJSON(needs.pre-setup.outputs.release-requested)
       run: >-
-        git push --atomic origin '${{ needs.pre-setup.outputs.git_tag }}'
+        git push --atomic origin '${{ needs.pre-setup.outputs.git-tag }}'
 ...
