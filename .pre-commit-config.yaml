@@ -1,11 +1,11 @@
 ---
 repos:
-- repo: git://github.com/asottile/add-trailing-comma
+- repo: https://github.com/asottile/add-trailing-comma.git
   rev: v2.0.1
   hooks:
   - id: add-trailing-comma
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks
+- repo: https://github.com/Lucas-C/pre-commit-hooks.git
   rev: v1.1.7
   hooks:
   - id: remove-tabs
@@ -22,7 +22,7 @@ repos:
     files: >-
       ^.*\.rst$
 
-- repo: git://github.com/pre-commit/pre-commit-hooks
+- repo: https://github.com/pre-commit/pre-commit-hooks.git
   rev: v2.3.0
   hooks:
   # Side-effects:
@@ -53,17 +53,21 @@ repos:
   # Heavy checks:
   - id: check-ast
   - id: debug-statements
+
+- repo: https://github.com/PyCQA/pydocstyle.git
+  rev: 6.1.1
+  hooks:
+  - id: pydocstyle
+
+- repo: https://gitlab.com/PyCQA/flake8.git
+  rev: 4.0.1
+  hooks:
   - id: flake8
     additional_dependencies:
     - flake8-2020>=1.6.0
     - flake8-pytest-style>=1.0.0
 
-- repo: git://github.com/PyCQA/pydocstyle.git
-  rev: 5.0.2
-  hooks:
-  - id: pydocstyle
-
-- repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
+- repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
   rev: v1.1.0
   hooks:
   - id: forbid-html-img-without-alt-text
