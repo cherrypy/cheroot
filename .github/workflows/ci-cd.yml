@@ -31,6 +31,15 @@ on:
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
+concurrency:
+  group: >-
+    ${{
+        github.workflow
+    }}-${{
+        github.event.pull_request.number || github.sha
+    }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: ${{ matrix.toxenv }}
