@@ -20,7 +20,7 @@
    :alt: codecov
 
 .. image:: https://readthedocs.org/projects/cheroot/badge/?version=latest
-   :target: https://cheroot.cherrypy.org/en/latest/?badge=latest
+   :target: https://cheroot.cherrypy.dev/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/badge/StackOverflow-Cheroot-blue.svg
    :target: https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy

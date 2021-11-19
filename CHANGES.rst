@@ -627,7 +627,7 @@
   <https://github.com/jaraco/skeleton>`_.
 
   Docs now built and `deployed at RTD
-  <https://cheroot.cherrypy.org/en/latest/history.html>`_.
+  <https://cheroot.cherrypy.dev/en/latest/history.html>`_.
 
 
 .. scm-version-title:: v5.2.0
