@@ -419,7 +419,7 @@ jobs:
         path: |
           dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
           dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
-        retention-days: 4
+        retention-days: 30  # Defaults to 90
 
   tests:
     name: >-
