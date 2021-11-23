@@ -304,8 +304,9 @@ jobs:
       🏗 sdist & wheel 📦
       v${{ needs.pre-setup.outputs.dist-version }}
     needs:
-    - pre-setup
-    runs-on: ubuntu-latest
+    - pre-setup  # transitive, for accessing settings
+
+    runs-on: Ubuntu-latest
 
     env:
       PY_COLORS: 1
