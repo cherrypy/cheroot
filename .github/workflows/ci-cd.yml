@@ -367,8 +367,8 @@ jobs:
       run: >-
         python -m
         tox
-        -p auto
-        --parallel-live -vvvv
+        --parallel auto
+        --parallel-live
         --skip-missing-interpreters false
         --notest
     - name: Install toml Python distribution package
