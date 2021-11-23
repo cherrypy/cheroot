@@ -152,17 +152,18 @@ class ConnectionManager:
                 conn.socket.fileno(), selectors.EVENT_READ, data=conn,
             )
 
-    def _expire(self):
+    def _expire(self, threshold):
         """Expire least recently used connections.
 
-        This happens if there are either too many open connections, or if the
-        connections have been timed out.
+        Args:
+            threshold (float): Connections that have not been used
+                within this duration (in seconds), are considered
+                expired and are closed and removed.
 
         This should be called periodically.
         """
         # find any connections still registered with the selector
         # that have not been active recently enough.
-        threshold = time.time() - self.server.timeout
         timed_out_connections = [
             (sock_fd, conn)
             for (sock_fd, conn) in self._selector.connections
@@ -203,11 +204,23 @@ class ConnectionManager:
             self._serving = False
 
     def _run(self, expiration_interval):
+        """Run connection handler loop until stop was requested.
+
+        Use expiration_interval as select() timeout
+        to assure expired connections are closed in time.
+
+        On Windows cap the timeout to 0.05 seconds
+        as select() does not return when a socket is ready.
+        """
         last_expiration_check = time.time()
+        if os.name == 'nt':
+            select_timeout = min(expiration_interval, 0.05)
+        else:
+            select_timeout = expiration_interval
 
         while not self._stop_requested:
             try:
-                active_list = self._selector.select(timeout=0.01)
+                active_list = self._selector.select(timeout=select_timeout)
             except OSError:
                 self._remove_invalid_sockets()
                 continue
@@ -226,7 +239,7 @@ class ConnectionManager:
 
             now = time.time()
             if (now - last_expiration_check) > expiration_interval:
-                self._expire()
+                self._expire(threshold=now - self.server.timeout)
                 last_expiration_check = now
 
     def _remove_invalid_sockets(self):
