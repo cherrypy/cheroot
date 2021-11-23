@@ -363,7 +363,7 @@ jobs:
           }}
         ref: ${{ github.event.inputs.release-commitish }}
 
-    - name: Pre-populate tox env
+    - name: Pre-populate the tox env
       run: >-
         python -m
         tox
@@ -661,7 +661,7 @@ jobs:
         + '\nOPENSSL_VERSION_NUMBER: '
         + repr(ssl.OPENSSL_VERSION_NUMBER))"
 
-    - name: Run tests
+    - name: Run the testing
       run: >-
         python -m
         tox
