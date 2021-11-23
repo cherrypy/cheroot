@@ -212,13 +212,17 @@ jobs:
       run: |
         from hashlib import sha512
         hashes_combo = sha512('-'.join((
-          "${{ hashFiles('setup.cfg')}}",
-          "${{ hashFiles('setup.py')}}",
-          "${{ hashFiles('tox.ini')}}",
-          "${{ hashFiles('pyproject.toml') }}",
-          "${{ hashFiles('.pre-commit-config.yaml') }}",
-          "${{ hashFiles('.pre-commit-config.yaml.failing') }}",
-          "${{ hashFiles('pytest.ini') }}",
+          "${{
+            hashFiles(
+              'setup.cfg',
+              'setup.py',
+              'tox.ini',
+              'pyproject.toml',
+              '.pre-commit-config.yaml',
+              '.pre-commit-config.yaml.failing',
+              'pytest.ini'
+            )
+          }}",
         )).encode()).hexdigest()
         print(f'::set-output name=files-hash-key::{hashes_combo}')
     - name: Get pip cache dir
