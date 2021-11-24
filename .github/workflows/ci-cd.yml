@@ -653,7 +653,8 @@ jobs:
         --parallel auto
         --parallel-live
         --skip-missing-interpreters false
-        --skip-pkg-install
+        -vvvv
+        --installpkg 'dist/${{ env.ARTIFACT_NAME }}'
     - name: Send coverage data to Codecov
       uses: codecov/codecov-action@v2
       with:
