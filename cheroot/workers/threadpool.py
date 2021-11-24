@@ -173,7 +173,7 @@ class ThreadPool:
 
     def start(self):
         """Start the pool of threads."""
-        for i in range(self.min):
+        for _ in range(self.min):
             self._threads.append(WorkerThread(self.server))
         for worker in self._threads:
             worker.name = (
@@ -251,7 +251,7 @@ class ThreadPool:
         # put shutdown requests on the queue equal to the number of threads
         # to remove. As each request is processed by a worker, that worker
         # will terminate and be culled from the list.
-        for n in range(n_to_remove):
+        for _ in range(n_to_remove):
             self._pending_shutdowns.append(None)
             self._queue.put(_SHUTDOWNREQUEST)
 

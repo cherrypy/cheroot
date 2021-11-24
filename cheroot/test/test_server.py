@@ -408,7 +408,7 @@ def many_open_sockets(request, resource_limit):
     # Open a lot of file descriptors, so the next one the server
     # opens is a high number
     try:
-        for i in range(resource_limit):
+        for _ in range(resource_limit):
             sock = socket.socket()
             test_sockets.append(sock)
             # If we reach a high enough number, we don't need to open more

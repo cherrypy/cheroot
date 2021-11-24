@@ -1781,7 +1781,7 @@ class HTTPServer:
                 info = [(sock_type, socket.SOCK_STREAM, 0, '', bind_addr)]
 
             for res in info:
-                af, socktype, proto, canonname, sa = res
+                af, socktype, proto, _canonname, sa = res
                 try:
                     self.bind(af, socktype, proto)
                     break
@@ -2122,7 +2122,7 @@ class HTTPServer:
                         host, port, socket.AF_UNSPEC,
                         socket.SOCK_STREAM,
                     ):
-                        af, socktype, proto, canonname, sa = res
+                        af, socktype, proto, _canonname, _sa = res
                         s = None
                         try:
                             s = socket.socket(af, socktype, proto)

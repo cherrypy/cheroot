@@ -149,7 +149,7 @@ def tls_ca_certificate_pem_path(ca):
 @pytest.fixture
 def tls_certificate(ca):
     """Provide a leaf certificate via fixture."""
-    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+    interface, _host, _port = _get_conn_data(ANY_INTERFACE_IPV4)
     return ca.issue_cert(ntou(interface))
 
 
@@ -658,7 +658,7 @@ def test_http_over_https_error(
     interface, _host, port = _get_conn_data(ip_addr)
     tlshttpserver = tls_http_server((interface, port), tls_adapter)
 
-    interface, host, port = _get_conn_data(
+    interface, _host, port = _get_conn_data(
         tlshttpserver.bind_addr,
     )
 

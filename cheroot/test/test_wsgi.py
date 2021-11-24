@@ -20,7 +20,7 @@ def simple_wsgi_server():
     """Fucking simple wsgi server fixture (duh)."""
     port = portend.find_available_local_port()
 
-    def app(environ, start_response):
+    def app(_environ, start_response):
         status = '200 OK'
         response_headers = [('Content-type', 'text/plain')]
         start_response(status, response_headers)

@@ -871,7 +871,7 @@ def test_100_Continue(test_client):
     conn.endheaders()
     conn.send(b"d'oh")
     response = conn.response_class(conn.sock, method='POST')
-    version, status, reason = response._read_status()
+    _version, status, _reason = response._read_status()
     assert status != 100
     conn.close()
 
@@ -904,7 +904,7 @@ def test_100_Continue(test_client):
 
     # ...get the final response
     response.begin()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    status_line, _actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
     assert actual_status == 200
     expected_resp_body = ("thanks for '%s'" % body).encode()
@@ -937,7 +937,7 @@ def test_readall_or_close(test_client, max_request_body_size):
     response = conn.response_class(conn.sock, method='POST')
 
     # ...assert and then skip the 100 response
-    version, status, reason = response._read_status()
+    _version, status, _reason = response._read_status()
     assert status == 100
     skip = True
     while skip:
@@ -948,7 +948,7 @@ def test_readall_or_close(test_client, max_request_body_size):
 
     # ...get the final response
     response.begin()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    status_line, _actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
     assert actual_status == 500
 
@@ -1053,7 +1053,7 @@ def test_Chunked_Encoding(test_client):
     conn.endheaders()
     conn.send(body)
     response = conn.getresponse()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    status_line, _actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
     assert actual_status == 200
     assert status_line[4:] == 'OK'
@@ -1093,7 +1093,7 @@ def test_Content_Length_in(test_client):
     conn.putheader('Content-Length', '9999')
     conn.endheaders()
     response = conn.getresponse()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    status_line, _actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
     assert actual_status == 413
     expected_resp_body = (
@@ -1106,7 +1106,7 @@ def test_Content_Length_in(test_client):
 
 def test_Content_Length_not_int(test_client):
     """Test that malicious Content-Length header returns 400."""
-    status_line, actual_headers, actual_resp_body = test_client.post(
+    status_line, _actual_headers, actual_resp_body = test_client.post(
         '/upload',
         headers=[
             ('Content-Type', 'text/plain'),
@@ -1146,7 +1146,7 @@ def test_Content_Length_out(
     conn.endheaders()
 
     response = conn.getresponse()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    status_line, _actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
 
     assert actual_status == expected_resp_status
@@ -1285,7 +1285,7 @@ def test_invalid_selected_connection(test_client, monkeypatch):
 
     # request a page with connection keep-alive to make sure
     # we'll have a connection to be modified.
-    resp_status, resp_headers, resp_body = test_client.request(
+    resp_status, _resp_headers, _resp_body = test_client.request(
         '/page1', headers=[('Connection', 'Keep-Alive')],
     )
 
