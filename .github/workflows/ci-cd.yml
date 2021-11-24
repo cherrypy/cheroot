@@ -425,8 +425,6 @@ jobs:
     name: >-
       🐍${{
           matrix.python-version
-      }} / ${{
-          matrix.tested-artifact
       }} @ ${{
           matrix.os
       }}
@@ -455,9 +453,6 @@ jobs:
         - macOS-latest
         - windows-latest
         - windows-2016
-        tested-artifact:
-        - wheel
-        - sdist
         exclude:
         # NOTE: Windows PyPy jobs are excluded to address the tox bug
         # NOTE: https://github.com/tox-dev/tox/issues/1704.
@@ -497,10 +492,6 @@ jobs:
         # https://github.com/actions/python-versions/blob/c483657/versions-manifest.json#L1228
         - os: ubuntu-18.04
           python-version: 3.4
-          tested-artifact: wheel
-        - os: ubuntu-18.04
-          python-version: 3.4
-          tested-artifact: sdist
 
     continue-on-error: >-
       ${{
@@ -518,12 +509,7 @@ jobs:
       }}
 
     env:
-      ARTIFACT_NAME: >-
-        ${{
-            matrix.tested-artifact == 'wheel'
-            && needs.pre-setup.outputs.wheel-artifact-name
-            || needs.pre-setup.outputs.sdist-artifact-name
-        }}
+      ARTIFACT_NAME: ${{ needs.pre-setup.outputs.wheel-artifact-name }}
       PIP_DISABLE_PIP_VERSION_CHECK: 1
       PIP_NO_PYTHON_VERSION_WARNING: 1
       PIP_NO_WARN_SCRIPT_LOCATION: 1
