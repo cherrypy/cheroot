@@ -20,12 +20,14 @@ from ..testing import get_server_client
 
 
 @pytest.fixture
+# pylint: disable=redefined-outer-name
 def wsgi_server_client(wsgi_server):  # noqa: F811
     """Create a test client out of given WSGI server."""
     return get_server_client(wsgi_server)
 
 
 @pytest.fixture
+# pylint: disable=redefined-outer-name
 def native_server_client(native_server):  # noqa: F811
     """Create a test client out of given HTTP server."""
     return get_server_client(native_server)
