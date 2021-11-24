@@ -43,7 +43,7 @@ def http_server():
         yield httpserver
 
     srv_creator = iter(start_srv())
-    next(srv_creator)
+    next(srv_creator)  # pylint: disable=stop-iteration-return
     yield srv_creator
     try:
         while True:
