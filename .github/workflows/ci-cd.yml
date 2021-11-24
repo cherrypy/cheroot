@@ -509,7 +509,6 @@ jobs:
       }}
 
     env:
-      ARTIFACT_NAME: ${{ needs.pre-setup.outputs.wheel-artifact-name }}
       PIP_DISABLE_PIP_VERSION_CHECK: 1
       PIP_NO_PYTHON_VERSION_WARNING: 1
       PIP_NO_WARN_SCRIPT_LOCATION: 1
@@ -612,8 +611,8 @@ jobs:
         --parallel auto
         --parallel-live
         --skip-missing-interpreters false
+        --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
         --notest
-        --installpkg 'dist/${{ env.ARTIFACT_NAME }}'
 
     - name: Windows system info
       run: systeminfo
@@ -663,7 +662,7 @@ jobs:
           GHA,
           ${{ runner.os }},
           ${{ matrix.python-version }},
-          ${{ env.ARTIFACT_NAME }}
+          ${{ needs.pre-setup.outputs.wheel-artifact-name }}
 
   publish:
     name: Publish 🐍📦 to (Test)PyPI
