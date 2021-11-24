@@ -13,7 +13,7 @@ import time
 import pytest
 
 from ..server import Gateway, HTTPServer
-from ..testing import (  # noqa: F401
+from ..testing import (  # noqa: F401  # pylint: disable=unused-import
     native_server, wsgi_server,
 )
 from ..testing import get_server_client
