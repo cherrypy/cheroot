@@ -654,7 +654,7 @@ jobs:
         --parallel-live
         --skip-missing-interpreters false
         -vvvv
-        --installpkg 'dist/${{ env.ARTIFACT_NAME }}'
+        --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
     - name: Send coverage data to Codecov
       uses: codecov/codecov-action@v2
       with:
