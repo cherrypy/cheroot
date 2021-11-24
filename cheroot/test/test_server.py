@@ -262,6 +262,7 @@ def test_peercreds_unix_sock(peercreds_enabled_server):
     if isinstance(bind_addr, six.binary_type):
         bind_addr = bind_addr.decode()
 
+    # pylint: disable=possibly-unused-variable
     quoted = urllib.parse.quote(bind_addr, safe='')
     unix_base_uri = 'http+unix://{quoted}'.format(**locals())
 
@@ -294,6 +295,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     if isinstance(bind_addr, six.binary_type):
         bind_addr = bind_addr.decode()
 
+    # pylint: disable=possibly-unused-variable
     quoted = urllib.parse.quote(bind_addr, safe='')
     unix_base_uri = 'http+unix://{quoted}'.format(**locals())
 

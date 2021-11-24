@@ -29,7 +29,9 @@ def simple_wsgi_server():
     host = '::'
     addr = host, port
     server = wsgi.Server(addr, app, timeout=600 if IS_SLOW_ENV else 20)
+    # pylint: disable=possibly-unused-variable
     url = 'http://localhost:{port}/'.format(**locals())
+    # pylint: disable=possibly-unused-variable
     with server._run_in_thread() as thread:
         yield locals()
 

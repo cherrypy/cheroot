@@ -169,6 +169,7 @@ def testing_server(raw_testing_server, monkeypatch):
 
     # Teardown verification, in case that the server logged an
     # error that wasn't notified to the client or we just made a mistake.
+    # pylint: disable=possibly-unused-variable
     for c_msg, c_level, c_traceback in raw_testing_server.error_log.calls:
         if c_level <= logging.WARNING:
             continue
