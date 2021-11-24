@@ -500,7 +500,7 @@ def openURL(*args, **kwargs):
     def on_exception():
         exc = sys.exc_info()[1]
         if isinstance(exc, raise_subcls):
-            raise
+            raise exc
         time.sleep(0.5)
 
     # Try up to 10 times
