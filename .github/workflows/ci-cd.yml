@@ -585,6 +585,7 @@ jobs:
         pip install
         --user
         --upgrade
+        --force-reinstall
         pip-with-requires-python
     - name: Install tox
       run: >-
