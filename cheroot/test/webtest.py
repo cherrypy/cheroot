@@ -26,7 +26,7 @@ import time
 import traceback
 import os
 import json
-import unittest
+import unittest  # pylint: disable=deprecated-module,preferred-module
 import warnings
 import functools
 
