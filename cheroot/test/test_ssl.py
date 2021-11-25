@@ -52,6 +52,7 @@ IS_PYOPENSSL_SSL_VERSION_1_0 = (
 PY27 = sys.version_info[:2] == (2, 7)
 PY34 = sys.version_info[:2] == (3, 4)
 PY3 = not six.PY2
+PY310_PLUS = sys.version_info[:2] >= (3, 10)
 
 
 _stdlib_to_openssl_verify = {
@@ -445,6 +446,13 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
                 "('Connection aborted.', "
                 "BrokenPipeError(32, 'Broken pipe'))",
             )
+
+        if IS_GITHUB_ACTIONS_WORKFLOW and IS_LINUX and PY310_PLUS:
+            expected_substrings += (
+                'SSLError(SSLEOFError(8, '
+                "'EOF occurred in violation of protocol (_ssl.c:",
+            )
+
         assert any(e in err_text for e in expected_substrings)
 
 
