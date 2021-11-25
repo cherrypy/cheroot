@@ -613,7 +613,6 @@ def test_https_over_http_error(http_server, ip_addr):
             'builtin',
             marks=pytest.mark.xfail(
                 IS_WINDOWS and six.PY2,
-                raises=requests.exceptions.ConnectionError,
                 reason='Stdlib `ssl` module behaves weirdly '
                 'on Windows under Python 2',
                 strict=False,
