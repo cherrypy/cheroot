@@ -452,6 +452,12 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
                 'SSLError(SSLEOFError(8, '
                 "'EOF occurred in violation of protocol (_ssl.c:",
             )
+        if IS_GITHUB_ACTIONS_WORKFLOW and IS_WIN2016 and PY310_PLUS:
+            expected_substrings += (
+                "('Connection aborted.', "
+                'RemoteDisconnected('
+                "'Remote end closed connection without response'))",
+            )
 
         assert any(e in err_text for e in expected_substrings)
 
