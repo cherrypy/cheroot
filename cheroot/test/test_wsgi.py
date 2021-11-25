@@ -58,3 +58,24 @@ def test_connection_keepalive(simple_wsgi_server):
         failures = sum(task.result() for task in tasks)
 
     assert not failures
+
+
+def test_gateway_start_response_called_twice(monkeypatch):
+    """Verify that repeat calls of ``Gateway.start_response()`` fail."""
+    monkeypatch.setattr(wsgi.Gateway, 'get_environ', lambda self: {})
+    wsgi_gateway = wsgi.Gateway(None)
+    wsgi_gateway.started_response = True
+
+    err_msg = '^WSGI start_response called a second time with no exc_info.$'
+    with pytest.raises(RuntimeError, match=err_msg):
+        wsgi_gateway.start_response('200', (), None)
+
+
+def test_gateway_write_needs_start_response_called_before(monkeypatch):
+    """Check that calling ``Gateway.write()`` needs started response."""
+    monkeypatch.setattr(wsgi.Gateway, 'get_environ', lambda self: {})
+    wsgi_gateway = wsgi.Gateway(None)
+
+    err_msg = '^WSGI write called before start_response.$'
+    with pytest.raises(RuntimeError, match=err_msg):
+        wsgi_gateway.write(None)  # The actual arg value is unimportant
