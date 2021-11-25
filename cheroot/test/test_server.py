@@ -29,6 +29,9 @@ from ..testing import (
 )
 
 
+IS_SLOW_ENV = IS_MACOS or IS_WINDOWS
+
+
 unix_only_sock_test = pytest.mark.skipif(
     not hasattr(socket, 'AF_UNIX'),
     reason='UNIX domain sockets are only available under UNIX-based OS',
@@ -180,7 +183,9 @@ def test_serving_is_false_and_stop_returns_after_ctrlc():
     serve_thread.start()
 
     # The thread should exit right away due to the interrupt.
-    serve_thread.join(httpserver.expiration_interval * 2)
+    serve_thread.join(
+        httpserver.expiration_interval * (4 if IS_SLOW_ENV else 2),
+    )
     assert not serve_thread.is_alive()
 
     assert not httpserver._connections._serving
