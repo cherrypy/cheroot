@@ -453,7 +453,7 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
                 'SSLError(SSLEOFError(8, '
                 "'EOF occurred in violation of protocol (_ssl.c:",
             )
-        if IS_GITHUB_ACTIONS_WORKFLOW and IS_WIN2016 and PY310_PLUS:
+        if IS_GITHUB_ACTIONS_WORKFLOW and IS_WINDOWS and PY310_PLUS:
             expected_substrings += (
                 "('Connection aborted.', "
                 'RemoteDisconnected('
