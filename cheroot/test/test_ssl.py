@@ -423,6 +423,10 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
                 'ConnectionResetError(10054, '
                 "'An existing connection was forcibly closed "
                 "by the remote host', None, 10054, None))",
+                "('Connection aborted.', "
+                'error(10054, '
+                "'An existing connection was forcibly closed "
+                "by the remote host'))",
             ) if IS_WINDOWS else (
                 "('Connection aborted.', "
                 'OSError("(104, \'ECONNRESET\')"))',
