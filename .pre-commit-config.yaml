@@ -74,3 +74,20 @@ repos:
   rev: v1.1.0
   hooks:
   - id: forbid-html-img-without-alt-text
+
+- repo: https://github.com/PyCQA/pylint.git
+  rev: v2.11.1
+  hooks:
+  - id: pylint
+    additional_dependencies:
+    - jaraco.context
+    - jaraco.functools
+    - jaraco.text
+    - more_itertools
+    - portend
+    - pylint-pytest < 1.1.0
+    - pypytools
+    - requests_toolbelt
+    - requests_unixsocket
+    - six
+    - Sphinx

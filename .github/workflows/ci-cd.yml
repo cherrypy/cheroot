@@ -59,15 +59,6 @@ jobs:
         - spellcheck-docs
         - linkcheck-docs
         - doctest-docs
-        experimental:
-        - false
-        include:
-        - experimental: true
-          os: Ubuntu
-          python-version: 3.9
-          toxenv: pre-commit-failing
-
-    continue-on-error: ${{ matrix.experimental }}
 
     env:
       PY_COLORS: 1
@@ -130,7 +121,6 @@ jobs:
     - name: Initialize pre-commit envs if needed
       run: |
         test -d .tox/pre-commit && .tox/pre-commit/bin/python -m pre_commit install-hooks || :
-        test -d .tox/pre-commit-failing && .tox/pre-commit-failing/bin/python -m pre_commit install-hooks || :
     - name: Run linters
       run: >-
         python -m
@@ -219,7 +209,6 @@ jobs:
               'tox.ini',
               'pyproject.toml',
               '.pre-commit-config.yaml',
-              '.pre-commit-config.yaml.failing',
               'pytest.ini'
             )
           }}",
