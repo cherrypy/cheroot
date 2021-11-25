@@ -447,7 +447,7 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
                 "BrokenPipeError(32, 'Broken pipe'))",
             )
 
-        if IS_GITHUB_ACTIONS_WORKFLOW and IS_LINUX and PY310_PLUS:
+        if (IS_LINUX or IS_MACOS) and PY310_PLUS:
             expected_substrings += (
                 'SSLError(SSLEOFError(8, '
                 "'EOF occurred in violation of protocol (_ssl.c:",
