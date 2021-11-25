@@ -459,7 +459,14 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
 @pytest.mark.parametrize(  # noqa: C901  # FIXME
     'adapter_type',
     (
-        'builtin',
+        pytest.param(
+            'builtin',
+            marks=pytest.mark.xfail(
+                IS_GITHUB_ACTIONS_WORKFLOW and IS_MACOS and PY310_PLUS,
+                reason='Unclosed TLS resource warnings happen on macOS '
+                'under Python 3.10',
+            ),
+        ),
         'pyopenssl',
     ),
 )
