@@ -27,12 +27,14 @@ submodules:
   recursive: true
 
 build:
-  image: latest
+  os: ubuntu-20.04
+  tools:
+    python: >-  # PyYAML parses it as float `3.1` if it's not an explicit str
+      3.10
 
 # Optionally set the version of Python and requirements required
 # to build docs
 python:
-  version: 3.7
   install:
   - requirements: requirements/tests.in
   - method: pip
