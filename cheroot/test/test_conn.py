@@ -17,8 +17,11 @@ import pytest
 from jaraco.text import trim, unwrap
 
 from cheroot.test import helper, webtest
-from cheroot._compat import IS_CI, IS_PYPY, IS_WINDOWS
+from cheroot._compat import IS_CI, IS_MACOS, IS_PYPY, IS_WINDOWS
 import cheroot.server
+
+
+IS_SLOW_ENV = IS_MACOS or IS_WINDOWS
 
 
 timeout = 1
@@ -673,7 +676,8 @@ def test_broken_connection_during_tcp_fin(
     conn.send(('Host: %s' % conn.host).encode('ascii'))
     conn.close()
 
-    for _ in range(10):  # Let the server attempt TCP shutdown
+    # Let the server attempt TCP shutdown:
+    for _ in range(10 * (2 if IS_SLOW_ENV else 1)):
         time.sleep(0.1)
         if hasattr(_close_kernel_socket, 'exception_leaked'):
             break
