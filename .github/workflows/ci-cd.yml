@@ -663,11 +663,24 @@ jobs:
           ${{ matrix.python-version }},
           ${{ needs.pre-setup.outputs.wheel-artifact-name }}
 
+  check:  # This job does nothing and is only used for the branch protection
+    needs:
+    - lint
+    - tests
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Report success of the test matrix
+      run: >-
+        print("All's good")
+      shell: python
+
   publish:
     name: Publish 🐍📦 to (Test)PyPI
     needs:
+    - check
     - pre-setup  # transitive, for accessing settings
-    - tests
     if: >-
       fromJSON(needs.pre-setup.outputs.is-untagged-devel) ||
       fromJSON(needs.pre-setup.outputs.release-requested)
