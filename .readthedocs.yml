@@ -34,9 +34,9 @@ build:
 python:
   version: 3.7
   install:
+  - requirements: requirements/tests.in
   - method: pip
     path: .
     extra_requirements:
     - docs
-    - testing
   system_packages: false
