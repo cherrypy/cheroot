@@ -315,7 +315,7 @@ jobs:
         retention-days: 30  # Defaults to 90
 
   lint:
-    name: ${{ matrix.toxenv }}
+    name: 🧹 ${{ matrix.toxenv }}
     needs:
     - build
     - pre-setup  # transitive, for accessing settings
