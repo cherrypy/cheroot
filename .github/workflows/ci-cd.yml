@@ -335,6 +335,7 @@ jobs:
         - spellcheck-docs
         - linkcheck-docs
         - doctest-docs
+      fail-fast: false
 
     env:
       PY_COLORS: 1
