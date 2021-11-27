@@ -2,7 +2,6 @@
 requires = [
     # Essentials
     "setuptools>=34.4",
-    "wheel",
 
     # Plugins
     "setuptools_scm[toml]>=3.5",
