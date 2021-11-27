@@ -204,7 +204,7 @@ jobs:
     env:
       PY_COLORS: 1
       TOX_PARALLEL_NO_SPINNER: 1
-      TOXENV: cleanup-dists,build-dists,metadata-validation
+      TOXENV: cleanup-dists,build-dists
 
     steps:
     - name: Switch to using Python 3.9 by default
@@ -317,7 +317,8 @@ jobs:
   lint:
     name: ${{ matrix.toxenv }}
     needs:
-    - pre-setup
+    - build
+    - pre-setup  # transitive, for accessing settings
 
     runs-on: ${{ matrix.os }}-latest
     strategy:
@@ -329,6 +330,7 @@ jobs:
         toxenv:
         - pre-commit
         - setup-check
+        - metadata-validation
         - build-docs
         - spellcheck-docs
         - linkcheck-docs
@@ -385,6 +387,19 @@ jobs:
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.inputs.release-commitish }}
+
+    - name: Make the env clean of non-test files
+      if: matrix.toxenv == 'metadata-validation'
+      run: |
+        shopt -s extglob
+        rm -rf !tox.ini
+      shell: bash
+    - name: Download all the dists
+      if: matrix.toxenv == 'metadata-validation'
+      uses: actions/download-artifact@v2
+      with:
+        name: python-package-distributions
+        path: dist/
 
     - name: Pre-populate tox env
       run: >-
