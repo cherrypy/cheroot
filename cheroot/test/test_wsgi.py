@@ -1,6 +1,7 @@
 """Test wsgi."""
 
 from concurrent.futures.thread import ThreadPoolExecutor
+from traceback import print_tb
 
 import pytest
 import portend
@@ -48,6 +49,7 @@ def test_connection_keepalive(simple_wsgi_server):
         with ExceptionTrap(requests.exceptions.ConnectionError) as trap:
             resp = session.get('info')
             resp.raise_for_status()
+        print_tb(trap.tb)
         return bool(trap)
 
     with ThreadPoolExecutor(max_workers=10 if IS_SLOW_ENV else 50) as pool:
