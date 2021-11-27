@@ -332,9 +332,9 @@ jobs:
         - setup-check
         - metadata-validation
         - build-docs
-        - spellcheck-docs
-        - linkcheck-docs
         - doctest-docs
+        - linkcheck-docs
+        - spellcheck-docs
       fail-fast: false
 
     env:
