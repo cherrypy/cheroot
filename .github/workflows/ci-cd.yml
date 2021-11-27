@@ -668,64 +668,93 @@ jobs:
         print("All's good")
       shell: python
 
-  publish:
-    name: Publish 🐍📦 to (Test)PyPI
+  publish-pypi:
+    name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
     needs:
     - check
     - pre-setup  # transitive, for accessing settings
     if: >-
-      fromJSON(needs.pre-setup.outputs.is-untagged-devel) ||
       fromJSON(needs.pre-setup.outputs.release-requested)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      # NOTE: Even though it's one job, it's easier to keep the params in one
-      # NOTE: place using a matrix:
-      matrix:
-        os:
-        - ubuntu-latest
+    runs-on: Ubuntu-latest
+
+    environment:
+      name: pypi
+      url: >-
+        https://pypi.org/project/proxy.py/${{
+          needs.pre-setup.outputs.dist-version
+        }}
 
     steps:
-    - name: Check out src from Git
-      if: fromJSON(needs.pre-setup.outputs.release-requested)
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Setup git user as [bot]
-      if: fromJSON(needs.pre-setup.outputs.release-requested)
-      # Refs:
-      # * https://github.community/t/github-actions-bot-email-address/17204/6
-      # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
-      uses: fregante/setup-git-user@v1.0.1
-
-    - name: >-
-        Tag the release in the local Git repo
-        as ${{ needs.pre-setup.outputs.git-tag }}
-      if: fromJSON(needs.pre-setup.outputs.release-requested)
-      run: >-
-        git tag '${{ needs.pre-setup.outputs.git-tag }}'
-        ${{ github.event.inputs.release-commitish }}
     - name: Download all the dists
       uses: actions/download-artifact@v2
       with:
         name: python-package-distributions
         path: dist/
-    - name: Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }}to TestPyPI
-      if: >-
-        fromJSON(needs.pre-setup.outputs.is-untagged-devel) ||
-        fromJSON(needs.pre-setup.outputs.release-requested)
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.TESTPYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
-    - name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
-      if: fromJSON(needs.pre-setup.outputs.release-requested)
+    - name: >-
+        Publish 🐍📦 v${{ needs.pre-setup.outputs.git-tag }} to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_TOKEN }}
+
+  publish-testpypi:
+    name: Publish 🐍📦 to TestPyPI
+    needs:
+    - check
+    - pre-setup  # transitive, for accessing settings
+    if: >-
+      fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+    runs-on: Ubuntu-latest
+
+    environment:
+      name: testpypi
+      url: >-
+        https://test.pypi.org/project/proxy.py/${{
+          needs.pre-setup.outputs.dist-version
+        }}
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v2
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: >-
+        Publish 🐍📦  v${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+
+  post-release-repo-update:
+    name: >-
+      Publish post-release Git tag
+      for ${{ needs.pre-setup.outputs.git-tag }}
+    needs:
+    - publish-pypi
+    - pre-setup  # transitive, for accessing settings
+    runs-on: Ubuntu-latest
+
+    steps:
+    - name: Fetch the src snapshot
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+        ref: ${{ github.event.inputs.release-commitish }}
+    - name: Setup git user as [bot]
+      uses: fregante/setup-git-user@v1.0.1
+
+    - name: >-
+        Tag the release in the local Git repo
+        as v${{ needs.pre-setup.outputs.git-tag }}
+      run: >-
+        git tag
+        -m '${{ needs.pre-setup.outputs.git-tag }}'
+        '${{ needs.pre-setup.outputs.git-tag }}'
+        --
+        ${{ github.event.inputs.release-commitish }}
     - name: >-
         Push ${{ needs.pre-setup.outputs.git-tag }} tag corresponding
         to the just published release back to GitHub
-      if: fromJSON(needs.pre-setup.outputs.release-requested)
       run: >-
         git push --atomic origin '${{ needs.pre-setup.outputs.git-tag }}'
 
@@ -733,10 +762,8 @@ jobs:
     name: >-
       Publish a GitHub Release for
       ${{ needs.pre-setup.outputs.git-tag }}
-    # FIXME: drop, once TestPyPI publishing is separated
-    if: fromJSON(needs.pre-setup.outputs.release-requested)
     needs:
-    - publish
+    - post-release-repo-update
     - pre-setup  # transitive, for accessing settings
     runs-on: Ubuntu-latest
 
