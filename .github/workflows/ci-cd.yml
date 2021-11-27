@@ -422,6 +422,7 @@ jobs:
         --parallel auto
         --parallel-live
         --skip-missing-interpreters false
+        --skip-pkg-install
 
   tests:
     name: >-
