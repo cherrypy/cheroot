@@ -291,8 +291,8 @@ jobs:
 
     env:
       PY_COLORS: 1
-      TOXENV: cleanup-dists,build-dists,metadata-validation
       TOX_PARALLEL_NO_SPINNER: 1
+      TOXENV: cleanup-dists,build-dists,metadata-validation
 
     steps:
     - name: Switch to using Python 3.9 by default
