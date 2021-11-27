@@ -402,7 +402,8 @@ jobs:
         name: python-package-distributions
         path: dist/
 
-    - name: Pre-populate tox env
+    - name: >-
+        Pre-populate tox envs: `${{ env.TOXENV }}`
       run: >-
         python -m
         tox
@@ -413,7 +414,8 @@ jobs:
     - name: Initialize pre-commit envs if needed
       run: |
         test -d .tox/pre-commit && .tox/pre-commit/bin/python -m pre_commit install-hooks || :
-    - name: Run linters
+    - name: >-
+        Run tox envs: `${{ env.TOXENV }}`
       run: >-
         python -m
         tox
