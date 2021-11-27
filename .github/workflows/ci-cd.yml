@@ -426,7 +426,7 @@ jobs:
 
   tests:
     name: >-
-      🐍${{
+      🧪 🐍${{
           matrix.python-version
       }} @ ${{
           matrix.os
