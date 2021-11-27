@@ -130,7 +130,7 @@ jobs:
         --skip-missing-interpreters false
 
   pre-setup:
-    name: Pre-set global build settings
+    name: ⚙️ Pre-set global build settings
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -289,9 +289,7 @@ jobs:
         }}-py2.py3-none-any.whl')
 
   build:
-    name: >-
-      🏗 sdist & wheel 📦
-      v${{ needs.pre-setup.outputs.dist-version }}
+    name: 👷 dists ${{ needs.pre-setup.outputs.git-tag }}
     needs:
     - pre-setup  # transitive, for accessing settings
 
