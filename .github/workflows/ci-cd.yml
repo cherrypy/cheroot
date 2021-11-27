@@ -200,20 +200,14 @@ jobs:
         steps.request-check.outputs.release-requested != 'true'
       id: calc-cache-key-files
       run: |
-        from hashlib import sha512
-        hashes_combo = sha512('-'.join((
-          "${{
-            hashFiles(
-              'setup.cfg',
-              'setup.py',
-              'tox.ini',
-              'pyproject.toml',
-              '.pre-commit-config.yaml',
-              'pytest.ini'
-            )
+        print(
+          "::set-output name=files-hash-key::${{
+              hashFiles(
+                'setup.cfg', 'setup.py', 'tox.ini', 'pyproject.toml',
+                '.pre-commit-config.yaml', 'pytest.ini'
+              )
           }}",
-        )).encode()).hexdigest()
-        print(f'::set-output name=files-hash-key::{hashes_combo}')
+        )
     - name: Get pip cache dir
       id: pip-cache-dir
       if: >-
