@@ -195,7 +195,20 @@ jobs:
         }}-py2.py3-none-any.whl')
 
   build:
-    name: 👷 dists ${{ needs.pre-setup.outputs.git-tag }}
+    name: >-
+      👷 dists ${{ needs.pre-setup.outputs.git-tag }}
+      [mode: ${{
+        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+        && '[nightly]' || ''
+      }}${{
+        fromJSON(needs.pre-setup.outputs.release-requested)
+        && '[release]' || ''
+      }}${{
+        (
+          !fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+          && !fromJSON(needs.pre-setup.outputs.release-requested)
+        ) && '[test]' || ''
+      }}]
     needs:
     - pre-setup  # transitive, for accessing settings
 
