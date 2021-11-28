@@ -474,10 +474,6 @@ jobs:
         # NOTE: https://github.com/tox-dev/tox/issues/1704.
         # NOTE: They should be re-added once it's fixed.
         - os: windows-latest
-          python-version: pypy2
-        - os: windows-2016
-          python-version: pypy2
-        - os: windows-latest
           python-version: pypy-3.6
         - os: windows-2016
           python-version: pypy-3.6
