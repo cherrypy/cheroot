@@ -623,7 +623,7 @@ jobs:
 
     - name: Populate system-level dependencies
       if: runner.os != 'Windows'
-      uses: re-actors/bindep@main
+      uses: re-actors/bindep@release/v1
       with:
         profile: >-
           test
