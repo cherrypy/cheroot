@@ -554,8 +554,7 @@ jobs:
 
     steps:
     - name: Populate system-level dependencies
-      if: runner.os == 'Linux'
-      uses: re-actors/bindep@release/v1
+      uses: re-actors/bindep@main
       with:
         profile: >-
           test
