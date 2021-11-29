@@ -622,6 +622,7 @@ jobs:
         path: dist/
 
     - name: Populate system-level dependencies
+      if: runner.os != 'Windows'
       uses: re-actors/bindep@main
       with:
         profile: >-
