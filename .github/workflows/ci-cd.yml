@@ -553,13 +553,6 @@ jobs:
       TOX_PARALLEL_NO_SPINNER: 1
 
     steps:
-    - name: Populate system-level dependencies
-      uses: re-actors/bindep@main
-      with:
-        profile: >-
-          test
-          ${{ matrix.python-version == 'pypy2' && 'pypy' || '' }}
-
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -627,6 +620,13 @@ jobs:
       with:
         name: python-package-distributions
         path: dist/
+
+    - name: Populate system-level dependencies
+      uses: re-actors/bindep@main
+      with:
+        profile: >-
+          test
+          ${{ matrix.python-version == 'pypy2' && 'pypy' || '' }}
 
     - name: >-
         Pre-populate tox envs:
