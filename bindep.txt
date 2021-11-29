@@ -1,3 +1,10 @@
-gcc
-libenchant1c2a
-python3-dev
+libenchant1c2a [platform:dpkg]  # `sphinxcontrib-spelling`
+
+# NOTE: `cryptography <= 3.4` needed to support Python 2, also it needs
+# NOTE: to be compiled under PyPy 2 because cryptography < 3.4.6 does
+# NOTE: not ship PyPy wheels.
+# Ref: https://cryptography.io/en/3.3.2/installation.html#debian-ubuntu
+libffi-dev [(platform:dpkg test pypy)]  # `cryptography`
+libssl-dev [(platform:dpkg test pypy)]  # `cryptography`
+pypy-dev [(platform:dpkg test pypy)]  # `cryptography`
+gcc [(platform:dpkg test pypy)]  # `cryptography`
