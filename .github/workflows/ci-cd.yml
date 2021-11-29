@@ -495,14 +495,6 @@ jobs:
           python-version: pypy2
         - os: macOS-latest
           python-version: pypy2
-        - os: macOS-11.0
-          python-version: pypy-3.6
-        - os: macOS-latest
-          python-version: pypy-3.6
-        - os: macOS-11.0
-          python-version: pypy-3.7
-        - os: macOS-latest
-          python-version: pypy-3.7
         include:
         # NOTE: The only GNU/Linux CPython 3.4 available is built for Ubuntu 18
         # https://github.com/actions/python-versions/blob/c483657/versions-manifest.json#L1228
