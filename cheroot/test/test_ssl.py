@@ -52,6 +52,7 @@ IS_PYOPENSSL_SSL_VERSION_1_0 = (
 PY27 = sys.version_info[:2] == (2, 7)
 PY34 = sys.version_info[:2] == (3, 4)
 PY3 = not six.PY2
+PY310_PLUS = sys.version_info[:2] >= (3, 10)
 
 
 _stdlib_to_openssl_verify = {
@@ -149,7 +150,7 @@ def tls_ca_certificate_pem_path(ca):
 @pytest.fixture
 def tls_certificate(ca):
     """Provide a leaf certificate via fixture."""
-    interface, host, port = _get_conn_data(ANY_INTERFACE_IPV4)
+    interface, _host, _port = _get_conn_data(ANY_INTERFACE_IPV4)
     return ca.issue_cert(ntou(interface))
 
 
@@ -423,6 +424,10 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
                 'ConnectionResetError(10054, '
                 "'An existing connection was forcibly closed "
                 "by the remote host', None, 10054, None))",
+                "('Connection aborted.', "
+                'error(10054, '
+                "'An existing connection was forcibly closed "
+                "by the remote host'))",
             ) if IS_WINDOWS else (
                 "('Connection aborted.', "
                 'OSError("(104, \'ECONNRESET\')"))',
@@ -441,13 +446,35 @@ def test_tls_client_auth(  # noqa: C901  # FIXME
                 "('Connection aborted.', "
                 "BrokenPipeError(32, 'Broken pipe'))",
             )
+
+        if PY310_PLUS:
+            # FIXME: Figure out what's happening and correct the problem
+            expected_substrings += (
+                'SSLError(SSLEOFError(8, '
+                "'EOF occurred in violation of protocol (_ssl.c:",
+            )
+        if IS_GITHUB_ACTIONS_WORKFLOW and IS_WINDOWS and PY310_PLUS:
+            expected_substrings += (
+                "('Connection aborted.', "
+                'RemoteDisconnected('
+                "'Remote end closed connection without response'))",
+            )
+
         assert any(e in err_text for e in expected_substrings)
 
 
 @pytest.mark.parametrize(  # noqa: C901  # FIXME
     'adapter_type',
     (
-        'builtin',
+        pytest.param(
+            'builtin',
+            marks=pytest.mark.xfail(
+                IS_GITHUB_ACTIONS_WORKFLOW and IS_MACOS and PY310_PLUS,
+                reason='Unclosed TLS resource warnings happen on macOS '
+                'under Python 3.10',
+                strict=False,
+            ),
+        ),
         'pyopenssl',
     ),
 )
@@ -613,7 +640,6 @@ def test_https_over_http_error(http_server, ip_addr):
             'builtin',
             marks=pytest.mark.xfail(
                 IS_WINDOWS and six.PY2,
-                raises=requests.exceptions.ConnectionError,
                 reason='Stdlib `ssl` module behaves weirdly '
                 'on Windows under Python 2',
                 strict=False,
@@ -658,7 +684,7 @@ def test_http_over_https_error(
     interface, _host, port = _get_conn_data(ip_addr)
     tlshttpserver = tls_http_server((interface, port), tls_adapter)
 
-    interface, host, port = _get_conn_data(
+    interface, _host, port = _get_conn_data(
         tlshttpserver.bind_addr,
     )
 

@@ -1,4 +1,4 @@
-Copyright © 2004-2020, CherryPy Team (team@cherrypy.org)
+Copyright © 2004-2020, CherryPy Team (team@cherrypy.dev)
 
 All rights reserved.
 

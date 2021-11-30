@@ -29,6 +29,9 @@ from ..testing import (
 )
 
 
+IS_SLOW_ENV = IS_MACOS or IS_WINDOWS
+
+
 unix_only_sock_test = pytest.mark.skipif(
     not hasattr(socket, 'AF_UNIX'),
     reason='UNIX domain sockets are only available under UNIX-based OS',
@@ -180,7 +183,9 @@ def test_serving_is_false_and_stop_returns_after_ctrlc():
     serve_thread.start()
 
     # The thread should exit right away due to the interrupt.
-    serve_thread.join(httpserver.expiration_interval * 2)
+    serve_thread.join(
+        httpserver.expiration_interval * (4 if IS_SLOW_ENV else 2),
+    )
     assert not serve_thread.is_alive()
 
     assert not httpserver._connections._serving
@@ -262,6 +267,7 @@ def test_peercreds_unix_sock(peercreds_enabled_server):
     if isinstance(bind_addr, six.binary_type):
         bind_addr = bind_addr.decode()
 
+    # pylint: disable=possibly-unused-variable
     quoted = urllib.parse.quote(bind_addr, safe='')
     unix_base_uri = 'http+unix://{quoted}'.format(**locals())
 
@@ -294,6 +300,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     if isinstance(bind_addr, six.binary_type):
         bind_addr = bind_addr.decode()
 
+    # pylint: disable=possibly-unused-variable
     quoted = urllib.parse.quote(bind_addr, safe='')
     unix_base_uri = 'http+unix://{quoted}'.format(**locals())
 
@@ -408,7 +415,7 @@ def many_open_sockets(request, resource_limit):
     # Open a lot of file descriptors, so the next one the server
     # opens is a high number
     try:
-        for i in range(resource_limit):
+        for _ in range(resource_limit):
             sock = socket.socket()
             test_sockets.append(sock)
             # If we reach a high enough number, we don't need to open more

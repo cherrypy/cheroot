@@ -31,7 +31,7 @@ try:
 except ImportError:
     extensions.append('spelling_stub_ext')
 else:
-    del _sphinxcontrib_spelling
+    del _sphinxcontrib_spelling  # noqa: WPS100
     extensions.append('sphinxcontrib.spelling')
 
 # Tree-local extensions:
@@ -88,8 +88,8 @@ intersphinx_mapping = {
     'python2': ('https://docs.python.org/2', None),
     # Ref: https://github.com/cherrypy/cherrypy/issues/1872
     'cherrypy': (
-        'https://cherrypy.rtfd.io/en/latest',
-        ('https://docs.cherrypy.org/en/latest', None),
+        'https://docs.cherrypy.dev/en/latest',
+        ('https://cherrypy.rtfd.io/en/latest', None),
     ),
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
     'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
