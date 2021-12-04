@@ -27,8 +27,9 @@ Resolves #<!-- issue number here -->
 📋 **Contribution checklist:**
 
   - [ ] I think the code is well written
-  - [ ] I wrote [good commit messages][1]
-  - [ ] I have [squashed related commits together][2] after the changes have been approved
+  - [ ] I wrote [good commit messages]
+  - [ ] I have [squashed related commits together][related squash] after
+        the changes have been approved
   - [ ] Unit tests for the changes exist
   - [ ] Integration tests for the changes exist (if applicable)
   - [ ] I used the same coding conventions as the rest of the project
@@ -37,5 +38,6 @@ Resolves #<!-- issue number here -->
   - [ ] The PR relates to *only* one subject with a clear title
   and description in grammatically correct, complete sentences
 
-[1]: http://chris.beams.io/posts/git-commit/
-[2]: https://github.com/todotxt/todo.txt-android/wiki/Squash-All-Commits-Related-to-a-Single-Issue-into-a-Single-Commit
+[good commit messages]: http://chris.beams.io/posts/git-commit/
+[related squash]:
+https://github.com/todotxt/todo.txt-android/wiki/Squash-All-Commits-Related-to-a-Single-Issue-into-a-Single-Commit
