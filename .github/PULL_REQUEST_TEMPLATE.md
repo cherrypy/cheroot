@@ -1,10 +1,11 @@
 ❓ **What kind of change does this PR introduce?**
-  - [ ] 🐞 bug fix
-  - [ ] 🐣 feature
-  - [ ] 📋 docs update
-  - [ ] 📋 tests/coverage improvement
-  - [ ] 📋 refactoring
-  - [ ] 💥 other
+
+* [ ] 🐞 bug fix
+* [ ] 🐣 feature
+* [ ] 📋 docs update
+* [ ] 📋 tests/coverage improvement
+* [ ] 📋 refactoring
+* [ ] 💥 other
 
 📋 **What is the related issue number (starting with `#`)**
 
