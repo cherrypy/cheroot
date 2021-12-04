@@ -26,6 +26,9 @@ Resolves #<!-- issue number here -->
 
 📋 **Contribution checklist:**
 
+(If you're a first-timer, check out
+[this guide on making great pull requests][making a lovely PR])
+
   - [ ] I think the code is well written
   - [ ] I wrote [good commit messages]
   - [ ] I have [squashed related commits together][related squash] after
@@ -39,5 +42,6 @@ Resolves #<!-- issue number here -->
   and description in grammatically correct, complete sentences
 
 [good commit messages]: http://chris.beams.io/posts/git-commit/
+[making a lovely PR]: https://mtlynch.io/code-review-love/
 [related squash]:
 https://github.com/todotxt/todo.txt-android/wiki/Squash-All-Commits-Related-to-a-Single-Issue-into-a-Single-Commit
