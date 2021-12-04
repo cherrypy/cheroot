@@ -24,7 +24,7 @@ Resolves #<!-- issue number here -->
 
 
 
-📋 **Checklist**:
+📋 **Contribution checklist:**
 
   - [ ] I think the code is well written
   - [ ] I wrote [good commit messages][1]
