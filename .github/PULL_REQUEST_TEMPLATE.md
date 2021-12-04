@@ -9,7 +9,8 @@
 
 📋 **What is the related issue number (starting with `#`)**
 
-#
+<!-- Are there any issues opened that will be resolved by merging this change? -->
+Resolves #<!-- issue number here -->
 
 ❓ **What is the current behavior?** (You can also link to an open issue here)
 
