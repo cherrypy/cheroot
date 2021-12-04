@@ -29,6 +29,7 @@ Resolves #<!-- issue number here -->
 (If you're a first-timer, check out
 [this guide on making great pull requests][making a lovely PR])
 
+- [ ] I wrote descriptive pull request text above
 - [ ] I think the code is well written
 - [ ] I wrote [good commit messages]
 - [ ] I have [squashed related commits together][related squash] after
