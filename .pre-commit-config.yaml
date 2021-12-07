@@ -75,6 +75,12 @@ repos:
   hooks:
   - id: forbid-html-img-without-alt-text
 
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: 'v0.910-1'
+  hooks:
+  - id: mypy
+    additional_dependencies: [typing]
+
 - repo: https://github.com/PyCQA/pylint.git
   rev: v2.11.1
   hooks:
@@ -91,10 +97,3 @@ repos:
     - requests_unixsocket
     - six
     - Sphinx
-
-
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v0.910-1'
-    hooks:
-    - id: mypy
-      additional_dependencies: [typing]
