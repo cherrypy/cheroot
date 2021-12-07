@@ -80,7 +80,6 @@ repos:
   hooks:
   - id: mypy
     additional_dependencies:
-    - typing
     - types-six
     args:
     - --install-types
