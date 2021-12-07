@@ -81,6 +81,9 @@ repos:
   - id: mypy
     additional_dependencies:
     - types-six
+    - types-backports
+    - types-pyOpenSSL
+    - types-requests
     args:
     - --install-types
     - --non-interactive
@@ -96,6 +99,9 @@ repos:
     additional_dependencies:
     - typing
     - types-six
+    - types-backports
+    - types-pyOpenSSL
+    - types-requests
     args:
     - --install-types
     - --non-interactive
