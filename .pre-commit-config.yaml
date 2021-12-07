@@ -83,7 +83,6 @@ repos:
     - typing
     - types-six
     args:
-    - --ignore-missing-imports
     - --install-types
     - --non-interactive
     - cheroot/
