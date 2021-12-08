@@ -97,11 +97,11 @@ repos:
   hooks:
   - id: mypy
     additional_dependencies:
-    - typing
-    - types-six
     - types-backports
     - types-pyOpenSSL
     - types-requests
+    - types-six
+    - typing
     args:
     - --install-types
     - --non-interactive
