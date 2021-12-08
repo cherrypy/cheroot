@@ -80,10 +80,10 @@ repos:
   hooks:
   - id: mypy
     additional_dependencies:
-    - types-six
     - types-backports
     - types-pyOpenSSL
     - types-requests
+    - types-six
     args:
     - --install-types
     - --non-interactive
