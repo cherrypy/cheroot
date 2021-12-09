@@ -633,17 +633,19 @@ def test_https_over_http_error(http_server, ip_addr):
     assert expected_substring in ssl_err.value.args[-1]
 
 
+http_over_https_error_builtin_marks = []
+if IS_WINDOWS and six.PY2:
+    http_over_https_error_builtin_marks.append(
+        pytest.mark.flaky(reruns=5, reruns_delay=2),
+    )
+
+
 @pytest.mark.parametrize(
     'adapter_type',
     (
         pytest.param(
             'builtin',
-            marks=pytest.mark.xfail(
-                IS_WINDOWS and six.PY2,
-                reason='Stdlib `ssl` module behaves weirdly '
-                'on Windows under Python 2',
-                strict=False,
-            ),
+            marks=http_over_https_error_builtin_marks,
         ),
         'pyopenssl',
     ),
