@@ -72,6 +72,10 @@ per-file-ignores =
 # Count the number of occurrences of each error/warning code and print a report:
 statistics = true
 
+# flake8-eradicate
+# E800:
+eradicate-whitelist-extend = isort:\s+\w+
+
 # flake8-pytest-style
 # PT001:
 pytest-fixture-no-parentheses = true
