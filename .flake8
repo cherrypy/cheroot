@@ -69,6 +69,9 @@ per-file-ignores =
   cheroot/workers/threadpool.py: WPS100, WPS121
   cheroot/wsgi.py: WPS100, WPS110, WPS121, WPS122, WPS130
 
+# Count the number of occurrences of each error/warning code and print a report:
+statistics = true
+
 # flake8-pytest-style
 # PT001:
 pytest-fixture-no-parentheses = true
