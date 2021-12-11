@@ -87,5 +87,23 @@ pytest-parametrize-values-row-type = tuple
 # PT023:
 pytest-mark-no-parentheses = true
 
+# flake8-rst-docstrings
+rst-directives =
+  spelling
+rst-roles =
+  # Built-in Sphinx roles:
+  class,
+  data,
+  exc,
+  meth,
+  term,
+  py:class,
+  py:data,
+  py:exc,
+  py:meth,
+  py:term,
+  # Sphinx's internal role:
+  event,
+
 # wemake-python-styleguide
 show-source = true
