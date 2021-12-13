@@ -91,6 +91,7 @@ repos:
   - id: mypy
     name: MyPy, for Python 3.5
     additional_dependencies:
+    - lxml
     - types-backports
     - types-pyOpenSSL
     - types-requests
@@ -105,6 +106,7 @@ repos:
   - id: mypy
     name: MyPy, for Python 2.7
     additional_dependencies:
+    - lxml
     - typed-ast
     - types-backports
     - types-pyOpenSSL
