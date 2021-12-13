@@ -99,6 +99,7 @@ repos:
     - --install-types
     - --non-interactive
     - --python-version=3.5
+    - --txt-report=.tox/.tmp/.mypy/
     - cheroot/
     pass_filenames: false
   - id: mypy
@@ -114,6 +115,7 @@ repos:
     - --install-types
     - --non-interactive
     - --python-version=2.7
+    - --txt-report=.tox/.tmp/.mypy/
     - cheroot/
     pass_filenames: false
 
