@@ -8,6 +8,7 @@ on:   # yamllint disable-line rule:truthy
 jobs:
   check-commit-message:
     name: 📝
+    if: github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-20.04
     steps:
     - name: Verify commit messages follow best practices in CI
