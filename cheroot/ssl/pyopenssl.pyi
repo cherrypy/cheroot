@@ -1,9 +1,9 @@
 from . import Adapter
 from ..makefile import StreamReader, StreamWriter
 from OpenSSL import SSL
-from typing import Any
+from typing import Any, Type
 
-ssl_conn_type: SSL.Connection
+ssl_conn_type: Type[SSL.Connection]
 
 class SSLFileobjectMixin:
     ssl_timeout: int
@@ -19,7 +19,7 @@ class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter): ...  # type:i
 class SSLConnectionProxyMeta:
     def __new__(mcl, name, bases, nmspc): ...
 
-class SSLConnection():
+class SSLConnection:
     def __init__(self, *args) -> None: ...
 
 class pyOpenSSLAdapter(Adapter):
@@ -28,3 +28,4 @@ class pyOpenSSLAdapter(Adapter):
     def wrap(self, sock): ...
     def get_environ(self): ...
     def makefile(self, sock, mode: str = ..., bufsize: int = ...): ...
+    def get_context(self) -> SSL.Context: ...
