@@ -1,4 +1,9 @@
 ---
+
+ci:
+  skip:
+  - stubtest
+
 repos:
 - repo: https://github.com/asottile/add-trailing-comma.git
   rev: v2.2.1
@@ -123,6 +128,32 @@ repos:
     - --txt-report=.tox/.tmp/.mypy/
     - cheroot/
     pass_filenames: false
+
+- repo: local
+  hooks:
+  - id: stubtest
+    name: MyPy stubtest
+    language: system
+    entry: stubtest
+    args:
+    - cheroot
+    - --mypy-config-file=mypy.ini
+    - --allowlist=stubtest_allowlist.txt
+    pass_filenames: false
+    types_or:
+    - python
+    - text
+    files: >-
+      (?x)
+      ^
+        (
+          .*\.pyi?
+          |
+          cheroot/py\.typed
+          |
+          stubtest_allowlist\.txt
+        )
+      $
 
 - repo: https://github.com/PyCQA/pylint.git
   rev: v2.12.2

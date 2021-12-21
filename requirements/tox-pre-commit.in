@@ -1,1 +1,10 @@
-pre-commit
+pre-commit  # main unified linting framework
+
+# Dependencies for the local `stubtest` hook
+mypy  # provides the main `stubtest` executable
+
+# Extra dependencies providing external type definitions:
+types-backports
+types-pyOpenSSL
+types-requests
+types-six
