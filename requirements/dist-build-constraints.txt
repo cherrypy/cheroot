@@ -14,7 +14,7 @@ setuptools-scm-git-archive==1.1
     # via -r requirements/dist-build-constraints.in
 tomli==2.0.0
     # via setuptools-scm
-wheel==0.37.0
+wheel==0.37.1
     # via -r requirements/dist-build-constraints.in
 
 # The following packages are considered to be unsafe in a requirements file:
