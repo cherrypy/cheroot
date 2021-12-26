@@ -127,7 +127,8 @@ repos:
     name: stubtest
     entry: stubtest cheroot --mypy-config-file mypy.ini --allowlist stubtest_allowlist.txt
     language: system
-    types: [python]
+    types:
+    - python
     pass_filenames: false
 
 - repo: https://github.com/PyCQA/pylint.git
