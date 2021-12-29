@@ -153,12 +153,12 @@ class ConnectionManager:
             )
 
     def _expire(self, threshold):
-        """Expire least recently used connections.
+        r"""Expire least recently used connections.
 
-        Args:
-            threshold (float): Connections that have not been used
-                within this duration (in seconds), are considered
-                expired and are closed and removed.
+        :param threshold: Connections that have not been used within this \
+                          duration (in seconds), are considered expired and \
+                          are closed and removed.
+        :type threshold: float
 
         This should be called periodically.
         """
@@ -206,17 +206,14 @@ class ConnectionManager:
     def _run(self, expiration_interval):
         """Run connection handler loop until stop was requested.
 
-        Use expiration_interval as select() timeout
+        Use ``expiration_interval`` as ``select()`` timeout
         to assure expired connections are closed in time.
 
         On Windows cap the timeout to 0.05 seconds
-        as select() does not return when a socket is ready.
+        as ``select()`` does not return when a socket is ready.
         """
         last_expiration_check = time.time()
-        if os.name == 'nt':
-            select_timeout = min(expiration_interval, 0.05)
-        else:
-            select_timeout = expiration_interval
+        select_timeout = min(expiration_interval, 0.05 if IS_WINDOWS else expiration_interval)
 
         while not self._stop_requested:
             try:
