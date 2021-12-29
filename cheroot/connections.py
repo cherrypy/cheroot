@@ -12,6 +12,7 @@ import time
 from . import errors
 from ._compat import selectors
 from ._compat import suppress
+from ._compat import IS_WINDOWS
 from .makefile import MakeFile
 
 import six
@@ -185,9 +186,10 @@ class ConnectionManager:
     def run(self, expiration_interval):
         """Run the connections selector indefinitely.
 
-        Args:
-            expiration_interval (float): Interval, in seconds, at which
-                connections will be checked for expiration.
+        :param expiration_interval: Interval, in seconds, at which \
+                                    connections will be checked for \
+                                    expiration.
+        :type expiration_interval: float
 
         Connections that are ready to process are submitted via
         self.server.process_conn()
@@ -206,6 +208,11 @@ class ConnectionManager:
     def _run(self, expiration_interval):
         """Run connection handler loop until stop was requested.
 
+        :param expiration_interval: Interval, in seconds, at which \
+                                    connections will be checked for \
+                                    expiration.
+        :type expiration_interval: float
+
         Use ``expiration_interval`` as ``select()`` timeout
         to assure expired connections are closed in time.
 
@@ -213,7 +220,10 @@ class ConnectionManager:
         as ``select()`` does not return when a socket is ready.
         """
         last_expiration_check = time.time()
-        select_timeout = min(expiration_interval, 0.05 if IS_WINDOWS else expiration_interval)
+        if IS_WINDOWS:
+            select_timeout = min(expiration_interval, 0.05)
+        else:
+            select_timeout = expiration_interval
 
         while not self._stop_requested:
             try:
