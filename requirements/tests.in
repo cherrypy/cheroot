@@ -38,9 +38,7 @@ pyopenssl
 # manager for disabling garbage collection in specific blocks
 # of the control flow:
 pypytools
-pytest>=4.6.6
 
-# pytest deps
 pytest-cov==2.8.1; python_version == "3.4"  # pyup: < 2.9
 pytest-cov==2.12.0; python_version != "3.4"
 pytest-forked>=1.1.3; sys_platform != "win32" and python_version >= '3.0' and python_version <= '3.4'
@@ -52,6 +50,7 @@ pytest-rerunfailures; python_version >= "3.6"
 pytest-sugar>=0.9.3
 pytest-watch==4.2.0
 pytest-xdist>=1.28.0
+pytest>=4.6.6
 
 # HTTP over UNIX socket
 requests-unixsocket
