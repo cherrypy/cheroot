@@ -719,7 +719,7 @@ jobs:
     environment:
       name: pypi
       url: >-
-        https://pypi.org/project/proxy.py/${{
+        https://pypi.org/project/cheroot/${{
           needs.pre-setup.outputs.dist-version
         }}
 
@@ -748,7 +748,7 @@ jobs:
     environment:
       name: testpypi
       url: >-
-        https://test.pypi.org/project/proxy.py/${{
+        https://test.pypi.org/project/cheroot/${{
           needs.pre-setup.outputs.dist-version
         }}
 
