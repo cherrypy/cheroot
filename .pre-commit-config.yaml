@@ -30,17 +30,18 @@ repos:
   - id: check-merge-conflict
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
-  - id: requirements-txt-fixer
-    exclude: >-
-      (?x)
-      ^
-        requirements/[^/]+.txt
-      $
-    files: >-
-      (?x)
-      ^
-        requirements/[^/]+.in
-      $
+  # disabled because it doesn't make sense to change pip-tools-managed files
+  #- id: requirements-txt-fixer
+  #  exclude: >-
+  #    (?x)
+  #    ^
+  #      requirements/[^/]+.txt
+  #    $
+  #  files: >-
+  #    (?x)
+  #    ^
+  #      requirements/[^/]+.in
+  #    $
 
   # Non-modifying checks:
   - id: name-tests-test
