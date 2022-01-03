@@ -1,17 +1,17 @@
 ---
 repos:
 - repo: https://github.com/asottile/add-trailing-comma.git
-  rev: v2.0.1
+  rev: v2.2.1
   hooks:
   - id: add-trailing-comma
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  rev: v1.1.7
+  rev: v1.1.10
   hooks:
   - id: remove-tabs
 
 - repo: git://github.com/Lucas-C/pre-commit-hooks-markup
-  rev: v1.0.0
+  rev: v1.0.1
   hooks:
   - id: rst-linter
     exclude: >-
@@ -23,7 +23,7 @@ repos:
       ^.*\.rst$
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v2.3.0
+  rev: v4.1.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
@@ -86,7 +86,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
-  rev: v0.910-1
+  rev: v0.930
   hooks:
   - id: mypy
     name: MyPy, for Python 3.5
@@ -122,7 +122,7 @@ repos:
     pass_filenames: false
 
 - repo: https://github.com/PyCQA/pylint.git
-  rev: v2.11.1
+  rev: v2.12.2
   hooks:
   - id: pylint
     additional_dependencies:
