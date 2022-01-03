@@ -86,7 +86,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
-  rev: v0.910-1
+  rev: v0.930
   hooks:
   - id: mypy
     alias: mypy-py35
