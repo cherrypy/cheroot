@@ -1,3 +1,31 @@
+.. scm-version-title:: v8.6.0
+
+Significant improvements:
+
+- :issue:`384` via :pr:`385`, :pr:`406`: Exposed type stubs with
+  annotations for public API -- by :user:`kasium`.
+
+- :pr:`401` (related to the :pr:`352` effort): Started reusing the
+  the ``expriration_interval`` setting in the low-level
+  :py:func:`~select.select` invocation, effectively reducing the system
+  load under the Windows OS when idle, that is noticeable on low-end
+  hardware systems -- by :user:`MichaIng`.
+
+Internal changes:
+
+- Implemented a manual-trigger-based release workflow.
+- Integrated publishing GitHub Releases into the workflow.
+- Migrated the docs theme to `Furo <https://pradyunsg.me/furo>`__
+  (created by :user:`pradyunsg`).
+- Attempted to improve the stability of testing.
+- Configured the CI to test the same distribution as will be shipped.
+- Improved the linting setup and contributor checklists.
+- Stopped running tests under Ubuntu 16.04.
+- Tweaked the distribution packages metadata to satisfy strict checks.
+- Implemented distribution build reproducibility using a pip constraints
+  lock-file.
+- Added per-environment lock-files into the tox test environments.
+
 .. scm-version-title:: v8.5.2
 
 - :issue:`358` via :pr:`359`: Fixed a regression from
