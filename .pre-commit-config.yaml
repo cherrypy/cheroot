@@ -89,6 +89,7 @@ repos:
   rev: v0.910-1
   hooks:
   - id: mypy
+    alias: mypy-py35
     name: MyPy, for Python 3.5
     additional_dependencies:
     - lxml
@@ -104,6 +105,7 @@ repos:
     - cheroot/
     pass_filenames: false
   - id: mypy
+    alias: mypy-py27
     name: MyPy, for Python 2.7
     additional_dependencies:
     - lxml
