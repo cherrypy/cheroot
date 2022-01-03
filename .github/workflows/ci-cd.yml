@@ -314,7 +314,7 @@ jobs:
         --parallel-live -vvvv
         --skip-missing-interpreters false
 
-    - name: Store the Python package distributions
+    - name: Store the distribution packages
       uses: actions/upload-artifact@v2
       with:
         name: python-package-distributions
