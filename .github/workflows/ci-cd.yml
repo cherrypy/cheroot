@@ -66,10 +66,11 @@ jobs:
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
     steps:
-    - name: Switch to using Python 3.9 by default
+    - name: Switch to using Python 3.10 by default
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: >-
+          3.10
     - name: >-
         Mark the build as untagged '${{
             github.event.repository.default_branch
@@ -220,10 +221,11 @@ jobs:
       TOXENV: cleanup-dists,build-dists
 
     steps:
-    - name: Switch to using Python 3.9 by default
+    - name: Switch to using Python v3.10
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: >-
+          3.10
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
@@ -335,7 +337,8 @@ jobs:
         os:
         - Ubuntu
         python-version:
-        - 3.9
+        - >-
+          3.10
         toxenv:
         - pre-commit
         - setup-check
