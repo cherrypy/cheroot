@@ -16,7 +16,7 @@
 
 - :pr:`350`: Fixed the incarnation of an earlier regression
   of not resetting the serving state
-  on :py:data:``SIGINT`` originally fixed by :pr:`322` and
+  on :py:data:`SIGINT` originally fixed by :pr:`322` and
   :pr:`331` but reintroduced by the changes in :pr:`311`
   -- by :user:`liamstask`.
 
