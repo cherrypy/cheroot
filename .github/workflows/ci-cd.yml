@@ -306,7 +306,7 @@ jobs:
       run: |
         git diff --color=always
         git update-index --assume-unchanged pyproject.toml
-    - name: Build dists and verify their metadata
+    - name: Build dists
       run: >-
         python -m
         tox
