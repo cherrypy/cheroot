@@ -277,35 +277,26 @@ jobs:
         --parallel-live
         --skip-missing-interpreters false
         --notest
-    - name: Install toml Python distribution package
-      if: fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+
+    - name: Setup git user as [bot]
+      if: >-
+        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+        || fromJSON(needs.pre-setup.outputs.release-requested)
+      uses: fregante/setup-git-user@v1.0.1
+    - name: >-
+        Tag the release in the local Git repo
+        as ${{ needs.pre-setup.outputs.git-tag }}
+        for setuptools-scm to set the desired version
+      if: >-
+        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+        || fromJSON(needs.pre-setup.outputs.release-requested)
       run: >-
-        python -m
-        pip install
-        --user
-        toml
-    - name: Instruct setuptools-scm not to add a local version part
-      if: fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-      run: |
-        import toml
-        with open('pyproject.toml') as pyproject_toml:
-            pyproj = toml.load(pyproject_toml)
+        git tag
+        -m '${{ needs.pre-setup.outputs.git-tag }}'
+        '${{ needs.pre-setup.outputs.git-tag }}'
+        --
+        ${{ github.event.inputs.release-commitish }}
 
-        pyproj['tool'] = pyproj.get('tool', {})
-        pyproj['tool']['setuptools_scm'] = pyproj['tool'].get(
-            'setuptools_scm',
-            {},
-        )
-
-        pyproj['tool']['setuptools_scm']['local_scheme'] = 'no-local-version'
-        with open('pyproject.toml', 'w') as pyproject_toml:
-            toml.dump(pyproj, pyproject_toml)
-      shell: python
-    - name: Pretend that pyproject.toml is unchanged
-      if: fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-      run: |
-        git diff --color=always
-        git update-index --assume-unchanged pyproject.toml
     - name: Build dists
       run: >-
         python -m
