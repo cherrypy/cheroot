@@ -22,7 +22,7 @@ chardet==4.0.0
     #   requests
 colorama==0.4.4
     # via pytest-watch
-configparser==4.0.2
+configparser==5.2.0
     # via importlib-metadata
 contextlib2==0.6.0.post1
     # via
