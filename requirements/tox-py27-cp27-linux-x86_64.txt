@@ -124,7 +124,7 @@ pytest-sugar==0.9.4
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
-pytest-xdist==1.34.0
+pytest-xdist==2.5.0
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
 pytest==4.6.11
     # via
