@@ -126,7 +126,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
 pytest-xdist==1.34.0
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
-pytest==4.6.11
+pytest==6.2.5
     # via
     #   -r requirements/tox-py27-cp27-linux-x86_64.in
     #   pytest-cov
