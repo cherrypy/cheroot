@@ -31,7 +31,7 @@ contextlib2==0.6.0.post1
     #   jaraco.context
     #   yg.lockfile
     #   zipp
-coverage[toml]==5.5 ; python_version < "3.6" and python_version != "3.4"
+coverage[toml]==6.2; python_version < "3.6" and python_version != "3.4"
     # via
     #   -r requirements/tox-py27-cp27-linux-x86_64.in
     #   pytest-cov
