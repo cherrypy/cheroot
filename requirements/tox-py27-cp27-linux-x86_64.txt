@@ -67,7 +67,7 @@ ipaddress==1.0.23
     #   trustme
 jaraco.apt==2.0
     # via jaraco.context
-jaraco.context==2.0
+jaraco.context==4.1.1
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
 jaraco.functools==2.0
     # via
