@@ -74,7 +74,7 @@ jaraco.functools==2.0
     #   jaraco.text
     #   tempora
     #   yg.lockfile
-jaraco.text==3.2.0
+jaraco.text==3.6.0
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
 mock==3.0.5
     # via pytest-mock
