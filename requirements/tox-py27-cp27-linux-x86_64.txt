@@ -69,7 +69,7 @@ jaraco.apt==2.0
     # via jaraco.context
 jaraco.context==2.0
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
-jaraco.functools==2.0
+jaraco.functools==3.5.0
     # via
     #   jaraco.text
     #   tempora
