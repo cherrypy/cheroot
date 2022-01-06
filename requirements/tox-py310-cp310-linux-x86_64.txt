@@ -36,7 +36,7 @@ iniconfig==1.1.1
     # via pytest
 jaraco.context==4.1.1
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
-jaraco.functools==3.4.0
+jaraco.functools==3.5.0
     # via
     #   jaraco.text
     #   tempora
