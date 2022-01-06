@@ -24,7 +24,7 @@ colorama==0.4.4
     # via pytest-watch
 configparser==4.0.2
     # via importlib-metadata
-contextlib2==0.6.0.post1
+contextlib2==21.6.0
     # via
     #   importlib-metadata
     #   importlib-resources
