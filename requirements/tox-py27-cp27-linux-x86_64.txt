@@ -55,7 +55,7 @@ idna==2.10
     # via
     #   requests
     #   trustme
-importlib-metadata==2.1.2
+importlib-metadata==4.10.0
     # via
     #   pluggy
     #   pytest
