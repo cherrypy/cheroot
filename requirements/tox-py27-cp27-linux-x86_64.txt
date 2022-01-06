@@ -35,7 +35,7 @@ coverage[toml]==5.5 ; python_version < "3.6" and python_version != "3.4"
     # via
     #   -r requirements/tox-py27-cp27-linux-x86_64.in
     #   pytest-cov
-cryptography==3.3.2
+cryptography==36.0.1
     # via
     #   pyopenssl
     #   trustme
