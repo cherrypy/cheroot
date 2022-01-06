@@ -93,7 +93,7 @@ pathlib2==2.3.6
     #   pytest
 pathtools==0.1.2
     # via watchdog
-pluggy==0.13.1
+pluggy==1.0.0
     # via pytest
 portend==2.6
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
