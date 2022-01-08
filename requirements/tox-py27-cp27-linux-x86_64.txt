@@ -180,7 +180,7 @@ urllib3==1.26.7 ; python_version != "3.4"
     #   -r requirements/tox-py27-cp27-linux-x86_64.in
     #   requests
     #   requests-unixsocket
-watchdog==0.10.7 ; python_version < "3.6"
+watchdog==2.1.6; python_version < "3.6"
     # via
     #   -r requirements/tox-py27-cp27-linux-x86_64.in
     #   pytest-watch
