@@ -113,7 +113,7 @@ tomli==1.2.2
     # via coverage
 trustme==0.9.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
-urllib3==1.26.7 ; python_version != "3.4"
+urllib3==1.26.8; python_version != "3.4"
     # via
     #   -r requirements/tox-py310-cp310-linux-x86_64.in
     #   requests
