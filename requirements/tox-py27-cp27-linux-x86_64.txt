@@ -190,7 +190,7 @@ yg.lockfile==2.3
     # via jaraco.context
 zc.lockfile==2.0
     # via yg.lockfile
-zipp==1.2.0
+zipp==3.7.0
     # via
     #   importlib-metadata
     #   importlib-resources
