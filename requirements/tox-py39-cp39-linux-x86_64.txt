@@ -109,7 +109,7 @@ termcolor==1.1.0
     # via pytest-sugar
 toml==0.10.2
     # via pytest
-tomli==1.2.2
+tomli==2.0.0
     # via coverage
 trustme==0.9.0
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
