@@ -657,6 +657,7 @@ if IS_WINDOWS and six.PY2:
         pytest.param(ANY_INTERFACE_IPV6, marks=missing_ipv6),
     ),
 )
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_http_over_https_error(
     tls_http_server, adapter_type,
     ca, ip_addr,
