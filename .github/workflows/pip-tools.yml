@@ -98,7 +98,7 @@ jobs:
         #tox-py39-cp39-linux-x86_64
 
 
-        (cd requirements/; ln -svf tests.in "${BASE_NAME}.in")
+        ln -svf requirements/tests.in "${BASE_NAME}.in"
 
 
         python -m piptools.compile
