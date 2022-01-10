@@ -102,9 +102,9 @@ jobs:
 
         python -m piptools compile
         --allow-unsafe
-        --output-file="requirements/${BASE_NAME}.txt"
+        --output-file="${BASE_NAME}.txt"
         --strip-extras
-        "requirements/${BASE_NAME}.in"
+        "${BASE_NAME}.in"
 
   check:  # This job does nothing and is only used for the branch protection
     if: always()
