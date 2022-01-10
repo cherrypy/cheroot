@@ -91,7 +91,7 @@ jobs:
         'from pip_constraint_helpers import get_constraint_file_path,
         get_runtime_python_tag;
         print(get_constraint_file_path(
-        "requirements/", "py", get_runtime_python_tag())
+        "requirements/", "py", get_runtime_python_tag())[:-4]
         )
         '
         )
