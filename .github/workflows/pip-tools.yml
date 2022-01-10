@@ -84,7 +84,7 @@ jobs:
     - name: Grab the source from Git
       uses: actions/checkout@v2
 
-    - name: Run the testing
+    - name: Generate constraints files
       run: >
         BASE_NAME=$(
         PYTHONPATH=bin/ python -c
