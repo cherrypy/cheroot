@@ -100,7 +100,7 @@ jobs:
         ln -svf requirements/tests.in "${BASE_NAME}.in"
 
 
-        python -m piptools.compile
+        python -m piptools compile
         --allow-unsafe
         --output-file="requirements/${BASE_NAME}.txt"
         --strip-extras
