@@ -112,6 +112,7 @@ jobs:
         || ''
         }}
         "requirements/${BASE_NAME}.in"
+      shell: bash
 
   check:  # This job does nothing and is only used for the branch protection
     if: always()
