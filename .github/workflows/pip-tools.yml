@@ -104,7 +104,10 @@ jobs:
         --allow-unsafe
         --output-file="requirements/${BASE_NAME}.txt"
         ${{
+        (
         matrix.python-version != '2.7'
+        && matrix.python-version != '3.5'
+        )
         && '--strip-extras'
         || ''
         }}
