@@ -91,20 +91,20 @@ jobs:
         'from pip_constraint_helpers import get_constraint_file_path,
         get_runtime_python_tag;
         print(get_constraint_file_path(
-        "requirements/", "py", get_runtime_python_tag())[:-4]
+        "", "py", get_runtime_python_tag())[:-4]
         )
         '
         )
 
 
-        ln -svf requirements/tests.in "${BASE_NAME}.in"
+        (cd requirements/; ln -svf tests.in "${BASE_NAME}.in")
 
 
         python -m piptools compile
         --allow-unsafe
-        --output-file="${BASE_NAME}.txt"
+        --output-file="requirements/${BASE_NAME}.txt"
         --strip-extras
-        "${BASE_NAME}.in"
+        "requirements/${BASE_NAME}.in"
 
   check:  # This job does nothing and is only used for the branch protection
     if: always()
