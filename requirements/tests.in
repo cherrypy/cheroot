@@ -44,8 +44,14 @@ pytest-cov==2.12.0; python_version != "3.4"
 pytest-forked>=1.1.3; sys_platform != "win32" and python_version >= '3.0' and python_version <= '3.4'
 pytest-forked>=1.2.0; sys_platform != "win32" and (python_version < '3.0' or python_version > '3.4')
 pytest-mock>=1.11.0
-pytest-rerunfailures < 10; python_version >= "3.0" and python_version < "3.6"
-pytest-rerunfailures < 9; python_version <= "2.7"
+# NOTE: `pytest-rerunfailures == 9` depends on `pytest >= 5` which
+# NOTE: dropped support for Python 3.4 and below but old pip-tools under
+# NOTE: Python 3.4 is unable to resolve the conflicts properly so we
+# NOTE: need to merge the markers for 2.7 and 3.4 requesting the version
+# NOTE: below 9.
+# pytest-rerunfailures < 10; python_version >= "3.0" and python_version < "3.6"
+# pytest-rerunfailures < 9; python_version <= "2.7"
+pytest-rerunfailures < 9; python_version < "3.6"
 pytest-rerunfailures; python_version >= "3.6"
 pytest-sugar>=0.9.3
 pytest-watch==4.2.0

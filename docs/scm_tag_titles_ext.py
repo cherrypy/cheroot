@@ -83,8 +83,12 @@ class SCMVersionTitle(SphinxDirective):
                 version_tag,
                 scm=ext_conf['scm'],
             )
-        except (ValueError, RuntimeError) as exc:
-            raise self.error(exc)
+        except (ValueError, RuntimeError):
+            release_date = '(no Git tag matched)'
+        else:
+            release_date = f'{{:{ext_conf["date_format"]}}}'.format(
+                version_date,
+            )
 
         release_section = nodes.section()
         release_section.tagname = 'div'
@@ -92,8 +96,6 @@ class SCMVersionTitle(SphinxDirective):
         release_section['class'] = ['section']
 
         release_section += version_subtitle(version_tag, version_tag)
-
-        release_date = f'{{:{ext_conf["date_format"]}}}'.format(version_date)
         release_section += nodes.paragraph(release_date, release_date)
 
         self.state.nested_parse(

@@ -1,5 +1,9 @@
 :tocdepth: 2
 
+.. spelling::
+
+   reproducibility
+
 .. _changes:
 
 History
