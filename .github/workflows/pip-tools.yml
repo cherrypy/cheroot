@@ -178,6 +178,11 @@ jobs:
         path: ${{ runner.temp }}/patches/
     - name: Grab the source from Git
       uses: actions/checkout@v2
+    - name: Setup git user as [bot]
+      # Refs:
+      # * https://github.community/t/github-actions-bot-email-address/17204/6
+      # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
+      uses: fregante/setup-git-user@v1.0.1
     - name: List Git patches
       run: ls -alh '${{ runner.temp }}/patches/'
     - name: Apply patches to the Git repo
