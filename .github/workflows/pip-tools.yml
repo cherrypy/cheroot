@@ -122,7 +122,25 @@ jobs:
         || ''
         }}
         "requirements/${BASE_NAME}.in"
+
+
+        git add requirements/
+
+
+        git commit -m "Update ${BASE_NAME} constraints" requirements/
       shell: bash
+
+    - name: Create a patch from the last Git commit
+      run: >-
+        git format-patch
+        --output-directory='${{ runner.temp }}/patches/'
+        -1
+        HEAD
+    - name: Save the package bump patch as a GHA artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: pip-constraints-git-patches
+        path: ${{ runner.temp }}/patches/
 
   check:  # This job does nothing and is only used for the branch protection
     if: always()
@@ -137,5 +155,24 @@ jobs:
       uses: re-actors/alls-green@release/v1
       with:
         jobs: ${{ toJSON(needs) }}
+
+  publish-pr:
+    name: Open/refresh a PR
+    needs:
+    - check
+    runs-on: Ubuntu-latest
+
+    environment: pip-tools
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v2
+      with:
+        name: pip-constraints-git-patches
+        path: ${{ runner.temp }}/patches/
+    - name: Grab the source from Git
+      uses: actions/checkout@v2
+    - name: List Git patches
+      run: ls -alh '${{ runner.temp }}/patches/'
 
 ...
