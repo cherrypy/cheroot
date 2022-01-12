@@ -180,5 +180,7 @@ jobs:
       uses: actions/checkout@v2
     - name: List Git patches
       run: ls -alh '${{ runner.temp }}/patches/'
+    - name: Apply patches to the Git repo
+      run: git am '${{ runner.temp }}/patches'/*.patch
 
 ...
