@@ -6,10 +6,14 @@ Significant improvements:
   annotations for public API -- by :user:`kasium`.
 
 - :pr:`401` (related to the :pr:`352` effort): Started reusing the
-  the ``expriration_interval`` setting in the low-level
+  the ``expriration_interval`` setting as timeout in the low-level
   :py:func:`~select.select` invocation, effectively reducing the system
-  load under the Windows OS when idle, that is noticeable on low-end
-  hardware systems -- by :user:`MichaIng`.
+  load when idle, that is noticeable on low-end hardware systems. On
+  Windows OS, due to different :py:func:`~select.select` behaviour, the
+  effect is less significant and comes with a theoretically decreased
+  performance on quickly repeating requests, which has however found
+  to be not significant in real world scenarios.
+  -- by :user:`MichaIng`.
 
 Internal changes:
 
