@@ -150,7 +150,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: pip-constraints-git-patches
-        path: ${{ steps.constraints.outputs.patch }}
+        path: ${{ runner.temp }}/patches/${{ steps.constraints.outputs.patch }}
 
   check:  # This job does nothing and is only used for the branch protection
     if: always()
