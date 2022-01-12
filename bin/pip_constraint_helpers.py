@@ -53,7 +53,7 @@ def get_constraint_file_path(req_dir, toxenv, python_tag):
     """
     sys_platform = sys.platform
     # pylint: disable=possibly-unused-variable
-    platform_machine = platform.machine()
+    platform_machine = platform.machine().lower()
 
     if toxenv in {'py', 'python'}:
         toxenv = 'py{ver}'.format(ver=python_tag[2:])
