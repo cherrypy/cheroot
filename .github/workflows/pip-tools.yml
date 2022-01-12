@@ -133,6 +133,7 @@ jobs:
 
 
         git commit -m "Update ${BASE_NAME} constraints" requirements/
+        || :
       shell: bash
 
     - name: Create a patch from the last Git commit
