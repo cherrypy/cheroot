@@ -98,6 +98,7 @@ jobs:
       uses: fregante/setup-git-user@v1.0.1
 
     - name: Generate constraints files
+      id: constraints
       run: >
         BASE_NAME=$(
         PYTHONPATH=bin/ python -c
@@ -133,20 +134,23 @@ jobs:
 
 
         git commit -m "Update ${BASE_NAME} constraints" requirements/
+        && echo "::set-output name=patch::0001-Update-${BASE_NAME}-constraints.patch"
         || :
       shell: bash
 
     - name: Create a patch from the last Git commit
+      if: steps.constraints.outputs.patch
       run: >-
         git format-patch
         --output-directory='${{ runner.temp }}/patches/'
         -1
         HEAD
     - name: Save the package bump patch as a GHA artifact
+      if: steps.constraints.outputs.patch
       uses: actions/upload-artifact@v2
       with:
         name: pip-constraints-git-patches
-        path: ${{ runner.temp }}/patches/
+        path: ${{ steps.constraints.outputs.patch }}
 
   check:  # This job does nothing and is only used for the branch protection
     if: always()
