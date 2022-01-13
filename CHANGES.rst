@@ -9,7 +9,7 @@ Significant improvements:
   the ``expriration_interval`` setting as timeout in the low-level
   :py:func:`~select.select` invocation, effectively reducing the system
   load when idle, that is noticeable on low-end hardware systems. On
-  Windows OS, due to different :py:func:`~select.select` behaviour, the
+  Windows OS, due to different :py:func:`~select.select` behavior, the
   effect is less significant and comes with a theoretically decreased
   performance on quickly repeating requests, which has however found
   to be not significant in real world scenarios.
