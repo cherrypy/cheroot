@@ -174,6 +174,9 @@ jobs:
 
     environment: pip-tools
 
+    permissions:
+      pull-requests: write
+
     steps:
     - name: Download all the dists
       uses: actions/download-artifact@v2
@@ -189,9 +192,54 @@ jobs:
       # * https://github.community/t/github-actions-bot-email-address/17204/6
       # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
       uses: fregante/setup-git-user@v1.0.1
+
+    - name: Switch to the PR branch
+      run: git checkout -B maintenance/pip-tools-constraint-lockfiles
+    - name: Make an empty initial commit
+      run: git commit --allow-empty -m "Pip-tools initial commit $(uuidgen)"
+    - name: Push the PR branch to remote
+      # ... so that it's possible to create a PR out of it
+      # FIXME: use `GITHUB_TOKEN`
+      run: git push --atomic origin 'HEAD:maintenance/pip-tools-constraint-lockfiles'
+    - name: Wipe the dummy commit
+      # ... so that it's possible to create a PR out of it
+      run: git reset HEAD^
+
+    - name: Create a PR
+      id: pr
+      uses: peter-evans/create-pull-request@v3
+      env:
+        BRANCH_PREFIX: ''
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PULL_REQUEST_BODY: >-
+          Automated pip-tools-managed pip constraint lockfiles update.
+        PULL_REQUEST_BRANCH: ${{ github.event.repository.default_branch }}
+        PULL_REQUEST_FROM_BRANCH: >-
+          maintenance/pip-tools-constraint-lockfiles
+        PULL_REQUEST_TITLE: >-
+          Bump transitive deps in pip-tools-managed lockfiles
+    - name: Log the pull request details
+      run: >-
+        echo
+        "PR number: ${{ steps.pr.outputs.pull_request_number }}"
+        "\nPR URL: ${{ steps.pr.outputs.pull_request_url }}"
+
     - name: List Git patches
       run: ls -alh '${{ runner.temp }}/patches/'
     - name: Apply patches to the Git repo
       run: git am '${{ runner.temp }}/patches'/*.patch
+    - name: Force-push the PR branch to remote
+      # ... with only the useful commits which will cause a `pull_request` `synchronize`
+      # event because of the SSH key
+      run: git push --atomic origin 'HEAD:maintenance/pip-tools-constraint-lockfiles' --force-with-lease
+
+    - name: Enable auto-merge for the PR
+      run: >-
+        gh pr merge
+        --auto --merge
+        '${{ steps.pr.outputs.pull_request_url }}'
+      env:
+        PR_URL: ${{ steps.pr.outputs.pull_request_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 ...
