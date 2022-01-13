@@ -182,6 +182,8 @@ jobs:
         path: ${{ runner.temp }}/patches/
     - name: Grab the source from Git
       uses: actions/checkout@v2
+      with:
+        ssh-key: ${{ secrets.PIP_TOOLS_DEPLOYMENT_KEY }}
     - name: Setup git user as [bot]
       # Refs:
       # * https://github.community/t/github-actions-bot-email-address/17204/6
