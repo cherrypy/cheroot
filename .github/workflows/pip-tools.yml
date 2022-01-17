@@ -175,6 +175,7 @@ jobs:
     environment: pip-tools
 
     permissions:
+      contents: write  # Needed to enable auto-merge
       pull-requests: write
 
     steps:
