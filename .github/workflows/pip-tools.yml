@@ -134,22 +134,26 @@ jobs:
 
         ${{
         (
-        runner.os == 'Linux'
-        && matrix.python-version != '2.7'
-        && matrix.python-version != '3.4'
-        && matrix.python-version != '3.5'
-        && matrix.python-version != 'pypy2'
+        runner.os == 'Linux' &&
+        (
+        matrix.python-version != '2.7'
+        || matrix.python-version != '3.4'
+        || matrix.python-version != '3.5'
+        || matrix.python-version != 'pypy2'
+        )
         )
         && 'sed -i "s/\[[^\[]\+\]//g" "requirements/${BASE_NAME}.txt"'
         || ''
         }}
         ${{
         (
-        runner.os == 'macOS'
-        && matrix.python-version != '2.7'
-        && matrix.python-version != '3.4'
-        && matrix.python-version != '3.5'
-        && matrix.python-version != 'pypy2'
+        runner.os == 'macOS' &&
+        (
+        matrix.python-version != '2.7'
+        || matrix.python-version != '3.4'
+        || matrix.python-version != '3.5'
+        || matrix.python-version != 'pypy2'
+        )
         )
         && 'sed -i "" "s/\[[^\[]\+\]//g" "requirements/${BASE_NAME}.txt"'
         || ''
