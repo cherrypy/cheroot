@@ -199,6 +199,9 @@ jobs:
         echo "::set-output name=info::$(
         git ls-remote origin maintenance/pip-tools-constraint-lockfiles
         )"
+    - name: Fetch the existing remote PR branch
+      if: steps.pre-existing-remote-branch.outputs.info
+      run: git fetch origin maintenance/pip-tools-constraint-lockfiles
     - name: Switch to the PR branch
       run: git checkout -B maintenance/pip-tools-constraint-lockfiles
     - name: Make an empty initial commit
