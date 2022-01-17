@@ -113,6 +113,18 @@ jobs:
         )
 
 
+        ${{
+        (
+        matrix.python-version == '2.7'
+        || matrix.python-version == '3.4'
+        || matrix.python-version == '3.5'
+        || matrix.python-version == 'pypy2'
+        )
+        && 'echo "..  # runtime deps of the project" >> requirements/tests.in'
+        || ''
+        }}
+
+
         (cd requirements/; ln -svf tests.in "${BASE_NAME}.in")
 
 
@@ -138,6 +150,18 @@ jobs:
         && matrix.python-version != 'pypy2'
         )
         && 'setup.cfg'
+        || ''
+        }}
+
+
+        ${{
+        (
+        matrix.python-version == '2.7'
+        || matrix.python-version == '3.4'
+        || matrix.python-version == '3.5'
+        || matrix.python-version == 'pypy2'
+        )
+        && 'git checkout -- requirements/tests.in'
         || ''
         }}
 
