@@ -120,7 +120,7 @@ jobs:
         || matrix.python-version == '3.5'
         || matrix.python-version == 'pypy2'
         )
-        && 'echo "..  # runtime deps of the project" >> requirements/tests.in'
+        && 'echo ".  # runtime deps of the project" >> requirements/tests.in'
         || ''
         }}
 
