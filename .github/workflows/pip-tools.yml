@@ -82,6 +82,18 @@ jobs:
         --upgrade
         --force-reinstall
         pip-with-requires-python
+    - name: Upgrade setuptools
+      # ...to compensate the `PYTHONPATH` leak in the Python
+      # 3.4-compatible `pip` that seems to attempt to import a
+      # non-isolated `setuptools` version
+      if: matrix.python-version == '3.4'
+      run: >-
+        python -m
+        pip install
+        --user
+        --upgrade
+        --force-reinstall
+        setuptools
     - name: Install pip-tools
       run: >-
         python -m
