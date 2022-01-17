@@ -130,6 +130,7 @@ jobs:
         || ''
         }}
         "requirements/${BASE_NAME}.in"
+        setup.cfg
 
 
         ${{
