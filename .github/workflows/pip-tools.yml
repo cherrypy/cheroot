@@ -257,7 +257,6 @@ jobs:
         --auto --merge
         '${{ steps.pr.outputs.pull_request_url }}'
       env:
-        PR_URL: ${{ steps.pr.outputs.pull_request_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 ...
