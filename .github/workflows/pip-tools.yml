@@ -99,6 +99,8 @@ jobs:
 
     - name: Generate constraints files
       id: constraints
+      # NOTE: `sed` under macOS needs a backup argument.
+      # Ref: https://stackoverflow.com/a/7573438/595220
       run: >
         BASE_NAME=$(
         PYTHONPATH=bin/ python -c
@@ -137,7 +139,7 @@ jobs:
         && matrix.python-version != '3.5'
         && matrix.python-version != 'pypy2'
         )
-        && 'sed -i "s/\[[^\[]\+\]//g" "requirements/${BASE_NAME}.txt"'
+        && 'sed -i "" "s/\[[^\[]\+\]//g" "requirements/${BASE_NAME}.txt"'
         || ''
         }}
 
