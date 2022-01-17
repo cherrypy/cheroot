@@ -130,6 +130,18 @@ jobs:
         "requirements/${BASE_NAME}.in"
 
 
+        ${{
+        (
+        matrix.python-version != '2.7'
+        && matrix.python-version != '3.4'
+        && matrix.python-version != '3.5'
+        && matrix.python-version != 'pypy2'
+        )
+        && 'sed -i "s/\[[^\[]\+\]//g" "requirements/${BASE_NAME}.txt"'
+        || ''
+        }}
+
+
         git add requirements/
 
 
