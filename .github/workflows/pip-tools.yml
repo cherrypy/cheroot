@@ -188,7 +188,9 @@ jobs:
         || matrix.python-version == 'pypy2'
         )
         )
-        && 'sed -i "s/\[[^\[]\+\]//g" "requirements/${BASE_NAME}.txt"'
+        && 'sed -i
+        "s/\[[^\[]\+\]//g;/^file:.*$/{N;N; s/^file:.*\n\s\+#\svia[^\n]*\n//}"
+        "requirements/${BASE_NAME}.txt"'
         || ''
         }}
         ${{
@@ -201,7 +203,9 @@ jobs:
         || matrix.python-version == 'pypy2'
         )
         )
-        && 'sed -i "" "s/\[[^\[]\+\]//g" "requirements/${BASE_NAME}.txt"'
+        && 'sed -i ""
+        "s/\[[^\[]\+\]//g;/^file:.*$/{N;N; s/^file:.*\n\s\+#\svia[^\n]*\n//}"
+        "requirements/${BASE_NAME}.txt"'
         || ''
         }}
 
