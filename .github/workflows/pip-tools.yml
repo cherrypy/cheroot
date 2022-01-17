@@ -251,8 +251,7 @@ jobs:
       run: git push --atomic origin 'HEAD:maintenance/pip-tools-constraint-lockfiles' --force-with-lease
 
     - name: Enable auto-merge for the PR
-      if: >-
-        !steps.pre-existing-remote-branch.outputs.info
+      if: steps.pr.outputs.pull_request_url
       run: >-
         gh pr merge
         --auto --merge
