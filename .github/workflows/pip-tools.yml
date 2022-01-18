@@ -180,7 +180,7 @@ jobs:
 
         ${{
         (
-        runner.os == 'Linux' &&
+        runner.os != 'macOS' &&
         (
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
