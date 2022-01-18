@@ -189,7 +189,7 @@ jobs:
         )
         )
         && 'sed -i
-        "s/\[[^\\[]\\+\]//g;/^file:.*$/{N;N; s/^file:[^\"$\"]*\\n//;}"
+        "s/\\[.*\\]//g;/^file:.*$/{N;N; s/^file:[^\"$\"]*\\n//;}"
         "requirements/${BASE_NAME}.txt"'
         || ''
         }}
@@ -204,7 +204,7 @@ jobs:
         )
         )
         && 'sed -i ""
-        "s/\[[^\\[]\\+\]//g;/^file:.*$/{N;N; s/^file:[^\"$\"]*\\n//;}"
+        "s/\\[.*\\]//g;/^file:.*$/{N;N; s/^file:[^\"$\"]*\\n//;}"
         "requirements/${BASE_NAME}.txt"'
         || ''
         }}
