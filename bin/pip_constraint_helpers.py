@@ -7,6 +7,12 @@ import platform
 import subprocess  # noqa: S404
 import sys
 
+PYTHON_IMPLEMENTATION_MAP = {
+    'cpython': 'cp',
+    'python': 'py',
+    'pypy': 'pp',
+}
+
 print_info = functools.partial(print, file=sys.stderr)
 
 
@@ -16,12 +22,11 @@ def get_runtime_python_tag():
     :returns: Python tag.
     """
     python_minor_ver = sys.version_info[:2]
-    python_implementation = platform.python_implementation()
 
-    if python_implementation == 'PyPy':
-        python_tag_prefix = 'py'
-    else:
-        python_tag_prefix = 'cp'
+    python_tag_prefix = PYTHON_IMPLEMENTATION_MAP.get(
+        sys.implementation.name,
+        sys.implementation.name,
+    )
 
     # pylint: disable=possibly-unused-variable
     python_minor_ver_tag = ''.join(map(str, python_minor_ver))
@@ -30,14 +35,6 @@ def get_runtime_python_tag():
         '{python_tag_prefix!s}{python_minor_ver_tag!s}'.
         format(**locals())  # noqa: WPS421
     )
-
-    if python_tag_prefix == 'cp' and python_implementation == 'CPython':
-        print_info(
-            'WARNING: The chosen Python interpreter tag "{python_tag}" '
-            'may not match the current '
-            'Python implementation "{python_implementation}"'.
-            format(**locals()),  # noqa: WPS421
-        )
 
     return python_tag
 
