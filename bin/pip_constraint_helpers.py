@@ -9,6 +9,8 @@ import sys
 
 PYTHON_IMPLEMENTATION_MAP = {
     'cpython': 'cp',
+    'ironpython': 'ip',
+    'jython': 'jy',
     'python': 'py',
     'pypy': 'pp',
 }
