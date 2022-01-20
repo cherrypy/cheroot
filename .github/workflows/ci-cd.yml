@@ -631,8 +631,8 @@ jobs:
         path: dist/
 
     - name: >-
-        Pre-populate tox envs:
-        ${{ matrix.env.TOXENV }}
+        Pre-populate tox env:
+        ${{ env.TOXENV }}
       run: >-
         python -m
         tox
