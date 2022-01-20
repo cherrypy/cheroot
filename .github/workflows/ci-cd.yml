@@ -539,26 +539,7 @@ jobs:
             '-p no:warnings' || ''
         }}
       PY_COLORS: 1
-      TOXENV: >-
-        ${{
-            (
-                contains(matrix.python-version, 'pypy') &&
-                contains(matrix.python-version, '3')
-            )
-            && 'pypy3'
-            || ''
-        }}${{
-            (
-                contains(matrix.python-version, 'pypy') &&
-                contains(matrix.python-version, '2')
-            )
-            && 'pypy2'
-            || ''
-        }}${{
-            !contains(matrix.python-version, 'pypy')
-            && 'python'
-            || ''
-        }}
+      TOXENV: python
       TOX_PARALLEL_NO_SPINNER: 1
 
     steps:
