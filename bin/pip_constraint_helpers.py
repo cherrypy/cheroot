@@ -82,8 +82,8 @@ def make_pip_cmd(pip_args, constraint_file_path):
         pip_cmd += ['--constraint', constraint_file_path]
     else:
         print_info(
-            'WARNING: The expected pinned constraints file for the current env'
-            'does not exist (should be "{constraint_file_path}").'.
+            'WARNING: The expected pinned constraints file for the current '
+            'env does not exist (should be "{constraint_file_path}").'.
             format(**locals()),  # noqa: WPS421
         )
     return pip_cmd
