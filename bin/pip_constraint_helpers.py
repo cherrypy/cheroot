@@ -14,6 +14,7 @@ PYTHON_IMPLEMENTATION_MAP = {
     'python': 'py',
     'pypy': 'pp',
 }
+PYTHON_IMPLEMENTATION = platform.python_implementation()
 
 print_info = functools.partial(print, file=sys.stderr)
 
@@ -28,7 +29,7 @@ def get_runtime_python_tag():
     try:
         sys_impl = sys.implementation.name
     except AttributeError:
-        sys_impl = platform.python_implementation().lower()
+        sys_impl = PYTHON_IMPLEMENTATION.lower()
 
     python_tag_prefix = PYTHON_IMPLEMENTATION_MAP.get(sys_impl, sys_impl)
 
@@ -57,7 +58,8 @@ def get_constraint_file_path(req_dir, toxenv, python_tag):
     platform_machine = platform.machine().lower()
 
     if toxenv in {'py', 'python'}:
-        toxenv = 'py{ver}'.format(ver=python_tag[2:])
+        extra_prefix = 'py' if PYTHON_IMPLEMENTATION == 'PyPy' else ''
+        toxenv = '{prefix}py{ver}'.format(prefix=extra_prefix, ver=python_tag[2:])
 
     if sys_platform == 'linux2':
         sys_platform = 'linux'
