@@ -26,7 +26,7 @@ def get_runtime_python_tag():
     try:
         sys_impl = sys.implementation.name
     except AttributeError:
-        sys_impl = 'python'
+        sys_impl = platform.python_implementation().lower()
 
     python_tag_prefix = PYTHON_IMPLEMENTATION_MAP.get(sys_impl, sys_impl)
 
