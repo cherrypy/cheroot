@@ -23,10 +23,12 @@ def get_runtime_python_tag():
     """
     python_minor_ver = sys.version_info[:2]
 
-    python_tag_prefix = PYTHON_IMPLEMENTATION_MAP.get(
-        sys.implementation.name,
-        sys.implementation.name,
-    )
+    try:
+        sys_impl = sys.implementation.name
+    except AttributeError:
+        sys_impl = 'python'
+
+    python_tag_prefix = PYTHON_IMPLEMENTATION_MAP.get(sys_impl, sys_impl)
 
     # pylint: disable=possibly-unused-variable
     python_minor_ver_tag = ''.join(map(str, python_minor_ver))
