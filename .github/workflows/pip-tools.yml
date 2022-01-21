@@ -137,7 +137,9 @@ jobs:
         }}
 
 
-        (cd requirements/; ln -svf tests.in "${BASE_NAME}.in")
+        (cd requirements/;
+        ln -svf tests.in "${BASE_NAME}.in";
+        git add "${BASE_NAME}.in")
 
 
         python -m piptools compile
