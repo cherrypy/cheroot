@@ -114,6 +114,9 @@ jobs:
       # NOTE: `sed` under macOS needs a backup argument.
       # Ref: https://stackoverflow.com/a/7573438/595220
       run: >
+        set -x
+
+
         BASE_NAME=$(
         PYTHONPATH=bin/ python -c
         'from pip_constraint_helpers import get_constraint_file_path,
