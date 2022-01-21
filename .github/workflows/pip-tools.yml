@@ -138,8 +138,20 @@ jobs:
 
 
         (cd requirements/;
-        ln -svf tests.in "${BASE_NAME}.in";
-        git add "${BASE_NAME}.in")
+        ${{
+        runner.os != 'Windows'
+        && 'ln -svf tests.in "${BASE_NAME}.in"; git add "${BASE_NAME}.in"'
+        || 'GIT_INDEX_OBJECT_SYMLINK_TYPE=120000;
+        SYMLINK_TARGET_HASH=$(echo -n tests.in | git hash-object --stdin);
+        CURRENT_SRC_OBJECT_TYPE=$(git ls-tree HEAD -- "${BASE_NAME}.in" | awk "{print\$1}");
+        [[ "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" !=
+        "${CURRENT_SRC_OBJECT_TYPE}" ]] &&
+        git update-index --add --cacheinfo
+        "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" "${SYMLINK_TARGET_HASH}"
+        "${BASE_NAME}.in" &&
+        git restore -- "${BASE_NAME}.in"'
+        }}
+        )
 
 
         python -m piptools compile
