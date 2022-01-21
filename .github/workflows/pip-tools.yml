@@ -210,7 +210,7 @@ jobs:
         }}
 
 
-        git add requirements/
+        git add "requirements/${BASE_NAME}.txt"
 
 
         git commit -m "Update ${BASE_NAME} constraints" requirements/
