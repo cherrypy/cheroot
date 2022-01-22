@@ -148,13 +148,15 @@ jobs:
         SYMLINK_TARGET_HASH=$(echo -n tests.in | git hash-object --stdin);
         CURRENT_SRC_OBJECT_TYPE="$(git ls-tree HEAD -- "${BASE_NAME}.in" | awk "{print\$1}")";
         echo "CURRENT_SRC_OBJECT_TYPE=${CURRENT_SRC_OBJECT_TYPE}";
-        [[ "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" !=
-        "${CURRENT_SRC_OBJECT_TYPE}" ]] &&
+        if [[ "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" !=
+        "${CURRENT_SRC_OBJECT_TYPE}" ]];
+        then
         git update-index --add --cacheinfo
         "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" "${SYMLINK_TARGET_HASH}"
         "requirements/${BASE_NAME}.in" &&
         git status &&
-        git restore -- "${BASE_NAME}.in"'
+        git restore -- "${BASE_NAME}.in";
+        fi'
         }}
         )
 
