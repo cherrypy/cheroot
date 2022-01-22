@@ -153,7 +153,6 @@ jobs:
         "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" "${SYMLINK_TARGET_HASH}"
         "${BASE_NAME}.in" &&
         git status &&
-        git status --raw &&
         git restore -- "${BASE_NAME}.in"'
         }}
         )
