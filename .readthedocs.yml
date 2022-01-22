@@ -36,5 +36,7 @@ build:
 # to build docs
 python:
   install:
+  - method: pip
+    path: .
   - requirements: requirements/tox-build-docs-cp310-linux-x86_64.txt
   system_packages: false
