@@ -31,7 +31,7 @@ def get_runtime_python_tag():
     except AttributeError:
         sys_impl = PYTHON_IMPLEMENTATION.lower()
 
-    # pylint: disable=python_tag_prefix
+    # pylint: disable=possibly-unused-variable
     python_tag_prefix = PYTHON_IMPLEMENTATION_MAP.get(sys_impl, sys_impl)
 
     # pylint: disable=possibly-unused-variable
