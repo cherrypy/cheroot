@@ -7,7 +7,7 @@ import platform
 import subprocess  # noqa: S404
 import sys
 
-PYTHON_IMPLEMENTATION_MAP = {
+PYTHON_IMPLEMENTATION_MAP = {  # noqa: WPS407
     'cpython': 'cp',
     'ironpython': 'ip',
     'jython': 'jy',
@@ -31,17 +31,16 @@ def get_runtime_python_tag():
     except AttributeError:
         sys_impl = PYTHON_IMPLEMENTATION.lower()
 
+    # pylint: disable=python_tag_prefix
     python_tag_prefix = PYTHON_IMPLEMENTATION_MAP.get(sys_impl, sys_impl)
 
     # pylint: disable=possibly-unused-variable
     python_minor_ver_tag = ''.join(map(str, python_minor_ver))
 
-    python_tag = (
+    return (
         '{python_tag_prefix!s}{python_minor_ver_tag!s}'.
         format(**locals())  # noqa: WPS421
     )
-
-    return python_tag
 
 
 def get_constraint_file_path(req_dir, toxenv, python_tag):
@@ -59,7 +58,10 @@ def get_constraint_file_path(req_dir, toxenv, python_tag):
 
     if toxenv in {'py', 'python'}:
         extra_prefix = 'py' if PYTHON_IMPLEMENTATION == 'PyPy' else ''
-        toxenv = '{prefix}py{ver}'.format(prefix=extra_prefix, ver=python_tag[2:])
+        toxenv = '{prefix}py{ver}'.format(
+            prefix=extra_prefix,
+            ver=python_tag[2:],
+        )
 
     if sys_platform == 'linux2':
         sys_platform = 'linux'
