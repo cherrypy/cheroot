@@ -324,6 +324,9 @@ def test_streaming_11(test_client, set_cl):
         assert actual_resp_body == b''
         assert not header_exists('Transfer-Encoding', actual_headers)
 
+    # Prevent the resource warnings:
+    http_connection.close()
+
 
 @pytest.mark.parametrize(
     'set_cl',
@@ -397,6 +400,9 @@ def test_streaming_10(test_client, set_cl):
 
     test_client.server_instance.protocol = original_server_protocol
 
+    # Prevent the resource warnings:
+    http_connection.close()
+
 
 @pytest.mark.parametrize(
     'http_server_protocol',
@@ -465,6 +471,9 @@ def test_keepalive(test_client, http_server_protocol):
     assert not header_exists('Keep-Alive', actual_headers)
 
     test_client.server_instance.protocol = original_server_protocol
+
+    # Prevent the resource warnings:
+    http_connection.close()
 
 
 def test_keepalive_conn_management(test_client):
@@ -1030,6 +1039,9 @@ def test_No_Message_Body(test_client):
     assert not header_exists('Content-Length', actual_headers)
     assert actual_resp_body == b''
     assert not header_exists('Connection', actual_headers)
+
+    # Prevent the resource warnings:
+    http_connection.close()
 
 
 @pytest.mark.xfail(
