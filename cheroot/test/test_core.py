@@ -263,6 +263,8 @@ def test_no_content_length(test_client):
     assert actual_status == HTTP_OK
     assert actual_resp_body == b'Hello world!'
 
+    c.close()  # deal with the resource warning
+
 
 def test_content_length_required(test_client):
     """Test POST query with body failing because of missing Content-Length."""
@@ -277,6 +279,8 @@ def test_content_length_required(test_client):
 
     actual_status = response.status
     assert actual_status == HTTP_LENGTH_REQUIRED
+
+    c.close()  # deal with the resource warning
 
 
 @pytest.mark.xfail(
@@ -350,6 +354,8 @@ def test_malformed_http_method(test_client):
     actual_resp_body = response.read(21)
     assert actual_resp_body == b'Malformed method name'
 
+    c.close()  # deal with the resource warning
+
 
 def test_malformed_header(test_client):
     """Check that broken HTTP header results in Bad Request."""
@@ -365,6 +371,8 @@ def test_malformed_header(test_client):
     assert actual_status == HTTP_BAD_REQUEST
     actual_resp_body = response.read(20)
     assert actual_resp_body == b'Illegal header line.'
+
+    c.close()  # deal with the resource warning
 
 
 def test_request_line_split_issue_1220(test_client):
