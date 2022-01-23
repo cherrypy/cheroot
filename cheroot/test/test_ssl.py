@@ -276,7 +276,7 @@ def test_ssl_adapters(
     reason='Fails under PyPy in CI for unknown reason',
     strict=False,
 )
-def test_tls_client_auth(  # noqa: C901  # FIXME
+def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
     # FIXME: remove twisted logic, separate tests
     mocker,
     tls_http_server, adapter_type,
