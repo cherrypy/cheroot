@@ -314,6 +314,7 @@ jobs:
       with:
         ssh-key: ${{ secrets.PIP_TOOLS_DEPLOYMENT_KEY }}
     - name: Setup git user as [bot]
+      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
       # Refs:
       # * https://github.community/t/github-actions-bot-email-address/17204/6
       # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
