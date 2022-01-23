@@ -60,6 +60,7 @@ def test_connection_keepalive(simple_wsgi_server):
         ]
         failures = sum(task.result() for task in tasks)
 
+    session.close()
     assert not failures
 
 
