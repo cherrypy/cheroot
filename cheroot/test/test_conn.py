@@ -565,6 +565,11 @@ def test_keepalive_conn_management(test_client):
     # Restore original timeout.
     test_client.server_instance.timeout = timeout
 
+    # Prevent the resource warnings:
+    c1.close()
+    c2.close()
+    c3.close()
+
 
 @pytest.mark.parametrize(
     ('simulated_exception', 'error_number', 'exception_leaks'),
