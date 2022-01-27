@@ -1,3 +1,4 @@
+# generated members by metaclass
 cheroot.ssl.pyopenssl.SSLConnection.accept
 cheroot.ssl.pyopenssl.SSLConnection.bind
 cheroot.ssl.pyopenssl.SSLConnection.close
@@ -33,3 +34,7 @@ cheroot.ssl.pyopenssl.SSLConnection.state_string
 cheroot.ssl.pyopenssl.SSLConnection.want_read
 cheroot.ssl.pyopenssl.SSLConnection.want_write
 cheroot.ssl.pyopenssl.SSLConnection.write
+
+# false positives (https://github.com/python/mypy/issues/11843)
+cheroot.connections.IS_WINDOWS
+cheroot.ssl.builtin.IS_ABOVE_OPENSSL10

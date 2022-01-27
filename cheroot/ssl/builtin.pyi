@@ -1,7 +1,6 @@
 from typing import Any
 from . import Adapter
 
-generic_socket_error = OSError
 DEFAULT_BUFFER_SIZE: int
 
 class BuiltinSSLAdapter(Adapter):
