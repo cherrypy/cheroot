@@ -112,7 +112,7 @@ repos:
     - lxml
     - typed-ast
     - types-backports
-    - types-pyOpenSSL
+    - types-pyOpenSSL ~= 21.0  # Last interface supporting Python 2.7
     - types-requests
     - types-six
     - typing
