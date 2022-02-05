@@ -283,47 +283,31 @@ jobs:
       pull-requests: write
 
     steps:
-    - name: >-
-        Determine whether any change suggestions to lockfiles
-        have been produced
-      id: artifacts
-      run: |
-        set -x
-
-        ARTIFACT_NUMBER="$(\
-           curl -s \
-             https://api.github.com/repos/cherrypy/cheroot/actions/runs/${{ github.run_id }}/artifacts \
-           | jq '.total_count' \
-        )"
-
-        if [ "${ARTIFACT_NUMBER}" -ne 0 ]
-        then
-          UPDATES_NEEDED=true
-        else
-          UPDATES_NEEDED=false
-        fi
-
-        echo "::set-output name=lockfile-updates-needed::${UPDATES_NEEDED}"
     - name: Download all the dists
-      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+      continue-on-error: true  # and judge whether there's updates later
       uses: actions/download-artifact@v2
       with:
         name: pip-constraints-git-patches
         path: ${{ runner.temp }}/patches/
+    - name: >-
+        Determine whether any change suggestions to lockfiles
+        have been produced
+      id: artifacts
+      run: echo '::set-output name=lockfile-updates-needed::true'
     - name: Grab the source from Git
-      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+      if: steps.artifacts.outputs.lockfile-updates-needed
       uses: actions/checkout@v2
       with:
         ssh-key: ${{ secrets.PIP_TOOLS_DEPLOYMENT_KEY }}
     - name: Setup git user as [bot]
-      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+      if: steps.artifacts.outputs.lockfile-updates-needed
       # Refs:
       # * https://github.community/t/github-actions-bot-email-address/17204/6
       # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
       uses: fregante/setup-git-user@v1.0.1
 
     - name: Figure out if the pre-existing remote branch exists
-      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+      if: steps.artifacts.outputs.lockfile-updates-needed
       id: pre-existing-remote-branch
       run: >-
         echo "::set-output name=info::$(
@@ -333,31 +317,31 @@ jobs:
       if: steps.pre-existing-remote-branch.outputs.info
       run: git fetch origin maintenance/pip-tools-constraint-lockfiles
     - name: Switch to the PR branch
-      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+      if: steps.artifacts.outputs.lockfile-updates-needed
       run: git checkout -B maintenance/pip-tools-constraint-lockfiles
     - name: Make an empty initial commit
       if: >-
         !steps.pre-existing-remote-branch.outputs.info
-        && fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+        && steps.artifacts.outputs.lockfile-updates-needed
       run: git commit --allow-empty -m "Pip-tools initial commit $(uuidgen)"
     - name: Push the PR branch to remote
       # ... so that it's possible to create a PR out of it
       if: >-
         !steps.pre-existing-remote-branch.outputs.info
-        && fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+        && steps.artifacts.outputs.lockfile-updates-needed
       # FIXME: use `GITHUB_TOKEN`
       run: git push --atomic origin 'HEAD:maintenance/pip-tools-constraint-lockfiles'
     - name: Wipe the dummy commit
       if: >-
         !steps.pre-existing-remote-branch.outputs.info
-        && fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+        && steps.artifacts.outputs.lockfile-updates-needed
       # ... so that it's possible to create a PR out of it
       run: git reset HEAD^
 
     - name: Create a PR
       if: >-
         !steps.pre-existing-remote-branch.outputs.info
-        && fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+        && steps.artifacts.outputs.lockfile-updates-needed
       id: pr
       uses: vsoch/pull-request-action@1.0.18
       env:
@@ -377,15 +361,15 @@ jobs:
         "\nPR URL: ${{ steps.pr.outputs.pull_request_url }}"
 
     - name: List Git patches
-      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+      if: steps.artifacts.outputs.lockfile-updates-needed
       run: ls -alh '${{ runner.temp }}/patches/'
     - name: Apply patches to the Git repo
-      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+      if: steps.artifacts.outputs.lockfile-updates-needed
       run: git am '${{ runner.temp }}/patches'/*.patch
     - name: Force-push the PR branch to remote
       # ... with only the useful commits which will cause a `pull_request` `synchronize`
       # event because of the SSH key
-      if: fromJSON(steps.artifacts.outputs.lockfile-updates-needed)
+      if: steps.artifacts.outputs.lockfile-updates-needed
       run: git push --atomic origin 'HEAD:maintenance/pip-tools-constraint-lockfiles' --force-with-lease
 
     - name: Enable auto-merge for the PR
