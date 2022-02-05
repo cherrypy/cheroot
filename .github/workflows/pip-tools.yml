@@ -163,6 +163,7 @@ jobs:
 
         python -m piptools compile
         --allow-unsafe
+        --upgrade
         --output-file="requirements/${BASE_NAME}.txt"
         ${{
         (
