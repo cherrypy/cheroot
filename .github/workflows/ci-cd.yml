@@ -547,9 +547,22 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Figure out if the interpreter ABI is stable
+      id: py-abi
+      run: |
+        from sys import version_info
+
+        is_stable_abi = version_info.releaselevel == 'final'
+
+        print(
+            '::set-output name=is-stable-abi::{is_stable_abi}'.
+            format(is_stable_abi=str(is_stable_abi).lower())
+        )
+      shell: python
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
+      if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       id: calc-cache-key-py
       run: |
         from hashlib import sha512
@@ -559,6 +572,7 @@ jobs:
         print('::set-output name=py-hash-key::{hash}'.format(hash=hash))
       shell: python
     - name: Get pip cache dir
+      if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       id: pip-cache
       run: |
         set +e
@@ -572,6 +586,7 @@ jobs:
         fi
       shell: bash
     - name: Set up pip cache
+      if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       uses: actions/cache@v2.1.7
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
