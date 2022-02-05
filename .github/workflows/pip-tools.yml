@@ -372,16 +372,6 @@ jobs:
       if: steps.artifacts.outputs.lockfile-updates-needed
       run: git push --atomic origin 'HEAD:maintenance/pip-tools-constraint-lockfiles' --force-with-lease
 
-    - name: Auto-approve the PR
-      # ... to fulfill the branch protection requirement
-      if: steps.pr.outputs.pull_request_url
-      run: >-
-        gh pr review
-        '${{ steps.pr.outputs.pull_request_url }}'
-        --approve
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Enable auto-merge for the PR
       if: steps.pr.outputs.pull_request_url
       run: >-
