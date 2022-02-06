@@ -317,6 +317,7 @@ jobs:
     - name: >-
         Determine whether any change suggestions to lockfiles
         have been produced
+      if: success()
       id: artifacts
       run: echo '::set-output name=lockfile-updates-needed::true'
     - name: Grab the source from Git
