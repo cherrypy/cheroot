@@ -4,6 +4,13 @@ name: pip-tools
 
 on:   # yamllint disable-line rule:truthy
   workflow_dispatch:
+    inputs:
+      package-distribuition:
+        # github.event_name == 'workflow_dispatch'
+        # && github.event.inputs.package-distribuition
+        description: >-
+          A target Python package distribution to upgrade
+        required: true
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
@@ -163,7 +170,17 @@ jobs:
 
         python -m piptools compile
         --allow-unsafe
-        --upgrade
+        ${{
+        (
+        github.event_name == 'workflow_dispatch'
+        && github.event.inputs.package-distribuition
+        )
+        && format(
+        '--upgrade-package="{0}"',
+        github.event.inputs.package-distribuition
+        )
+        || '--upgrade'
+        }}
         --output-file="requirements/${BASE_NAME}.txt"
         ${{
         (
@@ -235,7 +252,14 @@ jobs:
         git add "requirements/${BASE_NAME}.txt"
 
 
-        git commit -m "Update ${BASE_NAME} constraints" requirements/
+        git commit -m "Update ${BASE_NAME} constraints${{
+        (
+        github.event_name == 'workflow_dispatch'
+        && github.event.inputs.package-distribuition
+        )
+        && format(' for {0}', github.event.inputs.package-distribuition)
+        || ''
+        }}" requirements/
         && echo "::set-output name=patch::0001-Update-${BASE_NAME}-constraints.patch"
         || :
       shell: bash
@@ -354,7 +378,14 @@ jobs:
         PULL_REQUEST_FROM_BRANCH: >-
           maintenance/pip-tools-constraint-lockfiles
         PULL_REQUEST_TITLE: >-
-          Bump transitive deps in pip-tools-managed lockfiles
+          Bump transitive deps in pip-tools-managed lockfiles${{
+          (
+          github.event_name == 'workflow_dispatch'
+          && github.event.inputs.package-distribuition
+          )
+          && format(' for {0}', github.event.inputs.package-distribuition)
+          || ''
+          }}
     - name: Log the pull request details
       run: >-
         echo
