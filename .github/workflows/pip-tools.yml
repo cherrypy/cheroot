@@ -272,6 +272,7 @@ jobs:
       run: >-
         git format-patch
         --output-directory='${{ runner.temp }}/patches/'
+        --output='${{ steps.constraints.outputs.patch }}'
         -1
         HEAD
     - name: Save the package bump patch as a GHA artifact
