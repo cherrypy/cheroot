@@ -104,7 +104,7 @@ requests==2.27.1
     #   requests-unixsocket
 requests-toolbelt==0.9.1
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
-requests-unixsocket==0.2.0
+requests-unixsocket==0.3.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
 six==1.16.0
     # via cheroot (setup.cfg)
@@ -122,7 +122,6 @@ urllib3==1.26.7 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py310-cp310-linux-x86_64.in
     #   requests
-    #   requests-unixsocket
 watchdog==2.1.6
     # via pytest-watch
 
