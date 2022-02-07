@@ -472,26 +472,26 @@ jobs:
         - ubuntu-18.04
         - macOS-11.0
         - macOS-latest
-        - windows-latest
-        - windows-2016
+        - windows-2019
+        - windows-2022
         exclude:
         # NOTE: Windows PyPy jobs are excluded to address the tox bug
         # NOTE: https://github.com/tox-dev/tox/issues/1704.
         # NOTE: They should be re-added once it's fixed.
-        - os: windows-latest
+        - os: windows-2022
           python-version: pypy2
-        - os: windows-2016
+        - os: windows-2019
           python-version: pypy2
-        - os: windows-latest
+        - os: windows-2022
           python-version: pypy-3.6
-        - os: windows-2016
+        - os: windows-2019
           python-version: pypy-3.6
         # NOTE: Windows PyPy 3.7 jobs are excluded because of the lack
         # NOTE: of the build deps to compile cryptography.
         # NOTE: They should be re-added once it's fixed.
-        - os: windows-latest
+        - os: windows-2022
           python-version: pypy-3.7
-        - os: windows-2016
+        - os: windows-2019
           python-version: pypy-3.7
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
