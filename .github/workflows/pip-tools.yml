@@ -267,6 +267,9 @@ jobs:
     - name: Log the patch
       if: steps.constraints.outputs.patch
       run: git show --color
+    - name: Create a temporary patch directory
+      if: steps.constraints.outputs.patch
+      run: mkdir -pv '${{ runner.temp }}/patches'
     - name: Create a patch from the last Git commit
       if: steps.constraints.outputs.patch
       run: >-
