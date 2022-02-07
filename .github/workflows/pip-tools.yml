@@ -301,6 +301,17 @@ jobs:
         path: ${{ runner.temp }}/patches/${{ steps.constraints.outputs.patch }}
 
   check:  # This job does nothing and is only used for the branch protection
+    name: >-
+      check
+      ⮸
+      ${{
+      (
+          github.event_name == 'workflow_dispatch'
+          && github.event.inputs.package-distribuition
+      )
+      && format('`{0}`', github.event.inputs.package-distribuition)
+      || 'everything'
+      }}
     if: always()
 
     needs:
