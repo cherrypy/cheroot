@@ -12,7 +12,7 @@ cffi==1.15.0
     # via cryptography
 chardet==4.0.0
     # via -r requirements/tox-py36-cp36-linux-x86_64.in
-charset-normalizer==2.0.10
+charset-normalizer==2.0.11
     # via requests
 colorama==0.4.4
     # via pytest-watch
