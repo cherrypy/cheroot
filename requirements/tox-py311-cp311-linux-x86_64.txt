@@ -108,7 +108,7 @@ requests-unixsocket==0.3.0
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
 six==1.16.0
     # via cheroot (setup.cfg)
-tempora==5.0.0
+tempora==5.0.1
     # via portend
 termcolor==1.1.0
     # via pytest-sugar
