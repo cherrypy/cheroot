@@ -3,6 +3,9 @@ name: CI/CD
 
 on:   # yamllint disable-line rule:truthy
   push:
+    branches-ignore:
+    - maintenance/pip-tools-constraint-lockfiles
+    - maintenance/pip-tools-constraint-lockfiles-**
   pull_request:
   workflow_dispatch:
     inputs:
