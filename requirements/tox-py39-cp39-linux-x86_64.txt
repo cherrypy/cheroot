@@ -108,7 +108,7 @@ requests-unixsocket==0.3.0
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 six==1.16.0
     # via cheroot (setup.cfg)
-tempora==4.1.2
+tempora==5.0.1
     # via portend
 termcolor==1.1.0
     # via pytest-sugar
