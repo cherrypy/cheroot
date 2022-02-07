@@ -12,7 +12,7 @@ cffi==1.15.0              # via cryptography
 chardet==3.0.4
 colorama==0.4.1 ; python_version == "3.4"
 coverage==4.5.4 ; python_version == "3.4"
-cryptography==2.8         # via pyopenssl, trustme
+cryptography==2.8
 docopt==0.6.2             # via pytest-watch
 execnet==1.7.1            # via pytest-xdist
 idna==2.8                 # via requests, trustme
