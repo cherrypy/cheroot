@@ -309,6 +309,7 @@ jobs:
 
     steps:
     - name: Download all the dists
+      id: artifacts-download
       continue-on-error: true  # and judge whether there's updates later
       uses: actions/download-artifact@v2
       with:
@@ -317,7 +318,7 @@ jobs:
     - name: >-
         Determine whether any change suggestions to lockfiles
         have been produced
-      if: success()
+      if: steps.artifacts-download.outcome == 'success'
       id: artifacts
       run: echo '::set-output name=lockfile-updates-needed::true'
     - name: Grab the source from Git
