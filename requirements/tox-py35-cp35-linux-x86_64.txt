@@ -157,4 +157,6 @@ zipp==1.2.0
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==50.3.2
-    # via pytest-rerunfailures
+    # via
+    #   pytest-rerunfailures
+    #   zc.lockfile
