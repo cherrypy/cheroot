@@ -140,5 +140,5 @@ zipp==3.7.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==60.5.0
+setuptools==60.8.1
     # via pytest-rerunfailures
