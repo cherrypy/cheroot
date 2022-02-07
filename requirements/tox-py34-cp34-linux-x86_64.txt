@@ -44,7 +44,7 @@ pytest==4.6.11
 pytz==2021.3              # via tempora
 requests-toolbelt==0.9.1
 requests-unixsocket==0.3.0
-requests==2.21.0
+requests==2.21.0          # via requests-toolbelt, requests-unixsocket
 scandir==1.10.0           # via pathlib2
 six==1.16.0               # via cryptography, jaraco.apt, jaraco.text, pathlib2, pyopenssl, pytest, pytest-xdist, tempora
 tempora==1.14.1           # via portend, yg.lockfile

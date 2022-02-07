@@ -70,7 +70,7 @@ py==1.11.0
     #   pytest-forked
 pycparser==2.21
     # via cffi
-pyopenssl==21.0.0
+pyopenssl==22.0.0
     # via -r requirements/tox-py37-cp37-linux-x86_64.in
 pyparsing==3.0.7
     # via packaging
@@ -113,9 +113,7 @@ requests-toolbelt==0.9.1
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py37-cp37-linux-x86_64.in
 six==1.16.0
-    # via
-    #   cheroot (setup.cfg)
-    #   pyopenssl
+    # via cheroot (setup.cfg)
 tempora==5.0.0
     # via portend
 termcolor==1.1.0
