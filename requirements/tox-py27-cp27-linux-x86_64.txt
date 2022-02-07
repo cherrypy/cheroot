@@ -142,7 +142,7 @@ pytz==2021.3
     # via tempora
 requests-toolbelt==0.9.1
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
-requests-unixsocket==0.2.0
+requests-unixsocket==0.3.0
     # via -r requirements/tox-py27-cp27-linux-x86_64.in
 requests==2.27.1
     # via
@@ -183,7 +183,6 @@ urllib3==1.26.8 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py27-cp27-linux-x86_64.in
     #   requests
-    #   requests-unixsocket
 watchdog==0.10.7 ; python_version < "3.6"
     # via
     #   -r requirements/tox-py27-cp27-linux-x86_64.in
