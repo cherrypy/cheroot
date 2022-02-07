@@ -31,6 +31,7 @@ contextlib2==0.6.0.post1
     #   importlib-resources
     #   jaraco.context
     #   yg.lockfile
+    #   zipp
 coverage==5.5 ; python_version < "3.6" and python_version != "3.4"
     # via
     #   -r requirements/tox-pypy27-pp27-linux-x86_64.in
@@ -55,7 +56,7 @@ idna==2.10
     # via
     #   requests
     #   trustme
-importlib-metadata==2.1.2
+importlib-metadata==2.1.3
     # via
     #   pluggy
     #   pytest
