@@ -281,6 +281,7 @@ jobs:
     - name: Create a temporary patch directory
       if: steps.constraints.outputs.patch
       run: mkdir -pv '${{ runner.temp }}/patches'
+      shell: bash
     - name: Create a patch from the last Git commit
       if: steps.constraints.outputs.patch
       run: >-
