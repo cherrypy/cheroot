@@ -66,7 +66,7 @@ pycparser==2.21
     # via cffi
 pyopenssl==22.0.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
-pyparsing==3.0.6
+pyparsing==3.0.7
     # via packaging
 pypytools==0.6.2
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
