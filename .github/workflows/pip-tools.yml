@@ -10,7 +10,7 @@ on:   # yamllint disable-line rule:truthy
         # && github.event.inputs.package-distribuition
         description: >-
           A target Python package distribution to upgrade
-        required: true
+        required: false
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
