@@ -15,7 +15,13 @@ on:   # yamllint disable-line rule:truthy
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
 env:
-  git-branch: maintenance/pip-tools-constraint-lockfiles
+  git-branch: >-
+    maintenance/pip-tools-constraint-lockfiles${{
+      (
+      github.event_name == 'workflow_dispatch'
+      && github.event.inputs.package-distribuition
+      )
+      && format('-updating-{0}', github.event.inputs.package-distribuition) || '' }}
 
 concurrency:
   group: >-
