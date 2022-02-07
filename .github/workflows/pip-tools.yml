@@ -65,7 +65,7 @@ jobs:
         os:
         - ubuntu-18.04
         - macOS-11.0
-        - windows-2016
+        - windows-2019
         exclude:
         # NOTE: macOS PyPy 3.6 job is excluded because during
         # NOTE: self-provisioning, invoking `ensurepip` fails to load
