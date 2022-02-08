@@ -94,7 +94,7 @@ pytest-sugar==0.9.4
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
-pytest-xdist==2.4.0
+pytest-xdist==2.5.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
 pytz==2021.3
     # via tempora
