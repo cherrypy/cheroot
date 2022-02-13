@@ -41,18 +41,18 @@ iniconfig==1.1.1
 jaraco-context==4.1.1
     # via
     #   -r requirements/tox-py310-cp310-win32-amd64.in
-    #   jaraco.text
+    #   jaraco-text
 jaraco-functools==3.5.0
     # via
     #   cheroot (setup.cfg)
-    #   jaraco.text
+    #   jaraco-text
     #   tempora
 jaraco-text==3.7.0
     # via -r requirements/tox-py310-cp310-win32-amd64.in
 more-itertools==8.12.0 ; python_version >= "3.6"
     # via
     #   cheroot (setup.cfg)
-    #   jaraco.functools
+    #   jaraco-functools
 packaging==21.3
     # via
     #   pytest
@@ -128,5 +128,5 @@ watchdog==2.1.6
     # via pytest-watch
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==60.8.1
+setuptools==60.8.2
     # via pytest-rerunfailures
