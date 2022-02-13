@@ -120,7 +120,7 @@ tomli==1.2.3
     # via coverage
 trustme==0.9.0
     # via -r requirements/tox-pypy36-pp36-linux-x86_64.in
-typing-extensions==4.0.1
+typing-extensions==4.1.0
     # via importlib-metadata
 urllib3==1.26.8 ; python_version != "3.4"
     # via

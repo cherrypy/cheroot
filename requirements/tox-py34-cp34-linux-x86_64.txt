@@ -50,7 +50,8 @@ six==1.16.0               # via cryptography, jaraco.apt, jaraco.text, pathlib2,
 tempora==1.14.1           # via portend, yg.lockfile
 termcolor==1.1.0          # via pytest-sugar
 trustme==0.9.0
-typing==3.10.0.0          # via importlib-resources
+typing-extensions==3.10.0.2
+typing==3.10.0.0          # via importlib-resources, typing-extensions
 urllib3==1.24.3 ; python_version == "3.4"
 watchdog==0.10.7 ; python_version < "3.6"
 wcwidth==0.2.5            # via pytest
