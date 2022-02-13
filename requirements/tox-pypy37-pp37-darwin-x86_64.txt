@@ -12,7 +12,7 @@ cffi==1.15.0
     # via cryptography
 chardet==4.0.0
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
-charset-normalizer==2.0.11
+charset-normalizer==2.0.12
     # via requests
 colorama==0.4.4
     # via pytest-watch
@@ -37,24 +37,24 @@ importlib-metadata==4.10.1
     #   pluggy
     #   pytest
 importlib-resources==5.4.0
-    # via jaraco.text
+    # via jaraco-text
 iniconfig==1.1.1
     # via pytest
 jaraco-context==4.1.1
     # via
     #   -r requirements/tox-pypy37-pp37-darwin-x86_64.in
-    #   jaraco.text
+    #   jaraco-text
 jaraco-functools==3.5.0
     # via
     #   cheroot (setup.cfg)
-    #   jaraco.text
+    #   jaraco-text
     #   tempora
 jaraco-text==3.7.0
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
 more-itertools==8.12.0 ; python_version >= "3.6"
     # via
     #   cheroot (setup.cfg)
-    #   jaraco.functools
+    #   jaraco-functools
 packaging==21.3
     # via
     #   pytest
