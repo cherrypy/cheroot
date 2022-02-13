@@ -33,24 +33,24 @@ idna==3.3
     #   requests
     #   trustme
 importlib-resources==5.4.0
-    # via jaraco.text
+    # via jaraco-text
 iniconfig==1.1.1
     # via pytest
 jaraco-context==4.1.1
     # via
     #   -r requirements/tox-py38-cp38-linux-x86_64.in
-    #   jaraco.text
+    #   jaraco-text
 jaraco-functools==3.5.0
     # via
     #   cheroot (setup.cfg)
-    #   jaraco.text
+    #   jaraco-text
     #   tempora
 jaraco-text==3.7.0
     # via -r requirements/tox-py38-cp38-linux-x86_64.in
 more-itertools==8.12.0 ; python_version >= "3.6"
     # via
     #   cheroot (setup.cfg)
-    #   jaraco.functools
+    #   jaraco-functools
 packaging==21.3
     # via
     #   pytest
