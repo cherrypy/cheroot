@@ -6,7 +6,7 @@
 #
 apipkg==2.0.1 ; python_version == "3.4"
 atomicwrites==1.4.0       # via pytest
-attrs==21.1.0
+attrs==21.1.0             # via pytest
 certifi==2021.10.8        # via requests
 cffi==1.15.0              # via cryptography
 chardet==3.0.4
@@ -47,7 +47,7 @@ requests-unixsocket==0.3.0
 requests==2.21.0          # via requests-toolbelt, requests-unixsocket
 scandir==1.10.0           # via pathlib2
 six==1.16.0               # via cryptography, jaraco.apt, jaraco.text, pathlib2, pyopenssl, pytest, pytest-xdist, tempora
-tempora==1.14.1
+tempora==1.14.1           # via portend, yg.lockfile
 termcolor==1.1.0          # via pytest-sugar
 trustme==0.9.0
 typing==3.10.0.0          # via importlib-resources
