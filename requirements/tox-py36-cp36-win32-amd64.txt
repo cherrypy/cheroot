@@ -45,13 +45,15 @@ importlib-resources==5.4.0
 iniconfig==1.1.1
     # via pytest
 jaraco.context==4.1.1
-    # via -r requirements/tox-py36-cp36-win32-amd64.in
+    # via
+    #   -r requirements/tox-py36-cp36-win32-amd64.in
+    #   jaraco.text
 jaraco.functools==3.4.0
     # via
     #   cheroot (setup.cfg)
     #   jaraco.text
     #   tempora
-jaraco.text==3.6.0
+jaraco.text==3.7.0
     # via -r requirements/tox-py36-cp36-win32-amd64.in
 more-itertools==8.12.0 ; python_version >= "3.6"
     # via
