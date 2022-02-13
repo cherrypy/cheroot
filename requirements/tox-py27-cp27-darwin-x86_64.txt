@@ -89,7 +89,7 @@ packaging==20.9
     # via
     #   pytest
     #   pytest-sugar
-pathlib2==2.3.6
+pathlib2==2.3.7.post1
     # via
     #   importlib-metadata
     #   importlib-resources
@@ -180,7 +180,9 @@ toml==0.10.2
 trustme==0.9.0
     # via -r requirements/tox-py27-cp27-darwin-x86_64.in
 typing==3.10.0.0
-    # via importlib-resources
+    # via
+    #   importlib-resources
+    #   pathlib2
 urllib3==1.26.8 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py27-cp27-darwin-x86_64.in
