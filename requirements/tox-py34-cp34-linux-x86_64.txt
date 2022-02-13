@@ -59,4 +59,4 @@ zc.lockfile==2.0          # via yg.lockfile
 zipp==1.2.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==43.0.0        # via pytest-rerunfailures, zc.lockfile
+setuptools==43.0.0
