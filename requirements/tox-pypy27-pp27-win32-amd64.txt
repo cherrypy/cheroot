@@ -33,7 +33,6 @@ contextlib2==0.6.0.post1
     #   importlib-resources
     #   jaraco.context
     #   yg.lockfile
-    #   zipp
 coverage==5.5 ; python_version < "3.6" and python_version != "3.4"
     # via
     #   -r requirements/tox-pypy27-pp27-win32-amd64.in
@@ -91,7 +90,7 @@ packaging==20.9
     # via
     #   pytest
     #   pytest-sugar
-pathlib2==2.3.6
+pathlib2==2.3.7.post1
     # via
     #   importlib-metadata
     #   importlib-resources
@@ -177,7 +176,9 @@ toml==0.10.2
 trustme==0.9.0
     # via -r requirements/tox-pypy27-pp27-win32-amd64.in
 typing==3.10.0.0
-    # via importlib-resources
+    # via
+    #   importlib-resources
+    #   pathlib2
 urllib3==1.26.8 ; python_version != "3.4"
     # via
     #   -r requirements/tox-pypy27-pp27-win32-amd64.in

@@ -64,7 +64,7 @@ packaging==20.9
     # via
     #   pytest
     #   pytest-sugar
-pathlib2==2.3.6
+pathlib2==2.3.7.post1
     # via pytest
 pathtools==0.1.2
     # via watchdog
