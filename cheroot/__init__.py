@@ -4,12 +4,15 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 try:
-    import pkg_resources
+    from importlib.metadata import version
 except ImportError:
-    pass
+    try:
+        from importlib_metadata import version
+    except ImportError:
+        pass
 
 
 try:
-    __version__ = pkg_resources.get_distribution('cheroot').version
+    __version__ = version('cheroot')
 except Exception:
     __version__ = 'unknown'
