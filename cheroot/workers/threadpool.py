@@ -178,7 +178,7 @@ class ThreadPool:
         for worker in self._threads:
             worker.name = (
                 'CP Server {worker_name!s}'.
-                format(worker_name=worker.name),
+                format(worker_name=worker.name)
             )
             worker.start()
         for worker in self._threads:
@@ -228,7 +228,7 @@ class ThreadPool:
         worker = WorkerThread(self.server)
         worker.name = (
             'CP Server {worker_name!s}'.
-            format(worker_name=worker.name),
+            format(worker_name=worker.name)
         )
         worker.start()
         return worker
