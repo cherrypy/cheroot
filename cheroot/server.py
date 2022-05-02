@@ -1588,6 +1588,9 @@ class HTTPServer:
     ``PEERCREDS``-provided IDs.
     """
 
+    reuse_port = False
+    """If True, set SO_REUSEPORT on the socket."""
+
     keep_alive_conn_limit = 10
     """The maximum number of waiting keep-alive connections that will be kept open.
 
@@ -1597,6 +1600,7 @@ class HTTPServer:
         self, bind_addr, gateway,
         minthreads=10, maxthreads=-1, server_name=None,
         peercreds_enabled=False, peercreds_resolve_enabled=False,
+        reuse_port=False,
     ):
         """Initialize HTTPServer instance.
 
@@ -1607,6 +1611,8 @@ class HTTPServer:
             maxthreads (int): maximum number of threads for HTTP thread pool
             server_name (str): web server name to be advertised via Server
                 HTTP header
+            reuse_port (bool): if True SO_REUSEPORT option would be set to
+                socket
         """
         self.bind_addr = bind_addr
         self.gateway = gateway
@@ -1622,6 +1628,7 @@ class HTTPServer:
         self.peercreds_resolve_enabled = (
             peercreds_resolve_enabled and peercreds_enabled
         )
+        self.reuse_port = reuse_port
         self.clear_stats()
 
     def clear_stats(self):
@@ -1896,6 +1903,7 @@ class HTTPServer:
             self.bind_addr,
             family, type, proto,
             self.nodelay, self.ssl_adapter,
+            self.reuse_port,
         )
         sock = self.socket = self.bind_socket(sock, self.bind_addr)
         self.bind_addr = self.resolve_real_bind_addr(sock)
@@ -1947,6 +1955,7 @@ class HTTPServer:
             bind_addr=bind_addr,
             family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
             nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
+            reuse_port=self.reuse_port,
         )
 
         try:
@@ -1987,13 +1996,20 @@ class HTTPServer:
         return sock
 
     @staticmethod
-    def prepare_socket(bind_addr, family, type, proto, nodelay, ssl_adapter):
+    def prepare_socket(
+        bind_addr, family, type, proto, nodelay, ssl_adapter, reuse_port,
+    ):
         """Create and prepare the socket object."""
         sock = socket.socket(family, type, proto)
         connections.prevent_socket_inheritance(sock)
 
         host, port = bind_addr[:2]
         IS_EPHEMERAL_PORT = port == 0
+
+        if reuse_port:
+            if not hasattr(socket, 'SO_REUSEPORT'):
+                raise ValueError('SO_REUSEPORT not supported on this platform')
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         if not (IS_WINDOWS or IS_EPHEMERAL_PORT):
             """Enable SO_REUSEADDR for the current socket.

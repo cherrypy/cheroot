@@ -363,6 +363,33 @@ def test_high_number_of_file_descriptors(native_server_client, resource_limit):
     assert any(fn >= resource_limit for fn in native_process_conn.filenos)
 
 
+@pytest.mark.skipif(
+    not hasattr(socket, 'SO_REUSEPORT'),
+    reason='socket.SO_REUSEPORT is not supported on this platform',
+)
+@pytest.mark.parametrize(
+    'ip_addr',
+    (
+        ANY_INTERFACE_IPV4,
+        ANY_INTERFACE_IPV6,
+    ),
+)
+def test_reuse_port(http_server, ip_addr):
+    """Check that port initialized exetrnally can be reused."""
+    family = socket.getaddrinfo(ip_addr, EPHEMERAL_PORT)[0][0]
+    s = socket.socket(family)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    s.bind((ip_addr, EPHEMERAL_PORT))
+    server = HTTPServer(
+        bind_addr=s.getsockname()[:2], gateway=Gateway, reuse_port=True,
+    )
+    try:
+        server.prepare()
+    finally:
+        server.stop()
+        s.close()
+
+
 if not IS_WINDOWS:
     test_high_number_of_file_descriptors = pytest.mark.forked(
         test_high_number_of_file_descriptors,
