@@ -11,8 +11,9 @@ except ImportError:
 
 
 try:
-    __version__ = re.search(r'(?x)^(\d+)\.(\d+)(\.(\d+))?([ab](\d+))?',
-                            pkg_resources.get_distribution('cheroot').version
-                            ).expand(r'\1.\2\3\5')
+    __version__ = re.search(
+        r'(?x)^(\d+)\.(\d+)(\.(\d+))?([ab](\d+))?',
+        pkg_resources.get_distribution('cheroot').version,
+    ).expand(r'\1.\2\3\5')
 except Exception:
     __version__ = 'unknown'
