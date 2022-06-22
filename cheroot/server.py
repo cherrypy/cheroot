@@ -57,6 +57,10 @@ will run the server forever) or use invoking :func:`prepare()
 
 And now for a trivial doctest to exercise the test suite
 
+.. testsetup::
+
+   from cheroot.server import HTTPServer
+
 >>> 'HTTPServer' in globals()
 True
 """
@@ -264,7 +268,8 @@ class SizeCheckWrapper:
     def read(self, size=None):
         """Read a chunk from ``rfile`` buffer and return it.
 
-        :param int size: amount of data to read
+        :param size: amount of data to read
+        :type size: int
 
         :returns: chunk from ``rfile``, limited by size if specified
         :rtype: bytes
@@ -277,7 +282,8 @@ class SizeCheckWrapper:
     def readline(self, size=None):
         """Read a single line from ``rfile`` buffer and return it.
 
-        :param int size: minimum amount of data to read
+        :param size: minimum amount of data to read
+        :type size: int
 
         :returns: one line from ``rfile``
         :rtype: bytes
@@ -303,7 +309,8 @@ class SizeCheckWrapper:
     def readlines(self, sizehint=0):
         """Read all lines from ``rfile`` buffer and return them.
 
-        :param int sizehint: hint of minimum amount of data to read
+        :param sizehint: hint of minimum amount of data to read
+        :type sizehint: int
 
         :returns: lines of bytes read from ``rfile``
         :rtype: list[bytes]
@@ -353,7 +360,8 @@ class KnownLengthRFile:
     def read(self, size=None):
         """Read a chunk from ``rfile`` buffer and return it.
 
-        :param int size: amount of data to read
+        :param size: amount of data to read
+        :type size: int
 
         :rtype: bytes
         :returns: chunk from ``rfile``, limited by size if specified
@@ -372,7 +380,8 @@ class KnownLengthRFile:
     def readline(self, size=None):
         """Read a single line from ``rfile`` buffer and return it.
 
-        :param int size: minimum amount of data to read
+        :param size: minimum amount of data to read
+        :type size: int
 
         :returns: one line from ``rfile``
         :rtype: bytes
@@ -391,7 +400,8 @@ class KnownLengthRFile:
     def readlines(self, sizehint=0):
         """Read all lines from ``rfile`` buffer and return them.
 
-        :param int sizehint: hint of minimum amount of data to read
+        :param sizehint: hint of minimum amount of data to read
+        :type sizehint: int
 
         :returns: lines of bytes read from ``rfile``
         :rtype: list[bytes]
@@ -492,7 +502,8 @@ class ChunkedRFile:
     def read(self, size=None):
         """Read a chunk from ``rfile`` buffer and return it.
 
-        :param int size: amount of data to read
+        :param size: amount of data to read
+        :type size: int
 
         :returns: chunk from ``rfile``, limited by size if specified
         :rtype: bytes
@@ -523,7 +534,8 @@ class ChunkedRFile:
     def readline(self, size=None):
         """Read a single line from ``rfile`` buffer and return it.
 
-        :param int size: minimum amount of data to read
+        :param size: minimum amount of data to read
+        :type size: int
 
         :returns: one line from ``rfile``
         :rtype: bytes
@@ -564,7 +576,8 @@ class ChunkedRFile:
     def readlines(self, sizehint=0):
         """Read all lines from ``rfile`` buffer and return them.
 
-        :param int sizehint: hint of minimum amount of data to read
+        :param sizehint: hint of minimum amount of data to read
+        :type sizehint: int
 
         :returns: lines of bytes read from ``rfile``
         :rtype: list[bytes]
@@ -1761,7 +1774,7 @@ class HTTPServer:
                 info = [(sock_type, socket.SOCK_STREAM, 0, '', bind_addr)]
 
             for res in info:
-                af, socktype, proto, canonname, sa = res
+                af, socktype, proto, _canonname, sa = res
                 try:
                     self.bind(af, socktype, proto)
                     break
@@ -1825,7 +1838,7 @@ class HTTPServer:
         """Context manager for running this server in a thread."""
         self.prepare()
         thread = threading.Thread(target=self.serve)
-        thread.setDaemon(True)
+        thread.daemon = True
         thread.start()
         try:
             yield thread
@@ -2096,7 +2109,7 @@ class HTTPServer:
                         host, port, socket.AF_UNSPEC,
                         socket.SOCK_STREAM,
                     ):
-                        af, socktype, proto, canonname, sa = res
+                        af, socktype, proto, _canonname, _sa = res
                         s = None
                         try:
                             s = socket.socket(af, socktype, proto)

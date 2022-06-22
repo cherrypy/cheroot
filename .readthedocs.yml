@@ -8,7 +8,7 @@ version: 2
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
-  builder: html
+  builder: dirhtml
   configuration: docs/conf.py
   fail_on_warning: true
 
@@ -27,16 +27,16 @@ submodules:
   recursive: true
 
 build:
-  image: latest
+  os: ubuntu-20.04
+  tools:
+    python: >-  # PyYAML parses it as float `3.1` if it's not an explicit str
+      3.10
 
 # Optionally set the version of Python and requirements required
 # to build docs
 python:
-  version: 3.7
   install:
   - method: pip
     path: .
-    extra_requirements:
-    - docs
-    - testing
+  - requirements: requirements/tox-build-docs-cp310-linux-x86_64.txt
   system_packages: false

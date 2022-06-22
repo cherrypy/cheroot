@@ -1,17 +1,22 @@
 ---
+
+ci:
+  skip:
+  - stubtest
+
 repos:
-- repo: git://github.com/asottile/add-trailing-comma
-  rev: v2.0.1
+- repo: https://github.com/asottile/add-trailing-comma.git
+  rev: v2.2.1
   hooks:
   - id: add-trailing-comma
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.7
+- repo: https://github.com/Lucas-C/pre-commit-hooks.git
+  rev: v1.1.12
   hooks:
   - id: remove-tabs
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks-markup
-  rev: v1.0.0
+- repo: https://github.com/Lucas-C/pre-commit-hooks-markup.git
+  rev: v1.0.1
   hooks:
   - id: rst-linter
     exclude: >-
@@ -22,15 +27,26 @@ repos:
     files: >-
       ^.*\.rst$
 
-- repo: git://github.com/pre-commit/pre-commit-hooks
-  rev: v2.3.0
+- repo: https://github.com/pre-commit/pre-commit-hooks.git
+  rev: v4.1.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
   - id: check-merge-conflict
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
-  - id: requirements-txt-fixer
+  # disabled because it doesn't make sense to change pip-tools-managed files
+  #- id: requirements-txt-fixer
+  #  exclude: >-
+  #    (?x)
+  #    ^
+  #      requirements/[^/]+.txt
+  #    $
+  #  files: >-
+  #    (?x)
+  #    ^
+  #      requirements/[^/]+.in
+  #    $
 
   # Non-modifying checks:
   - id: name-tests-test
@@ -53,17 +69,105 @@ repos:
   # Heavy checks:
   - id: check-ast
   - id: debug-statements
-  - id: flake8
-    additional_dependencies:
-    - flake8-2020>=1.6.0
-    - flake8-pytest-style>=1.0.0
 
-- repo: git://github.com/PyCQA/pydocstyle.git
-  rev: 5.0.2
+- repo: https://github.com/PyCQA/pydocstyle.git
+  rev: 6.1.1
   hooks:
   - id: pydocstyle
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
+- repo: https://github.com/PyCQA/flake8.git
+  rev: 4.0.1
+  hooks:
+  - id: flake8
+    language_version: python3
+    additional_dependencies:
+    - flake8-2020>=1.6.0
+    - flake8-docstrings
+    - flake8-pytest-style>=1.0.0
+    - wemake-python-styleguide ~= 0.16.0
+
+- repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
   rev: v1.1.0
   hooks:
   - id: forbid-html-img-without-alt-text
+
+- repo: https://github.com/pre-commit/mirrors-mypy.git
+  rev: v0.931
+  hooks:
+  - id: mypy
+    alias: mypy-py35
+    name: MyPy, for Python 3.5
+    additional_dependencies:
+    - lxml
+    - types-backports
+    - types-pyOpenSSL
+    - types-requests
+    - types-six
+    args:
+    - --install-types
+    - --non-interactive
+    - --python-version=3.5
+    - --txt-report=.tox/.tmp/.mypy/
+    - cheroot/
+    pass_filenames: false
+  - id: mypy
+    alias: mypy-py27
+    name: MyPy, for Python 2.7
+    additional_dependencies:
+    - lxml
+    - typed-ast
+    - types-backports
+    - types-pyOpenSSL ~= 21.0  # Last interface supporting Python 2.7
+    - types-requests
+    - types-six
+    - typing
+    args:
+    - --install-types
+    - --non-interactive
+    - --python-version=2.7
+    - --txt-report=.tox/.tmp/.mypy/
+    - cheroot/
+    pass_filenames: false
+
+- repo: local
+  hooks:
+  - id: stubtest
+    name: MyPy stubtest
+    language: system
+    entry: stubtest
+    args:
+    - cheroot
+    - --mypy-config-file=mypy.ini
+    - --allowlist=stubtest_allowlist.txt
+    pass_filenames: false
+    types_or:
+    - python
+    - text
+    files: >-
+      (?x)
+      ^
+        (
+          .*\.pyi?
+          |
+          cheroot/py\.typed
+          |
+          stubtest_allowlist\.txt
+        )
+      $
+
+- repo: https://github.com/PyCQA/pylint.git
+  rev: v2.12.2
+  hooks:
+  - id: pylint
+    additional_dependencies:
+    - jaraco.context
+    - jaraco.functools
+    - jaraco.text
+    - more_itertools
+    - portend
+    - pylint-pytest < 1.1.0
+    - pypytools
+    - requests_toolbelt
+    - requests_unixsocket
+    - six
+    - Sphinx

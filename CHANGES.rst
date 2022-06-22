@@ -1,3 +1,35 @@
+.. scm-version-title:: v8.6.0
+
+Significant improvements:
+
+- :issue:`384` via :pr:`385`, :pr:`406`: Exposed type stubs with
+  annotations for public API -- by :user:`kasium`.
+
+- :pr:`401` (related to the :pr:`352` effort): Started reusing the
+  the ``expriration_interval`` setting as timeout in the low-level
+  :py:func:`~select.select` invocation, effectively reducing the system
+  load when idle, that is noticeable on low-end hardware systems. On
+  Windows OS, due to different :py:func:`~select.select` behavior, the
+  effect is less significant and comes with a theoretically decreased
+  performance on quickly repeating requests, which has however found
+  to be not significant in real world scenarios.
+  -- by :user:`MichaIng`.
+
+Internal changes:
+
+- Implemented a manual-trigger-based release workflow.
+- Integrated publishing GitHub Releases into the workflow.
+- Migrated the docs theme to `Furo <https://pradyunsg.me/furo>`__
+  (created by :user:`pradyunsg`).
+- Attempted to improve the stability of testing.
+- Configured the CI to test the same distribution as will be shipped.
+- Improved the linting setup and contributor checklists.
+- Stopped running tests under Ubuntu 16.04.
+- Tweaked the distribution packages metadata to satisfy strict checks.
+- Implemented distribution build reproducibility using a pip constraints
+  lock-file.
+- Added per-environment lock-files into the tox test environments.
+
 .. scm-version-title:: v8.5.2
 
 - :issue:`358` via :pr:`359`: Fixed a regression from
@@ -16,7 +48,7 @@
 
 - :pr:`350`: Fixed the incarnation of an earlier regression
   of not resetting the serving state
-  on :py:data:``SIGINT`` originally fixed by :pr:`322` and
+  on :py:data:`SIGINT` originally fixed by :pr:`322` and
   :pr:`331` but reintroduced by the changes in :pr:`311`
   -- by :user:`liamstask`.
 .. .. scm-version-title:: v9.0.0
@@ -634,7 +666,7 @@
   <https://github.com/jaraco/skeleton>`_.
 
   Docs now built and `deployed at RTD
-  <https://cheroot.cherrypy.org/en/latest/history.html>`_.
+  <https://cheroot.cherrypy.dev/en/latest/history.html>`_.
 
 
 .. scm-version-title:: v5.2.0

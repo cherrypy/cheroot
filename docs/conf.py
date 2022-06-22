@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     # Third-party extensions:
@@ -30,7 +31,7 @@ try:
 except ImportError:
     extensions.append('spelling_stub_ext')
 else:
-    del _sphinxcontrib_spelling
+    del _sphinxcontrib_spelling  # noqa: WPS100
     extensions.append('sphinxcontrib.spelling')
 
 # Tree-local extensions:
@@ -88,7 +89,11 @@ extlinks = {
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'python2': ('https://docs.python.org/2', None),
-    'cherrypy': ('https://docs.cherrypy.org/en/latest/', None),
+    # Ref: https://github.com/cherrypy/cherrypy/issues/1872
+    'cherrypy': (
+        'https://docs.cherrypy.dev/en/latest',
+        ('https://cherrypy.rtfd.io/en/latest', None),
+    ),
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
     'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
     'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
@@ -113,7 +118,16 @@ linkcheck_ignore = [
 
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
     # line anchors.
-    r'https://github.com/python/cpython/blob/c39b52f/Lib/poplib.py#L297-L302',
+    r'https://github\.com'
+    r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302',
+    r'https://github\.com'
+    r'/python/cpython/blob/c39b52f/Lib/poplib\.py#user-content-L297-L302',
+
+    # The domain is currently down. TODO: Revisit after Aug 3, 2021.
+    # Ref: https://github.com/cherrypy/cherrypy/issues/1872
+    r'https://cheroot\.cherrypy\.org',
+    r'https://docs\.cherrypy\.org',
+    r'https://www\.cherrypy\.org',
 ]
 linkcheck_workers = 25
 
@@ -122,11 +136,15 @@ nitpicky = True
 # NOTE: consider having a separate ignore file
 # Ref: https://stackoverflow.com/a/30624034/595220
 nitpick_ignore = [
+    ('py:data', 'SIGINT'),
     ('py:const', 'socket.SO_PEERCRED'),
     ('py:class', '_pyio.BufferedWriter'),
     ('py:class', '_pyio.BufferedReader'),
     ('py:class', 'unittest.case.TestCase'),
     ('py:meth', 'cheroot.connections.ConnectionManager.get_conn'),
+
+    # Ref: https://github.com/pyca/pyopenssl/issues/1012
+    ('py:class', 'pyopenssl:OpenSSL.SSL.Context'),
 ]
 
 # Ref:
@@ -139,14 +157,4 @@ sphinx_tabs_valid_builders = ['linkcheck']  # prevent linkcheck warning
 default_role = 'any'
 
 
-html_theme = 'alabaster'
-
-# Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-    'index': [
-        'about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html',
-    ],
-    '**': [
-        'about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html',
-    ],
-}
+html_theme = 'furo'

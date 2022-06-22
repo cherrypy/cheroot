@@ -1,3 +1,7 @@
+.. image:: https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-direct.svg
+   :target: https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md
+   :alt: SWUbanner
+
 .. image:: https://img.shields.io/pypi/v/cheroot.svg
    :target: https://pypi.org/project/cheroot
 
@@ -5,13 +9,9 @@
    :target: https://tidelift.com/subscription/pkg/pypi-cheroot?utm_source=pypi-cheroot&utm_medium=readme
    :alt: Cheroot is available as part of the Tidelift Subscription
 
-.. image:: https://github.com/cherrypy/cheroot/workflows/Test%20suite/badge.svg
-   :target: https://github.com/cherrypy/cheroot/actions?query=workflow%3A%22Test+suite%22+branch%3Amaster
-   :alt: GitHub Actions Workflow — Test suite
-
-.. image:: https://github.com/cherrypy/cheroot/workflows/Code%20quality/badge.svg
-   :target: https://github.com/cherrypy/cheroot/actions?query=workflow%3A%22Code+quality%22+branch%3Amaster
-   :alt: GitHub Actions Workflow — Code quality
+.. image:: https://github.com/cherrypy/cheroot/actions/workflows/ci-cd.yml/badge.svg
+   :target: https://github.com/cherrypy/cheroot/actions/workflows/ci-cd.yml
+   :alt: GitHub Actions CI/CD Workflow
 
 .. image:: https://img.shields.io/badge/license-BSD-blue.svg?maxAge=3600
    :target: https://pypi.org/project/cheroot
@@ -24,7 +24,7 @@
    :alt: codecov
 
 .. image:: https://readthedocs.org/projects/cheroot/badge/?version=latest
-   :target: https://cheroot.cherrypy.org/en/latest/?badge=latest
+   :target: https://cheroot.cherrypy.dev/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/badge/StackOverflow-Cheroot-blue.svg
    :target: https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
