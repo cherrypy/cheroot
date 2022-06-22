@@ -2,7 +2,7 @@
 
 import errno
 import socket
-import urllib.parse
+import urllib.parse  # noqa: WPS301
 
 import pytest
 

@@ -605,7 +605,6 @@ def test_keepalive_conn_management(test_client):
         pytest.param(RuntimeError, 666, True, id='RuntimeError(666)'),
         pytest.param(socket.error, -1, True, id='socket.error(-1)'),
     ) + (
-        () if six.PY2 else (
             pytest.param(
                 ConnectionResetError, errno.ECONNRESET, False,
                 id='ConnectionResetError(ECONNRESET)',
@@ -618,7 +617,6 @@ def test_keepalive_conn_management(test_client):
                 BrokenPipeError, errno.ESHUTDOWN, False,
                 id='BrokenPipeError(ESHUTDOWN)',
             ),
-        )
     ),
 )
 def test_broken_connection_during_tcp_fin(

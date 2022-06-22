@@ -6,7 +6,7 @@ import socket
 import tempfile
 import threading
 import uuid
-import urllib.parse
+import urllib.parse  # noqa: WPS301
 
 import pytest
 import requests

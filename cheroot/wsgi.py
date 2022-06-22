@@ -143,7 +143,7 @@ class Gateway(server.Gateway):
             if hasattr(response, 'close'):
                 response.close()
 
-    def start_response(self, status, headers, exc_info=None):
+    def start_response(self, status, headers, exc_info=None):  # noqa: WPS238
         """WSGI callable to begin the HTTP response."""
         # "The application may call start_response more than once,
         # if and only if the exc_info argument is provided."

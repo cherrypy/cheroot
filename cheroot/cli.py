@@ -30,7 +30,7 @@ Basic usage:
 import argparse
 import os
 import sys
-import urllib.parse
+import urllib.parse  # noqa: WPS301
 from importlib import import_module
 from contextlib import suppress
 
