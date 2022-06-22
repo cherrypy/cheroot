@@ -4,15 +4,12 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 try:
-    from importlib.metadata import version
+    from importlib import metadata
 except ImportError:
-    try:
-        from importlib_metadata import version
-    except ImportError:
-        pass
+    import importlib_metadata as metadata  # noqa: WPS440
 
 
 try:
-    __version__ = version('cheroot')
+    __version__ = metadata.version('cheroot')
 except Exception:
     __version__ = 'unknown'
