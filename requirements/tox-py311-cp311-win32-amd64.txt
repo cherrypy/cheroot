@@ -128,5 +128,5 @@ watchdog==2.1.6
     # via pytest-watch
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==60.8.2
+setuptools==60.9.3
     # via pytest-rerunfailures
