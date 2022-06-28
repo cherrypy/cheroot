@@ -11,6 +11,9 @@ on:   # yamllint disable-line rule:truthy
         description: >-
           A target Python package distribution to upgrade
         required: false
+  pull_request:
+    paths:
+    - .github/workflows/pip-tools.yml
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
@@ -327,6 +330,7 @@ jobs:
 
   publish-pr:
     name: Open/refresh a PR
+    if: github.event_name != 'pull_request'
     needs:
     - check
     runs-on: Ubuntu-latest
