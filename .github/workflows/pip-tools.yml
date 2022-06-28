@@ -96,7 +96,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        cache: pip
+        cache: ${{ matrix.python-version != '3.4' && 'pip' || '' }}
         cache-dependency-path: requirements/**
         python-version: ${{ matrix.python-version }}
 
