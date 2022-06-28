@@ -59,6 +59,7 @@ idna==2.10
     #   trustme
 importlib-metadata==2.1.3
     # via
+    #   cheroot
     #   pluggy
     #   pytest
 importlib-resources==3.3.1
