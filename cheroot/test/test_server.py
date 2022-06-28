@@ -363,10 +363,10 @@ def test_high_number_of_file_descriptors(native_server_client, resource_limit):
     assert any(fn >= resource_limit for fn in native_process_conn.filenos)
 
 
-ISSUE_511 = IS_MACOS
+ISSUE511 = IS_MACOS
 
 
-if not IS_WINDOWS and not ISSUE_511:
+if not IS_WINDOWS and not ISSUE511:
     test_high_number_of_file_descriptors = pytest.mark.forked(
         test_high_number_of_file_descriptors,
     )
