@@ -55,16 +55,16 @@ jobs:
         # NOTE: important results first.
         - >-
           3.10
-        - pypy2
+        - pypy2.7
         - 3.9
         - 3.8
-        - pypy-3.7
+        - pypy3.7
         - 3.7
         - 3.6
         - 3.5
         - 2.7
         - 3.11.0-alpha - 3.11.0
-        - pypy-3.6
+        - pypy3.6
         os:
         - ubuntu-18.04
         - macOS-11.0
@@ -76,7 +76,7 @@ jobs:
         # NOTE: `AttributeError: No symbol SCDynamicStoreCopyProxies
         # NOTE: found in library <None>`
         - os: macOS-11.0
-          python-version: pypy-3.6
+          python-version: pypy3.6
         include:
         # NOTE: The only GNU/Linux CPython 3.4 available is built for Ubuntu 18
         # https://github.com/actions/python-versions/blob/c483657/versions-manifest.json#L1228
@@ -154,7 +154,7 @@ jobs:
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
         || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2'
+        || matrix.python-version == 'pypy2.7'
         )
         && 'echo ".  # runtime deps of the project" >> requirements/tests.in'
         || ''
@@ -201,7 +201,7 @@ jobs:
         matrix.python-version != '2.7'
         && matrix.python-version != '3.4'
         && matrix.python-version != '3.5'
-        && matrix.python-version != 'pypy2'
+        && matrix.python-version != 'pypy2.7'
         )
         && '--strip-extras'
         || ''
@@ -212,7 +212,7 @@ jobs:
         matrix.python-version != '2.7'
         && matrix.python-version != '3.4'
         && matrix.python-version != '3.5'
-        && matrix.python-version != 'pypy2'
+        && matrix.python-version != 'pypy2.7'
         )
         && 'setup.cfg'
         || ''
@@ -224,7 +224,7 @@ jobs:
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
         || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2'
+        || matrix.python-version == 'pypy2.7'
         )
         && 'git checkout -- requirements/tests.in'
         || ''
@@ -238,7 +238,7 @@ jobs:
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
         || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2'
+        || matrix.python-version == 'pypy2.7'
         )
         )
         && 'sed -i
@@ -253,7 +253,7 @@ jobs:
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
         || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2'
+        || matrix.python-version == 'pypy2.7'
         )
         )
         && 'sed -i ""
