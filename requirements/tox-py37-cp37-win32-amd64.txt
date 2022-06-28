@@ -36,8 +36,9 @@ idna==3.3
     # via
     #   requests
     #   trustme
-importlib-metadata==4.11.0
+importlib-metadata==4.11.0 ; python_version < "3.8"
     # via
+    #   cheroot (setup.cfg)
     #   pluggy
     #   pytest
 importlib-resources==5.4.0
@@ -140,5 +141,5 @@ zipp==3.7.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==60.9.3
+setuptools==62.6.0
     # via pytest-rerunfailures
