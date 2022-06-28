@@ -36,8 +36,9 @@ idna==3.3
     # via
     #   requests
     #   trustme
-importlib-metadata==4.8.3
+importlib-metadata==4.8.3 ; python_version < "3.8"
     # via
+    #   cheroot (setup.cfg)
     #   pluggy
     #   pytest
 importlib-resources==5.4.0
