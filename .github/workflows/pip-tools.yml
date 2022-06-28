@@ -90,6 +90,9 @@ jobs:
       PY_COLORS: 1
 
     steps:
+    - name: Grab the source from Git
+      uses: actions/checkout@v2  # Keep before `setup-python` for cache to work
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -124,8 +127,6 @@ jobs:
         --user
         pip-tools
 
-    - name: Grab the source from Git
-      uses: actions/checkout@v2
     - name: Setup git user as [bot]
       # Refs:
       # * https://github.community/t/github-actions-bot-email-address/17204/6
