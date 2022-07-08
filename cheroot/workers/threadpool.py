@@ -173,17 +173,7 @@ class ThreadPool:
 
     def start(self):
         """Start the pool of threads."""
-        for _ in range(self.min):
-            self._threads.append(WorkerThread(self.server))
-        for worker in self._threads:
-            worker.name = (
-                'CP Server {worker_name!s}'.
-                format(worker_name=worker.name)
-            )
-            worker.start()
-        for worker in self._threads:
-            while not worker.ready:
-                time.sleep(.1)
+        self.grow(self.min)
 
     @property
     def idle(self):  # noqa: D401; irrelevant for properties
