@@ -70,6 +70,16 @@ repos:
   - id: check-ast
   - id: debug-statements
 
+- repo: https://github.com/adrienverge/yamllint.git
+  rev: v1.27.1
+  hooks:
+  - id: yamllint
+    types:
+    - file
+    - yaml
+    args:
+    - --strict
+
 - repo: https://github.com/PyCQA/pydocstyle.git
   rev: 6.1.1
   hooks:
