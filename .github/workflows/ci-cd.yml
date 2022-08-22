@@ -427,8 +427,10 @@ jobs:
         --skip-missing-interpreters false
         --notest
     - name: Initialize pre-commit envs if needed
-      run: |
-        test -d .tox/pre-commit && .tox/pre-commit/bin/python -m pre_commit install-hooks || :
+      run: >-
+        test -d .tox/pre-commit
+        && .tox/pre-commit/bin/python -m pre_commit install-hooks
+        || :
     - name: >-
         Run tox envs: `${{ env.TOXENV }}`
       run: >-

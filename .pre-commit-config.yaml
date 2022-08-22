@@ -36,17 +36,17 @@ repos:
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
   # disabled because it doesn't make sense to change pip-tools-managed files
-  #- id: requirements-txt-fixer
-  #  exclude: >-
-  #    (?x)
-  #    ^
-  #      requirements/[^/]+.txt
-  #    $
-  #  files: >-
-  #    (?x)
-  #    ^
-  #      requirements/[^/]+.in
-  #    $
+  # - id: requirements-txt-fixer
+  #   exclude: >-
+  #     (?x)
+  #     ^
+  #       requirements/[^/]+.txt
+  #     $
+  #   files: >-
+  #     (?x)
+  #     ^
+  #       requirements/[^/]+.in
+  #     $
 
   # Non-modifying checks:
   - id: name-tests-test
@@ -58,7 +58,7 @@ repos:
   - id: check-byte-order-marker
   - id: check-case-conflict
   # disabled due to pre-commit/pre-commit-hooks#159
-  #- id: check-docstring-first
+  # - id: check-docstring-first
   - id: check-json
   - id: check-symlinks
   - id: check-yaml

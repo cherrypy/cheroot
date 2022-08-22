@@ -1,3 +1,5 @@
+---
+
 # Configuration for probot-stale - https://github.com/probot/stale
 
 
@@ -30,3 +32,5 @@ closeComment: false
 
 # Limit to only `issues` or `pulls`
 # only: issues
+
+...

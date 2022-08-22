@@ -24,7 +24,9 @@ env:
       github.event_name == 'workflow_dispatch'
       && github.event.inputs.package-distribuition
       )
-      && format('-updating-{0}', github.event.inputs.package-distribuition) || '' }}
+      && format('-updating-{0}', github.event.inputs.package-distribuition)
+      || ''
+    }}
 
 concurrency:
   group: >-
@@ -170,7 +172,10 @@ jobs:
         && 'ln -svf tests.in "${BASE_NAME}.in"; git add "${BASE_NAME}.in"'
         || 'GIT_INDEX_OBJECT_SYMLINK_TYPE=120000;
         SYMLINK_TARGET_HASH=$(echo -n tests.in | git hash-object --stdin);
-        CURRENT_SRC_OBJECT_TYPE="$(git ls-tree HEAD -- "${BASE_NAME}.in" | awk "{print\$1}")";
+        CURRENT_SRC_OBJECT_TYPE="$(
+        git ls-tree HEAD -- "${BASE_NAME}.in"
+        | awk "{print\$1}"
+        )";
         echo "CURRENT_SRC_OBJECT_TYPE=${CURRENT_SRC_OBJECT_TYPE}";
         if [[ "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" !=
         "${CURRENT_SRC_OBJECT_TYPE}" ]];
@@ -277,7 +282,8 @@ jobs:
         && format(' for {0}', github.event.inputs.package-distribuition)
         || ''
         }}" requirements/
-        && echo "::set-output name=patch::0001-Update-${BASE_NAME}-constraints.patch"
+        && echo
+        "::set-output name=patch::0001-Update-${BASE_NAME}-constraints.patch"
         || :
       shell: bash
 
@@ -437,10 +443,14 @@ jobs:
       if: steps.artifacts.outputs.lockfile-updates-needed
       run: git am '${{ runner.temp }}/patches'/*.patch
     - name: Force-push the PR branch to remote
-      # ... with only the useful commits which will cause a `pull_request` `synchronize`
-      # event because of the SSH key
+      # ... with only the useful commits which will cause a `pull_request`
+      # `synchronize` event because of the SSH key
       if: steps.artifacts.outputs.lockfile-updates-needed
-      run: git push --atomic origin 'HEAD:${{ env.git-branch }}' --force-with-lease
+      run: >-
+        git push
+        --atomic
+        origin 'HEAD:${{ env.git-branch }}'
+        --force-with-lease
 
     - name: Enable auto-merge for the PR
       if: steps.pr.outputs.pull_request_url

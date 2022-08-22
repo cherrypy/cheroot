@@ -1,3 +1,5 @@
+---
+
 - job:
     name: tox-pre-commit
     parent: tox
@@ -97,3 +99,5 @@
       - tox-spellcheck-docs
       - tox-linkcheck-docs
       - tox-pre-commit-failing
+
+...

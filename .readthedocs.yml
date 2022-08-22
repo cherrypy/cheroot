@@ -1,3 +1,5 @@
+---
+
 # .readthedocs.yml
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html
@@ -13,9 +15,9 @@ sphinx:
   fail_on_warning: true
 
 # Build documentation with MkDocs
-#mkdocs:
-#  configuration: mkdocs.yml
-#  fail_on_warning: true
+# mkdocs:
+#   configuration: mkdocs.yml
+#   fail_on_warning: true
 
 # Optionally build your docs in additional formats
 # such as PDF and ePub
@@ -40,3 +42,5 @@ python:
     path: .
   - requirements: requirements/tox-build-docs-cp310-linux-x86_64.txt
   system_packages: false
+
+...
