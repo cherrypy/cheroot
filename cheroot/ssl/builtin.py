@@ -270,6 +270,11 @@ class BuiltinSSLAdapter(Adapter):
             s = self.context.wrap_socket(
                 sock, do_handshake_on_connect=True, server_side=True,
             )
+        except ssl.SSLZeroReturnError:
+            # This is almost certainly due to the cherrypy engine
+            # 'pinging' the socket to assert it's connectable;
+            # the 'ping' isn't SSL.
+            return EMPTY_RESULT
         except ssl.SSLError as ex:
             if ex.errno == ssl.SSL_ERROR_EOF:
                 # This is almost certainly due to the cherrypy engine
