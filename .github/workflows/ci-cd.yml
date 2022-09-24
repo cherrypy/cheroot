@@ -219,7 +219,7 @@ jobs:
     needs:
     - pre-setup  # transitive, for accessing settings
 
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     env:
       PY_COLORS: 1
@@ -341,7 +341,7 @@ jobs:
     strategy:
       matrix:
         os:
-        - Ubuntu
+        - ubuntu
         python-version:
         - >-
           3.10
@@ -475,8 +475,8 @@ jobs:
         os:
         - ubuntu-20.04
         - ubuntu-18.04
-        - macOS-11.0
-        - macOS-latest
+        - macos-11.0
+        - macos-latest
         - windows-2019
         - windows-2022
         exclude:
@@ -501,17 +501,17 @@ jobs:
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
-        - os: macOS-11.0
+        - os: macos-11.0
           python-version: pypy2
-        - os: macOS-latest
+        - os: macos-latest
           python-version: pypy2
-        - os: macOS-11.0
+        - os: macos-11.0
           python-version: pypy-3.6
-        - os: macOS-latest
+        - os: macos-latest
           python-version: pypy-3.6
-        - os: macOS-11.0
+        - os: macos-11.0
           python-version: pypy-3.7
-        - os: macOS-latest
+        - os: macos-latest
           python-version: pypy-3.7
         include:
         # NOTE: The only GNU/Linux CPython 3.4 available is built for Ubuntu 18
@@ -720,7 +720,7 @@ jobs:
     - pre-setup  # transitive, for accessing settings
     if: >-
       fromJSON(needs.pre-setup.outputs.release-requested)
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     environment:
       name: pypi
@@ -749,7 +749,7 @@ jobs:
     if: >-
       fromJSON(needs.pre-setup.outputs.is-untagged-devel)
       || fromJSON(needs.pre-setup.outputs.release-requested)
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     environment:
       name: testpypi
@@ -778,7 +778,7 @@ jobs:
     needs:
     - publish-pypi
     - pre-setup  # transitive, for accessing settings
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Fetch the src snapshot
@@ -811,7 +811,7 @@ jobs:
     needs:
     - post-release-repo-update
     - pre-setup  # transitive, for accessing settings
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     permissions:
       contents: write
