@@ -80,11 +80,6 @@ repos:
     args:
     - --strict
 
-- repo: https://github.com/PyCQA/pydocstyle.git
-  rev: 6.1.1
-  hooks:
-  - id: pydocstyle
-
 - repo: https://github.com/PyCQA/flake8.git
   rev: 5.0.4
   hooks:
