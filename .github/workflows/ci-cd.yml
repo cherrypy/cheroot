@@ -685,8 +685,21 @@ jobs:
         --parallel auto
         --parallel-live
         --skip-missing-interpreters false
-        -vvvv
         --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
+    - name: Re-run the failing tests with maximum verbosity
+      if: failure()
+      run: >-  # `exit 1` makes sure that the job remains red with flaky runs
+        python -m
+        tox
+        --parallel auto
+        --parallel-live
+        --skip-missing-interpreters false
+        -vvvvv
+        --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
+        --
+        --no-cov -vvvvv --lf
+        && exit 1
+      shell: bash
     - name: Send coverage data to Codecov
       uses: codecov/codecov-action@v2
       with:
