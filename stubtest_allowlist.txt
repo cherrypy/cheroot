@@ -37,7 +37,6 @@ cheroot.ssl.pyopenssl.SSLConnection.write
 
 # false positives (https://github.com/python/mypy/issues/11843)
 cheroot.connections.IS_WINDOWS
-cheroot.ssl.builtin.IS_ABOVE_OPENSSL10
 
 # suppress is both a function and class
 cheroot._compat.suppress
