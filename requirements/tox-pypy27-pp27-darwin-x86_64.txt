@@ -15,7 +15,7 @@ backports.functools-lru-cache==1.6.4
     #   wcwidth
 certifi==2021.10.8
     # via requests
-cffi==1.15.0
+cffi==1.15.1
     # via cryptography
 chardet==4.0.0
     # via

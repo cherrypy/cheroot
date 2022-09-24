@@ -8,7 +8,7 @@ attrs==21.4.0
     # via pytest
 certifi==2021.10.8
     # via requests
-cffi==1.15.0
+cffi==1.15.1
     # via cryptography
 chardet==4.0.0
     # via
@@ -158,6 +158,4 @@ zipp==1.2.0
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==50.3.2
-    # via
-    #   pytest-rerunfailures
-    #   zc.lockfile
+    # via pytest-rerunfailures

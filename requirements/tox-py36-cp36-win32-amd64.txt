@@ -10,7 +10,7 @@ attrs==21.4.0
     # via pytest
 certifi==2021.10.8
     # via requests
-cffi==1.15.0
+cffi==1.15.1
     # via cryptography
 chardet==4.0.0
     # via -r requirements/tox-py36-cp36-win32-amd64.in
