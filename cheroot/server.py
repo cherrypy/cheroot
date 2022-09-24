@@ -1589,7 +1589,7 @@ class HTTPServer:
     """
 
     keep_alive_conn_limit = 10
-    """The maximum number of waiting keep-alive connections that will be kept open.
+    """Maximum number of waiting keep-alive connections that will be kept open.
 
     Default is 10. Set to None to have unlimited connections."""
 
