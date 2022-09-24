@@ -16,6 +16,7 @@ on:   # yamllint disable-line rule:truthy
           Target PEP440-compliant version to release.
           Please, don't prepend `v`.
         required: true
+        type: string
       release-commitish:
         # github.event_name == 'workflow_dispatch'
         # && github.event.inputs.release-commitish
@@ -24,6 +25,7 @@ on:   # yamllint disable-line rule:truthy
           The commit to be released to PyPI and tagged
           in Git as `release-version`. Normally, you
           should keep this empty.
+        type: string
       YOLO:
         default: false
         description: >-
@@ -31,6 +33,7 @@ on:   # yamllint disable-line rule:truthy
           release (true/false). Only use this under
           extraordinary circumstances to ignore the
           test failures and cut the release regardless.
+        type: boolean
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
@@ -269,7 +272,7 @@ jobs:
       with:
         fetch-depth: >-
           ${{
-              steps.request-check.outputs.release-requested == 'true'
+              fromJSON(needs.pre-setup.outputs.release-requested)
               && 1 || 0
           }}
         ref: ${{ github.event.inputs.release-commitish }}
@@ -520,7 +523,7 @@ jobs:
       ${{
           (
             (
-              needs.pre-setup.outputs.release-requested == 'true' &&
+              fromJSON(needs.pre-setup.outputs.release-requested) &&
               !toJSON(github.event.inputs.YOLO)
             ) ||
             contains(matrix.python-version, 'alpha') ||
