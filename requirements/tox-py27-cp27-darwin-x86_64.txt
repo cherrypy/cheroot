@@ -31,6 +31,7 @@ contextlib2==0.6.0.post1
     #   importlib-resources
     #   jaraco.context
     #   yg.lockfile
+    #   zipp
 coverage==5.5 ; python_version < "3.6" and python_version != "3.4"
     # via
     #   -r requirements/tox-py27-cp27-darwin-x86_64.in
@@ -139,7 +140,7 @@ pytest==4.6.11
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
-pytz==2021.3
+pytz==2022.2.1
     # via tempora
 requests-toolbelt==0.9.1
     # via -r requirements/tox-py27-cp27-darwin-x86_64.in
@@ -167,6 +168,7 @@ six==1.16.0
     #   pyopenssl
     #   pytest
     #   pytest-xdist
+    #   singledispatch
     #   tempora
 tempora==1.14.1
     # via
@@ -203,4 +205,6 @@ zipp==1.2.0
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==44.1.1
-    # via pytest-rerunfailures
+    # via
+    #   pytest-rerunfailures
+    #   zc.lockfile
