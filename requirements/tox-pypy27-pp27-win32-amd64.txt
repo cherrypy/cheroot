@@ -107,7 +107,7 @@ py==1.11.0
     #   pypytools
     #   pytest
     #   pytest-forked
-pyopenssl==21.0.0
+pyopenssl==21.0.0 ; implementation_name != "pypy"
     # via -r requirements/tox-pypy27-pp27-win32-amd64.in
 pyparsing==2.4.7
     # via packaging
