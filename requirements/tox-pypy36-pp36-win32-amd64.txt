@@ -8,7 +8,7 @@ atomicwrites==1.4.0
     # via pytest
 attrs==21.4.0
     # via pytest
-certifi==2021.10.8
+certifi==2022.9.24
     # via requests
 cffi==1.15.1
     # via cryptography
