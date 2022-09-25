@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-py36-cp36-win32-amd64.txt --strip-extras requirements/tox-py36-cp36-win32-amd64.in setup.cfg
 #
-atomicwrites==1.4.0
+atomicwrites==1.4.1
     # via pytest
 attrs==22.1.0
     # via pytest

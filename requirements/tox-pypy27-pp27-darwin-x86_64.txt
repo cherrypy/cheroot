@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-pypy27-pp27-darwin-x86_64.txt requirements/tox-pypy27-pp27-darwin-x86_64.in
 #
-atomicwrites==1.4.0
+atomicwrites==1.4.1
     # via pytest
 attrs==21.4.0
     # via pytest

@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-py310-cp310-win32-amd64.txt --resolver=backtracking --strip-extras requirements/tox-py310-cp310-win32-amd64.in setup.cfg
 #
-atomicwrites==1.4.0
+atomicwrites==1.4.1
     # via pytest
 attrs==22.1.0
     # via pytest
