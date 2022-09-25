@@ -686,6 +686,11 @@ jobs:
         --parallel-live
         --skip-missing-interpreters false
         --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
+    - name: Produce markdown test summary from JUnit 
+      if: always()
+      uses: test-summary/action@v1
+      with:
+        paths: .test-results/pytest/test.xml
     - name: Re-run the failing tests with maximum verbosity
       if: failure()
       run: >-  # `exit 1` makes sure that the job remains red with flaky runs
