@@ -139,7 +139,7 @@ toml==0.10.2
     #   pytest
 trustme==0.9.0
     # via -r requirements/tox-py35-cp35-darwin-x86_64.in
-urllib3==1.26.8 ; python_version != "3.4"
+urllib3==1.26.9 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py35-cp35-darwin-x86_64.in
     #   requests
@@ -158,4 +158,6 @@ zipp==1.2.0
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==50.3.2
-    # via pytest-rerunfailures
+    # via
+    #   pytest-rerunfailures
+    #   zc.lockfile
