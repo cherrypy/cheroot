@@ -10,7 +10,7 @@ certifi==2022.9.24
     # via requests
 cffi==1.15.1
     # via cryptography
-chardet==4.0.0
+chardet==5.0.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 charset-normalizer==2.0.12
     # via requests
