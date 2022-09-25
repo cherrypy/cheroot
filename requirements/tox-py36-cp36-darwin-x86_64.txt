@@ -52,7 +52,7 @@ jaraco.functools==3.4.0
     #   tempora
 jaraco.text==3.7.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-more-itertools==8.12.0 ; python_version >= "3.6"
+more-itertools==8.14.0 ; python_version >= "3.6"
     # via
     #   cheroot (setup.cfg)
     #   jaraco.functools
