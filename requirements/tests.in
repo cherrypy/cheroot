@@ -34,6 +34,13 @@ jaraco.text>=3.1
 portend
 pyopenssl
 
+# cryptography >= 3.4 started using Rust but it's unstable w/ old PyPy
+# and pyopenssl == 22 started requiring cryptography 35+
+# which is why we need these restrictions for the dependency resolution
+# to succeed.
+pyopenssl >= 22.0.0; implementation_name != "pypy" or python_version >= "3.8"
+pyopenssl < 22.0.0; implementation_name == "pypy" and python_version < "3.8"
+
 # The pypytools library provides a cross-implementation context
 # manager for disabling garbage collection in specific blocks
 # of the control flow:
