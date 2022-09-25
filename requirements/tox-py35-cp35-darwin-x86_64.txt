@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-py35-cp35-darwin-x86_64.txt requirements/tox-py35-cp35-darwin-x86_64.in
 #
-attrs==21.4.0
+attrs==22.1.0
     # via pytest
 certifi==2021.10.8
     # via requests
