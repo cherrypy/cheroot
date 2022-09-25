@@ -6,7 +6,7 @@
 #
 apipkg==2.0.1 ; python_version == "3.4"
 atomicwrites==1.4.0       # via pytest
-attrs==21.1.0
+attrs==21.1.0             # via pytest
 certifi==2021.10.8        # via requests
 cffi==1.15.1              # via cryptography
 chardet==3.0.4
@@ -59,4 +59,4 @@ zc.lockfile==2.0          # via yg.lockfile
 zipp==1.2.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==43.0.0        # via pytest-rerunfailures, zc.lockfile
+setuptools==43.0.0
