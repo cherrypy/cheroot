@@ -7,12 +7,12 @@
 apipkg==2.0.1 ; python_version == "3.4"
 atomicwrites==1.4.0       # via pytest
 attrs==21.1.0             # via pytest
-certifi==2021.10.8        # via requests
+certifi==2021.10.8
 cffi==1.15.1              # via cryptography
 chardet==3.0.4
 colorama==0.4.1 ; python_version == "3.4"
 coverage==4.5.4 ; python_version == "3.4"
-cryptography==2.8
+cryptography==2.8         # via pyopenssl, trustme
 docopt==0.6.2             # via pytest-watch
 execnet==1.7.1            # via pytest-xdist
 idna==2.8                 # via requests, trustme
