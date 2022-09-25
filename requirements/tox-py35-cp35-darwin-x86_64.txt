@@ -76,7 +76,7 @@ py==1.11.0
     #   pytest-forked
 pycparser==2.21
     # via cffi
-pyopenssl==20.0.1
+pyopenssl==20.0.1 ; implementation_name != "pypy"
     # via -r requirements/tox-py35-cp35-darwin-x86_64.in
 pyparsing==2.4.7
     # via packaging
@@ -158,6 +158,4 @@ zipp==1.2.0
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==50.3.2
-    # via
-    #   pytest-rerunfailures
-    #   zc.lockfile
+    # via pytest-rerunfailures
