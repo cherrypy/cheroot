@@ -686,7 +686,7 @@ jobs:
         --parallel-live
         --skip-missing-interpreters false
         --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
-    - name: Produce markdown test summary from JUnit 
+    - name: Produce markdown test summary from JUnit
       if: always()
       uses: test-summary/action@v1
       with:
