@@ -5,7 +5,7 @@
 #    pip-compile --allow-unsafe --output-file=requirements/tox-py34-cp34-linux-x86_64.txt requirements/tox-py34-cp34-linux-x86_64.in
 #
 apipkg==2.0.1 ; python_version == "3.4"
-atomicwrites==1.4.0       # via pytest
+atomicwrites==1.4.1       # via pytest
 attrs==21.1.0             # via pytest
 certifi==2021.10.8        # via requests
 cffi==1.15.1              # via cryptography
@@ -41,7 +41,7 @@ pytest-sugar==0.9.5
 pytest-watch==4.2.0
 pytest-xdist==1.31.0
 pytest==4.6.11
-pytz==2021.3              # via tempora
+pytz==2022.2.1            # via tempora
 requests-toolbelt==0.9.1
 requests-unixsocket==0.3.0
 requests==2.21.0          # via requests-toolbelt, requests-unixsocket
