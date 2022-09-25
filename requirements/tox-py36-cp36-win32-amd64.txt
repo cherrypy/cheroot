@@ -99,7 +99,7 @@ pytest-mock==3.6.1
     # via -r requirements/tox-py36-cp36-win32-amd64.in
 pytest-rerunfailures==10.2 ; python_version >= "3.6"
     # via -r requirements/tox-py36-cp36-win32-amd64.in
-pytest-sugar==0.9.4
+pytest-sugar==0.9.5
     # via -r requirements/tox-py36-cp36-win32-amd64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py36-cp36-win32-amd64.in

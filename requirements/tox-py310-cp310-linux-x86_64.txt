@@ -90,7 +90,7 @@ pytest-mock==3.7.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
 pytest-rerunfailures==10.2 ; python_version >= "3.6"
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
-pytest-sugar==0.9.4
+pytest-sugar==0.9.5
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
