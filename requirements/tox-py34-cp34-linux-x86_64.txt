@@ -12,7 +12,7 @@ cffi==1.15.1              # via cryptography
 chardet==3.0.4
 colorama==0.4.1 ; python_version == "3.4"
 coverage==4.5.4 ; python_version == "3.4"
-cryptography==2.8
+cryptography==2.8         # via pyopenssl, trustme
 docopt==0.6.2             # via pytest-watch
 execnet==1.7.1            # via pytest-xdist
 idna==2.8                 # via requests, trustme
@@ -41,7 +41,7 @@ pytest-sugar==0.9.5
 pytest-watch==4.2.0
 pytest-xdist==1.31.0
 pytest==4.6.11
-pytz==2021.3              # via tempora
+pytz==2022.2.1
 requests-toolbelt==0.9.1
 requests-unixsocket==0.3.0
 requests==2.21.0          # via requests-toolbelt, requests-unixsocket
