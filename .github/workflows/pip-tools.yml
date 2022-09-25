@@ -203,6 +203,18 @@ jobs:
         )
         || '--upgrade'
         }}
+        ${{
+        (
+        matrix.python-version != '2.7'
+        && matrix.python-version != '3.4'
+        && matrix.python-version != '3.5'
+        && matrix.python-version != '3.6'
+        && matrix.python-version != 'pypy2.7'
+        && matrix.python-version != 'pypy3.6'
+        )
+        && '--resolver backtracking'
+        || ''
+        }}
         --output-file="requirements/${BASE_NAME}.txt"
         ${{
         (
