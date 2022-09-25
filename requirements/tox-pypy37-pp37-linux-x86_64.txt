@@ -20,8 +20,9 @@ coverage==6.2 ; python_version >= "3.6"
     # via
     #   -r requirements/tox-pypy37-pp37-linux-x86_64.in
     #   pytest-cov
-cryptography==36.0.1
+cryptography==3.3.2 ; implementation_name == "pypy" and python_version < "3.8"
     # via
+    #   -r requirements/tox-pypy37-pp37-linux-x86_64.in
     #   pyopenssl
     #   trustme
 docopt==0.6.2
@@ -69,7 +70,7 @@ py==1.11.0
     #   pypytools
     #   pytest
     #   pytest-forked
-pyopenssl==22.0.0
+pyopenssl==21.0.0 ; implementation_name == "pypy" and python_version < "3.8"
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
 pyparsing==3.0.7
     # via packaging
@@ -112,7 +113,10 @@ requests-toolbelt==0.9.1
 requests-unixsocket==0.3.0
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
 six==1.16.0
-    # via cheroot (setup.cfg)
+    # via
+    #   cheroot (setup.cfg)
+    #   cryptography
+    #   pyopenssl
 tempora==5.0.1
     # via portend
 termcolor==1.1.0

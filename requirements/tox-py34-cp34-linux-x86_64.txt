@@ -12,7 +12,7 @@ cffi==1.15.1              # via cryptography
 chardet==3.0.4
 colorama==0.4.1 ; python_version == "3.4"
 coverage==4.5.4 ; python_version == "3.4"
-cryptography==2.8         # via pyopenssl, trustme
+cryptography==2.8
 docopt==0.6.2             # via pytest-watch
 execnet==1.7.1            # via pytest-xdist
 idna==2.8                 # via requests, trustme
@@ -30,7 +30,7 @@ pluggy==0.13.1            # via pytest
 portend==2.6
 py==1.10.0                # via pypytools, pytest
 pycparser==2.21           # via cffi
-pyopenssl==19.1.0
+pyopenssl==19.1.0 ; implementation_name != "pypy"
 pyparsing==2.4.7          # via packaging
 pypytools==0.6.2
 pytest-cov==2.8.1 ; python_version == "3.4"
