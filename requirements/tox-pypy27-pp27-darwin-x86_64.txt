@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-pypy27-pp27-darwin-x86_64.txt requirements/tox-pypy27-pp27-darwin-x86_64.in
 #
-atomicwrites==1.4.0
+atomicwrites==1.4.1
     # via pytest
 attrs==21.4.0
     # via pytest
@@ -21,7 +21,7 @@ chardet==4.0.0
     # via
     #   -r requirements/tox-pypy27-pp27-darwin-x86_64.in
     #   requests
-colorama==0.4.4
+colorama==0.4.5
     # via pytest-watch
 configparser==4.0.2
     # via importlib-metadata
@@ -137,7 +137,7 @@ pytest==4.6.11
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
-pytz==2021.3
+pytz==2022.2.1
     # via tempora
 requests-toolbelt==0.9.1
     # via -r requirements/tox-pypy27-pp27-darwin-x86_64.in
@@ -180,7 +180,7 @@ typing==3.10.0.0
     # via
     #   importlib-resources
     #   pathlib2
-urllib3==1.26.8 ; python_version != "3.4"
+urllib3==1.26.12 ; python_version != "3.4"
     # via
     #   -r requirements/tox-pypy27-pp27-darwin-x86_64.in
     #   requests
