@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-py35-cp35-win32-amd64.txt requirements/tox-py35-cp35-win32-amd64.in
 #
-atomicwrites==1.4.0
+atomicwrites==1.4.1
     # via pytest
-attrs==21.4.0
+attrs==22.1.0
     # via pytest
 certifi==2021.10.8
     # via requests
@@ -16,7 +16,7 @@ chardet==4.0.0
     # via
     #   -r requirements/tox-py35-cp35-win32-amd64.in
     #   requests
-colorama==0.4.4
+colorama==0.4.5
     # via
     #   pytest
     #   pytest-watch
@@ -110,7 +110,7 @@ pytest==6.1.2
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
-pytz==2021.3
+pytz==2022.2.1
     # via tempora
 requests-toolbelt==0.9.1
     # via -r requirements/tox-py35-cp35-win32-amd64.in
@@ -141,7 +141,7 @@ toml==0.10.2
     #   pytest
 trustme==0.9.0
     # via -r requirements/tox-py35-cp35-win32-amd64.in
-urllib3==1.26.8 ; python_version != "3.4"
+urllib3==1.26.9 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py35-cp35-win32-amd64.in
     #   requests
