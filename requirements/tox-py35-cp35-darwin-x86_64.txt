@@ -14,7 +14,7 @@ chardet==4.0.0
     # via
     #   -r requirements/tox-py35-cp35-darwin-x86_64.in
     #   requests
-colorama==0.4.4
+colorama==0.4.5
     # via pytest-watch
 coverage==5.5 ; python_version < "3.6" and python_version != "3.4"
     # via

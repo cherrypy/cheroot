@@ -18,7 +18,7 @@ chardet==4.0.0
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 charset-normalizer==2.0.12
     # via requests
-colorama==0.4.4
+colorama==0.4.5
     # via
     #   pytest
     #   pytest-watch

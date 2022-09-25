@@ -21,7 +21,7 @@ chardet==4.0.0
     # via
     #   -r requirements/tox-pypy27-pp27-darwin-x86_64.in
     #   requests
-colorama==0.4.4
+colorama==0.4.5
     # via pytest-watch
 configparser==4.0.2
     # via importlib-metadata
