@@ -20,7 +20,7 @@ coverage==6.2 ; python_version >= "3.6"
     # via
     #   -r requirements/tox-py36-cp36-darwin-x86_64.in
     #   pytest-cov
-cryptography==36.0.1
+cryptography==38.0.1
     # via
     #   pyopenssl
     #   trustme
@@ -71,7 +71,7 @@ py==1.11.0
     #   pytest-forked
 pycparser==2.21
     # via cffi
-pyopenssl==22.0.0
+pyopenssl==22.0.0 ; implementation_name != "pypy"
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 pyparsing==3.0.7
     # via packaging
