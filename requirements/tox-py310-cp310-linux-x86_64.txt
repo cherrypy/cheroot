@@ -96,7 +96,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
 pytest-xdist==2.5.0
     # via -r requirements/tox-py310-cp310-linux-x86_64.in
-pytz==2021.3
+pytz==2022.2.1
     # via tempora
 requests==2.27.1
     # via
