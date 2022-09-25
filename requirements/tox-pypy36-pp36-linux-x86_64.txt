@@ -14,7 +14,7 @@ chardet==4.0.0
     # via -r requirements/tox-pypy36-pp36-linux-x86_64.in
 charset-normalizer==2.0.12
     # via requests
-colorama==0.4.4
+colorama==0.4.5
     # via pytest-watch
 coverage==6.2 ; python_version >= "3.6"
     # via
