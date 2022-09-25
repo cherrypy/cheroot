@@ -56,7 +56,9 @@ pytest-rerunfailures; python_version >= "3.6"
 pytest-sugar>=0.9.3
 pytest-watch==4.2.0
 pytest-xdist>=1.28.0
-pytest>=4.6.6
+
+# pytest-forked is currently incompatible with pytest 7
+pytest >= 4.6.6, < 7
 
 # HTTP over UNIX socket
 requests-unixsocket
