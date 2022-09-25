@@ -4,23 +4,23 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-py36-cp36-darwin-x86_64.txt --strip-extras requirements/tox-py36-cp36-darwin-x86_64.in setup.cfg
 #
-attrs==21.4.0
+attrs==22.1.0
     # via pytest
-certifi==2021.10.8
+certifi==2022.9.24
     # via requests
 cffi==1.15.1
     # via cryptography
-chardet==4.0.0
+chardet==5.0.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 charset-normalizer==2.0.12
     # via requests
-colorama==0.4.4
+colorama==0.4.5
     # via pytest-watch
 coverage==6.2 ; python_version >= "3.6"
     # via
     #   -r requirements/tox-py36-cp36-darwin-x86_64.in
     #   pytest-cov
-cryptography==36.0.1
+cryptography==38.0.1
     # via
     #   pyopenssl
     #   trustme
@@ -28,7 +28,7 @@ docopt==0.6.2
     # via pytest-watch
 execnet==1.9.0
     # via pytest-xdist
-idna==3.3
+idna==3.4
     # via
     #   requests
     #   trustme
@@ -52,7 +52,7 @@ jaraco.functools==3.4.0
     #   tempora
 jaraco.text==3.7.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-more-itertools==8.12.0 ; python_version >= "3.6"
+more-itertools==8.14.0 ; python_version >= "3.6"
     # via
     #   cheroot (setup.cfg)
     #   jaraco.functools
@@ -73,11 +73,11 @@ pycparser==2.21
     # via cffi
 pyopenssl==22.0.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-pyparsing==3.0.7
+pyparsing==3.0.9
     # via packaging
 pypytools==0.6.2
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-pytest==6.2.5
+pytest==7.0.1
     # via
     #   -r requirements/tox-py36-cp36-darwin-x86_64.in
     #   pytest-cov
@@ -103,7 +103,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 pytest-xdist==2.5.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-pytz==2021.3
+pytz==2022.2.1
     # via tempora
 requests==2.27.1
     # via
@@ -119,19 +119,19 @@ tempora==4.1.2
     # via portend
 termcolor==1.1.0
     # via pytest-sugar
-toml==0.10.2
-    # via pytest
 tomli==1.2.3
-    # via coverage
+    # via
+    #   coverage
+    #   pytest
 trustme==0.9.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-typing-extensions==4.1.0
+typing-extensions==4.1.1
     # via importlib-metadata
-urllib3==1.26.8 ; python_version != "3.4"
+urllib3==1.26.12 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py36-cp36-darwin-x86_64.in
     #   requests
-watchdog==2.1.6
+watchdog==2.1.9
     # via pytest-watch
 zipp==3.6.0
     # via
