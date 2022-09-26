@@ -5,7 +5,7 @@
 #    pip-compile --allow-unsafe --output-file=requirements/tox-py34-cp34-linux-x86_64.txt requirements/tox-py34-cp34-linux-x86_64.in
 #
 apipkg==2.0.1 ; python_version == "3.4"
-atomicwrites==1.4.1
+atomicwrites==1.4.1       # via pytest
 attrs==21.1.0             # via pytest
 certifi==2021.10.8        # via requests
 cffi==1.15.1              # via cryptography
@@ -44,7 +44,7 @@ pytest==4.6.11
 pytz==2022.2.1            # via tempora
 requests-toolbelt==0.9.1
 requests-unixsocket==0.3.0
-requests==2.21.0          # via requests-toolbelt, requests-unixsocket
+requests==2.21.0
 scandir==1.10.0           # via pathlib2
 six==1.16.0               # via cryptography, jaraco.apt, jaraco.text, pathlib2, pyopenssl, pytest, pytest-xdist, tempora
 tempora==1.14.1           # via portend, yg.lockfile
@@ -59,4 +59,4 @@ zc.lockfile==2.0          # via yg.lockfile
 zipp==1.2.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==43.0.0
+setuptools==43.0.0        # via pytest-rerunfailures, zc.lockfile

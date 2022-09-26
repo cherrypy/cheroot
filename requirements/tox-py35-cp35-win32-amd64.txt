@@ -13,9 +13,7 @@ certifi==2021.10.8
 cffi==1.15.1
     # via cryptography
 chardet==4.0.0
-    # via
-    #   -r requirements/tox-py35-cp35-win32-amd64.in
-    #   requests
+    # via requests
 colorama==0.4.5
     # via
     #   pytest
@@ -118,6 +116,7 @@ requests-unixsocket==0.3.0
     # via -r requirements/tox-py35-cp35-win32-amd64.in
 requests==2.25.1
     # via
+    #   -r requirements/tox-py35-cp35-win32-amd64.in
     #   requests-toolbelt
     #   requests-unixsocket
 six==1.16.0
