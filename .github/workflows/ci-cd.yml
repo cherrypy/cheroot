@@ -608,9 +608,9 @@ jobs:
           }}-
           ${{ runner.os }}-pip-
 
-    - name: Install libffi-dev on ubuntu-18.04
+    - name: Install libffi and libffi-dev on ubuntu-18.04
       if: matrix.os == 'ubuntu-18.04'
-      run: sudo apt-get update && sudo apt-get install -y libffi-dev
+      run: sudo apt-get update && sudo apt-get install -y libffi libffi-dev
 
     - name: Upgrade pip with `requires_python`
       run: >-
