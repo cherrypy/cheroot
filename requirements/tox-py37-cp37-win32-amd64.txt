@@ -102,7 +102,7 @@ pytest-cov==2.12.0 ; python_version != "3.4"
     # via -r requirements/tox-py37-cp37-win32-amd64.in
 pytest-forked==1.4.0
     # via pytest-xdist
-pytest-mock==3.7.0
+pytest-mock==3.8.2
     # via -r requirements/tox-py37-cp37-win32-amd64.in
 pytest-rerunfailures==10.2 ; python_version >= "3.6"
     # via -r requirements/tox-py37-cp37-win32-amd64.in
