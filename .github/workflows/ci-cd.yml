@@ -610,7 +610,7 @@ jobs:
 
     - name: Install libffi-dev on ubuntu-18.04
       if: matrix.os == 'ubuntu-18.04'
-      run: apt-get update && apt-get install libffi-dev
+      run: sudo apt-get update && sudo apt-get install -y libffi-dev
 
     - name: Upgrade pip with `requires_python`
       run: >-
