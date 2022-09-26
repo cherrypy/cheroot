@@ -134,7 +134,7 @@ urllib3==1.26.12 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py38-cp38-darwin-x86_64.in
     #   requests
-watchdog==2.1.6
+watchdog==2.1.9
     # via pytest-watch
 zipp==3.7.0
     # via importlib-resources
