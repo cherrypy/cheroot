@@ -16,7 +16,7 @@ cffi==1.15.1
     # via cryptography
 chardet==5.0.0
     # via requests
-charset-normalizer==2.0.12
+charset-normalizer==2.1.1
     # via requests
 colorama==0.4.5
     # via
