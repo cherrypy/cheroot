@@ -18,9 +18,7 @@ certifi==2021.10.8
 cffi==1.15.1
     # via cryptography
 chardet==4.0.0
-    # via
-    #   -r requirements/tox-py27-cp27-win32-amd64.in
-    #   requests
+    # via requests
 colorama==0.4.5
     # via
     #   pytest
@@ -148,6 +146,7 @@ requests-unixsocket==0.3.0
     # via -r requirements/tox-py27-cp27-win32-amd64.in
 requests==2.27.1
     # via
+    #   -r requirements/tox-py27-cp27-win32-amd64.in
     #   requests-toolbelt
     #   requests-unixsocket
 scandir==1.10.0
