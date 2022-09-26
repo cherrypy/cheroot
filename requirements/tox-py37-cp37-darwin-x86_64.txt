@@ -78,7 +78,7 @@ pycparser==2.21
     # via cffi
 pydantic==1.10.2
     # via inflect
-pyopenssl==22.0.0 ; implementation_name != "pypy"
+pyopenssl==22.1.0 ; implementation_name != "pypy"
     # via -r requirements/tox-py37-cp37-darwin-x86_64.in
 pyparsing==3.0.7
     # via packaging
