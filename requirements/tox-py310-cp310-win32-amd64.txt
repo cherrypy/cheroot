@@ -134,7 +134,7 @@ urllib3==1.26.12 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py310-cp310-win32-amd64.in
     #   requests
-watchdog==2.1.6
+watchdog==2.1.9
     # via pytest-watch
 
 # The following packages are considered to be unsafe in a requirements file:
