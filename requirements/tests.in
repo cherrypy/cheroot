@@ -21,8 +21,8 @@ requests[use_chardet_on_py3]
 # Updating `charset-normalizer` on Python 3.5 under Ubuntu 18.04 causes
 # some weird issues with `cryptography` — it starts wanting `libffi7`
 # but only `libffi6` is available in that environment.
-charset-normalizer >= 2.1.0; python_version > "3.5"
-charset-normalizer < 2.1.0; python_version <= "3.5"
+# Note that there's no `charset-normalizer` for Python 2
+charset-normalizer < 2.1.0; python_version > "2.7" and python_version <= "3.5"
 
 # Address https://github.com/tartley/colorama/issues/240.
 # It's a transitive dependency of pytest-watch plugin.
