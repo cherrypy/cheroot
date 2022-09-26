@@ -552,6 +552,7 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
+      id: python-install
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
@@ -710,9 +711,16 @@ jobs:
       with:
         files: .test-results/pytest/cov.xml
         flags: >-
-          GHA,
-          ${{ runner.os }},
-          ${{ matrix.python-version }},
+          CI-GHA,
+          OS-${{
+            runner.os
+          }},
+          VM-${{
+            matrix.os
+          }},
+          Py-${{
+            steps.python-install.outputs.python-version
+          }},
           ${{ needs.pre-setup.outputs.wheel-artifact-name }}
 
   check:  # This job does nothing and is only used for the branch protection
