@@ -38,6 +38,7 @@ idna==3.4
     # via
     #   requests
     #   trustme
+importlib-metadata==4.12.0
 inflect==6.0.0
     # via jaraco-text
 iniconfig==1.1.1
@@ -136,6 +137,8 @@ urllib3==1.26.12 ; python_version != "3.4"
     #   requests
 watchdog==2.1.6
     # via pytest-watch
+zipp==3.8.1
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==65.4.0
