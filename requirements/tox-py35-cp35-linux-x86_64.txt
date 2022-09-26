@@ -139,7 +139,7 @@ toml==0.10.2
     #   pytest
 trustme==0.9.0
     # via -r requirements/tox-py35-cp35-linux-x86_64.in
-urllib3==1.26.8 ; python_version != "3.4"
+urllib3==1.26.9 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py35-cp35-linux-x86_64.in
     #   requests

@@ -184,7 +184,7 @@ typing==3.10.0.0
     # via
     #   importlib-resources
     #   pathlib2
-urllib3==1.26.8 ; python_version != "3.4"
+urllib3==1.26.12 ; python_version != "3.4"
     # via
     #   -r requirements/tox-py27-cp27-win32-amd64.in
     #   requests
