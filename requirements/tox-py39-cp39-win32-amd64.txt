@@ -120,7 +120,7 @@ six==1.16.0
     # via cheroot (setup.cfg)
 tempora==5.0.1
     # via portend
-termcolor==1.1.0
+termcolor==2.0.1
     # via pytest-sugar
 toml==0.10.2
     # via pytest
