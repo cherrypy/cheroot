@@ -1,6 +1,7 @@
 ---
 
 ci:
+  autoupdate_schedule: quarterly
   skip:
   - stubtest
 
