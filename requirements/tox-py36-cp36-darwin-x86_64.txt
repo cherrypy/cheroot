@@ -71,7 +71,7 @@ py==1.11.0
     #   pytest-forked
 pycparser==2.21
     # via cffi
-pyopenssl==22.0.0 ; implementation_name != "pypy"
+pyopenssl==22.1.0 ; implementation_name != "pypy"
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 pyparsing==3.0.7
     # via packaging
