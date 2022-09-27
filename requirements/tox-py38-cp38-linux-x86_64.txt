@@ -95,7 +95,7 @@ pytest-forked==1.4.0 ; sys_platform != "win32" and (python_version < "3.0" or py
     # via
     #   -r requirements/tox-py38-cp38-linux-x86_64.in
     #   pytest-xdist
-pytest-mock==3.7.0
+pytest-mock==3.8.2
     # via -r requirements/tox-py38-cp38-linux-x86_64.in
 pytest-rerunfailures==10.2 ; python_version >= "3.6"
     # via -r requirements/tox-py38-cp38-linux-x86_64.in
