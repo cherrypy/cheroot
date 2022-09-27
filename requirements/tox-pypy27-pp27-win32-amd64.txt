@@ -31,7 +31,6 @@ contextlib2==0.6.0.post1
     #   importlib-resources
     #   jaraco.context
     #   yg.lockfile
-    #   zipp
 coverage==5.5 ; python_version < "3.6" and python_version != "3.4"
     # via
     #   -r requirements/tox-pypy27-pp27-win32-amd64.in
