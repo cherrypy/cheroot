@@ -463,6 +463,7 @@ jobs:
         # NOTE: The latest and the lowest supported Pythons are prioritized
         # NOTE: to improve the responsiveness. It's nice to see the most
         # NOTE: important results first.
+        - ~3.11.0-0
         - '3.10'
         - pypy2
         - 3.9
@@ -472,7 +473,6 @@ jobs:
         - 3.6
         - 3.5
         - 2.7
-        - 3.11.0-alpha - 3.11.0
         - pypy-3.6
         os:
         - ubuntu-20.04
@@ -528,7 +528,7 @@ jobs:
               fromJSON(needs.pre-setup.outputs.release-requested) &&
               !toJSON(github.event.inputs.YOLO)
             ) ||
-            contains(matrix.python-version, 'alpha') ||
+            contains(matrix.python-version, '~') ||
             (
               matrix.python-version == '2.7' &&
               startsWith(matrix.os, 'windows-')
