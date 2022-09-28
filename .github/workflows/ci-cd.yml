@@ -7,6 +7,7 @@ on:   # yamllint disable-line rule:truthy
     - dependabot/**
     - maintenance/pip-tools-constraint-lockfiles
     - maintenance/pip-tools-constraint-lockfiles-**
+    - pre-commit-ci-update-config
   pull_request:
   workflow_dispatch:
     inputs:
