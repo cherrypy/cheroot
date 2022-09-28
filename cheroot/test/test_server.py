@@ -277,14 +277,14 @@ def test_peercreds_unix_sock(peercreds_enabled_server):
     with requests_unixsocket.monkeypatch():
         peercreds_resp = requests.get(
             unix_base_uri + PEERCRED_IDS_URI,
-            timeout=0.01,
+            timeout=0.1,
         )
         peercreds_resp.raise_for_status()
         assert peercreds_resp.text == expected_peercreds
 
         peercreds_text_resp = requests.get(
             unix_base_uri + PEERCRED_TEXTS_URI,
-            timeout=0.01,
+            timeout=0.1,
         )
         assert peercreds_text_resp.status_code == 500
 
@@ -320,7 +320,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     with requests_unixsocket.monkeypatch():
         peercreds_text_resp = requests.get(
             unix_base_uri + PEERCRED_TEXTS_URI,
-            timeout=0.01,
+            timeout=0.1,
         )
         peercreds_text_resp.raise_for_status()
         assert peercreds_text_resp.text == expected_textcreds
