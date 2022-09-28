@@ -63,7 +63,13 @@ class HelloController(helper.Controller):
         '/no_body': hello,
         '/body_required': body_required,
         '/query_string': query_string,
+        # FIXME: Unignore the pylint rules in pylint >= 2.15.4.
+        # Refs:
+        # * https://github.com/PyCQA/pylint/issues/6592
+        # * https://github.com/PyCQA/pylint/pull/7395
+        # pylint: disable-next=too-many-function-args
         _munge('/привіт'): hello,
+        # pylint: disable-next=too-many-function-args
         _munge('/Юххууу'): hello,
         '/\xa0Ðblah key 0 900 4 data': hello,
         '/*': asterisk,
