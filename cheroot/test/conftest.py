@@ -25,7 +25,7 @@ def http_request_timeout():
     """Return a common HTTP request timeout for tests with queries."""
     computed_timeout = 0.1
 
-    if IS_MACOS: 
+    if IS_MACOS:
         computed_timeout *= 2
 
     if IS_WINDOWS:
