@@ -67,6 +67,45 @@ env:
     PYTEST_THEME
     PYTEST_THEME_MODE
 
+run-name: >-
+  ${{
+    (
+      github.event_name == 'push' &&
+      github.ref == format(
+        'refs/heads/{0}', github.event.repository.default_branch
+      )
+    )
+    && 'Testing nightly' || ''
+  }}${{
+    github.event_name == 'workflow_dispatch'
+    && format('📦 Releasing v{0}', github.event.inputs.release-version)
+    || ''
+  }}${{
+    (
+      (
+        github.event_name != 'push' ||
+        github.ref != format(
+          'refs/heads/{0}', github.event.repository.default_branch
+        )
+      )
+      && github.event_name != 'workflow_dispatch'
+    ) && '🧪 Testing' || ''
+  }}...
+  Triggered by: ${{ github.event_name }} of ${{ github.ref }} ${{ github.ref_type }} via
+  ${{
+      github.event.pull_request.number && 'PR' || ''
+  }}${{
+      !github.event.pull_request.number && 'commit' || ''
+  }}
+  ${{ github.event.pull_request.number || github.sha }}
+  (workflow run ID: ${{
+    github.run_id
+  }}; number: ${{
+    github.run_number
+  }}; attempt: ${{
+    github.run_attempt
+  }})
+
 jobs:
   pre-setup:
     name: ⚙️ Pre-set global build settings
