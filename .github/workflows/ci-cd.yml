@@ -69,28 +69,10 @@ env:
 
 run-name: >-
   ${{
-    (
-      github.event_name == 'push' &&
-      github.ref == format(
-        'refs/heads/{0}', github.event.repository.default_branch
-      )
-    )
-    && 'Testing nightly' || ''
-  }}${{
     github.event_name == 'workflow_dispatch'
-    && format('📦 Releasing v{0}', github.event.inputs.release-version)
+    && format('📦 Releasing v{0}...', github.event.inputs.release-version)
     || ''
-  }}${{
-    (
-      (
-        github.event_name != 'push' ||
-        github.ref != format(
-          'refs/heads/{0}', github.event.repository.default_branch
-        )
-      )
-      && github.event_name != 'workflow_dispatch'
-    ) && '🧪 Testing' || ''
-  }}...
+  }}
   Triggered by: ${{ github.event_name }} of ${{ github.ref }} ${{ github.ref_type }} via
   ${{
       github.event.pull_request.number && 'PR' || ''
