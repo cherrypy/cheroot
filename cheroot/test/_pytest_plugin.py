@@ -47,4 +47,8 @@ def pytest_load_initial_conftests(early_config, parser, args):
         '<ssl.SSLSocket fd=-1, family=AddressFamily.AF_UNIX, '
         'type=SocketKind.SOCK_STREAM, proto=.:'
         'pytest.PytestUnraisableExceptionWarning:_pytest.unraisableexception',
+
+        # FIXME: Try to figure out what causes this and ensure that the socket
+        # FIXME: gets closed.
+        'ignore:unclosed <socket.socket fd=:ResourceWarning'
     ))
