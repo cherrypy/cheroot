@@ -568,7 +568,10 @@ jobs:
               fromJSON(needs.pre-setup.outputs.release-requested) &&
               !toJSON(github.event.inputs.YOLO)
             ) ||
-            contains(matrix.python-version, '~') ||
+            (
+              startsWith(matrix.python-version, '~') &&
+              !startsWith(matrix.python-version, '~3.11')
+            )||
             (
               matrix.python-version == '2.7' &&
               startsWith(matrix.os, 'windows-')
