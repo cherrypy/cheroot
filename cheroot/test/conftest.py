@@ -20,6 +20,12 @@ from ..testing import get_server_client
 
 
 @pytest.fixture
+def http_request_timeout():
+    """Return a common HTTP request timeout for tests with queries."""
+    return 0.1
+
+
+@pytest.fixture
 # pylint: disable=redefined-outer-name
 def wsgi_server_client(wsgi_server):  # noqa: F811
     """Create a test client out of given WSGI server."""

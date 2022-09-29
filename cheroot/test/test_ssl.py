@@ -213,6 +213,7 @@ def thread_exceptions():
     ),
 )
 def test_ssl_adapters(
+    http_request_timeout,
     tls_http_server, adapter_type,
     tls_certificate,
     tls_certificate_chain_pem_path,
@@ -241,7 +242,7 @@ def test_ssl_adapters(
 
     resp = requests.get(
         'https://{host!s}:{port!s}/'.format(host=interface, port=port),
-        timeout=0.1,
+        timeout=http_request_timeout,
         verify=tls_ca_certificate_pem_path,
     )
 
@@ -279,6 +280,7 @@ def test_ssl_adapters(
 )
 def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
     # FIXME: remove twisted logic, separate tests
+    http_request_timeout,
     mocker,
     tls_http_server, adapter_type,
     ca,
@@ -333,7 +335,7 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
             'https://{host!s}:{port!s}/'.format(host=interface, port=port),
 
             # Don't wait for the first byte forever:
-            timeout=0.1,
+            timeout=http_request_timeout,
 
             # Server TLS certificate verification:
             verify=tls_ca_certificate_pem_path,
@@ -497,6 +499,7 @@ def test_ssl_env(  # noqa: C901  # FIXME
         thread_exceptions,
         recwarn,
         mocker,
+        http_request_timeout,
         tls_http_server, adapter_type,
         ca, tls_verify_mode, tls_certificate,
         tls_certificate_chain_pem_path,
@@ -537,7 +540,7 @@ def test_ssl_env(  # noqa: C901  # FIXME
 
         resp = requests.get(
             'https://' + interface + ':' + str(port) + '/env',
-            timeout=0.1,
+            timeout=http_request_timeout,
             verify=tls_ca_certificate_pem_path,
             cert=cl_pem if use_client_cert else None,
         )
@@ -665,6 +668,7 @@ if IS_WINDOWS and six.PY2:
 )
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_http_over_https_error(
+    http_request_timeout,
     tls_http_server, adapter_type,
     ca, ip_addr,
     tls_certificate,
@@ -734,7 +738,7 @@ def test_http_over_https_error(
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
             'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
-            timeout=0.1,
+            timeout=http_request_timeout,
         )
         assert resp.status_code == 400
         assert resp.text == (
@@ -746,7 +750,7 @@ def test_http_over_https_error(
     with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
         requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
             'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
-            timeout=0.1,
+            timeout=http_request_timeout,
         )
 
     if IS_LINUX:

@@ -259,7 +259,7 @@ def peercreds_enabled_server(http_server, unix_sock_file):
 
 @unix_only_sock_test
 @non_macos_sock_test
-def test_peercreds_unix_sock(peercreds_enabled_server):
+def test_peercreds_unix_sock(http_request_timeout, peercreds_enabled_server):
     """Check that ``PEERCRED`` lookup works when enabled."""
     httpserver = peercreds_enabled_server
     bind_addr = httpserver.bind_addr
@@ -277,14 +277,14 @@ def test_peercreds_unix_sock(peercreds_enabled_server):
     with requests_unixsocket.monkeypatch():
         peercreds_resp = requests.get(
             unix_base_uri + PEERCRED_IDS_URI,
-            timeout=0.1,
+            timeout=http_request_timeout,
         )
         peercreds_resp.raise_for_status()
         assert peercreds_resp.text == expected_peercreds
 
         peercreds_text_resp = requests.get(
             unix_base_uri + PEERCRED_TEXTS_URI,
-            timeout=0.1,
+            timeout=http_request_timeout,
         )
         assert peercreds_text_resp.status_code == 500
 
@@ -296,7 +296,10 @@ def test_peercreds_unix_sock(peercreds_enabled_server):
 )
 @unix_only_sock_test
 @non_macos_sock_test
-def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
+def test_peercreds_unix_sock_with_lookup(
+        http_request_timeout,
+        peercreds_enabled_server,
+):
     """Check that ``PEERCRED`` resolution works when enabled."""
     httpserver = peercreds_enabled_server
     httpserver.peercreds_resolve_enabled = True
@@ -320,7 +323,7 @@ def test_peercreds_unix_sock_with_lookup(peercreds_enabled_server):
     with requests_unixsocket.monkeypatch():
         peercreds_text_resp = requests.get(
             unix_base_uri + PEERCRED_TEXTS_URI,
-            timeout=0.1,
+            timeout=http_request_timeout,
         )
         peercreds_text_resp.raise_for_status()
         assert peercreds_text_resp.text == expected_textcreds
