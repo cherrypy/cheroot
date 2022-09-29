@@ -47,6 +47,10 @@ extend-ignore =
   ANN205,  # Missing return type annotation for staticmethod
   ANN206,  # Missing return type annotation for classmethod
 
+  # FIXME: These `flake8-annotations` errors need fixing and removal
+  SC100,  # Possibly misspelt word / comments
+  SC200,  # Possibly misspelt word / names
+
 # https://wemake-python-stylegui.de/en/latest/pages/usage/formatter.html
 #format = wemake
 
