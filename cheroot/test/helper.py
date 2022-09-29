@@ -66,7 +66,7 @@ class CherootWebCase(webtest.WebCase):
         v = sys.version.split()[0]
         log.info('Python version used to run this test script: %s', v)
         log.info('Cheroot version: %s', cheroot.__version__)
-        log.info('HTTP server version: %s%s', (cls.httpserver.protocol, ssl))
+        log.info('HTTP server version: %s%s', cls.httpserver.protocol, ssl)
         log.info('PID: %s', os.getpid())
 
         if hasattr(cls, 'setup_server'):
