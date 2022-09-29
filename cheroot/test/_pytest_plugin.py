@@ -44,10 +44,6 @@ def pytest_load_initial_conftests(early_config, parser, args):
         '<socket.socket fd=-1, family=AF_INET6, '
         'type=SocketKind.SOCK_STREAM, proto=.:'
         'pytest.PytestUnraisableExceptionWarning:_pytest.unraisableexception',
-        'ignore:Exception ignored in. '
-        '<ssl.SSLSocket fd=-1, family=AddressFamily.AF_UNIX, '
-        'type=SocketKind.SOCK_STREAM, proto=.:'
-        'pytest.PytestUnraisableExceptionWarning:_pytest.unraisableexception',
     ))
 
     if six.PY2:
@@ -60,4 +56,5 @@ def pytest_load_initial_conftests(early_config, parser, args):
         # FIXME: Try to figure out what causes this and ensure that the socket
         # FIXME: gets closed.
         'ignore:unclosed <socket.socket fd=:ResourceWarning',
+        'ignore:unclosed <ssl.SSLSocket fd=:ResourceWarning',
     ))
