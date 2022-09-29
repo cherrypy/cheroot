@@ -79,7 +79,11 @@ run-name: >-
       !github.event.pull_request.number && 'Commit' || ''
   }}
   ${{ github.event.pull_request.number || github.sha }}
-  triggered by: ${{ github.event_name }} of ${{ github.ref }} ${{ github.ref_type }}
+  triggered by: ${{ github.event_name }} of ${{
+    github.ref
+  }} ${{
+    github.ref_type
+  }}
   (workflow run ID: ${{
     github.run_id
   }}; number: ${{
