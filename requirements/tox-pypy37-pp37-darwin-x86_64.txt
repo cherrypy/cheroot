@@ -18,7 +18,7 @@ charset-normalizer==2.1.1
     # via requests
 colorama==0.4.5
     # via pytest-watch
-coverage==6.4.4 ; python_version >= "3.6"
+coverage==6.5.0 ; python_version >= "3.6"
     # via
     #   -r requirements/tox-pypy37-pp37-darwin-x86_64.in
     #   pytest-cov
@@ -151,5 +151,5 @@ zipp==3.8.1
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==65.4.0
+setuptools==65.4.1
     # via pytest-rerunfailures
