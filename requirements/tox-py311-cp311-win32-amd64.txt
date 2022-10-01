@@ -22,7 +22,7 @@ colorama==0.4.5
     # via
     #   pytest
     #   pytest-watch
-coverage==6.4.4 ; python_version >= "3.6"
+coverage==6.5.0 ; python_version >= "3.6"
     # via
     #   -r requirements/tox-py311-cp311-win32-amd64.in
     #   pytest-cov
@@ -136,5 +136,5 @@ watchdog==2.1.9
     # via pytest-watch
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==65.4.0
+setuptools==65.4.1
     # via pytest-rerunfailures
