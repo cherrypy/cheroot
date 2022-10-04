@@ -107,7 +107,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py38-cp38-win32-amd64.in
 pytest-xdist==2.5.0
     # via -r requirements/tox-py38-cp38-win32-amd64.in
-pytz==2022.2.1
+pytz==2022.4
     # via tempora
 requests==2.28.1
     # via
