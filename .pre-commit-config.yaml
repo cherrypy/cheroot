@@ -109,7 +109,7 @@ repos:
     - --select
     - WPS
     additional_dependencies:
-    - wemake-python-styleguide ~= 0.16.1
+    - wemake-python-styleguide ~= 0.17.0
     language_version: python3
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
