@@ -115,12 +115,6 @@ linkcheck_ignore = [
     r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302',
     r'https://github\.com'
     r'/python/cpython/blob/c39b52f/Lib/poplib\.py#user-content-L297-L302',
-
-    # The domain is currently down. TODO: Revisit after Aug 3, 2021.
-    # Ref: https://github.com/cherrypy/cherrypy/issues/1872
-    r'https://cheroot\.cherrypy\.org',
-    r'https://docs\.cherrypy\.org',
-    r'https://www\.cherrypy\.org',
 ]
 linkcheck_workers = 25
 
