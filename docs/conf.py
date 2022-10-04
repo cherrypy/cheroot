@@ -109,10 +109,6 @@ linkcheck_ignore = [
     r'https://github\.com/cherrypy/cherrypy/issues',
     r'https://github\.com/cherrypy/cherrypy/pull',
 
-    # Requires a more liberal 'Accept: ' HTTP request header:
-    # Ref: https://github.com/sphinx-doc/sphinx/issues/7247
-    r'https://github\.com/cherrypy/cheroot/workflows/[^/]+/badge\.svg',
-
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
     # line anchors.
     r'https://github\.com'
