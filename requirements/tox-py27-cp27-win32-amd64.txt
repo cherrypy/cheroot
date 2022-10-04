@@ -138,7 +138,7 @@ pytest==4.6.11
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
-pytz==2022.2.1
+pytz==2022.4
     # via tempora
 requests-toolbelt==0.9.1
     # via -r requirements/tox-py27-cp27-win32-amd64.in
