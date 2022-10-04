@@ -747,7 +747,7 @@ jobs:
         && exit 1
       shell: bash
     - name: Send coverage data to Codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         files: .test-results/pytest/cov.xml
         flags: >-
