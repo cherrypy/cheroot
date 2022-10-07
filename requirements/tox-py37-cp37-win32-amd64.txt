@@ -102,7 +102,7 @@ pytest-cov==2.12.0 ; python_version != "3.4"
     # via -r requirements/tox-py37-cp37-win32-amd64.in
 pytest-forked==1.4.0
     # via pytest-xdist
-pytest-mock==3.9.0
+pytest-mock==3.10.0
     # via -r requirements/tox-py37-cp37-win32-amd64.in
 pytest-rerunfailures==10.2 ; python_version >= "3.6"
     # via -r requirements/tox-py37-cp37-win32-amd64.in
@@ -135,7 +135,7 @@ tomli==2.0.1
     # via coverage
 trustme==0.9.0
     # via -r requirements/tox-py37-cp37-win32-amd64.in
-typing-extensions==4.3.0
+typing-extensions==4.4.0
     # via
     #   importlib-metadata
     #   pydantic
