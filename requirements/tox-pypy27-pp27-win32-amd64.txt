@@ -137,7 +137,7 @@ pytest==4.6.11
     #   pytest-xdist
 pytz==2022.4
     # via tempora
-requests-toolbelt==0.9.1
+requests-toolbelt==0.10.0
     # via -r requirements/tox-pypy27-pp27-win32-amd64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-pypy27-pp27-win32-amd64.in
