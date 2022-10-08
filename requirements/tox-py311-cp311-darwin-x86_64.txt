@@ -110,7 +110,7 @@ requests==2.28.1
     #   -r requirements/tox-py311-cp311-darwin-x86_64.in
     #   requests-toolbelt
     #   requests-unixsocket
-requests-toolbelt==0.9.1
+requests-toolbelt==0.10.0
     # via -r requirements/tox-py311-cp311-darwin-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py311-cp311-darwin-x86_64.in
