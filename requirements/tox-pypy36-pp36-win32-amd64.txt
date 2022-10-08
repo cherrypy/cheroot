@@ -111,7 +111,7 @@ requests==2.27.1
     #   -r requirements/tox-pypy36-pp36-win32-amd64.in
     #   requests-toolbelt
     #   requests-unixsocket
-requests-toolbelt==0.9.1
+requests-toolbelt==0.10.0
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
