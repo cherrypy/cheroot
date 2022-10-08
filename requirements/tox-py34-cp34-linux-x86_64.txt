@@ -47,7 +47,7 @@ pytest-watch==4.2.0
 pytest-xdist==1.31.0
 pytest==4.6.11
 pytz==2022.4              # via tempora
-requests-toolbelt==0.9.1
+requests-toolbelt==0.10.0
 requests-unixsocket==0.3.0
 requests==2.21.0
 scandir==1.10.0           # via pathlib2
