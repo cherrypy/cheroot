@@ -151,12 +151,19 @@ class ThreadPool:
             server (cheroot.server.HTTPServer): web server object
                 receiving this request
             min (int): minimum number of worker threads
-            max (int): maximum number of worker threads
+            max (int): maximum number of worker threads (-1 for no max)
             accepted_queue_size (int): maximum number of active
                 requests in queue
             accepted_queue_timeout (int): timeout for putting request
                 into queue
+
+        :raises ValueError: if the min/max values are invalid
         """
+        if min < 1:
+            raise ValueError('min={} must be > 0'.format(min))
+        if -1 < max < min:
+            raise ValueError('max={} must be > min={} (or -1 for no max)'.format(max, min))
+
         self.server = server
         self.min = min
         self.max = max
@@ -167,7 +174,12 @@ class ThreadPool:
         self._pending_shutdowns = collections.deque()
 
     def start(self):
-        """Start the pool of threads."""
+        """Start the pool of threads.
+
+        :raises RuntimeError: if the pool is already started
+        """
+        if self._threads:
+            raise RuntimeError('Threadpools can only be started once.')
         self.grow(self.min)
 
     @property
