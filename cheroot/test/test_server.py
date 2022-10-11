@@ -5,6 +5,7 @@ import queue
 import socket
 import tempfile
 import threading
+import types
 import uuid
 import urllib.parse  # noqa: WPS301
 
@@ -17,6 +18,7 @@ from pypytools.gc.custom import DefaultGc
 from .._compat import bton, ntob
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
+from ..workers.threadpool import ThreadPool
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -439,3 +441,52 @@ def many_open_sockets(request, resource_limit):
         # Close our open resources
         for test_socket in test_sockets:
             test_socket.close()
+
+
+@pytest.mark.parametrize(
+    ('minthreads', 'maxthreads', 'error'),
+    (
+        (-1, -1, ValueError),
+        (-1, 0, ValueError),
+        (-1, 1, ValueError),
+        (-1, 2, ValueError),
+        (0, -1, ValueError),
+        (0, 0, ValueError),
+        (0, 1, ValueError),
+        (0, 2, ValueError),
+        (1, -1, None),
+        (1, 0, ValueError),
+        (1, 1, None),
+        (1, 2, None),
+        (2, -1, None),
+        (2, 0, ValueError),
+        (2, 1, ValueError),
+        (2, 2, None),
+    ),
+)
+def test_threadpool_threadnum_validation(minthreads, maxthreads, error):
+    kwargs = dict(
+        server=None,
+        min=minthreads,
+        max=maxthreads,
+    )
+    if error is None:
+        ThreadPool(**kwargs)
+    else:
+        with pytest.raises(error):
+            ThreadPool(**kwargs)
+
+
+def test_threadpool_multistart_validation(monkeypatch):
+    # replace _spawn_worker with a function that returns a placeholder to avoid
+    # actually starting any threads
+    monkeypatch.setattr(
+        ThreadPool,
+        '_spawn_worker',
+        lambda _: types.SimpleNamespace(ready=True),
+    )
+
+    tp = ThreadPool(server=None)
+    tp.start()
+    with pytest.raises(RuntimeError, match='threadpools can only be started once'):
+        tp.start()
