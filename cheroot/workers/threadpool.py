@@ -157,6 +157,11 @@ class ThreadPool:
             accepted_queue_timeout (int): timeout for putting request
                 into queue
         """
+        if min < 1:
+            raise ValueError("min must be > 0")
+        if max > 0 and min < max:
+            raise ValueError("max must be > min (or -1 for no max)")
+
         self.server = server
         self.min = min
         self.max = max
@@ -168,6 +173,8 @@ class ThreadPool:
 
     def start(self):
         """Start the pool of threads."""
+        if self._threads:
+            raise RuntimeError("threadpools can only be started once")
         self.grow(self.min)
 
     @property
