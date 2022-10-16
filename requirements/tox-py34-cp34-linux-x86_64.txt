@@ -18,7 +18,7 @@ cryptography==2.8         # via pyopenssl, trustme
 docopt==0.6.2             # via pytest-watch
 dragonmapper==0.2.6       # via charset-normalizer
 execnet==1.7.1            # via pytest-xdist
-hanzidentifier==1.0.2     # via dragonmapper
+hanzidentifier==1.1.0     # via dragonmapper
 idna==2.8                 # via requests, trustme
 importlib-metadata==1.1.3  # via pluggy, pytest
 importlib-resources==1.0.2  # via jaraco.text
