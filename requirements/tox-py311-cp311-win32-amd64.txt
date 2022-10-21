@@ -38,7 +38,7 @@ idna==3.4
     # via
     #   requests
     #   trustme
-inflect==6.0.0
+inflect==6.0.2
     # via jaraco-text
 iniconfig==1.1.1
     # via pytest
@@ -51,9 +51,9 @@ jaraco-functools==3.5.2
     #   cheroot (setup.cfg)
     #   jaraco-text
     #   tempora
-jaraco-text==3.9.1
+jaraco-text==3.10.0
     # via -r requirements/tox-py311-cp311-win32-amd64.in
-more-itertools==8.14.0 ; python_version >= "3.6"
+more-itertools==9.0.0 ; python_version >= "3.6"
     # via
     #   cheroot (setup.cfg)
     #   jaraco-functools
@@ -105,7 +105,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py311-cp311-win32-amd64.in
 pytest-xdist==2.5.0
     # via -r requirements/tox-py311-cp311-win32-amd64.in
-pytz==2022.4
+pytz==2022.5
     # via tempora
 requests==2.28.1
     # via
