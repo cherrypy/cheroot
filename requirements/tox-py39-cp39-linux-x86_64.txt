@@ -16,13 +16,13 @@ chardet==5.0.0
     # via requests
 charset-normalizer==2.1.1
     # via requests
-colorama==0.4.5
+colorama==0.4.6
     # via pytest-watch
 coverage==6.5.0 ; python_version >= "3.6"
     # via
     #   -r requirements/tox-py39-cp39-linux-x86_64.in
     #   pytest-cov
-cryptography==38.0.1
+cryptography==38.0.3
     # via
     #   pyopenssl
     #   trustme
@@ -90,9 +90,7 @@ pytest==6.2.5
 pytest-cov==2.12.0 ; python_version != "3.4"
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 pytest-forked==1.4.0 ; sys_platform != "win32" and (python_version < "3.0" or python_version > "3.4")
-    # via
-    #   -r requirements/tox-py39-cp39-linux-x86_64.in
-    #   pytest-xdist
+    # via -r requirements/tox-py39-cp39-linux-x86_64.in
 pytest-mock==3.10.0
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 pytest-rerunfailures==10.2 ; python_version >= "3.6"
@@ -101,16 +99,16 @@ pytest-sugar==0.9.5
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
-pytest-xdist==2.5.0
+pytest-xdist==3.0.2
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
-pytz==2022.5
+pytz==2022.6
     # via tempora
 requests==2.28.1
     # via
     #   -r requirements/tox-py39-cp39-linux-x86_64.in
     #   requests-toolbelt
     #   requests-unixsocket
-requests-toolbelt==0.10.0
+requests-toolbelt==0.10.1
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
@@ -118,7 +116,7 @@ six==1.16.0
     # via cheroot (setup.cfg)
 tempora==5.0.2
     # via portend
-termcolor==2.0.1
+termcolor==2.1.0
     # via pytest-sugar
 toml==0.10.2
     # via pytest
