@@ -108,9 +108,9 @@ pytest==6.1.2
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
-pytz==2022.5
+pytz==2022.6
     # via tempora
-requests-toolbelt==0.10.0
+requests-toolbelt==0.10.1
     # via -r requirements/tox-py35-cp35-darwin-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py35-cp35-darwin-x86_64.in
