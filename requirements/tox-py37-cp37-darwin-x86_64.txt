@@ -102,7 +102,7 @@ pytest-mock==3.10.0
     # via -r requirements/tox-py37-cp37-darwin-x86_64.in
 pytest-rerunfailures==10.2 ; python_version >= "3.6"
     # via -r requirements/tox-py37-cp37-darwin-x86_64.in
-pytest-sugar==0.9.5
+pytest-sugar==0.9.6
     # via -r requirements/tox-py37-cp37-darwin-x86_64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py37-cp37-darwin-x86_64.in
