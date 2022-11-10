@@ -118,11 +118,10 @@ jobs:
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
     steps:
-    - name: Switch to using Python 3.10 by default
+    - name: Switch to using Python 3.11 by default
       uses: actions/setup-python@v4
       with:
-        python-version: >-
-          3.10
+        python-version: 3.11
     - name: >-
         Mark the build as untagged '${{
             github.event.repository.default_branch
@@ -271,11 +270,11 @@ jobs:
       TOXENV: cleanup-dists,build-dists
 
     steps:
-    - name: Switch to using Python v3.10
+    - name: Switch to using Python 3.11
       uses: actions/setup-python@v4
       with:
-        python-version: >-
-          3.10
+        python-version: 3.11
+
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
