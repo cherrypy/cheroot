@@ -161,7 +161,10 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: >-
-          ${{ steps.request-check.outputs.release-requested == 'true' && 1 || 0 }}
+          ${{
+            steps.request-check.outputs.release-requested == 'true'
+            && 1 || 0
+          }}
         ref: ${{ github.event.inputs.release-commitish }}
     - name: >-
         Calculate Python interpreter version hash value
@@ -722,7 +725,9 @@ jobs:
 
         hash = sha512(version.encode()).hexdigest()
 
-        with open(environ['GITHUB_OUTPUT'], mode=FILE_APPEND_MODE) as outputs_file:
+        with open(
+                environ['GITHUB_OUTPUT'], mode=FILE_APPEND_MODE,
+        ) as outputs_file:
             print('py-hash-key={hash}'.format(hash=hash), file=outputs_file)
       shell: python
     - name: Get pip cache dir
