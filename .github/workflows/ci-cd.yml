@@ -849,17 +849,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: >-
+        Check if the requested tag ${{ needs.pre-setup.outputs.git-tag }}
+        is present and is pointing at the required commit ${{
+          github.event.inputs.release-commitish
+        }}
+      id: existing-remote-tag-check
+      run: |
+        REMOTE_TAGGED_COMMIT_SHA="$(
+          git ls-remote --tags --refs $(git remote get-url origin) '${{
+            needs.pre-setup.outputs.git-tag
+          }}' | awk '{print $1}'
+        )"
+
+        if [[ "${REMOTE_TAGGED_COMMIT_SHA}" == '${{
+          github.event.inputs.release-commitish
+        }}' ]]
+        then
+          echo "already-exists=true" >> "${GITHUB_OUTPUT}"
+        fi
+
     - name: Fetch the src snapshot
+      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
       uses: actions/checkout@v3
       with:
         fetch-depth: 1
         ref: ${{ github.event.inputs.release-commitish }}
     - name: Setup git user as [bot]
+      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
       uses: fregante/setup-git-user@v1.1.0
 
     - name: >-
         Tag the release in the local Git repo
         as ${{ needs.pre-setup.outputs.git-tag }}
+      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
       run: >-
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
@@ -872,6 +895,7 @@ jobs:
     - name: >-
         Push ${{ needs.pre-setup.outputs.git-tag }} tag corresponding
         to the just published release back to GitHub
+      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
       run: >-
         git push --atomic origin '${{ needs.pre-setup.outputs.git-tag }}'
 
