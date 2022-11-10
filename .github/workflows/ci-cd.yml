@@ -132,13 +132,29 @@ jobs:
         github.ref == format(
           'refs/heads/{0}', github.event.repository.default_branch
         )
-      run: >-
-        print('::set-output name=is-untagged-devel::true')
+      run: |
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print('is-untagged-devel=true', file=outputs_file)
     - name: Mark the build as "release request"
       id: request-check
       if: github.event_name == 'workflow_dispatch'
-      run: >-
-        print('::set-output name=release-requested::true')
+      run: |
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print('release-requested=true', file=outputs_file)
     - name: Check out src from Git
       if: >-
         steps.request-check.outputs.release-requested != 'true'
@@ -155,9 +171,18 @@ jobs:
       id: calc-cache-key-py
       run: |
         from hashlib import sha512
+        from os import environ
+        from pathlib import Path
         from sys import version
+
+        FILE_APPEND_MODE = 'a'
+
         hash = sha512(version.encode()).hexdigest()
-        print(f'::set-output name=py-hash-key::{hash}')
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'py-hash-key={hash}', file=outputs_file)
     - name: >-
         Calculate dependency files' combined hash value
         for use in the cache key
@@ -165,20 +190,29 @@ jobs:
         steps.request-check.outputs.release-requested != 'true'
       id: calc-cache-key-files
       run: |
-        print(
-          "::set-output name=files-hash-key::${{
-              hashFiles(
-                'setup.cfg', 'setup.py', 'tox.ini', 'pyproject.toml',
-                '.pre-commit-config.yaml', 'pytest.ini'
-              )
-          }}",
-        )
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                "files-hash-key=${{
+                    hashFiles(
+                      'setup.cfg', 'setup.py', 'tox.ini', 'pyproject.toml',
+                      '.pre-commit-config.yaml', 'pytest.ini'
+                    )
+                }}",
+                file=outputs_file,
+            )
     - name: Get pip cache dir
       id: pip-cache-dir
       if: >-
         steps.request-check.outputs.release-requested != 'true'
       run: >-
-        echo "::set-output name=dir::$(python -m pip cache dir)"
+        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
       shell: bash
     - name: Set up pip cache
       if: >-
@@ -217,35 +251,69 @@ jobs:
       if: steps.request-check.outputs.release-requested != 'true'
       id: scm-version
       run: |
+        from os import environ
+        from pathlib import Path
+
         import setuptools_scm
+
+        FILE_APPEND_MODE = 'a'
+
         ver = setuptools_scm.get_version(
           ${{
               steps.untagged-check.outputs.is-untagged-devel == 'true'
               && 'local_scheme="no-local-version"' || ''
           }}
         )
-        print('::set-output name=dist-version::{ver}'.format(ver=ver))
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'dist-version={ver}', file=outputs_file)
     - name: Set the target Git tag
       id: git-tag
-      run: >-
-        print('::set-output name=tag::v${{
-            steps.request-check.outputs.release-requested == 'true'
-            && github.event.inputs.release-version
-            || steps.scm-version.outputs.dist-version
-        }}')
+      run: |
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                "tag=v${{
+                    steps.request-check.outputs.release-requested == 'true'
+                    && github.event.inputs.release-version
+                    || steps.scm-version.outputs.dist-version
+                }}",
+                file=outputs_file,
+            )
     - name: Set the expected dist artifact names
       id: artifact-name
       run: |
-        print('::set-output name=sdist::cheroot-${{
-            steps.request-check.outputs.release-requested == 'true'
-            && github.event.inputs.release-version
-            || steps.scm-version.outputs.dist-version
-        }}.tar.gz')
-        print('::set-output name=wheel::cheroot-${{
-            steps.request-check.outputs.release-requested == 'true'
-            && github.event.inputs.release-version
-            || steps.scm-version.outputs.dist-version
-        }}-py2.py3-none-any.whl')
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                "sdist=cheroot-${{
+                    steps.request-check.outputs.release-requested == 'true'
+                    && github.event.inputs.release-version
+                    || steps.scm-version.outputs.dist-version
+                }}.tar.gz",
+                file=outputs_file,
+            )
+            print(
+                "wheel=cheroot-${{
+                    steps.request-check.outputs.release-requested == 'true'
+                    && github.event.inputs.release-version
+                    || steps.scm-version.outputs.dist-version
+                }}-py2.py3-none-any.whl",
+                file=outputs_file,
+            )
 
   build:
     name: >-
@@ -292,15 +360,23 @@ jobs:
       id: calc-cache-key-py
       run: |
         from hashlib import sha512
+        from os import environ
+        from pathlib import Path
         from sys import version
 
+        FILE_APPEND_MODE = 'a'
+
         hash = sha512(version.encode()).hexdigest()
-        print(f'::set-output name=py-hash-key::{hash}')
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'py-hash-key={hash}', file=outputs_file)
       shell: python
     - name: Get pip cache dir
       id: pip-cache-dir
       run: >-
-        echo "::set-output name=dir::$(python -m pip cache dir)"
+        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
     - name: Set up pip cache
       uses: actions/cache@v3
       with:
@@ -426,10 +502,18 @@ jobs:
       id: calc-cache-key-py
       run: |
         from hashlib import sha512
+        from os import environ
+        from pathlib import Path
         from sys import version
 
+        FILE_APPEND_MODE = 'a'
+
         hash = sha512(version.encode()).hexdigest()
-        print(f'::set-output name=py-hash-key::{hash}')
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'py-hash-key={hash}', file=outputs_file)
       shell: python
     - name: Get pip cache dir
       id: pip-cache
@@ -627,10 +711,15 @@ jobs:
       id: calc-cache-key-py
       run: |
         from hashlib import sha512
+        from os import environ
         from sys import version
 
+        FILE_APPEND_MODE = 'a'
+
         hash = sha512(version.encode()).hexdigest()
-        print('::set-output name=py-hash-key::{hash}'.format(hash=hash))
+
+        with open(environ['GITHUB_OUTPUT'], mode=FILE_APPEND_MODE) as outputs_file:
+            print('py-hash-key={hash}'.format(hash=hash), file=outputs_file)
       shell: python
     - name: Get pip cache dir
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
