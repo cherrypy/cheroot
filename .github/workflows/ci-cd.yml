@@ -729,7 +729,7 @@ jobs:
         --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
     - name: Produce markdown test summary from JUnit
       if: always()
-      uses: test-summary/action@v1
+      uses: test-summary/action@v2.0
       with:
         paths: .test-results/pytest/test.xml
     - name: Re-run the failing tests with maximum verbosity
