@@ -882,7 +882,12 @@ jobs:
     - name: Decide whether the needed jobs succeeded or failed
       uses: re-actors/alls-green@release/v1
       with:
-        allowed-failures: docs, linters
+        allowed-failures: >-
+          ${{
+            fromJSON(needs.pre-setup.outputs.release-requested) &&
+            github.event.inputs.YOLO
+            && 'lint, tests' || ''
+          }}
         jobs: ${{ toJSON(needs) }}
 
   publish-pypi:
