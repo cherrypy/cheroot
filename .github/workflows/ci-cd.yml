@@ -862,6 +862,9 @@ jobs:
       run: >-
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
+        -m 'Published at https://pypi.org/project/cheroot/${{
+          needs.pre-setup.outputs.dist-version
+        }}'
         '${{ needs.pre-setup.outputs.git-tag }}'
         --
         ${{ github.event.inputs.release-commitish }}
@@ -902,7 +905,24 @@ jobs:
           dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
           dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
         artifactContentType: raw  # Because whl and tgz are of different types
-        # body/bodyFile:  # FIXME: Use once Towncrier is integrated.
+        body: >
+          # Release ${{ needs.pre-setup.outputs.git-tag }}
+
+
+          This release is published to
+          https://pypi.org/project/cheroot/${{
+            needs.pre-setup.outputs.dist-version
+          }}.
+
+
+          This release has been produced by the following workflow run: ${{
+            github.server_url
+          }}/${{
+            github.repository
+          }}/actions/runs/${{
+            github.run_id
+          }}.
+        # bodyFile:  # FIXME: Use once Towncrier is integrated.
         commit: ${{ github.event.inputs.release-commitish }}
         discussionCategory: Announcements
         draft: false
