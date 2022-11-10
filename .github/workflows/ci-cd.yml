@@ -566,7 +566,7 @@ jobs:
           (
             (
               fromJSON(needs.pre-setup.outputs.release-requested) &&
-              !toJSON(github.event.inputs.YOLO)
+              !github.event.inputs.YOLO
             ) ||
             (
               startsWith(matrix.python-version, '~') &&
