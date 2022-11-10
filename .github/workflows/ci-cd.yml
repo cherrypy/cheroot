@@ -33,9 +33,9 @@ on:   # yamllint disable-line rule:truthy
         default: false
         description: >-
           Flag whether test results should block the
-          release (true/false). Only use this under
-          extraordinary circumstances to ignore the
-          test failures and cut the release regardless.
+          release. Only use this under extraordinary
+          circumstances to ignore the test failures
+          and cut the release regardless.
         type: boolean
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
