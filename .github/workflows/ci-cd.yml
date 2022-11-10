@@ -144,7 +144,8 @@ jobs:
         steps.request-check.outputs.release-requested != 'true'
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0
+        fetch-depth: >-
+          ${{ steps.request-check.outputs.release-requested == 'true' && 1 || 0 }}
         ref: ${{ github.event.inputs.release-commitish }}
     - name: >-
         Calculate Python interpreter version hash value
