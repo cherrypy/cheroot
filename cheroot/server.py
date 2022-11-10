@@ -606,8 +606,8 @@ class ChunkedRFile:
     def read_trailer_lines(self):
         """Read HTTP headers and yield them.
 
-        Returns:
-            Generator: yields CRLF separated lines.
+        :yields: CRLF separated lines
+        :ytype: bytes
 
         """
         if not self.closed:
