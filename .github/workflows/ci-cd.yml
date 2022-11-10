@@ -859,7 +859,7 @@ jobs:
 
     - name: >-
         Tag the release in the local Git repo
-        as v${{ needs.pre-setup.outputs.git-tag }}
+        as ${{ needs.pre-setup.outputs.git-tag }}
       run: >-
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
