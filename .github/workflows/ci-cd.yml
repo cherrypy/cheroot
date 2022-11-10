@@ -406,18 +406,22 @@ jobs:
         --skip-missing-interpreters false
         --notest
 
+    - name: Drop Git tags from HEAD for non-tag-create events
+      if: fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+      run: >-
+        git tag --points-at HEAD
+        |
+        xargs git tag --delete
+      shell: bash
+
     - name: Setup git user as [bot]
-      if: >-
-        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-        || fromJSON(needs.pre-setup.outputs.release-requested)
+      if: fromJSON(needs.pre-setup.outputs.release-requested)
       uses: fregante/setup-git-user@v1.1.0
     - name: >-
         Tag the release in the local Git repo
         as ${{ needs.pre-setup.outputs.git-tag }}
         for setuptools-scm to set the desired version
-      if: >-
-        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-        || fromJSON(needs.pre-setup.outputs.release-requested)
+      if: fromJSON(needs.pre-setup.outputs.release-requested)
       run: >-
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
