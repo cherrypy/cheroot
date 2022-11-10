@@ -717,6 +717,8 @@ jobs:
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       id: calc-cache-key-py
       run: |
+        from __future__ import print_function
+
         from hashlib import sha512
         from os import environ
         from sys import version
