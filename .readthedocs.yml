@@ -31,8 +31,8 @@ submodules:
 build:
   os: ubuntu-20.04
   tools:
-    python: >-  # PyYAML parses it as float `3.1` if it's not an explicit str
-      3.10
+    python: >-  # PyYAML parses it as float but RTD demands an explicit string
+      3.11
 
 # Optionally set the version of Python and requirements required
 # to build docs
@@ -40,7 +40,7 @@ python:
   install:
   - method: pip
     path: .
-  - requirements: requirements/tox-build-docs-cp310-linux-x86_64.txt
+  - requirements: requirements/tox-build-docs-cp311-linux-x86_64.txt
   system_packages: false
 
 ...
