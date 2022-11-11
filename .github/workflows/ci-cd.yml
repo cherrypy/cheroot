@@ -637,7 +637,7 @@ jobs:
         - 3.11
         - >-
           3.10
-        - pypy2
+        - pypy2.7-v7.3.9
         - 3.9
         - 3.8
         - pypy-3.7
@@ -658,9 +658,9 @@ jobs:
         # NOTE: https://github.com/tox-dev/tox/issues/1704.
         # NOTE: They should be re-added once it's fixed.
         - os: windows-2022
-          python-version: pypy2
+          python-version: pypy2.7-v7.3.9
         - os: windows-2019
-          python-version: pypy2
+          python-version: pypy2.7-v7.3.9
         - os: windows-2022
           python-version: pypy-3.6
         - os: windows-2019
@@ -676,9 +676,9 @@ jobs:
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
         - os: macos-11.0
-          python-version: pypy2
+          python-version: pypy2.7-v7.3.9
         - os: macos-latest
-          python-version: pypy2
+          python-version: pypy2.7-v7.3.9
         - os: macos-11.0
           python-version: pypy-3.6
         - os: macos-latest
@@ -714,7 +714,7 @@ jobs:
       PYTEST_ADDOPTS: >-
         ${{
             (
-                matrix.python-version == 'pypy2' &&
+                matrix.python-version == 'pypy2.7-v7.3.9' &&
                 startsWith(matrix.os, 'ubuntu-')
             ) &&
             '-p no:warnings' || ''
