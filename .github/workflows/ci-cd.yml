@@ -737,6 +737,8 @@ jobs:
     - name: Figure out if the interpreter ABI is stable
       id: py-abi
       run: |
+        from __future__ import print_function
+
         from os import environ
         from pathlib import Path
         from sys import version_info
