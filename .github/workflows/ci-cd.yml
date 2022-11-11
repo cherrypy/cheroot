@@ -740,14 +740,14 @@ jobs:
         from __future__ import print_function
 
         from os import environ
-        from pathlib import Path
         from sys import version_info
 
         FILE_APPEND_MODE = 'a'
 
         is_stable_abi = version_info.releaselevel == 'final'
 
-        with Path(environ['GITHUB_OUTPUT']).open(
+        with open(
+                environ['GITHUB_OUTPUT'],
                 mode=FILE_APPEND_MODE,
         ) as outputs_file:
             print(
