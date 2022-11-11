@@ -10,3 +10,5 @@ requires = [
     "setuptools_scm_git_archive>=1.1",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
