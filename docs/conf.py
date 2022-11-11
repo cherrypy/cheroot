@@ -74,13 +74,13 @@ cp_github_repo_url = f'{github_url}/{github_repo_org}/cherrypy'
 github_sponsors_url = f'{github_url}/sponsors'
 
 extlinks = {
-    'issue': (f'{github_repo_url}/issues/%s', '#'),
-    'pr': (f'{github_repo_url}/pull/%s', 'PR #'),
-    'commit': (f'{github_repo_url}/commit/%s', ''),
-    'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #'),
-    'cp-pr': (f'{cp_github_repo_url}/pull/%s', 'CherryPy PR #'),
-    'gh': (f'{github_url}/%s', 'GitHub: '),
-    'user': (f'{github_sponsors_url}/%s', '@'),
+    'issue': (f'{github_repo_url}/issues/%s', '#%s'),
+    'pr': (f'{github_repo_url}/pull/%s', 'PR #%s'),
+    'commit': (f'{github_repo_url}/commit/%s', '%s'),
+    'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #%s'),
+    'cp-pr': (f'{cp_github_repo_url}/pull/%s', 'CherryPy PR #%s'),
+    'gh': (f'{github_url}/%s', 'GitHub: %s'),
+    'user': (f'{github_sponsors_url}/%s', '@%s'),
 }
 
 intersphinx_mapping = {
