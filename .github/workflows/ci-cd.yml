@@ -634,8 +634,9 @@ jobs:
         # NOTE: The latest and the lowest supported Pythons are prioritized
         # NOTE: to improve the responsiveness. It's nice to see the most
         # NOTE: important results first.
-        - ~3.11.0-0
-        - '3.10'
+        - 3.11
+        - >-
+          3.10
         - pypy2
         - 3.9
         - 3.8
@@ -700,9 +701,8 @@ jobs:
               !github.event.inputs.YOLO
             ) ||
             (
-              startsWith(matrix.python-version, '~') &&
-              !startsWith(matrix.python-version, '~3.11')
-            )||
+              startsWith(matrix.python-version, '~')
+            ) ||
             (
               matrix.python-version == '2.7' &&
               startsWith(matrix.os, 'windows-')
