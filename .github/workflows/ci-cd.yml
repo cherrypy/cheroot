@@ -510,7 +510,8 @@ jobs:
         os:
         - ubuntu
         python-version:
-        - 3.11
+        - >-
+          3.10
         toxenv:
         - pre-commit
         - setup-check
