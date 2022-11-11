@@ -559,7 +559,7 @@ jobs:
     - name: Get pip cache dir
       id: pip-cache
       run: >-
-        echo "::set-output name=dir::$(pip cache dir)"
+        echo "dir=$(pip cache dir)" >> "${GITHUB_OUTPUT}"
     - name: Set up pip cache
       uses: actions/cache@v3
       with:
@@ -736,14 +736,22 @@ jobs:
     - name: Figure out if the interpreter ABI is stable
       id: py-abi
       run: |
+        from os import environ
+        from pathlib import Path
         from sys import version_info
+
+        FILE_APPEND_MODE = 'a'
 
         is_stable_abi = version_info.releaselevel == 'final'
 
-        print(
-            '::set-output name=is-stable-abi::{is_stable_abi}'.
-            format(is_stable_abi=str(is_stable_abi).lower())
-        )
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                'is-stable-abi={is_stable_abi}'.
+                format(is_stable_abi=str(is_stable_abi).lower()),
+                file=outputs_file,
+            )
       shell: python
     - name: >-
         Calculate Python interpreter version hash value
@@ -775,9 +783,9 @@ jobs:
         set -e
         if [ -n "${pip_cache_dir}" ]
         then
-          echo "::set-output name=dir::${pip_cache_dir}"
+          echo "dir=${pip_cache_dir}" >> "${GITHUB_OUTPUT}"
         else  # Python 3.4 under Ubuntu:
-          echo "::set-output name=dir::'~/.cache/pip'"
+          echo "dir='~/.cache/pip'" >> "${GITHUB_OUTPUT}"
         fi
       shell: bash
     - name: Set up pip cache
