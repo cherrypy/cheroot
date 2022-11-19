@@ -756,23 +756,15 @@ jobs:
       shell: python
     - name: Get pip cache dir
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
-      id: pip-cache
-      run: |
-        set +e
-        pip_cache_dir="$(pip cache dir)"
-        set -e
-        if [ -n "${pip_cache_dir}" ]
-        then
-          echo "dir=${pip_cache_dir}" >> "${GITHUB_OUTPUT}"
-        else  # Python 3.4 under Ubuntu:
-          echo "dir='~/.cache/pip'" >> "${GITHUB_OUTPUT}"
-        fi
+      id: pip-cache-dir
+      run: >-
+        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
       shell: bash
     - name: Set up pip cache
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       uses: actions/cache@v3
       with:
-        path: ${{ steps.pip-cache.outputs.dir }}
+        path: ${{ steps.pip-cache-dir.outputs.dir }}
         key: >-
           ${{ runner.os }}-pip-${{
           steps.calc-cache-key-py.outputs.py-hash-key }}-${{
