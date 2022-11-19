@@ -77,13 +77,13 @@ cp_github_repo_url = f'{github_url}/{github_repo_org}/cherrypy'
 github_sponsors_url = f'{github_url}/sponsors'
 
 extlinks = {
-    'issue': (f'{github_repo_url}/issues/%s', '#'),
-    'pr': (f'{github_repo_url}/pull/%s', 'PR #'),
-    'commit': (f'{github_repo_url}/commit/%s', ''),
-    'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #'),
-    'cp-pr': (f'{cp_github_repo_url}/pull/%s', 'CherryPy PR #'),
-    'gh': (f'{github_url}/%s', 'GitHub: '),
-    'user': (f'{github_sponsors_url}/%s', '@'),
+    'issue': (f'{github_repo_url}/issues/%s', '#%s'),
+    'pr': (f'{github_repo_url}/pull/%s', 'PR #%s'),
+    'commit': (f'{github_repo_url}/commit/%s', '%s'),
+    'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #%s'),
+    'cp-pr': (f'{cp_github_repo_url}/pull/%s', 'CherryPy PR #%s'),
+    'gh': (f'{github_url}/%s', 'GitHub: %s'),
+    'user': (f'{github_sponsors_url}/%s', '@%s'),
 }
 
 intersphinx_mapping = {
@@ -112,22 +112,12 @@ linkcheck_ignore = [
     r'https://github\.com/cherrypy/cherrypy/issues',
     r'https://github\.com/cherrypy/cherrypy/pull',
 
-    # Requires a more liberal 'Accept: ' HTTP request header:
-    # Ref: https://github.com/sphinx-doc/sphinx/issues/7247
-    r'https://github\.com/cherrypy/cheroot/workflows/[^/]+/badge\.svg',
-
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
     # line anchors.
     r'https://github\.com'
     r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302',
     r'https://github\.com'
     r'/python/cpython/blob/c39b52f/Lib/poplib\.py#user-content-L297-L302',
-
-    # The domain is currently down. TODO: Revisit after Aug 3, 2021.
-    # Ref: https://github.com/cherrypy/cherrypy/issues/1872
-    r'https://cheroot\.cherrypy\.org',
-    r'https://docs\.cherrypy\.org',
-    r'https://www\.cherrypy\.org',
 ]
 linkcheck_workers = 25
 

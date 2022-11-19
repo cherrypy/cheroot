@@ -1,17 +1,18 @@
 ---
 
 ci:
+  autoupdate_schedule: quarterly
   skip:
   - stubtest
 
 repos:
 - repo: https://github.com/asottile/add-trailing-comma.git
-  rev: v2.2.1
+  rev: v2.3.0
   hooks:
   - id: add-trailing-comma
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  rev: v1.1.12
+  rev: v1.3.1
   hooks:
   - id: remove-tabs
 
@@ -28,7 +29,7 @@ repos:
       ^.*\.rst$
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v4.1.0
+  rev: v4.3.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
@@ -36,17 +37,17 @@ repos:
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
   # disabled because it doesn't make sense to change pip-tools-managed files
-  #- id: requirements-txt-fixer
-  #  exclude: >-
-  #    (?x)
-  #    ^
-  #      requirements/[^/]+.txt
-  #    $
-  #  files: >-
-  #    (?x)
-  #    ^
-  #      requirements/[^/]+.in
-  #    $
+  # - id: requirements-txt-fixer
+  #   exclude: >-
+  #     (?x)
+  #     ^
+  #       requirements/[^/]+.txt
+  #     $
+  #   files: >-
+  #     (?x)
+  #     ^
+  #       requirements/[^/]+.in
+  #     $
 
   # Non-modifying checks:
   - id: name-tests-test
@@ -58,7 +59,7 @@ repos:
   - id: check-byte-order-marker
   - id: check-case-conflict
   # disabled due to pre-commit/pre-commit-hooks#159
-  #- id: check-docstring-first
+  # - id: check-docstring-first
   - id: check-json
   - id: check-symlinks
   - id: check-yaml
@@ -70,21 +71,46 @@ repos:
   - id: check-ast
   - id: debug-statements
 
-- repo: https://github.com/PyCQA/pydocstyle.git
-  rev: 6.1.1
+- repo: https://github.com/adrienverge/yamllint.git
+  rev: v1.28.0
   hooks:
-  - id: pydocstyle
+  - id: yamllint
+    types:
+    - file
+    - yaml
+    args:
+    - --strict
 
 - repo: https://github.com/PyCQA/flake8.git
-  rev: 4.0.1
+  rev: 5.0.4
   hooks:
   - id: flake8
-    language_version: python3
+    alias: flake8-no-wps
+    name: flake8 WPS-excluded
     additional_dependencies:
-    - flake8-2020>=1.6.0
-    - flake8-docstrings
-    - flake8-pytest-style>=1.0.0
-    - wemake-python-styleguide ~= 0.16.0
+    - flake8-2020 ~= 1.7.0
+    - flake8-annotations ~= 2.9.1; python_version >= "3.7"
+    - flake8-annotations ~= 2.7.0; python_version < "3.7"
+    - flake8-length ~= 0.3.0
+    - flake8-logging-format ~= 0.7.5
+    - flake8-pytest-style ~= 1.6.0
+    - flake8-spellcheck ~= 0.28.0; python_version >= "3.8"
+    - flake8-spellcheck ~= 0.26.0; python_version < "3.8"
+    language_version: python3
+
+- repo: https://github.com/PyCQA/flake8.git
+  # NOTE: This is kept at v4 for until WPS starts supporting flake v5.
+  rev: 4.0.1  # enforce-version: 4.0.1
+  hooks:
+  - id: flake8
+    alias: flake8-only-wps
+    name: flake8 WPS-only
+    args:
+    - --select
+    - WPS
+    additional_dependencies:
+    - wemake-python-styleguide ~= 0.17.0
+    language_version: python3
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
   rev: v1.1.0
@@ -92,7 +118,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
-  rev: v0.931
+  rev: v0.971
   hooks:
   - id: mypy
     alias: mypy-py35
@@ -156,7 +182,7 @@ repos:
       $
 
 - repo: https://github.com/PyCQA/pylint.git
-  rev: v2.12.2
+  rev: v2.15.3
   hooks:
   - id: pylint
     additional_dependencies:
@@ -171,3 +197,35 @@ repos:
     - requests_unixsocket
     - six
     - Sphinx
+
+- repo: local
+  hooks:
+  - id: enforced-flake8-version
+    name: Verify that enforced flake8 version stays unchanged
+    description: >-
+      This is a sanity check and fixer that makes sure that
+      the `flake8` version in this file remains matching the
+      corresponding request in the `# enforce-version` comment.
+    # Using Python here because using
+    # shell test does not always work in CIs:
+    entry: >-
+      python -c 'import pathlib, re, sys;
+      pre_commit_config = pathlib.Path(sys.argv[1]);
+      cfg_txt = pre_commit_config.read_text();
+      new_cfg_txt = re.sub(
+      r"(?P<spaces>\s+)rev:\s(?:\d+\.\d+\.\d+)\s{0,2}"
+      r"#\senforce-version:\s(?P<enforced_version>\d+\.\d+\.\d+)"
+      r"[ \t\f\v]*",
+      r"\g<spaces>rev: \g<enforced_version>  "
+      r"# enforce-version: \g<enforced_version>",
+      cfg_txt,
+      );
+      cfg_txt != new_cfg_txt and
+      pre_commit_config.write_text(new_cfg_txt)
+      '
+    pass_filenames: true
+    language: system
+    files: >-
+      ^\.pre-commit-config\.ya?ml$
+    types:
+    - yaml

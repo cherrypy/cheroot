@@ -1,3 +1,5 @@
+---
+
 # Configuration for probot-stale - https://github.com/probot/stale
 
 
@@ -9,9 +11,9 @@ daysUntilClose: 7
 
 # Issues with these labels will never be considered stale
 exemptLabels:
-  - pinned
-  - security
-  - bug
+- pinned
+- security
+- bug
 
 # Label to use when marking an issue as stale
 staleLabel: stale
@@ -30,3 +32,5 @@ closeComment: false
 
 # Limit to only `issues` or `pulls`
 # only: issues
+
+...

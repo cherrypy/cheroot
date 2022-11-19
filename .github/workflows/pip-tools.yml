@@ -11,6 +11,9 @@ on:   # yamllint disable-line rule:truthy
         description: >-
           A target Python package distribution to upgrade
         required: false
+  pull_request:
+    paths:
+    - .github/workflows/pip-tools.yml
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
@@ -21,7 +24,9 @@ env:
       github.event_name == 'workflow_dispatch'
       && github.event.inputs.package-distribuition
       )
-      && format('-updating-{0}', github.event.inputs.package-distribuition) || '' }}
+      && format('-updating-{0}', github.event.inputs.package-distribuition)
+      || ''
+    }}
 
 concurrency:
   group: >-
@@ -52,16 +57,16 @@ jobs:
         # NOTE: important results first.
         - >-
           3.10
-        - pypy2
+        - pypy2.7
         - 3.9
         - 3.8
-        - pypy-3.7
+        - pypy3.7
         - 3.7
         - 3.6
         - 3.5
         - 2.7
         - 3.11.0-alpha - 3.11.0
-        - pypy-3.6
+        - pypy3.6
         os:
         - ubuntu-18.04
         - macOS-11.0
@@ -73,7 +78,7 @@ jobs:
         # NOTE: `AttributeError: No symbol SCDynamicStoreCopyProxies
         # NOTE: found in library <None>`
         - os: macOS-11.0
-          python-version: pypy-3.6
+          python-version: pypy3.6
         include:
         # NOTE: The only GNU/Linux CPython 3.4 available is built for Ubuntu 18
         # https://github.com/actions/python-versions/blob/c483657/versions-manifest.json#L1228
@@ -87,9 +92,14 @@ jobs:
       PY_COLORS: 1
 
     steps:
+    - name: Grab the source from Git
+      uses: actions/checkout@v2  # Keep before `setup-python` for cache to work
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
+        cache: ${{ matrix.python-version != '3.4' && 'pip' || '' }}
+        cache-dependency-path: requirements/**
         python-version: ${{ matrix.python-version }}
 
     - name: Upgrade pip with `requires_python`
@@ -119,8 +129,6 @@ jobs:
         --user
         pip-tools
 
-    - name: Grab the source from Git
-      uses: actions/checkout@v2
     - name: Setup git user as [bot]
       # Refs:
       # * https://github.community/t/github-actions-bot-email-address/17204/6
@@ -151,7 +159,7 @@ jobs:
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
         || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2'
+        || matrix.python-version == 'pypy2.7'
         )
         && 'echo ".  # runtime deps of the project" >> requirements/tests.in'
         || ''
@@ -164,7 +172,10 @@ jobs:
         && 'ln -svf tests.in "${BASE_NAME}.in"; git add "${BASE_NAME}.in"'
         || 'GIT_INDEX_OBJECT_SYMLINK_TYPE=120000;
         SYMLINK_TARGET_HASH=$(echo -n tests.in | git hash-object --stdin);
-        CURRENT_SRC_OBJECT_TYPE="$(git ls-tree HEAD -- "${BASE_NAME}.in" | awk "{print\$1}")";
+        CURRENT_SRC_OBJECT_TYPE="$(
+        git ls-tree HEAD -- "${BASE_NAME}.in"
+        | awk "{print\$1}"
+        )";
         echo "CURRENT_SRC_OBJECT_TYPE=${CURRENT_SRC_OBJECT_TYPE}";
         if [[ "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" !=
         "${CURRENT_SRC_OBJECT_TYPE}" ]];
@@ -192,13 +203,25 @@ jobs:
         )
         || '--upgrade'
         }}
+        ${{
+        (
+        matrix.python-version != '2.7'
+        && matrix.python-version != '3.4'
+        && matrix.python-version != '3.5'
+        && matrix.python-version != '3.6'
+        && matrix.python-version != 'pypy2.7'
+        && matrix.python-version != 'pypy3.6'
+        )
+        && '--resolver backtracking'
+        || ''
+        }}
         --output-file="requirements/${BASE_NAME}.txt"
         ${{
         (
         matrix.python-version != '2.7'
         && matrix.python-version != '3.4'
         && matrix.python-version != '3.5'
-        && matrix.python-version != 'pypy2'
+        && matrix.python-version != 'pypy2.7'
         )
         && '--strip-extras'
         || ''
@@ -209,7 +232,7 @@ jobs:
         matrix.python-version != '2.7'
         && matrix.python-version != '3.4'
         && matrix.python-version != '3.5'
-        && matrix.python-version != 'pypy2'
+        && matrix.python-version != 'pypy2.7'
         )
         && 'setup.cfg'
         || ''
@@ -221,7 +244,7 @@ jobs:
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
         || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2'
+        || matrix.python-version == 'pypy2.7'
         )
         && 'git checkout -- requirements/tests.in'
         || ''
@@ -235,7 +258,7 @@ jobs:
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
         || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2'
+        || matrix.python-version == 'pypy2.7'
         )
         )
         && 'sed -i
@@ -250,7 +273,7 @@ jobs:
         matrix.python-version == '2.7'
         || matrix.python-version == '3.4'
         || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2'
+        || matrix.python-version == 'pypy2.7'
         )
         )
         && 'sed -i ""
@@ -271,7 +294,8 @@ jobs:
         && format(' for {0}', github.event.inputs.package-distribuition)
         || ''
         }}" requirements/
-        && echo "::set-output name=patch::0001-Update-${BASE_NAME}-constraints.patch"
+        && echo
+        "::set-output name=patch::0001-Update-${BASE_NAME}-constraints.patch"
         || :
       shell: bash
 
@@ -327,6 +351,7 @@ jobs:
 
   publish-pr:
     name: Open/refresh a PR
+    if: github.event_name != 'pull_request'
     needs:
     - check
     runs-on: Ubuntu-latest
@@ -430,10 +455,14 @@ jobs:
       if: steps.artifacts.outputs.lockfile-updates-needed
       run: git am '${{ runner.temp }}/patches'/*.patch
     - name: Force-push the PR branch to remote
-      # ... with only the useful commits which will cause a `pull_request` `synchronize`
-      # event because of the SSH key
+      # ... with only the useful commits which will cause a `pull_request`
+      # `synchronize` event because of the SSH key
       if: steps.artifacts.outputs.lockfile-updates-needed
-      run: git push --atomic origin 'HEAD:${{ env.git-branch }}' --force-with-lease
+      run: >-
+        git push
+        --atomic
+        origin 'HEAD:${{ env.git-branch }}'
+        --force-with-lease
 
     - name: Enable auto-merge for the PR
       if: steps.pr.outputs.pull_request_url

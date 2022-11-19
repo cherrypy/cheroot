@@ -4,8 +4,11 @@ name: CI/CD
 on:   # yamllint disable-line rule:truthy
   push:
     branches-ignore:
+    - dependabot/**
     - maintenance/pip-tools-constraint-lockfiles
     - maintenance/pip-tools-constraint-lockfiles-**
+    - patchback/backports/**
+    - pre-commit-ci-update-config
   pull_request:
   workflow_dispatch:
     inputs:
@@ -16,6 +19,7 @@ on:   # yamllint disable-line rule:truthy
           Target PEP440-compliant version to release.
           Please, don't prepend `v`.
         required: true
+        type: string
       release-commitish:
         # github.event_name == 'workflow_dispatch'
         # && github.event.inputs.release-commitish
@@ -24,13 +28,15 @@ on:   # yamllint disable-line rule:truthy
           The commit to be released to PyPI and tagged
           in Git as `release-version`. Normally, you
           should keep this empty.
+        type: string
       YOLO:
         default: false
         description: >-
           Flag whether test results should block the
-          release (true/false). Only use this under
-          extraordinary circumstances to ignore the
-          test failures and cut the release regardless.
+          release. Only use this under extraordinary
+          circumstances to ignore the test failures
+          and cut the release regardless.
+        type: boolean
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
@@ -39,9 +45,52 @@ concurrency:
     ${{
         github.workflow
     }}-${{
+        github.ref_type
+    }}-${{
         github.event.pull_request.number || github.sha
     }}
   cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 1  # Request colored output from CLI tools supporting it
+  MYPY_FORCE_COLOR: 1  # MyPy's color enforcement
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  PIP_NO_PYTHON_VERSION_WARNING: 1
+  PIP_NO_WARN_SCRIPT_LOCATION: 1
+  PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
+  TOX_PARALLEL_NO_SPINNER: 1
+  TOX_TESTENV_PASSENV: >-  # Make tox-wrapped tools see color requests
+    FORCE_COLOR
+    MYPY_FORCE_COLOR
+    NO_COLOR
+    PY_COLORS
+    PYTEST_THEME
+    PYTEST_THEME_MODE
+
+run-name: >-
+  ${{
+    github.event_name == 'workflow_dispatch'
+    && format('📦 Releasing v{0}...', github.event.inputs.release-version)
+    || ''
+  }}
+  ${{
+      github.event.pull_request.number && 'PR' || ''
+  }}${{
+      !github.event.pull_request.number && 'Commit' || ''
+  }}
+  ${{ github.event.pull_request.number || github.sha }}
+  triggered by: ${{ github.event_name }} of ${{
+    github.ref
+  }} ${{
+    github.ref_type
+  }}
+  (workflow run ID: ${{
+    github.run_id
+  }}; number: ${{
+    github.run_number
+  }}; attempt: ${{
+    github.run_attempt
+  }})
 
 jobs:
   pre-setup:
@@ -69,11 +118,10 @@ jobs:
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
     steps:
-    - name: Switch to using Python 3.10 by default
-      uses: actions/setup-python@v2
+    - name: Switch to using Python 3.11 by default
+      uses: actions/setup-python@v4
       with:
-        python-version: >-
-          3.10
+        python-version: 3.11
     - name: >-
         Mark the build as untagged '${{
             github.event.repository.default_branch
@@ -84,19 +132,39 @@ jobs:
         github.ref == format(
           'refs/heads/{0}', github.event.repository.default_branch
         )
-      run: >-
-        print('::set-output name=is-untagged-devel::true')
+      run: |
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print('is-untagged-devel=true', file=outputs_file)
     - name: Mark the build as "release request"
       id: request-check
       if: github.event_name == 'workflow_dispatch'
-      run: >-
-        print('::set-output name=release-requested::true')
+      run: |
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print('release-requested=true', file=outputs_file)
     - name: Check out src from Git
       if: >-
         steps.request-check.outputs.release-requested != 'true'
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
-        fetch-depth: 0
+        fetch-depth: >-
+          ${{
+            steps.request-check.outputs.release-requested == 'true'
+            && 1 || 0
+          }}
         ref: ${{ github.event.inputs.release-commitish }}
     - name: >-
         Calculate Python interpreter version hash value
@@ -106,9 +174,18 @@ jobs:
       id: calc-cache-key-py
       run: |
         from hashlib import sha512
+        from os import environ
+        from pathlib import Path
         from sys import version
+
+        FILE_APPEND_MODE = 'a'
+
         hash = sha512(version.encode()).hexdigest()
-        print(f'::set-output name=py-hash-key::{hash}')
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'py-hash-key={hash}', file=outputs_file)
     - name: >-
         Calculate dependency files' combined hash value
         for use in the cache key
@@ -116,25 +193,34 @@ jobs:
         steps.request-check.outputs.release-requested != 'true'
       id: calc-cache-key-files
       run: |
-        print(
-          "::set-output name=files-hash-key::${{
-              hashFiles(
-                'setup.cfg', 'setup.py', 'tox.ini', 'pyproject.toml',
-                '.pre-commit-config.yaml', 'pytest.ini'
-              )
-          }}",
-        )
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                "files-hash-key=${{
+                    hashFiles(
+                      'setup.cfg', 'setup.py', 'tox.ini', 'pyproject.toml',
+                      '.pre-commit-config.yaml', 'pytest.ini'
+                    )
+                }}",
+                file=outputs_file,
+            )
     - name: Get pip cache dir
       id: pip-cache-dir
       if: >-
         steps.request-check.outputs.release-requested != 'true'
       run: >-
-        echo "::set-output name=dir::$(python -m pip cache dir)"
+        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
       shell: bash
     - name: Set up pip cache
       if: >-
         steps.request-check.outputs.release-requested != 'true'
-      uses: actions/cache@v2.1.7
+      uses: actions/cache@v3
       with:
         path: ${{ steps.pip-cache-dir.outputs.dir }}
         key: >-
@@ -168,35 +254,69 @@ jobs:
       if: steps.request-check.outputs.release-requested != 'true'
       id: scm-version
       run: |
+        from os import environ
+        from pathlib import Path
+
         import setuptools_scm
+
+        FILE_APPEND_MODE = 'a'
+
         ver = setuptools_scm.get_version(
           ${{
               steps.untagged-check.outputs.is-untagged-devel == 'true'
               && 'local_scheme="no-local-version"' || ''
           }}
         )
-        print('::set-output name=dist-version::{ver}'.format(ver=ver))
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'dist-version={ver}', file=outputs_file)
     - name: Set the target Git tag
       id: git-tag
-      run: >-
-        print('::set-output name=tag::v${{
-            steps.request-check.outputs.release-requested == 'true'
-            && github.event.inputs.release-version
-            || steps.scm-version.outputs.dist-version
-        }}')
+      run: |
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                "tag=v${{
+                    steps.request-check.outputs.release-requested == 'true'
+                    && github.event.inputs.release-version
+                    || steps.scm-version.outputs.dist-version
+                }}",
+                file=outputs_file,
+            )
     - name: Set the expected dist artifact names
       id: artifact-name
       run: |
-        print('::set-output name=sdist::cheroot-${{
-            steps.request-check.outputs.release-requested == 'true'
-            && github.event.inputs.release-version
-            || steps.scm-version.outputs.dist-version
-        }}.tar.gz')
-        print('::set-output name=wheel::cheroot-${{
-            steps.request-check.outputs.release-requested == 'true'
-            && github.event.inputs.release-version
-            || steps.scm-version.outputs.dist-version
-        }}-py2.py3-none-any.whl')
+        from os import environ
+        from pathlib import Path
+
+        FILE_APPEND_MODE = 'a'
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                "sdist=cheroot-${{
+                    steps.request-check.outputs.release-requested == 'true'
+                    && github.event.inputs.release-version
+                    || steps.scm-version.outputs.dist-version
+                }}.tar.gz",
+                file=outputs_file,
+            )
+            print(
+                "wheel=cheroot-${{
+                    steps.request-check.outputs.release-requested == 'true'
+                    && github.event.inputs.release-version
+                    || steps.scm-version.outputs.dist-version
+                }}-py2.py3-none-any.whl",
+                file=outputs_file,
+            )
 
   build:
     name: >-
@@ -216,36 +336,52 @@ jobs:
     needs:
     - pre-setup  # transitive, for accessing settings
 
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     env:
-      PY_COLORS: 1
-      TOX_PARALLEL_NO_SPINNER: 1
       TOXENV: cleanup-dists,build-dists
 
     steps:
-    - name: Switch to using Python v3.10
-      uses: actions/setup-python@v2
+    - name: Switch to using Python 3.11
+      uses: actions/setup-python@v4
       with:
-        python-version: >-
-          3.10
+        python-version: 3.11
+
+    - name: Grab the source from Git
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: >-
+          ${{
+              fromJSON(needs.pre-setup.outputs.release-requested)
+              && 1 || 0
+          }}
+        ref: ${{ github.event.inputs.release-commitish }}
+
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
       id: calc-cache-key-py
       run: |
         from hashlib import sha512
+        from os import environ
+        from pathlib import Path
         from sys import version
 
+        FILE_APPEND_MODE = 'a'
+
         hash = sha512(version.encode()).hexdigest()
-        print(f'::set-output name=py-hash-key::{hash}')
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'py-hash-key={hash}', file=outputs_file)
       shell: python
     - name: Get pip cache dir
       id: pip-cache-dir
       run: >-
-        echo "::set-output name=dir::$(python -m pip cache dir)"
+        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
     - name: Set up pip cache
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v3
       with:
         path: ${{ steps.pip-cache-dir.outputs.dir }}
         key: >-
@@ -264,16 +400,6 @@ jobs:
         --user
         tox
 
-    - name: Grab the source from Git
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: >-
-          ${{
-              steps.request-check.outputs.release-requested == 'true'
-              && 1 || 0
-          }}
-        ref: ${{ github.event.inputs.release-commitish }}
-
     - name: Pre-populate the tox env
       run: >-
         python -m
@@ -283,24 +409,63 @@ jobs:
         --skip-missing-interpreters false
         --notest
 
+    - name: Drop Git tags from HEAD for non-tag-create events
+      if: >-
+        !fromJSON(needs.pre-setup.outputs.release-requested)
+      run: >-
+        git tag --points-at HEAD
+        |
+        xargs git tag --delete
+      shell: bash
+
     - name: Setup git user as [bot]
       if: >-
-        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-        || fromJSON(needs.pre-setup.outputs.release-requested)
-      uses: fregante/setup-git-user@v1.0.1
+        fromJSON(needs.pre-setup.outputs.release-requested)
+        || fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+      uses: fregante/setup-git-user@v1.1.0
     - name: >-
         Tag the release in the local Git repo
         as ${{ needs.pre-setup.outputs.git-tag }}
         for setuptools-scm to set the desired version
       if: >-
-        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-        || fromJSON(needs.pre-setup.outputs.release-requested)
+        fromJSON(needs.pre-setup.outputs.release-requested)
       run: >-
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
         '${{ needs.pre-setup.outputs.git-tag }}'
         --
-        ${{ github.event.inputs.release-commitish }}
+        ${{
+          fromJSON(needs.pre-setup.outputs.release-requested)
+          && github.event.inputs.release-commitish || ''
+        }}
+
+    - name: Install tomlkit Python distribution package
+      if: >-
+        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+      run: >-
+        python -m pip install --user tomlkit
+    - name: Instruct setuptools-scm not to add a local version part
+      if: >-
+        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+      run: |
+        from pathlib import Path
+
+        import tomlkit
+
+        pyproject_toml_path = Path.cwd() / 'pyproject.toml'
+        pyproject_toml_txt = pyproject_toml_path.read_text()
+        pyproject_toml = tomlkit.loads(pyproject_toml_txt)
+        setuptools_scm_section = pyproject_toml['tool']['setuptools_scm']
+        setuptools_scm_section['local_scheme'] = 'no-local-version'
+        patched_pyproject_toml_txt = tomlkit.dumps(pyproject_toml)
+        pyproject_toml_path.write_text(patched_pyproject_toml_txt)
+      shell: python
+    - name: Pretend that pyproject.toml is unchanged
+      if: >-
+        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+      run: |
+        git diff --color=always
+        git update-index --assume-unchanged pyproject.toml
 
     - name: Build dists
       run: >-
@@ -316,7 +481,7 @@ jobs:
         'dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}'
         'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
     - name: Store the distribution packages
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: python-package-distributions
         # NOTE: Exact expected file names are specified here
@@ -326,7 +491,12 @@ jobs:
         path: |
           dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
           dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
-        retention-days: 30  # Defaults to 90
+        retention-days: >-
+          ${{
+              (
+                fromJSON(needs.pre-setup.outputs.release-requested)
+              ) && 90 || 30
+          }}
 
   lint:
     name: 🧹 ${{ matrix.toxenv }}
@@ -338,7 +508,7 @@ jobs:
     strategy:
       matrix:
         os:
-        - Ubuntu
+        - ubuntu
         python-version:
         - >-
           3.10
@@ -353,34 +523,46 @@ jobs:
       fail-fast: false
 
     env:
-      PY_COLORS: 1
-      TOX_PARALLEL_NO_SPINNER: 1
       TOXENV: ${{ matrix.toxenv }}
 
     steps:
     - name: >-
         Switch to using Python v${{ matrix.python-version }}
         by default
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Grab the source from Git
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.release-commitish }}
+
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
       id: calc-cache-key-py
       run: |
         from hashlib import sha512
+        from os import environ
+        from pathlib import Path
         from sys import version
 
+        FILE_APPEND_MODE = 'a'
+
         hash = sha512(version.encode()).hexdigest()
-        print(f'::set-output name=py-hash-key::{hash}')
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'py-hash-key={hash}', file=outputs_file)
       shell: python
     - name: Get pip cache dir
       id: pip-cache
       run: >-
-        echo "::set-output name=dir::$(pip cache dir)"
+        echo "dir=$(pip cache dir)" >> "${GITHUB_OUTPUT}"
     - name: Set up pip cache
-      uses: actions/cache@v2.1.7
+      uses: actions/cache@v3
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: >-
@@ -399,11 +581,6 @@ jobs:
         --user
         tox
 
-    - name: Grab the source from Git
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.inputs.release-commitish }}
-
     - name: Make the env clean of non-test files
       if: matrix.toxenv == 'metadata-validation'
       run: |
@@ -412,7 +589,7 @@ jobs:
       shell: bash
     - name: Download all the dists
       if: matrix.toxenv == 'metadata-validation'
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: python-package-distributions
         path: dist/
@@ -427,8 +604,10 @@ jobs:
         --skip-missing-interpreters false
         --notest
     - name: Initialize pre-commit envs if needed
-      run: |
-        test -d .tox/pre-commit && .tox/pre-commit/bin/python -m pre_commit install-hooks || :
+      run: >-
+        test -d .tox/pre-commit
+        && .tox/pre-commit/bin/python -m pre_commit install-hooks
+        || :
     - name: >-
         Run tox envs: `${{ env.TOXENV }}`
       run: >-
@@ -456,19 +635,20 @@ jobs:
         # NOTE: The latest and the lowest supported Pythons are prioritized
         # NOTE: to improve the responsiveness. It's nice to see the most
         # NOTE: important results first.
-        - '3.10'
+        - 3.11
+        - >-
+          3.10
         - 3.9
         - 3.8
         - pypy-3.7
         - 3.7
         - 3.6
-        - 3.11.0-alpha - 3.11.0
         - pypy-3.6
         os:
         - ubuntu-20.04
         - ubuntu-18.04
-        - macOS-11.0
-        - macOS-latest
+        - macos-11.0
+        - macos-latest
         - windows-2019
         - windows-2022
         exclude:
@@ -491,11 +671,11 @@ jobs:
         # TODO: Remove the exclusions once this is addressed.
         - os: macOS-11.0
           python-version: pypy-3.6
-        - os: macOS-latest
+        - os: macos-latest
           python-version: pypy-3.6
-        - os: macOS-11.0
+        - os: macos-11.0
           python-version: pypy-3.7
-        - os: macOS-latest
+        - os: macos-latest
           python-version: pypy-3.7
         include:
         # NOTE: The only GNU/Linux CPython 3.4 available is built for Ubuntu 18
@@ -507,8 +687,11 @@ jobs:
       ${{
           (
             (
-              needs.pre-setup.outputs.release-requested == 'true' &&
-              !toJSON(github.event.inputs.YOLO)
+              fromJSON(needs.pre-setup.outputs.release-requested) &&
+              !github.event.inputs.YOLO
+            ) ||
+            (
+              startsWith(matrix.python-version, '~')
             ) ||
             contains(matrix.python-version, 'alpha')
           ) && true || false
@@ -520,24 +703,40 @@ jobs:
       PIP_NO_WARN_SCRIPT_LOCATION: 1
       PY_COLORS: 1
       TOXENV: python
-      TOX_PARALLEL_NO_SPINNER: 1
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      id: python-install
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Grab the source from Git
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.inputs.release-commitish }}
+
     - name: Figure out if the interpreter ABI is stable
       id: py-abi
       run: |
+        from __future__ import print_function
+
+        from os import environ
         from sys import version_info
+
+        FILE_APPEND_MODE = 'a'
 
         is_stable_abi = version_info.releaselevel == 'final'
 
-        print(
-            '::set-output name=is-stable-abi::{is_stable_abi}'.
-            format(is_stable_abi=str(is_stable_abi).lower())
-        )
+        with open(
+                environ['GITHUB_OUTPUT'],
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                'is-stable-abi={is_stable_abi}'.
+                format(is_stable_abi=str(is_stable_abi).lower()),
+                file=outputs_file,
+            )
       shell: python
     - name: >-
         Calculate Python interpreter version hash value
@@ -545,11 +744,20 @@ jobs:
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       id: calc-cache-key-py
       run: |
+        from __future__ import print_function
+
         from hashlib import sha512
+        from os import environ
         from sys import version
 
+        FILE_APPEND_MODE = 'a'
+
         hash = sha512(version.encode()).hexdigest()
-        print('::set-output name=py-hash-key::{hash}'.format(hash=hash))
+
+        with open(
+                environ['GITHUB_OUTPUT'], mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print('py-hash-key={hash}'.format(hash=hash), file=outputs_file)
       shell: python
     - name: Get pip cache dir
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
@@ -560,14 +768,14 @@ jobs:
         set -e
         if [ -n "${pip_cache_dir}" ]
         then
-          echo "::set-output name=dir::${pip_cache_dir}"
+          echo "dir=${pip_cache_dir}" >> "${GITHUB_OUTPUT}"
         else  # Python 3.4 under Ubuntu:
-          echo "::set-output name=dir::'~/.cache/pip'"
+          echo "dir='~/.cache/pip'" >> "${GITHUB_OUTPUT}"
         fi
       shell: bash
     - name: Set up pip cache
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
-      uses: actions/cache@v2.1.7
+      uses: actions/cache@v3
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: >-
@@ -595,13 +803,8 @@ jobs:
         --user
         tox
 
-    - name: Grab the source from Git
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.inputs.release-commitish }}
-
     - name: Download all the dists
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: python-package-distributions
         path: dist/
@@ -657,16 +860,41 @@ jobs:
         --parallel auto
         --parallel-live
         --skip-missing-interpreters false
-        -vvvv
         --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
+    - name: Produce markdown test summary from JUnit
+      if: always()
+      uses: test-summary/action@v2.0
+      with:
+        paths: .test-results/pytest/test.xml
+    - name: Re-run the failing tests with maximum verbosity
+      if: failure()
+      run: >-  # `exit 1` makes sure that the job remains red with flaky runs
+        python -m
+        tox
+        --parallel auto
+        --parallel-live
+        --skip-missing-interpreters false
+        -vvvvv
+        --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
+        --
+        --no-cov -vvvvv --lf
+        && exit 1
+      shell: bash
     - name: Send coverage data to Codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         files: .test-results/pytest/cov.xml
         flags: >-
-          GHA,
-          ${{ runner.os }},
-          ${{ matrix.python-version }},
+          CI-GHA,
+          OS-${{
+            runner.os
+          }},
+          VM-${{
+            matrix.os
+          }},
+          Py-${{
+            steps.python-install.outputs.python-version
+          }},
           ${{ needs.pre-setup.outputs.wheel-artifact-name }}
 
   check:  # This job does nothing and is only used for the branch protection
@@ -682,7 +910,13 @@ jobs:
     - name: Decide whether the needed jobs succeeded or failed
       uses: re-actors/alls-green@release/v1
       with:
-        allowed-failures: docs, linters
+        allowed-failures: >-
+          ${{
+            (
+              fromJSON(needs.pre-setup.outputs.release-requested)
+              && github.event.inputs.YOLO
+            ) && 'lint, tests' || ''
+          }}
         jobs: ${{ toJSON(needs) }}
 
   publish-pypi:
@@ -692,7 +926,7 @@ jobs:
     - pre-setup  # transitive, for accessing settings
     if: >-
       fromJSON(needs.pre-setup.outputs.release-requested)
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     environment:
       name: pypi
@@ -703,7 +937,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: python-package-distributions
         path: dist/
@@ -711,7 +945,7 @@ jobs:
         Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.PYPI_TOKEN }}
+        password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish-testpypi:
     name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
@@ -721,7 +955,7 @@ jobs:
     if: >-
       fromJSON(needs.pre-setup.outputs.is-untagged-devel)
       || fromJSON(needs.pre-setup.outputs.release-requested)
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     environment:
       name: testpypi
@@ -732,7 +966,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: python-package-distributions
         path: dist/
@@ -750,29 +984,56 @@ jobs:
     needs:
     - publish-pypi
     - pre-setup  # transitive, for accessing settings
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
+    - name: >-
+        Check if the requested tag ${{ needs.pre-setup.outputs.git-tag }}
+        is present and is pointing at the required commit ${{
+          github.event.inputs.release-commitish
+        }}
+      id: existing-remote-tag-check
+      run: |
+        REMOTE_TAGGED_COMMIT_SHA="$(
+          git ls-remote --tags --refs $(git remote get-url origin) '${{
+            needs.pre-setup.outputs.git-tag
+          }}' | awk '{print $1}'
+        )"
+
+        if [[ "${REMOTE_TAGGED_COMMIT_SHA}" == '${{
+          github.event.inputs.release-commitish
+        }}' ]]
+        then
+          echo "already-exists=true" >> "${GITHUB_OUTPUT}"
+        fi
+
     - name: Fetch the src snapshot
-      uses: actions/checkout@v2
+      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
+      uses: actions/checkout@v3
       with:
         fetch-depth: 1
         ref: ${{ github.event.inputs.release-commitish }}
     - name: Setup git user as [bot]
-      uses: fregante/setup-git-user@v1.0.1
+      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
+      uses: fregante/setup-git-user@v1.1.0
 
     - name: >-
         Tag the release in the local Git repo
-        as v${{ needs.pre-setup.outputs.git-tag }}
+        as ${{ needs.pre-setup.outputs.git-tag }}
+      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
       run: >-
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
+        -m 'Published at https://pypi.org/project/cheroot/${{
+          needs.pre-setup.outputs.dist-version
+        }}'
         '${{ needs.pre-setup.outputs.git-tag }}'
         --
         ${{ github.event.inputs.release-commitish }}
     - name: >-
         Push ${{ needs.pre-setup.outputs.git-tag }} tag corresponding
         to the just published release back to GitHub
+      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
       run: >-
         git push --atomic origin '${{ needs.pre-setup.outputs.git-tag }}'
 
@@ -783,7 +1044,7 @@ jobs:
     needs:
     - post-release-repo-update
     - pre-setup  # transitive, for accessing settings
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
 
     permissions:
       contents: write
@@ -791,7 +1052,7 @@ jobs:
 
     steps:
     - name: Download all the dists
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: python-package-distributions
         path: dist/
@@ -799,7 +1060,7 @@ jobs:
     - name: >-
         Publish a GitHub Release for
         ${{ needs.pre-setup.outputs.git-tag }}
-      uses: ncipollo/release-action@v1.9.0
+      uses: ncipollo/release-action@v1.11.1
       with:
         allowUpdates: false
         artifactErrorsFailBuild: false
@@ -807,7 +1068,24 @@ jobs:
           dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
           dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
         artifactContentType: raw  # Because whl and tgz are of different types
-        # body/bodyFile:  # FIXME: Use once Towncrier is integrated.
+        body: >
+          # Release ${{ needs.pre-setup.outputs.git-tag }}
+
+
+          This release is published to
+          https://pypi.org/project/cheroot/${{
+            needs.pre-setup.outputs.dist-version
+          }}.
+
+
+          This release has been produced by the following workflow run: ${{
+            github.server_url
+          }}/${{
+            github.repository
+          }}/actions/runs/${{
+            github.run_id
+          }}.
+        # bodyFile:  # FIXME: Use once Towncrier is integrated.
         commit: ${{ github.event.inputs.release-commitish }}
         discussionCategory: Announcements
         draft: false
