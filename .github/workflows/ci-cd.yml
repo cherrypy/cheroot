@@ -314,7 +314,7 @@ jobs:
                     steps.request-check.outputs.release-requested == 'true'
                     && github.event.inputs.release-version
                     || steps.scm-version.outputs.dist-version
-                }}-py2.py3-none-any.whl",
+                }}-py3-none-any.whl",
                 file=outputs_file,
             )
 
