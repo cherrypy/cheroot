@@ -638,14 +638,11 @@ jobs:
         - 3.11
         - >-
           3.10
-        - pypy2.7-v7.3.9
         - 3.9
         - 3.8
         - pypy-3.7
         - 3.7
         - 3.6
-        - 3.5
-        - 2.7
         - pypy-3.6
         os:
         - ubuntu-20.04
@@ -658,10 +655,6 @@ jobs:
         # NOTE: Windows PyPy jobs are excluded to address the tox bug
         # NOTE: https://github.com/tox-dev/tox/issues/1704.
         # NOTE: They should be re-added once it's fixed.
-        - os: windows-2022
-          python-version: pypy2.7-v7.3.9
-        - os: windows-2019
-          python-version: pypy2.7-v7.3.9
         - os: windows-2022
           python-version: pypy-3.6
         - os: windows-2019
@@ -676,11 +669,7 @@ jobs:
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
-        - os: macos-11.0
-          python-version: pypy2.7-v7.3.9
-        - os: macos-latest
-          python-version: pypy2.7-v7.3.9
-        - os: macos-11.0
+        - os: macOS-11.0
           python-version: pypy-3.6
         - os: macos-latest
           python-version: pypy-3.6
@@ -688,11 +677,6 @@ jobs:
           python-version: pypy-3.7
         - os: macos-latest
           python-version: pypy-3.7
-        include:
-        # NOTE: The only GNU/Linux CPython 3.4 available is built for Ubuntu 18
-        # https://github.com/actions/python-versions/blob/c483657/versions-manifest.json#L1228
-        - os: ubuntu-18.04
-          python-version: 3.4
 
     continue-on-error: >-
       ${{
@@ -704,22 +688,15 @@ jobs:
             (
               startsWith(matrix.python-version, '~')
             ) ||
-            (
-              matrix.python-version == '2.7' &&
-              startsWith(matrix.os, 'windows-')
-            )
+            contains(matrix.python-version, 'alpha')
           ) && true || false
       }}
 
     env:
-      PYTEST_ADDOPTS: >-
-        ${{
-            (
-                matrix.python-version == 'pypy2.7-v7.3.9' &&
-                startsWith(matrix.os, 'ubuntu-')
-            ) &&
-            '-p no:warnings' || ''
-        }}
+      PIP_DISABLE_PIP_VERSION_CHECK: 1
+      PIP_NO_PYTHON_VERSION_WARNING: 1
+      PIP_NO_WARN_SCRIPT_LOCATION: 1
+      PY_COLORS: 1
       TOXENV: python
 
     steps:

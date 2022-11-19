@@ -1,23 +1,18 @@
 """Tests for the HTTP server."""
-# -*- coding: utf-8 -*-
-# vim: set fileencoding=utf-8 :
-
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
 import os
+import queue
 import socket
 import tempfile
 import threading
 import uuid
+import urllib.parse  # noqa: WPS301
 
 import pytest
 import requests
 import requests_unixsocket
-import six
 
 from pypytools.gc.custom import DefaultGc
-from six.moves import queue, urllib
 
 from .._compat import bton, ntob
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM
@@ -264,7 +259,7 @@ def test_peercreds_unix_sock(http_request_timeout, peercreds_enabled_server):
     httpserver = peercreds_enabled_server
     bind_addr = httpserver.bind_addr
 
-    if isinstance(bind_addr, six.binary_type):
+    if isinstance(bind_addr, bytes):
         bind_addr = bind_addr.decode()
 
     # pylint: disable=possibly-unused-variable
@@ -306,7 +301,7 @@ def test_peercreds_unix_sock_with_lookup(
 
     bind_addr = httpserver.bind_addr
 
-    if isinstance(bind_addr, six.binary_type):
+    if isinstance(bind_addr, bytes):
         bind_addr = bind_addr.decode()
 
     # pylint: disable=possibly-unused-variable

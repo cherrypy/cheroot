@@ -1,3 +1,11 @@
+.. scm-version-title:: v9.0.0
+
+- :issue:`252` via :pr:`339`: Cheroot now requires Python
+  3.6 or later. Python 3.5 and Python 2.7 are still supported
+  by the :gh:`maint/8.x branch
+  <cherrypy/cheroot/tree/maint/8.x>` and stabilizing
+  bugfixes will be accepted to that branch.
+
 .. scm-version-title:: v8.6.0
 
 Significant improvements:
