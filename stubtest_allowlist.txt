@@ -41,3 +41,6 @@ cheroot.ssl.builtin.IS_ABOVE_OPENSSL10
 
 # suppress is both a function and class
 cheroot._compat.suppress
+
+# ignore test packages
+cheroot.test.*
