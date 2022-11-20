@@ -112,6 +112,14 @@ jobs:
         ${{
             steps.request-check.outputs.release-requested || false
         }}
+      is-yolo-mode: >-
+        ${{
+          (
+            steps.request-check.outputs.release-requested == 'true'
+            && github.event.inputs.YOLO
+          )
+          && true || false
+        }}
       cache-key-files: >-
         ${{ steps.calc-cache-key-files.outputs.files-hash-key }}
       git-tag: ${{ steps.git-tag.outputs.tag }}
@@ -681,10 +689,7 @@ jobs:
     continue-on-error: >-
       ${{
           (
-            (
-              fromJSON(needs.pre-setup.outputs.release-requested) &&
-              !github.event.inputs.YOLO
-            ) ||
+            fromJSON(needs.pre-setup.outputs.is-yolo-mode) ||
             (
               startsWith(matrix.python-version, '~')
             ) ||
@@ -896,10 +901,8 @@ jobs:
       with:
         allowed-failures: >-
           ${{
-            (
-              fromJSON(needs.pre-setup.outputs.release-requested)
-              && github.event.inputs.YOLO
-            ) && 'lint, tests' || ''
+            fromJSON(needs.pre-setup.outputs.is-yolo-mode)
+            && 'lint, tests' || ''
           }}
         jobs: ${{ toJSON(needs) }}
 
