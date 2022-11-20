@@ -1911,9 +1911,6 @@ class HTTPServer:
                     'remove() argument 1 must be encoded '
                     'string without null bytes, not unicode'
                     not in err_msg
-                    and 'embedded NUL character' not in err_msg  # py34
-                    and 'argument must be a '
-                    'string without NUL characters' not in err_msg  # pypy2
             ):
                 raise
         except ValueError as val_err:

@@ -714,8 +714,6 @@ jobs:
     - name: Figure out if the interpreter ABI is stable
       id: py-abi
       run: |
-        from __future__ import print_function
-
         from os import environ
         from sys import version_info
 
@@ -739,8 +737,6 @@ jobs:
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       id: calc-cache-key-py
       run: |
-        from __future__ import print_function
-
         from hashlib import sha512
         from os import environ
         from sys import version
@@ -752,7 +748,7 @@ jobs:
         with open(
                 environ['GITHUB_OUTPUT'], mode=FILE_APPEND_MODE,
         ) as outputs_file:
-            print('py-hash-key={hash}'.format(hash=hash), file=outputs_file)
+            print(f'py-hash-key={hash}', file=outputs_file)
       shell: python
     - name: Get pip cache dir
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
