@@ -6,7 +6,7 @@
 #
 attrs==22.1.0
     # via pytest
-autocommand==2.2.1
+autocommand==2.2.2
     # via jaraco-text
 certifi==2022.9.24
     # via requests
@@ -46,7 +46,7 @@ inflect==6.0.2
     # via jaraco-text
 iniconfig==1.1.1
     # via pytest
-jaraco-context==4.1.2
+jaraco-context==4.2.0
     # via
     #   -r requirements/tox-pypy37-pp37-darwin-x86_64.in
     #   jaraco-text
@@ -123,7 +123,7 @@ six==1.16.0
     #   cheroot (setup.cfg)
     #   cryptography
     #   pyopenssl
-tempora==5.0.2
+tempora==5.1.0
     # via portend
 termcolor==2.1.0
     # via pytest-sugar
@@ -147,5 +147,5 @@ zipp==3.10.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==65.5.1
+setuptools==65.6.0
     # via pytest-rerunfailures
