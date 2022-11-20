@@ -885,6 +885,7 @@ jobs:
 
     needs:
     - lint
+    - pre-setup  # transitive, for accessing settings
     - tests
 
     runs-on: ubuntu-latest
