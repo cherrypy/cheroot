@@ -55,17 +55,14 @@ jobs:
         # NOTE: The latest and the lowest supported Pythons are prioritized
         # NOTE: to improve the responsiveness. It's nice to see the most
         # NOTE: important results first.
+        - 3.11
         - >-
           3.10
-        - pypy2.7
         - 3.9
         - 3.8
         - pypy3.7
         - 3.7
         - 3.6
-        - 3.5
-        - 2.7
-        - 3.11.0-alpha - 3.11.0
         - pypy3.6
         os:
         - ubuntu-18.04
@@ -79,11 +76,6 @@ jobs:
         # NOTE: found in library <None>`
         - os: macOS-11.0
           python-version: pypy3.6
-        include:
-        # NOTE: The only GNU/Linux CPython 3.4 available is built for Ubuntu 18
-        # https://github.com/actions/python-versions/blob/c483657/versions-manifest.json#L1228
-        - os: ubuntu-18.04
-          python-version: 3.4
 
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: 1
@@ -98,7 +90,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        cache: ${{ matrix.python-version != '3.4' && 'pip' || '' }}
+        cache: pip
         cache-dependency-path: requirements/**
         python-version: ${{ matrix.python-version }}
 
@@ -110,18 +102,6 @@ jobs:
         --upgrade
         --force-reinstall
         pip-with-requires-python
-    - name: Upgrade setuptools
-      # ...to compensate the `PYTHONPATH` leak in the Python
-      # 3.4-compatible `pip` that seems to attempt to import a
-      # non-isolated `setuptools` version
-      if: matrix.python-version == '3.4'
-      run: >-
-        python -m
-        pip install
-        --user
-        --upgrade
-        --force-reinstall
-        setuptools
     - name: Install pip-tools
       run: >-
         python -m
@@ -152,18 +132,6 @@ jobs:
         )
         '
         )
-
-
-        ${{
-        (
-        matrix.python-version == '2.7'
-        || matrix.python-version == '3.4'
-        || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2.7'
-        )
-        && 'echo ".  # runtime deps of the project" >> requirements/tests.in'
-        || ''
-        }}
 
 
         (cd requirements/;
@@ -205,82 +173,16 @@ jobs:
         }}
         ${{
         (
-        matrix.python-version != '2.7'
-        && matrix.python-version != '3.4'
-        && matrix.python-version != '3.5'
-        && matrix.python-version != '3.6'
-        && matrix.python-version != 'pypy2.7'
+        matrix.python-version != '3.6'
         && matrix.python-version != 'pypy3.6'
         )
         && '--resolver backtracking'
         || ''
         }}
         --output-file="requirements/${BASE_NAME}.txt"
-        ${{
-        (
-        matrix.python-version != '2.7'
-        && matrix.python-version != '3.4'
-        && matrix.python-version != '3.5'
-        && matrix.python-version != 'pypy2.7'
-        )
-        && '--strip-extras'
-        || ''
-        }}
+        --strip-extras
         "requirements/${BASE_NAME}.in"
-        ${{
-        (
-        matrix.python-version != '2.7'
-        && matrix.python-version != '3.4'
-        && matrix.python-version != '3.5'
-        && matrix.python-version != 'pypy2.7'
-        )
-        && 'setup.cfg'
-        || ''
-        }}
-
-
-        ${{
-        (
-        matrix.python-version == '2.7'
-        || matrix.python-version == '3.4'
-        || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2.7'
-        )
-        && 'git checkout -- requirements/tests.in'
-        || ''
-        }}
-
-
-        ${{
-        (
-        runner.os != 'macOS' &&
-        (
-        matrix.python-version == '2.7'
-        || matrix.python-version == '3.4'
-        || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2.7'
-        )
-        )
-        && 'sed -i
-        "s/\\[.*\\]//g;/^file:.*$/{N;N; s/^file:[^\"$\"]*\\n//;}"
-        "requirements/${BASE_NAME}.txt"'
-        || ''
-        }}
-        ${{
-        (
-        runner.os == 'macOS' &&
-        (
-        matrix.python-version == '2.7'
-        || matrix.python-version == '3.4'
-        || matrix.python-version == '3.5'
-        || matrix.python-version == 'pypy2.7'
-        )
-        )
-        && 'sed -i ""
-        "s/\\[.*\\]//g;/^file:.*$/{N;N; s/^file:[^\"$\"]*\\n//;}"
-        "requirements/${BASE_NAME}.txt"'
-        || ''
-        }}
+        setup.cfg
 
 
         git add "requirements/${BASE_NAME}.txt"
