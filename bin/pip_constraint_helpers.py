@@ -1,6 +1,4 @@
 """A set of functions helping generating pip constraint files."""
-from __future__ import print_function  # noqa: WPS422
-
 import functools
 import os
 import platform
