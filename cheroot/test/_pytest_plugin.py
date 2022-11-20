@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import pytest
-import six
 
 
 pytest_version = tuple(map(int, pytest.__version__.split('.')))
@@ -45,9 +44,6 @@ def pytest_load_initial_conftests(early_config, parser, args):
         'type=SocketKind.SOCK_STREAM, proto=.:'
         'pytest.PytestUnraisableExceptionWarning:_pytest.unraisableexception',
     ))
-
-    if six.PY2:
-        return
 
     # NOTE: `ResourceWarning` does not exist under Python 2 and so using
     # NOTE: it in warning filters results in an `_OptionError` exception
