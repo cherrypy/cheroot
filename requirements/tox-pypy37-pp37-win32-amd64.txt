@@ -22,7 +22,7 @@ colorama==0.4.6
     # via
     #   pytest
     #   pytest-watch
-coverage==6.5.0 ; python_version >= "3.6"
+coverage==6.5.0
     # via
     #   -r requirements/tox-pypy37-pp37-win32-amd64.in
     #   pytest-cov
@@ -95,11 +95,11 @@ pytest==6.2.5
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
-pytest-cov==2.12.0 ; python_version != "3.4"
+pytest-cov==2.12.0
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 pytest-mock==3.10.0
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
-pytest-rerunfailures==10.2 ; python_version >= "3.6"
+pytest-rerunfailures==10.2
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
@@ -137,10 +137,8 @@ typing-extensions==4.4.0
     # via
     #   importlib-metadata
     #   pydantic
-urllib3==1.26.12 ; python_version != "3.4"
-    # via
-    #   -r requirements/tox-pypy37-pp37-win32-amd64.in
-    #   requests
+urllib3==1.26.12
+    # via requests
 watchdog==2.1.9
     # via pytest-watch
 zipp==3.10.0
