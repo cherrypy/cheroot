@@ -47,9 +47,9 @@ jaraco-functools==3.5.2
     #   cheroot (setup.cfg)
     #   jaraco-text
     #   tempora
-jaraco-text==3.10.0
+jaraco-text==3.11.0
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
-more-itertools==9.0.0 ; python_version >= "3.6"
+more-itertools==9.0.0
     # via
     #   cheroot (setup.cfg)
     #   jaraco-functools
@@ -112,11 +112,9 @@ requests-toolbelt==0.10.1
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
-six==1.16.0
-    # via cheroot (setup.cfg)
 tempora==5.1.0
     # via portend
-termcolor==2.1.0
+termcolor==2.1.1
     # via pytest-sugar
 toml==0.10.2
     # via pytest
