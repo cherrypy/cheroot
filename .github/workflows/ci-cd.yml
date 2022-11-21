@@ -112,6 +112,14 @@ jobs:
         ${{
             steps.request-check.outputs.release-requested || false
         }}
+      is-yolo-mode: >-
+        ${{
+          (
+            steps.request-check.outputs.release-requested == 'true'
+            && github.event.inputs.YOLO
+          )
+          && true || false
+        }}
       cache-key-files: >-
         ${{ steps.calc-cache-key-files.outputs.files-hash-key }}
       git-tag: ${{ steps.git-tag.outputs.tag }}
@@ -314,7 +322,7 @@ jobs:
                     steps.request-check.outputs.release-requested == 'true'
                     && github.event.inputs.release-version
                     || steps.scm-version.outputs.dist-version
-                }}-py2.py3-none-any.whl",
+                }}-py3-none-any.whl",
                 file=outputs_file,
             )
 
@@ -681,10 +689,7 @@ jobs:
     continue-on-error: >-
       ${{
           (
-            (
-              fromJSON(needs.pre-setup.outputs.release-requested) &&
-              !github.event.inputs.YOLO
-            ) ||
+            fromJSON(needs.pre-setup.outputs.is-yolo-mode) ||
             (
               startsWith(matrix.python-version, '~')
             ) ||
@@ -714,8 +719,6 @@ jobs:
     - name: Figure out if the interpreter ABI is stable
       id: py-abi
       run: |
-        from __future__ import print_function
-
         from os import environ
         from sys import version_info
 
@@ -739,8 +742,6 @@ jobs:
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       id: calc-cache-key-py
       run: |
-        from __future__ import print_function
-
         from hashlib import sha512
         from os import environ
         from sys import version
@@ -752,27 +753,19 @@ jobs:
         with open(
                 environ['GITHUB_OUTPUT'], mode=FILE_APPEND_MODE,
         ) as outputs_file:
-            print('py-hash-key={hash}'.format(hash=hash), file=outputs_file)
+            print(f'py-hash-key={hash}', file=outputs_file)
       shell: python
     - name: Get pip cache dir
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
-      id: pip-cache
-      run: |
-        set +e
-        pip_cache_dir="$(pip cache dir)"
-        set -e
-        if [ -n "${pip_cache_dir}" ]
-        then
-          echo "dir=${pip_cache_dir}" >> "${GITHUB_OUTPUT}"
-        else  # Python 3.4 under Ubuntu:
-          echo "dir='~/.cache/pip'" >> "${GITHUB_OUTPUT}"
-        fi
+      id: pip-cache-dir
+      run: >-
+        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
       shell: bash
     - name: Set up pip cache
       if: fromJSON(steps.py-abi.outputs.is-stable-abi)
       uses: actions/cache@v3
       with:
-        path: ${{ steps.pip-cache.outputs.dir }}
+        path: ${{ steps.pip-cache-dir.outputs.dir }}
         key: >-
           ${{ runner.os }}-pip-${{
           steps.calc-cache-key-py.outputs.py-hash-key }}-${{
@@ -897,6 +890,7 @@ jobs:
 
     needs:
     - lint
+    - pre-setup  # transitive, for accessing settings
     - tests
 
     runs-on: ubuntu-latest
@@ -907,10 +901,8 @@ jobs:
       with:
         allowed-failures: >-
           ${{
-            (
-              fromJSON(needs.pre-setup.outputs.release-requested)
-              && github.event.inputs.YOLO
-            ) && 'lint, tests' || ''
+            fromJSON(needs.pre-setup.outputs.is-yolo-mode)
+            && 'lint, tests' || ''
           }}
         jobs: ${{ toJSON(needs) }}
 

@@ -5,7 +5,7 @@ First-time setup
 ~~~~~~~~~~~~~~~~
 
 - You need to install `Python`_ 3 which is required for building docs.
-  For example, Python 3.7.
+  For example, Python 3.11.
 
   Then, `create and activate a virtual environment`_.
   And install `tox`_.
@@ -65,19 +65,19 @@ Once you finished coding, you are recommended to do the following steps:
 
 - Run tests with `tox`_
 
-Run one test with Python3.6::
+Run one test with Python3.11::
 
-    $ tox -e py36 -- cheroot/test/test_name.py
+    $ tox -e py311 -- cheroot/test/test_name.py
 
 **``tox``** — Run all tests using the Python version where `python` command
 currently points to which is specified in ``tox`` settings::
 
     envlist = python
-    minversion = 3.5.3
+    minversion = 3.21.0
 
 Run linters and all tests against several Python interpreters::
 
-    $ tox -e pre-commit,py27,py37  # etc.
+    $ tox -e pre-commit,py310,py37  # etc.
 
 - Run the `pre-commit`_ linting suite::
 

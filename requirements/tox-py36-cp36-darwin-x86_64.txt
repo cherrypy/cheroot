@@ -16,7 +16,7 @@ charset-normalizer==2.0.12
     # via requests
 colorama==0.4.5
     # via pytest-watch
-coverage==6.2 ; python_version >= "3.6"
+coverage==6.2
     # via
     #   -r requirements/tox-py36-cp36-darwin-x86_64.in
     #   pytest-cov
@@ -52,7 +52,7 @@ jaraco.functools==3.4.0
     #   tempora
 jaraco.text==3.7.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-more-itertools==8.14.0 ; python_version >= "3.6"
+more-itertools==8.14.0
     # via
     #   cheroot (setup.cfg)
     #   jaraco.functools
@@ -87,13 +87,13 @@ pytest==6.2.5
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
-pytest-cov==2.12.0 ; python_version != "3.4"
+pytest-cov==2.12.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-pytest-forked==1.4.0 ; sys_platform != "win32" and (python_version < "3.0" or python_version > "3.4")
+pytest-forked==1.4.0 ; sys_platform != "win32"
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 pytest-mock==3.6.1
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-pytest-rerunfailures==10.2 ; python_version >= "3.6"
+pytest-rerunfailures==10.2
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
@@ -112,8 +112,6 @@ requests-toolbelt==0.10.1
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
-six==1.16.0
-    # via cheroot (setup.cfg)
 tempora==4.1.2
     # via portend
 termcolor==1.1.0
@@ -126,10 +124,8 @@ trustme==0.9.0
     # via -r requirements/tox-py36-cp36-darwin-x86_64.in
 typing-extensions==4.1.1
     # via importlib-metadata
-urllib3==1.26.12 ; python_version != "3.4"
-    # via
-    #   -r requirements/tox-py36-cp36-darwin-x86_64.in
-    #   requests
+urllib3==1.26.12
+    # via requests
 watchdog==2.1.9
     # via pytest-watch
 zipp==3.6.0

@@ -6,7 +6,7 @@
 #
 attrs==22.1.0
     # via pytest
-autocommand==2.2.1
+autocommand==2.2.2
     # via jaraco-text
 certifi==2022.9.24
     # via requests
@@ -18,7 +18,7 @@ charset-normalizer==2.1.1
     # via requests
 colorama==0.4.6
     # via pytest-watch
-coverage==6.5.0 ; python_version >= "3.6"
+coverage==6.5.0
     # via
     #   -r requirements/tox-pypy37-pp37-linux-x86_64.in
     #   pytest-cov
@@ -46,7 +46,7 @@ inflect==6.0.2
     # via jaraco-text
 iniconfig==1.1.1
     # via pytest
-jaraco-context==4.1.2
+jaraco-context==4.2.0
     # via
     #   -r requirements/tox-pypy37-pp37-linux-x86_64.in
     #   jaraco-text
@@ -55,9 +55,9 @@ jaraco-functools==3.5.2
     #   cheroot (setup.cfg)
     #   jaraco-text
     #   tempora
-jaraco-text==3.10.0
+jaraco-text==3.11.0
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
-more-itertools==9.0.0 ; python_version >= "3.6"
+more-itertools==9.0.0
     # via
     #   cheroot (setup.cfg)
     #   jaraco-functools
@@ -93,13 +93,13 @@ pytest==6.2.5
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
-pytest-cov==2.12.0 ; python_version != "3.4"
+pytest-cov==2.12.0
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
-pytest-forked==1.4.0 ; sys_platform != "win32" and (python_version < "3.0" or python_version > "3.4")
+pytest-forked==1.4.0 ; sys_platform != "win32"
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
 pytest-mock==3.10.0
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
-pytest-rerunfailures==10.2 ; python_version >= "3.6"
+pytest-rerunfailures==10.2
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
@@ -120,12 +120,11 @@ requests-unixsocket==0.3.0
     # via -r requirements/tox-pypy37-pp37-linux-x86_64.in
 six==1.16.0
     # via
-    #   cheroot (setup.cfg)
     #   cryptography
     #   pyopenssl
-tempora==5.0.2
+tempora==5.1.0
     # via portend
-termcolor==2.1.0
+termcolor==2.1.1
     # via pytest-sugar
 toml==0.10.2
     # via pytest
@@ -137,10 +136,8 @@ typing-extensions==4.4.0
     # via
     #   importlib-metadata
     #   pydantic
-urllib3==1.26.12 ; python_version != "3.4"
-    # via
-    #   -r requirements/tox-pypy37-pp37-linux-x86_64.in
-    #   requests
+urllib3==1.26.12
+    # via requests
 watchdog==2.1.9
     # via pytest-watch
 zipp==3.10.0
@@ -149,5 +146,5 @@ zipp==3.10.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==65.5.1
+setuptools==65.6.0
     # via pytest-rerunfailures
