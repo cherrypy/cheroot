@@ -57,7 +57,7 @@ jaraco.functools==3.4.0
     #   tempora
 jaraco.text==3.7.0
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
-more-itertools==8.14.0 ; python_version >= "3.6"
+more-itertools==8.14.0
     # via
     #   cheroot (setup.cfg)
     #   jaraco.functools
@@ -113,7 +113,6 @@ requests-unixsocket==0.3.0
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
 six==1.16.0
     # via
-    #   cheroot (setup.cfg)
     #   cryptography
     #   pyopenssl
 tempora==4.1.2
