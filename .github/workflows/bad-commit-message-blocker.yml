@@ -1,19 +1,148 @@
 ---
 
-name: Good commit messages
+name: 📝 Git commit messages
 
 on:   # yamllint disable-line rule:truthy
   pull_request:
 
+env:
+  MAX_ALLOWED_PR_COMMITS: 50
+
 jobs:
   check-commit-message:
-    name: 📝
+    name: ✍
     if: github.event.pull_request.user.type != 'Bot'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-    - name: Verify commit messages follow best practices in CI
-      uses: platisd/bad-commit-message-blocker@1.0.1
+    - name: Get PR commits details
+      id: commits
+      run: |
+        COMMITS_NUMBER="$(\
+            2>http_headers curl --verbose --show-error \
+            --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' \
+            --header 'Accept: application/vnd.github.v3+json' \
+            'https://api.github.com/repos/${{
+                github.repository
+            }}/pulls/${{
+                github.event.pull_request.number
+            }}/commits?per_page=${{
+                env.MAX_ALLOWED_PR_COMMITS
+            }}' | jq length \
+        )"
+        echo "number=${COMMITS_NUMBER}" >> "${GITHUB_OUTPUT}"
+
+        if grep 'link:' http_headers
+        then
+            TOO_MANY=true
+        else
+            TOO_MANY=false
+        fi
+        echo "too-many=${TOO_MANY}" >> "${GITHUB_OUTPUT}"
+
+        echo check-range='${{
+            github.event.pull_request.base.sha
+        }}..${{
+            github.event.pull_request.head.sha
+        }}' >> "${GITHUB_OUTPUT}"
+
+        echo last-commit='${{
+            github.event.pull_request.head.sha
+        }}' >> "${GITHUB_OUTPUT}"
+      shell: bash
+    - name: Prepare helper commands
+      id: commands
+      run: |
+        echo gitlint-install='pip install --user gitlint' >> "${GITHUB_OUTPUT}"
+
+        echo gitlint-lint="\
+        python -m \
+        gitlint.cli \
+        --ignore-stdin \
+        --commits '${{ steps.commits.outputs.check-range }}'\
+        " >> "${GITHUB_OUTPUT}"
+        # -C ./.github/workflows/.gitlint
+
+        echo git-log="\
+        git log --color --no-patch \
+        '${{ steps.commits.outputs.check-range }}'\
+        " >> "${GITHUB_OUTPUT}"
+      shell: bash
+    # Ref:https://joe.gl/ombek/blog/pr-gitlint/
+    - name: Check out src from Git
+      uses: actions/checkout@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: steps.commits.outputs.number
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: Log the commits to be checked
+      run: ${{ steps.commands.outputs.git-log }}
+    - name: Install gitlint
+      run: ${{ steps.commands.outputs.gitlint-install }}
+    - name: Check commit messages in the PR
+      shell: bash
+      run: |
+        >&2 echo Checking the following commit range: '${{
+            steps.commits.outputs.check-range
+        }}'
+        ${{
+            steps.commands.outputs.gitlint-lint
+        }} 2>&1 | >&2 tee gitlint-results.txt
+    - name: Report check summary for too many commits
+      if: fromJSON(steps.commits.outputs.too-many)
+      run: >-
+        echo
+        '# This pull request has too many commits, only the last ${{
+            env.MAX_ALLOWED_PR_COMMITS
+        }} have been checked'
+        >>
+        "${GITHUB_STEP_SUMMARY}"
+      shell: bash
+    - name: Set a failing status because of too many commits
+      if: fromJSON(steps.commits.outputs.too-many)
+      run: exit 1
+      shell: bash
+    - name: Report gitlint check summary
+      if: always()
+      run: |
+        echo >> "${GITHUB_STEP_SUMMARY}"
+        echo '> **Note**' >> "${GITHUB_STEP_SUMMARY}"
+        echo \
+        '> If this check is failing, check the Gitlint rule violations,' \
+        'matching them with the corresponding commits listed down  below.' \
+        'Fix the problems and force-push the pull request branch to clear' \
+        'this failure.' >> "${GITHUB_STEP_SUMMARY}"
+        echo >> "${GITHUB_STEP_SUMMARY}"
+
+        echo >> "${GITHUB_STEP_SUMMARY}"
+        echo '# Gitlint check output' >> "${GITHUB_STEP_SUMMARY}"
+        echo >> "${GITHUB_STEP_SUMMARY}"
+
+        echo '```console' >> "${GITHUB_STEP_SUMMARY}"
+        echo "$ ${{
+            steps.commands.outputs.gitlint-install
+        }}" >> "${GITHUB_STEP_SUMMARY}"
+        echo "$ ${{
+            steps.commands.outputs.gitlint-lint
+        }}" >> "${GITHUB_STEP_SUMMARY}"
+        if [[ \
+            "" != "$(cat gitlint-results.txt)" && \
+            ! $(grep 'Commit' gitlint-results.txt) \
+        ]]
+        then
+            echo 'Commit ${{
+                steps.commits.outputs.last-commit
+            }}:' >> "${GITHUB_STEP_SUMMARY}"
+        fi
+        cat gitlint-results.txt >> "${GITHUB_STEP_SUMMARY}"
+        echo '```' >> "${GITHUB_STEP_SUMMARY}"
+
+        echo >> "${GITHUB_STEP_SUMMARY}"
+        echo '# Checked commits' >> "${GITHUB_STEP_SUMMARY}"
+        echo >> "${GITHUB_STEP_SUMMARY}"
+        echo '```console' >> "${GITHUB_STEP_SUMMARY}"
+        ${{
+            steps.commands.outputs.git-log
+        }} --no-color >> "${GITHUB_STEP_SUMMARY}"
+        echo '```' >> "${GITHUB_STEP_SUMMARY}"
+      shell: bash
 
 ...
