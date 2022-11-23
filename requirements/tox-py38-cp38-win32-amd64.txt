@@ -63,6 +63,7 @@ more-itertools==9.0.0
 packaging==21.3
     # via
     #   pytest
+    #   pytest-rerunfailures
     #   pytest-sugar
 pluggy==1.0.0
     # via pytest
@@ -95,7 +96,7 @@ pytest-cov==2.12.0
     # via -r requirements/tox-py38-cp38-win32-amd64.in
 pytest-mock==3.10.0
     # via -r requirements/tox-py38-cp38-win32-amd64.in
-pytest-rerunfailures==10.2
+pytest-rerunfailures==10.3
     # via -r requirements/tox-py38-cp38-win32-amd64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-py38-cp38-win32-amd64.in
@@ -132,7 +133,3 @@ watchdog==2.1.9
     # via pytest-watch
 zipp==3.10.0
     # via importlib-resources
-
-# The following packages are considered to be unsafe in a requirements file:
-setuptools==65.6.0
-    # via pytest-rerunfailures
