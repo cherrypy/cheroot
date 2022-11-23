@@ -196,8 +196,12 @@ jobs:
         && format(' for {0}', github.event.inputs.package-distribuition)
         || ''
         }}" requirements/
-        && echo
-        "::set-output name=patch::0001-Update-${BASE_NAME}-constraints.patch"
+        && {
+        echo
+        "patch=0001-Update-${BASE_NAME}-constraints.patch"
+        >> "${GITHUB_OUTPUT}"
+        ;
+        }
         || :
       shell: bash
 
@@ -277,7 +281,8 @@ jobs:
         have been produced
       if: steps.artifacts-download.outcome == 'success'
       id: artifacts
-      run: echo '::set-output name=lockfile-updates-needed::true'
+      run: >-
+        echo "lockfile-updates-needed=true" >> "${GITHUB_OUTPUT}"
     - name: Grab the source from Git
       if: steps.artifacts.outputs.lockfile-updates-needed
       uses: actions/checkout@v3
@@ -294,9 +299,9 @@ jobs:
       if: steps.artifacts.outputs.lockfile-updates-needed
       id: pre-existing-remote-branch
       run: >-
-        echo "::set-output name=info::$(
+        echo "info=$(
         git ls-remote origin '${{ env.git-branch }}'
-        )"
+        )" >> "${GITHUB_OUTPUT}"
     - name: Fetch the existing remote PR branch
       if: steps.pre-existing-remote-branch.outputs.info
       run: git fetch origin '${{ env.git-branch }}'
