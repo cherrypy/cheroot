@@ -22,6 +22,8 @@ colorama==0.4.6
     # via
     #   pytest
     #   pytest-watch
+commonmark==0.9.1
+    # via rich
 coverage==6.5.0
     # via
     #   -r requirements/tox-pypy37-pp37-win32-amd64.in
@@ -76,12 +78,16 @@ pluggy==1.0.0
     # via pytest
 portend==3.1.0
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
+pprintpp==0.4.0
+    # via pytest-clarity
 py==1.11.0
     # via
     #   pypytools
     #   pytest
 pydantic==1.10.2
     # via inflect
+pygments==2.13.0
+    # via rich
 pyopenssl==21.0.0 ; implementation_name == "pypy" and python_version < "3.8"
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 pyparsing==3.0.9
@@ -91,12 +97,15 @@ pypytools==0.6.2
 pytest==6.2.5
     # via
     #   -r requirements/tox-pypy37-pp37-win32-amd64.in
+    #   pytest-clarity
     #   pytest-cov
     #   pytest-mock
     #   pytest-rerunfailures
     #   pytest-sugar
     #   pytest-watch
     #   pytest-xdist
+pytest-clarity==1.0.1
+    # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 pytest-cov==2.12.0
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 pytest-mock==3.10.0
@@ -120,6 +129,8 @@ requests-toolbelt==0.10.1
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
+rich==12.6.0
+    # via pytest-clarity
 six==1.16.0
     # via
     #   cryptography
@@ -138,6 +149,7 @@ typing-extensions==4.4.0
     # via
     #   importlib-metadata
     #   pydantic
+    #   rich
 urllib3==1.26.12
     # via requests
 watchdog==2.1.9
