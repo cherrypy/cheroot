@@ -32,6 +32,7 @@ pyopenssl < 22.0.0; implementation_name == "pypy" and python_version < "3.8"
 # of the control flow:
 pypytools
 
+pytest-clarity
 pytest-cov==2.12.0
 pytest-forked>=1.2.0; sys_platform != "win32"
 pytest-mock>=1.11.0
