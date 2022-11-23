@@ -41,6 +41,7 @@ importlib-metadata==4.8.3 ; python_version < "3.8"
     #   cheroot (setup.cfg)
     #   pluggy
     #   pytest
+    #   pytest-rerunfailures
 importlib-resources==5.4.0
     # via jaraco.text
 iniconfig==1.1.1
@@ -63,6 +64,7 @@ more-itertools==8.14.0
 packaging==21.3
     # via
     #   pytest
+    #   pytest-rerunfailures
     #   pytest-sugar
 pluggy==1.0.0
     # via pytest
@@ -93,7 +95,7 @@ pytest-cov==2.12.0
     # via -r requirements/tox-py36-cp36-win32-amd64.in
 pytest-mock==3.6.1
     # via -r requirements/tox-py36-cp36-win32-amd64.in
-pytest-rerunfailures==10.2
+pytest-rerunfailures==10.3
     # via -r requirements/tox-py36-cp36-win32-amd64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-py36-cp36-win32-amd64.in
@@ -132,7 +134,3 @@ zipp==3.6.0
     # via
     #   importlib-metadata
     #   importlib-resources
-
-# The following packages are considered to be unsafe in a requirements file:
-setuptools==59.6.0
-    # via pytest-rerunfailures
