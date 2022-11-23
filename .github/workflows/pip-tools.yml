@@ -85,7 +85,7 @@ jobs:
 
     steps:
     - name: Grab the source from Git
-      uses: actions/checkout@v2  # Keep before `setup-python` for cache to work
+      uses: actions/checkout@v3  # Keep before `setup-python` for cache to work
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -113,7 +113,7 @@ jobs:
       # Refs:
       # * https://github.community/t/github-actions-bot-email-address/17204/6
       # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
-      uses: fregante/setup-git-user@v1.0.1
+      uses: fregante/setup-git-user@v1.1.0
 
     - name: Generate constraints files
       id: constraints
@@ -196,8 +196,12 @@ jobs:
         && format(' for {0}', github.event.inputs.package-distribuition)
         || ''
         }}" requirements/
-        && echo
-        "::set-output name=patch::0001-Update-${BASE_NAME}-constraints.patch"
+        && {
+        echo
+        "patch=0001-Update-${BASE_NAME}-constraints.patch"
+        >> "${GITHUB_OUTPUT}"
+        ;
+        }
         || :
       shell: bash
 
@@ -221,7 +225,7 @@ jobs:
         HEAD
     - name: Save the package bump patch as a GHA artifact
       if: steps.constraints.outputs.patch
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: pip-constraints-git-patches
         path: ${{ runner.temp }}/patches/${{ steps.constraints.outputs.patch }}
@@ -268,7 +272,7 @@ jobs:
     - name: Download all the dists
       id: artifacts-download
       continue-on-error: true  # and judge whether there's updates later
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: pip-constraints-git-patches
         path: ${{ runner.temp }}/patches/
@@ -277,10 +281,11 @@ jobs:
         have been produced
       if: steps.artifacts-download.outcome == 'success'
       id: artifacts
-      run: echo '::set-output name=lockfile-updates-needed::true'
+      run: >-
+        echo "lockfile-updates-needed=true" >> "${GITHUB_OUTPUT}"
     - name: Grab the source from Git
       if: steps.artifacts.outputs.lockfile-updates-needed
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ssh-key: ${{ secrets.PIP_TOOLS_DEPLOYMENT_KEY }}
     - name: Setup git user as [bot]
@@ -288,15 +293,15 @@ jobs:
       # Refs:
       # * https://github.community/t/github-actions-bot-email-address/17204/6
       # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
-      uses: fregante/setup-git-user@v1.0.1
+      uses: fregante/setup-git-user@v1.1.0
 
     - name: Figure out if the pre-existing remote branch exists
       if: steps.artifacts.outputs.lockfile-updates-needed
       id: pre-existing-remote-branch
       run: >-
-        echo "::set-output name=info::$(
+        echo "info=$(
         git ls-remote origin '${{ env.git-branch }}'
-        )"
+        )" >> "${GITHUB_OUTPUT}"
     - name: Fetch the existing remote PR branch
       if: steps.pre-existing-remote-branch.outputs.info
       run: git fetch origin '${{ env.git-branch }}'
