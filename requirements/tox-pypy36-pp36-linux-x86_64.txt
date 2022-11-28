@@ -144,7 +144,7 @@ typing-extensions==4.1.1
     # via
     #   importlib-metadata
     #   rich
-urllib3==1.26.12
+urllib3==1.26.13
     # via requests
 watchdog==2.1.9
     # via pytest-watch
