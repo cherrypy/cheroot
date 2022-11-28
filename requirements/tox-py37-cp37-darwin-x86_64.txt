@@ -24,7 +24,7 @@ coverage==6.5.0
     # via
     #   -r requirements/tox-py37-cp37-darwin-x86_64.in
     #   pytest-cov
-cryptography==38.0.3
+cryptography==38.0.4
     # via
     #   pyopenssl
     #   trustme
@@ -36,7 +36,7 @@ idna==3.4
     # via
     #   requests
     #   trustme
-importlib-metadata==5.0.0 ; python_version < "3.8"
+importlib-metadata==5.1.0 ; python_version < "3.8"
     # via
     #   cheroot (setup.cfg)
     #   pluggy
@@ -147,11 +147,11 @@ typing-extensions==4.4.0
     #   importlib-metadata
     #   pydantic
     #   rich
-urllib3==1.26.12
+urllib3==1.26.13
     # via requests
 watchdog==2.1.9
     # via pytest-watch
-zipp==3.10.0
+zipp==3.11.0
     # via
     #   importlib-metadata
     #   importlib-resources
