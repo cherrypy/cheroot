@@ -855,7 +855,7 @@ jobs:
       with:
         paths: .test-results/pytest/test.xml
     - name: Check if Cobertura XML coverage files exist
-      if: runner.os != 'Windows'
+      if: runner.os == 'Linux'
       id: coverage-files
       run: >-
         compgen -G '.test-results/pytest/cov.xml'
