@@ -88,6 +88,7 @@ repos:
     alias: flake8-no-wps
     name: flake8 WPS-excluded
     additional_dependencies:
+    - darglint ~= 1.8.1
     - flake8-2020 ~= 1.7.0
     - flake8-annotations ~= 2.9.1; python_version >= "3.7"
     - flake8-annotations ~= 2.7.0; python_version < "3.7"
