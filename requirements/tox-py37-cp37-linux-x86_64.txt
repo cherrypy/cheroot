@@ -8,7 +8,7 @@ attrs==22.1.0
     # via pytest
 autocommand==2.2.2
     # via jaraco-text
-certifi==2022.9.24
+certifi==2022.12.7
     # via requests
 cffi==1.15.1
     # via cryptography
@@ -22,7 +22,7 @@ commonmark==0.9.1
     # via rich
 coverage==6.5.0
     # via
-    #   -r requirements/tox-py37-cp37-linux-x86_64.in
+    #   -r tox-py37-cp37-linux-x86_64.in
     #   pytest-cov
 cryptography==38.0.4
     # via
@@ -36,32 +36,22 @@ idna==3.4
     # via
     #   requests
     #   trustme
-importlib-metadata==5.1.0 ; python_version < "3.8"
-    # via
-    #   cheroot (setup.cfg)
-    #   pluggy
-    #   pytest
-    #   pytest-rerunfailures
-importlib-resources==5.10.0
-    # via jaraco-text
 inflect==6.0.2
     # via jaraco-text
 iniconfig==1.1.1
     # via pytest
 jaraco-context==4.2.0
     # via
-    #   -r requirements/tox-py37-cp37-linux-x86_64.in
+    #   -r tox-py37-cp37-linux-x86_64.in
     #   jaraco-text
 jaraco-functools==3.5.2
     # via
-    #   cheroot (setup.cfg)
     #   jaraco-text
     #   tempora
 jaraco-text==3.11.0
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 more-itertools==9.0.0
     # via
-    #   cheroot (setup.cfg)
     #   jaraco-functools
     #   jaraco-text
 packaging==21.3
@@ -72,7 +62,7 @@ packaging==21.3
 pluggy==1.0.0
     # via pytest
 portend==3.1.0
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pprintpp==0.4.0
     # via pytest-clarity
 py==1.11.0
@@ -87,14 +77,14 @@ pydantic==1.10.2
 pygments==2.13.0
     # via rich
 pyopenssl==22.1.0 ; implementation_name != "pypy"
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pyparsing==3.0.9
     # via packaging
 pypytools==0.6.2
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytest==6.2.5
     # via
-    #   -r requirements/tox-py37-cp37-linux-x86_64.in
+    #   -r tox-py37-cp37-linux-x86_64.in
     #   pytest-clarity
     #   pytest-cov
     #   pytest-forked
@@ -104,32 +94,32 @@ pytest==6.2.5
     #   pytest-watch
     #   pytest-xdist
 pytest-clarity==1.0.1
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytest-cov==2.12.0
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytest-forked==1.4.0 ; sys_platform != "win32"
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytest-mock==3.10.0
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytest-rerunfailures==10.3
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytest-sugar==0.9.6
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytest-watch==4.2.0
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytest-xdist==3.1.0
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 pytz==2022.6
     # via tempora
 requests==2.28.1
     # via
-    #   -r requirements/tox-py37-cp37-linux-x86_64.in
+    #   -r tox-py37-cp37-linux-x86_64.in
     #   requests-toolbelt
     #   requests-unixsocket
 requests-toolbelt==0.10.1
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 requests-unixsocket==0.3.0
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 rich==12.6.0
     # via pytest-clarity
 tempora==5.1.0
@@ -138,20 +128,11 @@ termcolor==2.1.1
     # via pytest-sugar
 toml==0.10.2
     # via pytest
-tomli==2.0.1
-    # via coverage
 trustme==0.9.0
-    # via -r requirements/tox-py37-cp37-linux-x86_64.in
+    # via -r tox-py37-cp37-linux-x86_64.in
 typing-extensions==4.4.0
-    # via
-    #   importlib-metadata
-    #   pydantic
-    #   rich
+    # via pydantic
 urllib3==1.26.13
     # via requests
 watchdog==2.2.0
     # via pytest-watch
-zipp==3.11.0
-    # via
-    #   importlib-metadata
-    #   importlib-resources
