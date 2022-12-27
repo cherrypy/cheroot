@@ -20,9 +20,9 @@ on:   # yamllint disable-line rule:truthy
           Please, don't prepend `v`.
         required: true
         type: string
-      release-commitish:
+      release-committish:
         # github.event_name == 'workflow_dispatch'
-        # && github.event.inputs.release-commitish
+        # && github.event.inputs.release-committish
         default: ''
         description: >-
           The commit to be released to PyPI and tagged
@@ -173,7 +173,7 @@ jobs:
             steps.request-check.outputs.release-requested == 'true'
             && 1 || 0
           }}
-        ref: ${{ github.event.inputs.release-commitish }}
+        ref: ${{ github.event.inputs.release-committish }}
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
@@ -363,7 +363,7 @@ jobs:
               fromJSON(needs.pre-setup.outputs.release-requested)
               && 1 || 0
           }}
-        ref: ${{ github.event.inputs.release-commitish }}
+        ref: ${{ github.event.inputs.release-committish }}
 
     - name: >-
         Calculate Python interpreter version hash value
@@ -444,7 +444,7 @@ jobs:
         --
         ${{
           fromJSON(needs.pre-setup.outputs.release-requested)
-          && github.event.inputs.release-commitish || ''
+          && github.event.inputs.release-committish || ''
         }}
 
     - name: Install tomlkit Python distribution package
@@ -544,7 +544,7 @@ jobs:
     - name: Grab the source from Git
       uses: actions/checkout@v3
       with:
-        ref: ${{ github.event.inputs.release-commitish }}
+        ref: ${{ github.event.inputs.release-committish }}
 
     - name: >-
         Calculate Python interpreter version hash value
@@ -999,7 +999,7 @@ jobs:
     - name: >-
         Check if the requested tag ${{ needs.pre-setup.outputs.git-tag }}
         is present and is pointing at the required commit ${{
-          github.event.inputs.release-commitish
+          github.event.inputs.release-committish
         }}
       id: existing-remote-tag-check
       run: |
@@ -1010,7 +1010,7 @@ jobs:
         )"
 
         if [[ "${REMOTE_TAGGED_COMMIT_SHA}" == '${{
-          github.event.inputs.release-commitish
+          github.event.inputs.release-committish
         }}' ]]
         then
           echo "already-exists=true" >> "${GITHUB_OUTPUT}"
@@ -1021,7 +1021,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 1
-        ref: ${{ github.event.inputs.release-commitish }}
+        ref: ${{ github.event.inputs.release-committish }}
     - name: Setup git user as [bot]
       if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
       uses: fregante/setup-git-user@v1.1.0
@@ -1045,7 +1045,7 @@ jobs:
         }}'
         '${{ needs.pre-setup.outputs.git-tag }}'
         --
-        ${{ github.event.inputs.release-commitish }}
+        ${{ github.event.inputs.release-committish }}
     - name: >-
         Push ${{ needs.pre-setup.outputs.git-tag }} tag corresponding
         to the just published release back to GitHub
@@ -1102,7 +1102,7 @@ jobs:
             github.run_id
           }}.
         # bodyFile:  # FIXME: Use once Towncrier is integrated.
-        commit: ${{ github.event.inputs.release-commitish }}
+        commit: ${{ github.event.inputs.release-committish }}
         discussionCategory: Announcements
         draft: false
         name: ${{ needs.pre-setup.outputs.git-tag }}
