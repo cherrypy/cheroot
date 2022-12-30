@@ -6,9 +6,9 @@
 #
 atomicwrites==1.4.1
     # via pytest
-attrs==22.1.0
+attrs==22.2.0
     # via pytest
-certifi==2022.9.24
+certifi==2022.12.7
     # via requests
 cffi==1.15.1
     # via cryptography
@@ -114,7 +114,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py36-cp36-win32-amd64.in
 pytest-xdist==3.0.2
     # via -r requirements/tox-py36-cp36-win32-amd64.in
-pytz==2022.6
+pytz==2022.7
     # via tempora
 requests==2.27.1
     # via
