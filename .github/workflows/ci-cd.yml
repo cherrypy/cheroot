@@ -409,7 +409,7 @@ jobs:
         python -m
         pip install
         --user
-        ${{ env.TOX_VERSION }}
+        '${{ env.TOX_VERSION }}'
 
     - name: Pre-populate the tox env
       run: >-
@@ -590,7 +590,7 @@ jobs:
         python -m
         pip install
         --user
-        ${{ env.TOX_VERSION }}
+        '${{ env.TOX_VERSION }}'
 
     - name: Make the env clean of non-test files
       if: matrix.toxenv == 'metadata-validation'
@@ -792,7 +792,7 @@ jobs:
         python -m
         pip install
         --user
-        ${{ env.TOX_VERSION }}
+        '${{ env.TOX_VERSION }}'
 
     - name: Download all the dists
       uses: actions/download-artifact@v3
