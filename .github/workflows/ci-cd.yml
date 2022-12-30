@@ -794,6 +794,16 @@ jobs:
         --user
         '${{ env.TOX_VERSION }}'
 
+    - name: Patch tox.ini for Python 3.6 under Windows
+      if: >-
+        runner.os == 'Windows'
+        && matrix.python-version == '3.6'
+      run: >-
+        sed -i
+        's/^package_env\(\s\)\?=.*/package_env = py36-win-dummy/g'
+        tox.ini
+      shell: bash
+
     - name: Download all the dists
       uses: actions/download-artifact@v3
       with:
