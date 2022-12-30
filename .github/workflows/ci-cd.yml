@@ -68,6 +68,7 @@ env:
     PY_COLORS
     PYTEST_THEME
     PYTEST_THEME_MODE
+  TOX_VERSION: tox < 4
 
 run-name: >-
   ${{
@@ -408,7 +409,7 @@ jobs:
         python -m
         pip install
         --user
-        tox
+        ${{ env.TOX_VERSION }}
 
     - name: Pre-populate the tox env
       run: >-
@@ -589,7 +590,7 @@ jobs:
         python -m
         pip install
         --user
-        tox
+        ${{ env.TOX_VERSION }}
 
     - name: Make the env clean of non-test files
       if: matrix.toxenv == 'metadata-validation'
@@ -791,7 +792,7 @@ jobs:
         python -m
         pip install
         --user
-        tox
+        ${{ env.TOX_VERSION }}
 
     - name: Download all the dists
       uses: actions/download-artifact@v3
