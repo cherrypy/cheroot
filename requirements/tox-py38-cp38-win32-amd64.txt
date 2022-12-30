@@ -6,11 +6,11 @@
 #
 atomicwrites==1.4.1
     # via pytest
-attrs==22.1.0
+attrs==22.2.0
     # via pytest
 autocommand==2.2.2
     # via jaraco-text
-certifi==2022.9.24
+certifi==2022.12.7
     # via requests
 cffi==1.15.1
     # via cryptography
@@ -24,7 +24,7 @@ colorama==0.4.6
     #   pytest-watch
 commonmark==0.9.1
     # via rich
-coverage==6.5.0
+coverage==7.0.1
     # via
     #   -r requirements/tox-py38-cp38-win32-amd64.in
     #   pytest-cov
@@ -40,7 +40,7 @@ idna==3.4
     # via
     #   requests
     #   trustme
-importlib-resources==5.10.0
+importlib-resources==5.10.2
     # via jaraco-text
 inflect==6.0.2
     # via jaraco-text
@@ -62,7 +62,7 @@ more-itertools==9.0.0
     #   cheroot (setup.cfg)
     #   jaraco-functools
     #   jaraco-text
-packaging==21.3
+packaging==22.0
     # via
     #   pytest
     #   pytest-rerunfailures
@@ -79,14 +79,12 @@ py==1.11.0
     #   pytest
 pycparser==2.21
     # via cffi
-pydantic==1.10.2
+pydantic==1.10.3
     # via inflect
 pygments==2.13.0
     # via rich
 pyopenssl==22.1.0 ; implementation_name != "pypy"
     # via -r requirements/tox-py38-cp38-win32-amd64.in
-pyparsing==3.0.9
-    # via packaging
 pypytools==0.6.2
     # via -r requirements/tox-py38-cp38-win32-amd64.in
 pytest==6.2.5
@@ -113,7 +111,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py38-cp38-win32-amd64.in
 pytest-xdist==3.1.0
     # via -r requirements/tox-py38-cp38-win32-amd64.in
-pytz==2022.6
+pytz==2022.7
     # via tempora
 requests==2.28.1
     # via
