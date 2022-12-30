@@ -57,7 +57,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: 1
   PIP_NO_PYTHON_VERSION_WARNING: 1
   PIP_NO_WARN_SCRIPT_LOCATION: 1
-  PRE_COMMIT_COLOR: 1
+  PRE_COMMIT_COLOR: always
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
   TOX_PARALLEL_NO_SPINNER: 1
   TOX_TESTENV_PASSENV: >-  # Make tox-wrapped tools see color requests
