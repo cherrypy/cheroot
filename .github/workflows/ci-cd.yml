@@ -59,6 +59,9 @@ env:
   PIP_NO_WARN_SCRIPT_LOCATION: 1
   PRE_COMMIT_COLOR: always
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
+  PYTHONIOENCODING: utf-8
+  PYTHONLEGACYWINDOWSSTDIO: 1  # Python 3.6 hack
+  PYTHONUTF8: 1
   TOX_PARALLEL_NO_SPINNER: 1
   TOX_TESTENV_PASSENV: >-  # Make tox-wrapped tools see color requests
     FORCE_COLOR
@@ -68,6 +71,9 @@ env:
     PY_COLORS
     PYTEST_THEME
     PYTEST_THEME_MODE
+    PYTHONIOENCODING
+    PYTHONLEGACYWINDOWSSTDIO
+    PYTHONUTF8
   TOX_VERSION: tox < 4
 
 run-name: >-
