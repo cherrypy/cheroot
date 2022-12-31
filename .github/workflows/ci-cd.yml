@@ -52,6 +52,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  dists-artifact-name: python-package-distributions
+
   FORCE_COLOR: 1  # Request colored output from CLI tools supporting it
   MYPY_FORCE_COLOR: 1  # MyPy's color enforcement
   PIP_DISABLE_PIP_VERSION_CHECK: 1
@@ -500,7 +502,7 @@ jobs:
     - name: Store the distribution packages
       uses: actions/upload-artifact@v3
       with:
-        name: python-package-distributions
+        name: ${{ env.dists-artifact-name }}
         # NOTE: Exact expected file names are specified here
         # NOTE: as a safety measure — if anything weird ends
         # NOTE: up being in this dir or not all dists will be
@@ -550,10 +552,22 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    # NOTE: `pre-commit --show-diff-on-failure` and `sphinxcontrib-spellcheck`
+    # NOTE: with Git authors allowlist enabled both depend on the presence of a
+    # NOTE: Git repository.
     - name: Grab the source from Git
+      if: >-
+        contains(fromJSON('["pre-commit", "spellcheck-docs"]'), matrix.toxenv)
       uses: actions/checkout@v3
       with:
         ref: ${{ github.event.inputs.release-committish }}
+    - name: Retrieve the project source from an sdist inside the GHA artifact
+      if: >-
+        !contains(fromJSON('["pre-commit", "spellcheck-docs"]'), matrix.toxenv)
+      uses: re-actors/checkout-python-sdist@release/v1
+      with:
+        source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
+        workflow-artifact-name: ${{ env.dists-artifact-name }}
 
     - name: >-
         Calculate Python interpreter version hash value
@@ -608,7 +622,7 @@ jobs:
       if: matrix.toxenv == 'metadata-validation'
       uses: actions/download-artifact@v3
       with:
-        name: python-package-distributions
+        name: ${{ env.dists-artifact-name }}
         path: dist/
 
     - name: >-
@@ -720,10 +734,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Grab the source from Git
-      uses: actions/checkout@v3
+    - name: Retrieve the project source from an sdist inside the GHA artifact
+      uses: re-actors/checkout-python-sdist@release/v1
       with:
-        ref: ${{ github.event.inputs.release-commitish }}
+        source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
+        workflow-artifact-name: ${{ env.dists-artifact-name }}
 
     - name: Figure out if the interpreter ABI is stable
       id: py-abi
@@ -813,7 +828,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v3
       with:
-        name: python-package-distributions
+        name: ${{ env.dists-artifact-name }}
         path: dist/
 
     - name: >-
@@ -974,7 +989,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v3
       with:
-        name: python-package-distributions
+        name: ${{ env.dists-artifact-name }}
         path: dist/
     - name: >-
         Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
@@ -1003,7 +1018,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v3
       with:
-        name: python-package-distributions
+        name: ${{ env.dists-artifact-name }}
         path: dist/
     - name: >-
         Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
@@ -1096,7 +1111,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v3
       with:
-        name: python-package-distributions
+        name: ${{ env.dists-artifact-name }}
         path: dist/
 
     - name: >-
