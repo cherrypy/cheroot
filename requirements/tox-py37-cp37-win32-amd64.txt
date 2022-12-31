@@ -85,7 +85,7 @@ py==1.11.0
     #   pytest
 pycparser==2.21
     # via cffi
-pydantic==1.10.3
+pydantic==1.10.4
     # via inflect
 pygments==2.13.0
     # via rich
@@ -128,7 +128,7 @@ requests-toolbelt==0.10.1
     # via -r requirements/tox-py37-cp37-win32-amd64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py37-cp37-win32-amd64.in
-rich==12.6.0
+rich==13.0.0
     # via pytest-clarity
 tempora==5.1.0
     # via portend
