@@ -32,26 +32,42 @@ extend-exclude =
 # Completely and unconditionally ignore the following errors:
 extend-ignore =
   # Legitimate cases, no need to "fix" these violations:
-  E501,  # "line too long", its function is replaced by `flake8-length`
-  W505,  # "doc line too long", its function is replaced by `flake8-length`
-  I  # flake8-isort is drunk + we have isort integrated into pre-commit
-  WPS326  # "Found implicit string concatenation" -- nothing bad about this
+  # E501: "line too long", its function is replaced by `flake8-length`
+  E501,
+  # W505: "doc line too long", its function is replaced by `flake8-length`
+  W505,
+  # I: flake8-isort is drunk + we have isort integrated into pre-commit
+  I,
+  # WPS326: "Found implicit string concatenation" -- nothing bad about this
+  WPS326,
 
   # FIXME: These `flake8-annotations` errors need fixing and removal
-  ANN001,  # Missing type annotation for function argument 'argv'
-  ANN002,  # Missing type annotation for *exceptions
-  ANN003,  # Missing type annotation for **kwargs
-  ANN101,  # Missing type annotation for self in method
-  ANN102,  # Missing type annotation for cls in classmethod
-  ANN201,  # Missing return type annotation for public function
-  ANN202,  # Missing return type annotation for protected function
-  ANN204,  # Missing return type annotation for special method
-  ANN205,  # Missing return type annotation for staticmethod
-  ANN206,  # Missing return type annotation for classmethod
+  # ANN001: Missing type annotation for function argument 'argv'
+  ANN001,
+  # ANN002: Missing type annotation for *exceptions
+  ANN002,
+  # ANN003: Missing type annotation for **kwargs
+  ANN003,
+  # ANN101: Missing type annotation for self in method
+  ANN101,
+  # ANN102: Missing type annotation for cls in classmethod
+  ANN102,
+  # ANN201: Missing return type annotation for public function
+  ANN201,
+  # ANN202: Missing return type annotation for protected function
+  ANN202,
+  # ANN204: Missing return type annotation for special method
+  ANN204,
+  # ANN205: Missing return type annotation for staticmethod
+  ANN205,
+  # ANN206: Missing return type annotation for classmethod
+  ANN206,
 
   # FIXME: These `flake8-spellcheck` errors need fixing and removal
-  SC100,  # Possibly misspelt word / comments
-  SC200,  # Possibly misspelt word / names
+  # SC100: Possibly misspelt word / comments
+  SC100,
+  # SC200: Possibly misspelt word / names
+  SC200,
 
 # https://wemake-python-stylegui.de/en/latest/pages/usage/formatter.html
 #format = wemake
