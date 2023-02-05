@@ -14,7 +14,7 @@ distlib==0.3.6
     # via virtualenv
 filelock==3.8.0
     # via virtualenv
-identify==2.5.8
+identify==2.5.9
     # via pre-commit
 jaraco-functools==3.5.2
     # via cheroot (setup.cfg)
@@ -22,13 +22,13 @@ more-itertools==9.0.0 ; python_version >= "3.6"
     # via
     #   cheroot (setup.cfg)
     #   jaraco-functools
-mypy==0.990
+mypy==0.991
     # via -r requirements/tox-pre-commit-cp311-linux-x86_64.in
 mypy-extensions==0.4.3
     # via mypy
 nodeenv==1.7.0
     # via pre-commit
-platformdirs==2.5.3
+platformdirs==2.5.4
     # via virtualenv
 pre-commit==2.20.0
     # via -r requirements/tox-pre-commit-cp311-linux-x86_64.in
@@ -48,17 +48,17 @@ types-cryptography==3.3.23.2
     # via types-pyopenssl
 types-pyopenssl==22.1.0.2
     # via -r requirements/tox-pre-commit-cp311-linux-x86_64.in
-types-requests==2.28.11.4
+types-requests==2.28.11.5
     # via -r requirements/tox-pre-commit-cp311-linux-x86_64.in
-types-six==1.16.21.2
+types-six==1.16.21.4
     # via -r requirements/tox-pre-commit-cp311-linux-x86_64.in
-types-urllib3==1.26.25.3
+types-urllib3==1.26.25.4
     # via types-requests
 typing-extensions==4.4.0
     # via mypy
-virtualenv==20.16.6
+virtualenv==20.16.7
     # via pre-commit
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==65.5.1
+setuptools==65.6.0
     # via nodeenv
