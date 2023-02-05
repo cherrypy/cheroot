@@ -81,7 +81,7 @@ py==1.11.0
     # via
     #   pypytools
     #   pytest
-pygments==2.13.0
+pygments==2.14.0
     # via rich
 pyopenssl==21.0.0 ; implementation_name == "pypy" and python_version < "3.8"
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
@@ -113,7 +113,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
 pytest-xdist==3.0.2
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
-pytz==2022.7
+pytz==2022.7.1
     # via tempora
 requests==2.27.1
     # via
@@ -144,9 +144,9 @@ typing-extensions==4.1.1
     # via
     #   importlib-metadata
     #   rich
-urllib3==1.26.13
+urllib3==1.26.14
     # via requests
-watchdog==2.2.0
+watchdog==2.2.1
     # via pytest-watch
 zipp==3.6.0
     # via

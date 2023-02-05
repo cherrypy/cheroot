@@ -14,13 +14,11 @@ cffi==1.15.1
     # via cryptography
 chardet==5.1.0
     # via requests
-charset-normalizer==2.1.1
+charset-normalizer==3.0.1
     # via requests
 colorama==0.4.6
     # via pytest-watch
-commonmark==0.9.1
-    # via rich
-coverage==7.0.1
+coverage==7.1.0
     # via
     #   -r requirements/tox-pypy37-pp37-darwin-x86_64.in
     #   pytest-cov
@@ -37,7 +35,7 @@ idna==3.4
     # via
     #   requests
     #   trustme
-importlib-metadata==5.2.0 ; python_version < "3.8"
+importlib-metadata==6.0.0 ; python_version < "3.8"
     # via
     #   cheroot (setup.cfg)
     #   pluggy
@@ -47,9 +45,9 @@ importlib-resources==5.10.2
     # via jaraco-text
 inflect==6.0.2
     # via jaraco-text
-iniconfig==1.1.1
+iniconfig==2.0.0
     # via pytest
-jaraco-context==4.2.0
+jaraco-context==4.3.0
     # via
     #   -r requirements/tox-pypy37-pp37-darwin-x86_64.in
     #   jaraco-text
@@ -58,14 +56,18 @@ jaraco-functools==3.5.2
     #   cheroot (setup.cfg)
     #   jaraco-text
     #   tempora
-jaraco-text==3.11.0
+jaraco-text==3.11.1
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
+markdown-it-py==2.1.0
+    # via rich
+mdurl==0.1.2
+    # via markdown-it-py
 more-itertools==9.0.0
     # via
     #   cheroot (setup.cfg)
     #   jaraco-functools
     #   jaraco-text
-packaging==22.0
+packaging==23.0
     # via
     #   pytest
     #   pytest-rerunfailures
@@ -83,7 +85,7 @@ py==1.11.0
     #   pytest-forked
 pydantic==1.10.4
     # via inflect
-pygments==2.13.0
+pygments==2.14.0
     # via rich
 pyopenssl==21.0.0 ; implementation_name == "pypy" and python_version < "3.8"
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
@@ -108,7 +110,7 @@ pytest-forked==1.4.0 ; sys_platform != "win32"
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
 pytest-mock==3.10.0
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
-pytest-rerunfailures==10.3
+pytest-rerunfailures==11.0
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
@@ -116,9 +118,9 @@ pytest-watch==4.2.0
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
 pytest-xdist==3.1.0
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
-pytz==2022.7
+pytz==2022.7.1
     # via tempora
-requests==2.28.1
+requests==2.28.2
     # via
     #   -r requirements/tox-pypy37-pp37-darwin-x86_64.in
     #   requests-toolbelt
@@ -127,15 +129,15 @@ requests-toolbelt==0.10.1
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
-rich==13.0.0
+rich==13.3.1
     # via pytest-clarity
 six==1.16.0
     # via
     #   cryptography
     #   pyopenssl
-tempora==5.1.0
+tempora==5.2.1
     # via portend
-termcolor==2.1.1
+termcolor==2.2.0
     # via pytest-sugar
 toml==0.10.2
     # via pytest
@@ -146,13 +148,14 @@ trustme==0.9.0
 typing-extensions==4.4.0
     # via
     #   importlib-metadata
+    #   markdown-it-py
     #   pydantic
     #   rich
-urllib3==1.26.13
+urllib3==1.26.14
     # via requests
-watchdog==2.2.0
+watchdog==2.2.1
     # via pytest-watch
-zipp==3.11.0
+zipp==3.12.0
     # via
     #   importlib-metadata
     #   importlib-resources
