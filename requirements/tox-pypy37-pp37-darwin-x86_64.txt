@@ -155,7 +155,7 @@ urllib3==1.26.14
     # via requests
 watchdog==2.2.1
     # via pytest-watch
-zipp==3.12.0
+zipp==3.12.1
     # via
     #   importlib-metadata
     #   importlib-resources
