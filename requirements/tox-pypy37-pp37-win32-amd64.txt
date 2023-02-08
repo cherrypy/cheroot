@@ -116,7 +116,7 @@ pytest-sugar==0.9.6
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
-pytest-xdist==3.1.0
+pytest-xdist==3.2.0
     # via -r requirements/tox-pypy37-pp37-win32-amd64.in
 pytz==2022.7.1
     # via tempora
