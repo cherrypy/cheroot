@@ -136,7 +136,7 @@ tomli==2.0.1
     # via coverage
 trustme==0.9.0
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
-typing-extensions==4.4.0
+typing-extensions==4.5.0
     # via
     #   pydantic
     #   rich
