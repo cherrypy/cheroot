@@ -451,9 +451,11 @@ def many_open_sockets(request, resource_limit):
         (1, -1),
         (1, 1),
         (1, 2),
+        (1, float('inf')),
         (2, -2),
         (2, -1),
         (2, 2),
+        (2, float('inf')),
     ),
 )
 def test_threadpool_threadrange_set(minthreads, maxthreads):
@@ -468,7 +470,10 @@ def test_threadpool_threadrange_set(minthreads, maxthreads):
         max=maxthreads,
     )
     assert tp.min == minthreads
-    assert tp.max == maxthreads
+    if maxthreads < 0:
+        assert tp.max == float('inf')
+    else:
+        assert tp.max == maxthreads
 
 
 @pytest.mark.parametrize(
@@ -482,8 +487,10 @@ def test_threadpool_threadrange_set(minthreads, maxthreads):
         (0, 0, 'min=0 must be > 0'),
         (0, 1, 'min=0 must be > 0'),
         (0, 2, 'min=0 must be > 0'),
-        (1, 0, 'max=0 must be > min=1'),
-        (2, 0, 'max=0 must be > min=2'),
+        (1, 0, 'Expected an integer or the infinity value for the `max` argument but got 0.'),
+        (1, 0.5, 'Expected an integer or the infinity value for the `max` argument but got 0.5.'),
+        (2, 0, 'Expected an integer or the infinity value for the `max` argument but got 0.'),
+        (2, '1', 'Expected an integer or the infinity value for the `max` argument but got \'1\'.'),
         (2, 1, 'max=1 must be > min=2'),
     ),
 )
@@ -493,7 +500,7 @@ def test_threadpool_invalid_threadrange(minthreads, maxthreads, error):
     The ThreadPool should raise an error with the proper message when
     initialized with an invalid min+max number of threads.
     """
-    with pytest.raises(ValueError, match=error):
+    with pytest.raises((ValueError, TypeError), match=error):
         ThreadPool(
             server=None,
             min=minthreads,
