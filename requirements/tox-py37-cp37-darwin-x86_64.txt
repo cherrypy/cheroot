@@ -84,7 +84,7 @@ py==1.11.0
     #   pytest-forked
 pycparser==2.21
     # via cffi
-pydantic==1.10.4
+pydantic==1.10.5
     # via inflect
 pygments==2.14.0
     # via rich
