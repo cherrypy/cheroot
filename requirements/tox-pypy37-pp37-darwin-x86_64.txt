@@ -41,7 +41,7 @@ importlib-metadata==6.0.0 ; python_version < "3.8"
     #   pluggy
     #   pytest
     #   pytest-rerunfailures
-importlib-resources==5.10.2
+importlib-resources==5.12.0
     # via jaraco-text
 inflect==6.0.2
     # via jaraco-text
@@ -110,7 +110,7 @@ pytest-forked==1.6.0 ; sys_platform != "win32"
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
 pytest-mock==3.10.0
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
-pytest-rerunfailures==11.1
+pytest-rerunfailures==11.1.1
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-pypy37-pp37-darwin-x86_64.in
@@ -155,7 +155,7 @@ urllib3==1.26.14
     # via requests
 watchdog==2.2.1
     # via pytest-watch
-zipp==3.13.0
+zipp==3.14.0
     # via
     #   importlib-metadata
     #   importlib-resources
