@@ -44,7 +44,7 @@ jaraco-context==4.3.0
     # via
     #   -r requirements/tox-py38-cp38-linux-x86_64.in
     #   jaraco-text
-jaraco-functools==3.5.2
+jaraco-functools==3.6.0
     # via
     #   cheroot (setup.cfg)
     #   jaraco-text
