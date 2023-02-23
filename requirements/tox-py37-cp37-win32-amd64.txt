@@ -22,7 +22,7 @@ colorama==0.4.6
     # via
     #   pytest
     #   pytest-watch
-coverage==7.1.0
+coverage==7.2.0
     # via
     #   -r requirements/tox-py37-cp37-win32-amd64.in
     #   pytest-cov
@@ -61,7 +61,7 @@ jaraco-functools==3.6.0
     #   tempora
 jaraco-text==3.11.1
     # via -r requirements/tox-py37-cp37-win32-amd64.in
-markdown-it-py==2.1.0
+markdown-it-py==2.2.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
