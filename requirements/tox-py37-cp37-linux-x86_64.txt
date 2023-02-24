@@ -150,7 +150,7 @@ typing-extensions==4.5.0
     #   rich
 urllib3==1.26.14
     # via requests
-watchdog==2.2.1
+watchdog==2.3.0
     # via pytest-watch
 zipp==3.14.0
     # via
