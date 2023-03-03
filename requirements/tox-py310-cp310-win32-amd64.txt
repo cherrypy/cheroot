@@ -26,7 +26,7 @@ coverage==7.2.1
     # via
     #   -r requirements/tox-py310-cp310-win32-amd64.in
     #   pytest-cov
-cryptography==39.0.1
+cryptography==39.0.2
     # via
     #   pyopenssl
     #   trustme

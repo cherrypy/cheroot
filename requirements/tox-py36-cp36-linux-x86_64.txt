@@ -22,7 +22,7 @@ coverage==6.2
     # via
     #   -r requirements/tox-py36-cp36-linux-x86_64.in
     #   pytest-cov
-cryptography==39.0.1
+cryptography==39.0.2
     # via
     #   pyopenssl
     #   trustme
