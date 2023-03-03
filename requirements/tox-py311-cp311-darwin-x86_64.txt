@@ -22,7 +22,7 @@ coverage==7.2.1
     # via
     #   -r requirements/tox-py311-cp311-darwin-x86_64.in
     #   pytest-cov
-cryptography==39.0.1
+cryptography==39.0.2
     # via
     #   pyopenssl
     #   trustme
