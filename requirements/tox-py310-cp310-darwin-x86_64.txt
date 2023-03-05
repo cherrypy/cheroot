@@ -122,7 +122,7 @@ requests-toolbelt==0.10.1
     # via -r requirements/tox-py310-cp310-darwin-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py310-cp310-darwin-x86_64.in
-rich==13.3.1
+rich==13.3.2
     # via pytest-clarity
 tempora==5.2.1
     # via portend
