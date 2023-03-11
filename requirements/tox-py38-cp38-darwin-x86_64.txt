@@ -105,7 +105,7 @@ pytest-forked==1.6.0 ; sys_platform != "win32"
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
 pytest-mock==3.10.0
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
-pytest-rerunfailures==11.1.1
+pytest-rerunfailures==11.1.2
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
@@ -140,7 +140,7 @@ typing-extensions==4.5.0
     # via
     #   pydantic
     #   rich
-urllib3==1.26.14
+urllib3==1.26.15
     # via requests
 watchdog==2.3.1
     # via pytest-watch
