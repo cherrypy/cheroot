@@ -109,7 +109,7 @@ pytest-sugar==0.9.6
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-pytest-xdist==3.2.0
+pytest-xdist==3.2.1
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pytz==2022.7.1
     # via tempora
