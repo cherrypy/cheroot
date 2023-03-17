@@ -254,6 +254,7 @@ def peercreds_enabled_server(http_server, unix_sock_file):
 
 @unix_only_sock_test
 @non_macos_sock_test
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_peercreds_unix_sock(http_request_timeout, peercreds_enabled_server):
     """Check that ``PEERCRED`` lookup works when enabled."""
     httpserver = peercreds_enabled_server
