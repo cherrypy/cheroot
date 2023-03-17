@@ -444,21 +444,26 @@ def many_open_sockets(request, resource_limit):
 
 
 @pytest.mark.parametrize(
-    ('minthreads', 'maxthreads'),
+    ('minthreads', 'maxthreads', 'inited_maxthreads'),
     (
-        (1, -2),  # the docstring only mentions -1 to mean "no max", but other
-                  # negative numbers should also work
-        (1, -1),
-        (1, 1),
-        (1, 2),
-        (1, float('inf')),
-        (2, -2),
-        (2, -1),
-        (2, 2),
-        (2, float('inf')),
+        (
+            # NOTE: The docstring only mentions -1 to mean "no max", but other
+            # NOTE: negative numbers should also work.
+            1,
+            -2,
+            float('inf'),
+        ),
+        (1, -1, float('inf')),
+        (1, 1, 1),
+        (1, 2, 2),
+        (1, float('inf'), float('inf')),
+        (2, -2, float('inf')),
+        (2, -1, float('inf')),
+        (2, 2, 2),
+        (2, float('inf'), float('inf')),
     ),
 )
-def test_threadpool_threadrange_set(minthreads, maxthreads):
+def test_threadpool_threadrange_set(minthreads, maxthreads, inited_maxthreads):
     """Test setting the number of threads in a ThreadPool.
 
     The ThreadPool should properly set the min+max number of the threads to use
@@ -470,10 +475,7 @@ def test_threadpool_threadrange_set(minthreads, maxthreads):
         max=maxthreads,
     )
     assert tp.min == minthreads
-    if maxthreads < 0:
-        assert tp.max == float('inf')
-    else:
-        assert tp.max == maxthreads
+    assert tp.max == inited_maxthreads
 
 
 @pytest.mark.parametrize(
