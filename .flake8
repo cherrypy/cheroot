@@ -38,6 +38,8 @@ extend-ignore =
   W505,
   # I: flake8-isort is drunk + we have isort integrated into pre-commit
   I,
+  # WPS305: "Found f string" -- nothing bad about this
+  WPS305,
   # WPS326: "Found implicit string concatenation" -- nothing bad about this
   WPS326,
 
@@ -117,8 +119,8 @@ per-file-ignores =
   cheroot/test/_pytest_plugin.py: DAR101, I003, I004, WPS326, WPS422, WPS437
   cheroot/test/test__compat.py: DAR101, I001, I003, I005, WPS116, WPS226, WPS302, WPS317, WPS318, WPS326, WPS422, WPS436, S101
   cheroot/test/test_errors.py: DAR101, WPS300, WPS317, WPS436, WPS509, S101
-  docs/conf.py: E800, I001, I004, WPS226, WPS301, WPS305, WPS323, WPS326, WPS420, WPS433, WPS453
-  docs/scm_tag_titles_ext.py: DAR101, DAR201, DAR401, E800, I001, I004, N801, S404, S603, WPS210, WPS226, WPS301, WPS305, WPS317, WPS323, WPS407, WPS453
+  docs/conf.py: E800, I001, I004, WPS226, WPS301, WPS323, WPS326, WPS420, WPS433, WPS453
+  docs/scm_tag_titles_ext.py: DAR101, DAR201, DAR401, E800, I001, I004, N801, S404, S603, WPS210, WPS226, WPS301, WPS317, WPS323, WPS407, WPS453
   docs/spelling_stub_ext.py: DAR101, DAR201
   setup.py: WPS453
 
