@@ -490,7 +490,7 @@ def test_threadpool_threadrange_set(minthreads, maxthreads):
         (1, 0, 'Expected an integer or the infinity value for the `max` argument but got 0.'),
         (1, 0.5, 'Expected an integer or the infinity value for the `max` argument but got 0.5.'),
         (2, 0, 'Expected an integer or the infinity value for the `max` argument but got 0.'),
-        (2, '1', 'Expected an integer or the infinity value for the `max` argument but got \'1\'.'),
+        (2, '1', "Expected an integer or the infinity value for the `max` argument but got '1'."),
         (2, 1, 'max=1 must be > min=2'),
     ),
 )
