@@ -161,22 +161,21 @@ class ThreadPool:
         :raises TypeError: if the max is not an integer or inf
         """
         if min < 1:
-            raise ValueError('min={} must be > 0'.format(min))
+            raise ValueError(f'min={min!s} must be > 0')
 
         if max == float('inf'):
             pass
         elif not isinstance(max, int) or max == 0:
             raise TypeError(
                 'Expected an integer or the infinity value for the `max` '
-                'argument but got {!r}.'.format(max),
+                f'argument but got {max!r}.',
             )
         elif max < 0:
             max = float('inf')
 
         if max < min:
             raise ValueError(
-                'max={} must be > min={} (or infinity for no max)'
-                ''.format(max, min),
+                f'max={max!s} must be > min={min!s} (or infinity for no max)',
             )
 
         self.server = server
