@@ -136,5 +136,5 @@ typing-extensions==4.5.0
     # via pydantic
 urllib3==1.26.15
     # via requests
-watchdog==2.3.1
+watchdog==3.0.0
     # via pytest-watch
