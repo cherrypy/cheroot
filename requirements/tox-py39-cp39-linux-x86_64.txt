@@ -22,7 +22,7 @@ coverage==7.2.2
     # via
     #   -r requirements/tox-py39-cp39-linux-x86_64.in
     #   pytest-cov
-cryptography==39.0.2
+cryptography==40.0.1
     # via
     #   pyopenssl
     #   trustme
@@ -80,7 +80,7 @@ pydantic==1.10.7
     # via inflect
 pygments==2.14.0
     # via rich
-pyopenssl==23.0.0 ; implementation_name != "pypy"
+pyopenssl==23.1.1 ; implementation_name != "pypy"
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 pypytools==0.6.2
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
@@ -111,7 +111,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 pytest-xdist==3.2.1
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
-pytz==2022.7.1
+pytz==2023.3
     # via tempora
 requests==2.28.2
     # via
@@ -122,7 +122,7 @@ requests-toolbelt==0.10.1
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
-rich==13.3.2
+rich==13.3.3
     # via pytest-clarity
 tempora==5.2.1
     # via portend
