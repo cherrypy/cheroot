@@ -113,7 +113,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
 pytest-xdist==3.0.2
     # via -r requirements/tox-pypy36-pp36-win32-amd64.in
-pytz==2022.7.1
+pytz==2023.3
     # via tempora
 requests==2.27.1
     # via
