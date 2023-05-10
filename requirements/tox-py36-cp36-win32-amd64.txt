@@ -26,7 +26,7 @@ coverage==6.2
     # via
     #   -r requirements/tox-py36-cp36-win32-amd64.in
     #   pytest-cov
-cryptography==39.0.2
+cryptography==40.0.1
     # via
     #   pyopenssl
     #   trustme
@@ -84,7 +84,7 @@ pycparser==2.21
     # via cffi
 pygments==2.14.0
     # via rich
-pyopenssl==23.0.0 ; implementation_name != "pypy"
+pyopenssl==23.1.1 ; implementation_name != "pypy"
     # via -r requirements/tox-py36-cp36-win32-amd64.in
 pyparsing==3.0.9
     # via packaging
@@ -114,7 +114,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py36-cp36-win32-amd64.in
 pytest-xdist==3.0.2
     # via -r requirements/tox-py36-cp36-win32-amd64.in
-pytz==2022.7.1
+pytz==2023.3
     # via tempora
 requests==2.27.1
     # via
