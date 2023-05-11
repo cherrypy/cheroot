@@ -987,6 +987,10 @@ jobs:
           needs.pre-setup.outputs.dist-version
         }}
 
+    permissions:
+      contents: read  # This job doesn't need to `git push` anything
+      id-token: write  # PyPI Trusted Publishing (OIDC)
+
     steps:
     - name: Download all the dists
       uses: actions/download-artifact@v3
@@ -1014,6 +1018,10 @@ jobs:
           needs.pre-setup.outputs.dist-version
         }}
 
+    permissions:
+      contents: read  # This job doesn't need to `git push` anything
+      id-token: write  # PyPI Trusted Publishing (OIDC)
+
     steps:
     - name: Download all the dists
       uses: actions/download-artifact@v3
@@ -1024,7 +1032,7 @@ jobs:
         Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        repository_url: https://test.pypi.org/legacy/
+        repository-url: https://test.pypi.org/legacy/
 
   post-release-repo-update:
     name: >-
