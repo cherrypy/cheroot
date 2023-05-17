@@ -1977,7 +1977,16 @@ class HTTPServer:
         return sock
 
     @staticmethod
-    def _make_socket_reusable(socket_):
+    def _make_socket_reusable(socket_, bind_addr):
+        host, port = bind_addr[:2]
+        IS_EPHEMERAL_PORT = port == 0
+
+        if socket_.family not in (socket.AF_INET, socket.AF_INET6):
+            raise ValueError('Cannot reuse a non-IP socket')
+
+        if IS_EPHEMERAL_PORT:
+            raise ValueError('Cannot reuse an ephemeral port (0)')
+
         # Most BSD kernels implement SO_REUSEPORT the way that only the
         # latest listener can read from socket. Some of BSD kernels also
         # have SO_REUSEPORT_LB that works similarly to SO_REUSEPORT
@@ -2006,11 +2015,7 @@ class HTTPServer:
         IS_EPHEMERAL_PORT = port == 0
 
         if reuse_port:
-            if sock.family not in (socket.AF_INET, socket.AF_INET6):
-                raise ValueError('Cannot reuse a non-IP socket')
-            if IS_EPHEMERAL_PORT:
-                raise ValueError('Cannot reuse an ephemeral port (0)')
-            cls._make_socket_reusable(sock)
+            cls._make_socket_reusable(socket_=sock, bind_addr=bind_addr)
 
         if not (IS_WINDOWS or IS_EPHEMERAL_PORT):
             """Enable SO_REUSEADDR for the current socket.
