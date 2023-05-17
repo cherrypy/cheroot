@@ -65,7 +65,7 @@ jobs:
         - 3.6
         - pypy3.6
         os:
-        - ubuntu-18.04
+        - ubuntu-20.04
         - macOS-11.0
         - windows-2019
         exclude:

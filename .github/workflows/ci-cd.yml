@@ -679,8 +679,8 @@ jobs:
         - 3.6
         - pypy-3.6
         os:
+        - ubuntu-22.04
         - ubuntu-20.04
-        - ubuntu-18.04
         - macos-11.0
         - macos-latest
         - windows-2019
@@ -711,6 +711,9 @@ jobs:
           python-version: pypy-3.7
         - os: macos-latest
           python-version: pypy-3.7
+        # NOTE: Python 3.6 is not available for Ubuntu 22.04
+        - os: ubuntu-22.04
+          python-version: 3.6
 
     continue-on-error: >-
       ${{
@@ -984,6 +987,10 @@ jobs:
           needs.pre-setup.outputs.dist-version
         }}
 
+    permissions:
+      contents: read  # This job doesn't need to `git push` anything
+      id-token: write  # PyPI Trusted Publishing (OIDC)
+
     steps:
     - name: Download all the dists
       uses: actions/download-artifact@v3
@@ -993,8 +1000,6 @@ jobs:
     - name: >-
         Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish-testpypi:
     name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
@@ -1013,6 +1018,10 @@ jobs:
           needs.pre-setup.outputs.dist-version
         }}
 
+    permissions:
+      contents: read  # This job doesn't need to `git push` anything
+      id-token: write  # PyPI Trusted Publishing (OIDC)
+
     steps:
     - name: Download all the dists
       uses: actions/download-artifact@v3
@@ -1023,8 +1032,7 @@ jobs:
         Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
+        repository-url: https://test.pypi.org/legacy/
 
   post-release-repo-update:
     name: >-

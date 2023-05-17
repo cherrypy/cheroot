@@ -22,11 +22,11 @@ colorama==0.4.6
     # via
     #   pytest
     #   pytest-watch
-coverage==7.2.1
+coverage==7.2.2
     # via
     #   -r requirements/tox-py39-cp39-win32-amd64.in
     #   pytest-cov
-cryptography==39.0.2
+cryptography==40.0.1
     # via
     #   pyopenssl
     #   trustme
@@ -79,11 +79,11 @@ py==1.11.0
     #   pytest
 pycparser==2.21
     # via cffi
-pydantic==1.10.6
+pydantic==1.10.7
     # via inflect
 pygments==2.14.0
     # via rich
-pyopenssl==23.0.0 ; implementation_name != "pypy"
+pyopenssl==23.1.1 ; implementation_name != "pypy"
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pypytools==0.6.2
     # via -r requirements/tox-py39-cp39-win32-amd64.in
@@ -103,15 +103,15 @@ pytest-cov==2.12.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pytest-mock==3.10.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-pytest-rerunfailures==11.1.1
+pytest-rerunfailures==11.1.2
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pytest-sugar==0.9.6
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-pytest-xdist==3.2.0
+pytest-xdist==3.2.1
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-pytz==2022.7.1
+pytz==2023.3
     # via tempora
 requests==2.28.2
     # via
@@ -122,7 +122,7 @@ requests-toolbelt==0.10.1
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-rich==13.3.2
+rich==13.3.3
     # via pytest-clarity
 tempora==5.2.1
     # via portend
@@ -136,7 +136,7 @@ trustme==0.9.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 typing-extensions==4.5.0
     # via pydantic
-urllib3==1.26.14
+urllib3==1.26.15
     # via requests
-watchdog==2.3.1
+watchdog==3.0.0
     # via pytest-watch
