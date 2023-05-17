@@ -1883,17 +1883,12 @@ class HTTPServer:
 
     def bind(self, family, type, proto=0):
         """Create (or recreate) the actual socket object."""
-        sock = self.prepare_socket(
-            self.bind_addr,
-            family, type, proto,
-            self.nodelay, self.ssl_adapter,
-            self.reuse_port,
-        )
+        sock = self._prepare_socket(family, type, proto)
         sock = self.socket = self.bind_socket(sock, self.bind_addr)
         self.bind_addr = self.resolve_real_bind_addr(sock)
         return sock
 
-    def bind_unix_socket(self, bind_addr):  # noqa: C901  # FIXME
+    def bind_unix_socket(self):  # noqa: C901  # FIXME
         """Create (or recreate) a UNIX socket object."""
         if IS_WINDOWS:
             """
@@ -1932,11 +1927,8 @@ class HTTPServer:
             ):
                 raise
 
-        sock = self.prepare_socket(
-            bind_addr=bind_addr,
+        sock = self._prepare_socket(
             family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
-            nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
-            reuse_port=self.reuse_port,
         )
 
         try:
@@ -1948,7 +1940,7 @@ class HTTPServer:
             FS_PERMS_SET = False
 
         try:
-            sock = self.bind_socket(sock, bind_addr)
+            sock = self.bind_socket(sock, self.bind_addr)
         except socket.error:
             sock.close()
             raise
@@ -1976,9 +1968,11 @@ class HTTPServer:
         self.socket = sock
         return sock
 
-    @staticmethod
-    def _make_socket_reusable(socket_, bind_addr):
-        host, port = bind_addr[:2]
+    def _make_socket_reusable(self, socket_):
+        if not self.reuse_port:
+            return
+
+        host, port = self.bind_addr[:2]
         IS_EPHEMERAL_PORT = port == 0
 
         if socket_.family not in (socket.AF_INET, socket.AF_INET6):
@@ -2002,20 +1996,15 @@ class HTTPServer:
                 'Current platform does not support port reuse',
             )
 
-    @classmethod
-    def prepare_socket(
-            cls, bind_addr, family, type, proto, nodelay, ssl_adapter,
-            reuse_port=False,
-    ):
+    def _prepare_socket(self, family, type, proto):
         """Create and prepare the socket object."""
         sock = socket.socket(family, type, proto)
         connections.prevent_socket_inheritance(sock)
 
-        host, port = bind_addr[:2]
+        host, port = self.bind_addr[:2]
         IS_EPHEMERAL_PORT = port == 0
 
-        if reuse_port:
-            cls._make_socket_reusable(socket_=sock, bind_addr=bind_addr)
+        self._make_socket_reusable(socket_=sock)
 
         if not (IS_WINDOWS or IS_EPHEMERAL_PORT):
             """Enable SO_REUSEADDR for the current socket.
@@ -2029,11 +2018,11 @@ class HTTPServer:
             * https://gavv.github.io/blog/ephemeral-port-reuse/
             """
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if nodelay and not isinstance(bind_addr, (str, bytes)):
+        if self.nodelay and not isinstance(self.bind_addr, (str, bytes)):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
-        if ssl_adapter is not None:
-            sock = ssl_adapter.bind(sock)
+        if self.ssl_adapter is not None:
+            sock = self.ssl_adapter.bind(sock)
 
         # If listening on the IPV6 any address ('::' = IN6ADDR_ANY),
         # activate dual-stack. See
