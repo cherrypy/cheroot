@@ -1,3 +1,10 @@
+.. scm-version-title:: v10.0.0
+
+- :issue:`504` via :pr:`505`: Cheroot now accepts a
+  ``reuse_port`` parameter on the ``HTTPServer`` object.
+  Subclasses overriding ``prepare_socket`` will no longer
+  work and will need to adapt to the new interface.
+
 .. scm-version-title:: v9.0.0
 
 - :issue:`252` via :pr:`339`: Cheroot now requires Python
