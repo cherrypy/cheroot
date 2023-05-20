@@ -60,22 +60,10 @@ jobs:
           3.10
         - 3.9
         - 3.8
-        - pypy3.7
-        - 3.7
-        - 3.6
-        - pypy3.6
         os:
         - ubuntu-20.04
         - macOS-11.0
         - windows-2019
-        exclude:
-        # NOTE: macOS PyPy 3.6 job is excluded because during
-        # NOTE: self-provisioning, invoking `ensurepip` fails to load
-        # NOTE: some CFFI libs with a traceback saying
-        # NOTE: `AttributeError: No symbol SCDynamicStoreCopyProxies
-        # NOTE: found in library <None>`
-        - os: macOS-11.0
-          python-version: pypy3.6
 
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: 1
@@ -171,14 +159,7 @@ jobs:
         )
         || '--upgrade'
         }}
-        ${{
-        (
-        matrix.python-version != '3.6'
-        && matrix.python-version != 'pypy3.6'
-        )
-        && '--resolver backtracking'
-        || ''
-        }}
+        --resolver backtracking
         --output-file="requirements/${BASE_NAME}.txt"
         --strip-extras
         "requirements/${BASE_NAME}.in"
