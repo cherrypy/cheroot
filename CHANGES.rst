@@ -1,3 +1,7 @@
+.. scm-version-title:: v11.0.0
+
+- :issue:`565`: Cheroot requires Python 3.8 or later.
+
 .. scm-version-title:: v10.0.0
 
 - :issue:`504` via :pr:`505`: Cheroot now accepts a
