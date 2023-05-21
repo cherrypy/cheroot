@@ -873,7 +873,9 @@ class HTTPRequest:
             # invalid URIs without raising errors
             # https://tools.ietf.org/html/rfc7230#section-5.3.3
             invalid_path = (
-                _authority != uri or not _port or any((_scheme, _path, _qs, _fragment))
+                _authority != uri
+                or not _port
+                or any((_scheme, _path, _qs, _fragment))
             )
             if invalid_path:
                 self.simple_response(
@@ -887,7 +889,9 @@ class HTTPRequest:
             scheme = qs = fragment = EMPTY
         else:
             disallowed_absolute = (
-                self.strict_mode and not self.proxy_mode and uri_is_absolute_form
+                self.strict_mode
+                and not self.proxy_mode
+                and uri_is_absolute_form
             )
             if disallowed_absolute:
                 # https://tools.ietf.org/html/rfc7230#section-5.3.2
@@ -1182,7 +1186,8 @@ class HTTPRequest:
                 pass
             else:
                 needs_chunked = (
-                    self.response_protocol == 'HTTP/1.1' and self.method != b'HEAD'
+                    self.response_protocol == 'HTTP/1.1'
+                    and self.method != b'HEAD'
                 )
                 if needs_chunked:
                     # Use the chunked transfer-coding
@@ -1652,7 +1657,9 @@ class HTTPServer:
             server_name = self.version
         self.server_name = server_name
         self.peercreds_enabled = peercreds_enabled
-        self.peercreds_resolve_enabled = peercreds_resolve_enabled and peercreds_enabled
+        self.peercreds_resolve_enabled = (
+            peercreds_resolve_enabled and peercreds_enabled
+        )
         self.reuse_port = reuse_port
         self.clear_stats()
 
@@ -2291,7 +2298,9 @@ def get_ssl_adapter_class(name='builtin'):
             adapter = getattr(mod, attr_name)
         except AttributeError:
             raise AttributeError(
-                "'{}' object has no attribute '{}'".format(mod_path, attr_name),
+                "'{}' object has no attribute '{}'".format(
+                    mod_path, attr_name
+                ),
             )
 
     return adapter

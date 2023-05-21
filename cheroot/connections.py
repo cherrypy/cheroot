@@ -103,7 +103,10 @@ class _ThreadsafeSelector:
         Returns entries ready to read in the form:
             (socket_file_descriptor, connection)
         """
-        return ((key.fd, key.data) for key, _ in self._selector.select(timeout=timeout))
+        return (
+            (key.fd, key.data)
+            for key, _ in self._selector.select(timeout=timeout)
+        )
 
     def close(self):
         """Close the selector."""

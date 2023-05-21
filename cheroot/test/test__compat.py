@@ -55,6 +55,7 @@ def test_extract_bytes_invalid():
     """Ensure that invalid input causes exception to be raised."""
     with pytest.raises(
         ValueError,
-        match=r'^extract_bytes\(\) only accepts bytes ' 'and memoryview/buffer$',
+        match=r'^extract_bytes\(\) only accepts bytes '
+        'and memoryview/buffer$',
     ):
         extract_bytes('some юнікод їїї')

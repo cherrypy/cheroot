@@ -103,7 +103,9 @@ class CherootWebCase(webtest.WebCase):
             diff = dt2 - dt1
         if not diff < datetime.timedelta(seconds=seconds):
             raise AssertionError(
-                '{!r} and {!r} are not within {!r} seconds.'.format(dt1, dt2, seconds),
+                '{!r} and {!r} are not within {!r} seconds.'.format(
+                    dt1, dt2, seconds
+                ),
             )
 
 
@@ -151,7 +153,8 @@ class Controller:
         else:
             output = handler(req, resp)
             if output is not None and not any(
-                resp.status.startswith(status_code) for status_code in ('204', '304')
+                resp.status.startswith(status_code)
+                for status_code in ('204', '304')
             ):
                 resp.body = output
                 try:

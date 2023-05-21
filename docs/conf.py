@@ -112,7 +112,8 @@ linkcheck_ignore = [
     r'https://github\.com/cherrypy/cherrypy/pull',
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
     # line anchors.
-    r'https://github\.com' r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302',
+    r'https://github\.com'
+    r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302',
     r'https://github\.com'
     r'/python/cpython/blob/c39b52f/Lib/poplib\.py#user-content-L297-L302',
 ]

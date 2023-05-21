@@ -283,7 +283,9 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
     tls_verify_mode,
 ):
     """Verify that client TLS certificate auth works correctly."""
-    test_cert_rejection = tls_verify_mode != ssl.CERT_NONE and not is_trusted_cert
+    test_cert_rejection = (
+        tls_verify_mode != ssl.CERT_NONE and not is_trusted_cert
+    )
     interface, _host, port = _get_conn_data(ANY_INTERFACE_IPV4)
 
     client_cert_root_ca = ca if is_trusted_cert else trustme.CA()
@@ -351,7 +353,9 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
         # xfail some flaky tests
         # https://github.com/cherrypy/cheroot/issues/237
         issue_237 = (
-            IS_MACOS and adapter_type == 'builtin' and tls_verify_mode != ssl.CERT_NONE
+            IS_MACOS
+            and adapter_type == 'builtin'
+            and tls_verify_mode != ssl.CERT_NONE
         )
         if issue_237:
             pytest.xfail('Test sometimes fails')
@@ -392,10 +396,12 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
             expected_substrings += (
                 (
                     'bad handshake: ' "SysCallError(10054, 'WSAECONNRESET')",
-                    "('Connection aborted.', " 'OSError("(10054, \'WSAECONNRESET\')"))',
+                    "('Connection aborted.', "
+                    'OSError("(10054, \'WSAECONNRESET\')"))',
                     "('Connection aborted.', "
                     'OSError("(10054, \'WSAECONNRESET\')",))',
-                    "('Connection aborted.', " 'error("(10054, \'WSAECONNRESET\')",))',
+                    "('Connection aborted.', "
+                    'error("(10054, \'WSAECONNRESET\')",))',
                     "('Connection aborted.', "
                     'ConnectionResetError(10054, '
                     "'An existing connection was forcibly closed "
@@ -407,16 +413,22 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
                 )
                 if IS_WINDOWS
                 else (
-                    "('Connection aborted.', " 'OSError("(104, \'ECONNRESET\')"))',
-                    "('Connection aborted.', " 'OSError("(104, \'ECONNRESET\')",))',
-                    "('Connection aborted.', " 'error("(104, \'ECONNRESET\')",))',
+                    "('Connection aborted.', "
+                    'OSError("(104, \'ECONNRESET\')"))',
+                    "('Connection aborted.', "
+                    'OSError("(104, \'ECONNRESET\')",))',
+                    "('Connection aborted.', "
+                    'error("(104, \'ECONNRESET\')",))',
                     "('Connection aborted.', "
                     "ConnectionResetError(104, 'Connection reset by peer'))",
                     "('Connection aborted.', "
                     "error(104, 'Connection reset by peer'))",
                 )
                 if (IS_GITHUB_ACTIONS_WORKFLOW and IS_LINUX)
-                else ("('Connection aborted.', " "BrokenPipeError(32, 'Broken pipe'))",)
+                else (
+                    "('Connection aborted.', "
+                    "BrokenPipeError(32, 'Broken pipe'))",
+                )
             )
 
         if PY310_PLUS:

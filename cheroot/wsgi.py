@@ -162,7 +162,8 @@ class Gateway(server.Gateway):
         # if and only if the exc_info argument is provided."
         if self.started_response and not exc_info:
             raise RuntimeError(
-                'WSGI start_response called a second ' 'time with no exc_info.',
+                'WSGI start_response called a second '
+                'time with no exc_info.',
             )
         self.started_response = True
 

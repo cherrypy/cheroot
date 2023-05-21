@@ -191,7 +191,9 @@ def header_exists(header_name, headers):
 
 def header_has_value(header_name, header_value, headers):
     """Check that a header with a given value is present."""
-    return header_name.lower() in (k.lower() for (k, v) in headers if v == header_value)
+    return header_name.lower() in (
+        k.lower() for (k, v) in headers if v == header_value
+    )
 
 
 def test_HTTP11_persistent_connections(test_client):
@@ -1147,7 +1149,8 @@ def test_Content_Length_in(test_client):
     actual_status = int(status_line[:3])
     assert actual_status == 413
     expected_resp_body = (
-        b'The entity sent with the request exceeds ' b'the maximum allowed bytes.'
+        b'The entity sent with the request exceeds '
+        b'the maximum allowed bytes.'
     )
     assert actual_resp_body == expected_resp_body
     conn.close()

@@ -150,7 +150,9 @@ class WebCase(unittest.TestCase):
         except (TypeError, AttributeError):
             pass
 
-        self.HTTP_CONN = self.get_conn(auto_open=auto_open) if on else self._Conn
+        self.HTTP_CONN = (
+            self.get_conn(auto_open=auto_open) if on else self._Conn
+        )
 
     @property
     def persistent(self):

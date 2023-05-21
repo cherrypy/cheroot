@@ -213,7 +213,9 @@ class SSLConnectionProxyMeta:
             def proxy_wrapper(self, *args):
                 self._lock.acquire()
                 try:
-                    new_args = args[:] if method not in proxy_methods_no_args else []
+                    new_args = (
+                        args[:] if method not in proxy_methods_no_args else []
+                    )
                     return getattr(self._ssl_conn, method)(*new_args)
                 finally:
                     self._lock.release()
@@ -389,7 +391,11 @@ class pyOpenSSLAdapter(Adapter):
 
     def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
-        cls = SSLFileobjectStreamReader if 'r' in mode else SSLFileobjectStreamWriter
+        cls = (
+            SSLFileobjectStreamReader
+            if 'r' in mode
+            else SSLFileobjectStreamWriter
+        )
         if SSL and isinstance(sock, ssl_conn_type):
             wrapped_socket = cls(sock, mode, bufsize)
             wrapped_socket.ssl_timeout = sock.gettimeout()

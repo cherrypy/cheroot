@@ -39,7 +39,9 @@ def cheroot_server(server_factory):
     for interface in ANY_INTERFACE_IPV6, ANY_INTERFACE_IPV4:
         try:
             actual_bind_addr = (interface, bind_port)
-            httpserver = server_factory(bind_addr=actual_bind_addr, **conf)  # create it
+            httpserver = server_factory(
+                bind_addr=actual_bind_addr, **conf
+            )  # create it
         except OSError:
             pass
         else:

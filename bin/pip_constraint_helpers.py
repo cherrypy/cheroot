@@ -61,7 +61,9 @@ def get_constraint_file_path(req_dir, toxenv, python_tag):
     if sys_platform == 'linux2':
         sys_platform = 'linux'
 
-    constraint_name = f'tox-{toxenv}-{python_tag}-{sys_platform}-{platform_machine}'
+    constraint_name = (
+        f'tox-{toxenv}-{python_tag}-{sys_platform}-{platform_machine}'
+    )
     return os.path.join(req_dir, os.path.extsep.join((constraint_name, 'txt')))
 
 

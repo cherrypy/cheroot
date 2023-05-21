@@ -55,7 +55,10 @@ def test_connection_keepalive(simple_wsgi_server):
         return bool(trap)
 
     with ThreadPoolExecutor(max_workers=10 if IS_SLOW_ENV else 50) as pool:
-        tasks = [pool.submit(do_request) for n in range(250 if IS_SLOW_ENV else 1000)]
+        tasks = [
+            pool.submit(do_request)
+            for n in range(250 if IS_SLOW_ENV else 1000)
+        ]
         failures = sum(task.result() for task in tasks)
 
     session.close()

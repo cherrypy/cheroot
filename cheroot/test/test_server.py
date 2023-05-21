@@ -291,7 +291,8 @@ def test_peercreds_unix_sock(http_request_timeout, peercreds_enabled_server):
 
 @pytest.mark.skipif(
     not IS_UID_GID_RESOLVABLE,
-    reason='Modules `grp` and `pwd` are not available ' 'under the current platform',
+    reason='Modules `grp` and `pwd` are not available '
+    'under the current platform',
 )
 @unix_only_sock_test
 @non_macos_sock_test
@@ -575,5 +576,7 @@ def test_threadpool_multistart_validation(monkeypatch):
 
     tp = ThreadPool(server=None)
     tp.start()
-    with pytest.raises(RuntimeError, match='Threadpools can only be started once.'):
+    with pytest.raises(
+        RuntimeError, match='Threadpools can only be started once.'
+    ):
         tp.start()
