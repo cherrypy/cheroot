@@ -147,15 +147,11 @@ class SSLFileobjectMixin:
 
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
-        return self._safe_call(
-            False, super().sendall, *args, **kwargs
-        )
+        return self._safe_call(False, super().sendall, *args, **kwargs)
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""
-        return self._safe_call(
-            False, super().send, *args, **kwargs
-        )
+        return self._safe_call(False, super().send, *args, **kwargs)
 
 
 class SSLFileobjectStreamReader(SSLFileobjectMixin, StreamReader):
