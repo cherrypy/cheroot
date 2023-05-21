@@ -44,7 +44,7 @@ non_macos_sock_test = pytest.mark.skipif(
 @pytest.fixture(params=('abstract', 'file'))
 def unix_sock_file(request):
     """Check that bound UNIX socket address is stored in server."""
-    name = 'unix_{request.param}_sock'.format(**locals())
+    name = f'unix_{request.param}_sock'
     return request.getfixturevalue(name)
 
 
@@ -129,7 +129,7 @@ def test_stop_interrupts_serve():
 )
 def test_server_interrupt(exc_cls):
     """Check that assigning interrupt stops the server."""
-    interrupt_msg = 'should catch {uuid!s}'.format(uuid=uuid.uuid4())
+    interrupt_msg = f'should catch {uuid.uuid4()!s}'
     raise_marker_sentinel = object()
 
     httpserver = HTTPServer(
@@ -238,7 +238,7 @@ class _TestGateway(Gateway):
         elif req_uri == PEERCRED_TEXTS_URI:
             self.send_payload('!'.join((conn.peer_user, conn.peer_group)))
             return
-        return super(_TestGateway, self).respond()
+        return super().respond()
 
     def send_payload(self, payload):
         req = self.req
@@ -269,7 +269,7 @@ def test_peercreds_unix_sock(http_request_timeout, peercreds_enabled_server):
 
     # pylint: disable=possibly-unused-variable
     quoted = urllib.parse.quote(bind_addr, safe='')
-    unix_base_uri = 'http+unix://{quoted}'.format(**locals())
+    unix_base_uri = f'http+unix://{quoted}'
 
     expected_peercreds = os.getpid(), os.getuid(), os.getgid()
     expected_peercreds = '|'.join(map(str, expected_peercreds))
@@ -310,7 +310,7 @@ def test_peercreds_unix_sock_with_lookup(
 
     # pylint: disable=possibly-unused-variable
     quoted = urllib.parse.quote(bind_addr, safe='')
-    unix_base_uri = 'http+unix://{quoted}'.format(**locals())
+    unix_base_uri = f'http+unix://{quoted}'
 
     import grp
     import pwd

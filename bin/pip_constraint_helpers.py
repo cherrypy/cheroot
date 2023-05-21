@@ -35,9 +35,7 @@ def get_runtime_python_tag():
     # pylint: disable=possibly-unused-variable
     python_minor_ver_tag = ''.join(map(str, python_minor_ver))
 
-    return '{python_tag_prefix!s}{python_minor_ver_tag!s}'.format(
-        **locals()
-    )  # noqa: WPS421
+    return f'{python_tag_prefix!s}{python_minor_ver_tag!s}'  # noqa: WPS421
 
 
 def get_constraint_file_path(req_dir, toxenv, python_tag):
@@ -64,9 +62,7 @@ def get_constraint_file_path(req_dir, toxenv, python_tag):
         sys_platform = 'linux'
 
     constraint_name = (
-        'tox-{toxenv}-{python_tag}-{sys_platform}-{platform_machine}'.format(
-            **locals()
-        )  # noqa: WPS421
+        f'tox-{toxenv}-{python_tag}-{sys_platform}-{platform_machine}'  # noqa: WPS421
     )
     return os.path.join(req_dir, os.path.extsep.join((constraint_name, 'txt')))
 
@@ -84,10 +80,8 @@ def make_pip_cmd(pip_args, constraint_file_path):
         pip_cmd += ['--constraint', constraint_file_path]
     else:
         print_info(
-            'WARNING: The expected pinned constraints file for the current '
-            'env does not exist (should be "{constraint_file_path}").'.format(
-                **locals()
-            ),  # noqa: WPS421
+            f'WARNING: The expected pinned constraints file for the current '
+            f'env does not exist (should be "{constraint_file_path}").',  # noqa: WPS421
         )
     return pip_cmd
 

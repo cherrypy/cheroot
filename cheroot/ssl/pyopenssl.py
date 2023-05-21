@@ -105,7 +105,7 @@ class SSLFileobjectMixin:
                 errnum = e.args[0]
                 if is_reader and errnum in errors.socket_errors_to_ignore:
                     return b''
-                raise socket.error(errnum)
+                raise OSError(errnum)
             except SSL.Error as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
                     return b''
@@ -129,7 +129,7 @@ class SSLFileobjectMixin:
         """Receive message of a size from the socket."""
         return self._safe_call(
             True,
-            super(SSLFileobjectMixin, self).recv,
+            super().recv,
             size,
         )
 
@@ -141,20 +141,20 @@ class SSLFileobjectMixin:
         """
         return self._safe_call(
             True,
-            super(SSLFileobjectMixin, self).readline,
+            super().readline,
             size,
         )
 
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
         return self._safe_call(
-            False, super(SSLFileobjectMixin, self).sendall, *args, **kwargs
+            False, super().sendall, *args, **kwargs
         )
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""
         return self._safe_call(
-            False, super(SSLFileobjectMixin, self).send, *args, **kwargs
+            False, super().send, *args, **kwargs
         )
 
 
@@ -293,7 +293,7 @@ class pyOpenSSLAdapter(Adapter):
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
-        super(pyOpenSSLAdapter, self).__init__(
+        super().__init__(
             certificate,
             private_key,
             certificate_chain,
@@ -386,7 +386,7 @@ class pyOpenSSLAdapter(Adapter):
                     pos = dnstr.rfind('/')
                     dnstr, key = dnstr[:pos], dnstr[pos + 1 :]
                     if key and value:
-                        wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
+                        wsgikey = 'SSL_SERVER_{}_DN_{}'.format(prefix, key)
                         ssl_environ[wsgikey] = value
 
         return ssl_environ

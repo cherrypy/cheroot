@@ -223,7 +223,7 @@ class ThreadPool:
 
     def _spawn_worker(self):
         worker = WorkerThread(self.server)
-        worker.name = 'CP Server {worker_name!s}'.format(worker_name=worker.name)
+        worker.name = f'CP Server {worker.name!s}'
         worker.start()
         return worker
 

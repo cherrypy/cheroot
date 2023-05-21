@@ -133,7 +133,7 @@ def test_query_string_request(test_client):
     (
         '/hello',  # plain
         '/query_string?test=True',  # query
-        '/{0}?{1}={2}'.format(  # quoted unicode
+        '/{}?{}={}'.format(  # quoted unicode
             *map(urllib.parse.quote, ('Юххууу', 'ї', 'йо'))
         ),
     ),
@@ -164,7 +164,7 @@ def test_parse_uri_unsafe_uri(test_client):
     resource = '/\xa0Ðblah key 0 900 4 data'.encode('latin-1')
     quoted = urllib.parse.quote(resource)
     assert quoted == '/%A0%D0blah%20key%200%20900%204%20data'
-    request = 'GET {quoted} HTTP/1.1'.format(**locals())
+    request = f'GET {quoted} HTTP/1.1'
     c._output(request.encode('utf-8'))
     c._send_output()
     response = _get_http_response(c, method='GET')
@@ -180,7 +180,7 @@ def test_parse_uri_invalid_uri(test_client):
     Invalid request line test case: it should only contain US-ASCII.
     """
     c = test_client.get_connection()
-    c._output(u'GET /йопта! HTTP/1.1'.encode('utf-8'))
+    c._output('GET /йопта! HTTP/1.1'.encode())
     c._send_output()
     response = _get_http_response(c, method='GET')
     response.begin()
@@ -406,7 +406,7 @@ def test_garbage_in(test_client):
         actual_resp_body = response.read(22)
         assert actual_resp_body == b'Malformed Request-Line'
         c.close()
-    except socket.error as ex:
+    except OSError as ex:
         # "Connection reset by peer" is also acceptable.
         if ex.errno != errno.ECONNRESET:
             raise

@@ -125,7 +125,7 @@ class WebCase(unittest.TestCase):
 
         * from :py:mod:`python:http.client`.
         """
-        cls_name = '{scheme}Connection'.format(scheme=self.scheme.upper())
+        cls_name = f'{self.scheme.upper()}Connection'
         return getattr(http.client, cls_name)
 
     def get_conn(self, auto_open=False):
@@ -272,7 +272,7 @@ class WebCase(unittest.TestCase):
         sys.stdout.flush()
         while True:
             i = getchar().upper()
-            if not isinstance(i, type('')):
+            if not isinstance(i, str):
                 i = i.decode('ascii')
             if i not in 'BHSUIRX':
                 continue
@@ -339,7 +339,7 @@ class WebCase(unittest.TestCase):
             if value is None:
                 msg = '%r not in headers' % key
             else:
-                msg = '%r:%r not in headers' % (key, value)
+                msg = '{!r}:{!r} not in headers'.format(key, value)
         self._handlewebError(msg)
 
     def assertHeaderIn(self, key, values, msg=None):
@@ -363,7 +363,7 @@ class WebCase(unittest.TestCase):
             return value
 
         if msg is None:
-            msg = '%r not in %r' % (value, header_values)
+            msg = '{!r} not in {!r}'.format(value, header_values)
         self._handlewebError(msg)
 
     def assertNoHeader(self, key, msg=None):
@@ -382,7 +382,7 @@ class WebCase(unittest.TestCase):
         matches = [k for k, v in hdrs if k.lower() == lowkey and v == value]
         if matches:
             if msg is None:
-                msg = '%r:%r in %r' % (key, value, hdrs)
+                msg = '{!r}:{!r} in {!r}'.format(key, value, hdrs)
             self._handlewebError(msg)
 
     def assertBody(self, value, msg=None):
@@ -391,7 +391,7 @@ class WebCase(unittest.TestCase):
             value = value.encode(self.encoding)
         if value != self.body:
             if msg is None:
-                msg = 'expected body:\n%r\n\nactual body:\n%r' % (
+                msg = 'expected body:\n{!r}\n\nactual body:\n{!r}'.format(
                     value,
                     self.body,
                 )
@@ -403,7 +403,7 @@ class WebCase(unittest.TestCase):
             value = value.encode(self.encoding)
         if value not in self.body:
             if msg is None:
-                msg = '%r not in body: %s' % (value, self.body)
+                msg = '{!r} not in body: {}'.format(value, self.body)
             self._handlewebError(msg)
 
     def assertNotInBody(self, value, msg=None):
@@ -444,7 +444,7 @@ def cleanHeaders(headers, method, body, host, port):
         if port == 80:
             headers.append(('Host', host))
         else:
-            headers.append(('Host', '%s:%s' % (host, port)))
+            headers.append(('Host', '{}:{}'.format(host, port)))
 
     if method in methods_with_bodies:
         # Stick in default type and length headers if not present
@@ -464,7 +464,7 @@ def cleanHeaders(headers, method, body, host, port):
 
 def shb(response):
     """Return status, headers, body the way we like from a response."""
-    resp_status_line = '%s %s' % (response.status, response.reason)
+    resp_status_line = '{} {}'.format(response.status, response.reason)
 
     return resp_status_line, response.getheaders(), response.read()
 

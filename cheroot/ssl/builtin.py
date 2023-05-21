@@ -214,7 +214,7 @@ class BuiltinSSLAdapter(Adapter):
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
 
-        super(BuiltinSSLAdapter, self).__init__(
+        super().__init__(
             certificate,
             private_key,
             certificate_chain,
@@ -236,7 +236,7 @@ class BuiltinSSLAdapter(Adapter):
         if not self._server_env:
             return
         cert = None
-        with open(certificate, mode='rt') as f:
+        with open(certificate) as f:
             cert = f.read()
 
         # strip off any keys by only taking the first certificate
@@ -270,7 +270,7 @@ class BuiltinSSLAdapter(Adapter):
 
     def bind(self, sock):
         """Wrap and return the given socket."""
-        return super(BuiltinSSLAdapter, self).bind(sock)
+        return super().bind(sock)
 
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
@@ -413,7 +413,7 @@ class BuiltinSSLAdapter(Adapter):
 
         env = {}
         for cert_key, env_var in self.CERT_KEY_TO_ENV.items():
-            key = '%s_%s' % (env_prefix, env_var)
+            key = '{}_{}'.format(env_prefix, env_var)
             value = parsed_cert.get(cert_key)
             if env_var == 'SAN':
                 env.update(self._make_env_san_dict(key, value))
@@ -428,7 +428,7 @@ class BuiltinSSLAdapter(Adapter):
             remain = ssl.cert_time_to_seconds(parsed_cert['notAfter'])
             remain -= ssl.cert_time_to_seconds(parsed_cert['notBefore'])
             remain /= 60 * 60 * 24
-            env['%s_V_REMAIN' % (env_prefix,)] = str(int(remain))
+            env['{}_V_REMAIN'.format(env_prefix)] = str(int(remain))
 
         return env
 
@@ -472,7 +472,7 @@ class BuiltinSSLAdapter(Adapter):
         for rdn in cert_value:
             for attr_name, val in rdn:
                 attr_code = self.CERT_KEY_TO_LDAP_CODE.get(attr_name)
-                dn.append('%s=%s' % (attr_code or attr_name, val))
+                dn.append('{}={}'.format(attr_code or attr_name, val))
                 if not attr_code:
                     continue
                 dn_attrs.setdefault(attr_code, [])
@@ -482,7 +482,7 @@ class BuiltinSSLAdapter(Adapter):
             env_prefix: ','.join(dn),
         }
         for attr_code, values in dn_attrs.items():
-            env['%s_%s' % (env_prefix, attr_code)] = ','.join(values)
+            env['{}_{}'.format(env_prefix, attr_code)] = ','.join(values)
             if len(values) == 1:
                 continue
             for i, val in enumerate(values):

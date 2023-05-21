@@ -172,9 +172,9 @@ def testing_server(raw_testing_server, monkeypatch):
             continue
 
         assert c_msg in raw_testing_server.error_log.ignored_msgs, (
-            'Found error in the error log: '
-            "message = '{c_msg}', level = '{c_level}'\n"
-            '{c_traceback}'.format(**locals()),
+            f'Found error in the error log: '
+            f"message = '{c_msg}', level = '{c_level}'\n"
+            f'{c_traceback}',
         )
 
 
@@ -458,7 +458,7 @@ def test_keepalive(test_client, http_server_protocol):
     assert header_has_value('Connection', 'Keep-Alive', actual_headers)
     assert header_has_value(
         'Keep-Alive',
-        'timeout={test_client.server_instance.timeout}'.format(**locals()),
+        f'timeout={test_client.server_instance.timeout}',
         actual_headers,
     )
 
@@ -507,7 +507,7 @@ def test_keepalive_conn_management(test_client):
             assert header_has_value('Connection', 'Keep-Alive', actual_headers)
             assert header_has_value(
                 'Keep-Alive',
-                'timeout={test_client.server_instance.timeout}'.format(**locals()),
+                f'timeout={test_client.server_instance.timeout}',
                 actual_headers,
             )
         else:
@@ -521,7 +521,7 @@ def test_keepalive_conn_management(test_client):
             if n == count:
                 return
             assert time.time() <= deadline, (
-                'idle conn count mismatch, wanted {count}, got {n}'.format(**locals()),
+                f'idle conn count mismatch, wanted {count}, got {n}',
             )
 
     disconnect_errors = (
@@ -804,7 +804,7 @@ def test_HTTP11_Timeout_after_request(test_client):
     response = conn.response_class(conn.sock, method='GET')
     try:
         response.begin()
-    except (socket.error, http.client.BadStatusLine):
+    except (OSError, http.client.BadStatusLine):
         pass
     except Exception as ex:
         pytest.fail(fail_msg % ex)
@@ -834,7 +834,7 @@ def test_HTTP11_Timeout_after_request(test_client):
     response = conn.response_class(conn.sock, method='GET')
     try:
         response.begin()
-    except (socket.error, http.client.BadStatusLine):
+    except (OSError, http.client.BadStatusLine):
         pass
     except Exception as ex:
         pytest.fail(fail_msg % ex)
@@ -1228,7 +1228,7 @@ def test_598(test_client):
     # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
     remote_data_conn = urllib.request.urlopen(
-        '%s://%s:%s/one_megabyte_of_a' % ('http', conn.host, conn.port),
+        '{}://{}:{}/one_megabyte_of_a'.format('http', conn.host, conn.port),
     )
     buf = remote_data_conn.read(512)
     time.sleep(timeout * 0.6)

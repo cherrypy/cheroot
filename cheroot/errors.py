@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Collection of exceptions raised and/or processed by Cheroot."""
 
 import errno

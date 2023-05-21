@@ -73,7 +73,7 @@ class Server(server.HTTPServer):
             accepted_queue_timeout (int): timeout for putting request
                 into queue
         """
-        super(Server, self).__init__(
+        super().__init__(
             bind_addr,
             gateway=wsgi_gateways[self.wsgi_version],
             server_name=server_name,
@@ -112,7 +112,7 @@ class Gateway(server.Gateway):
         Args:
             req (HTTPRequest): current HTTP request
         """
-        super(Gateway, self).__init__(req)
+        super().__init__(req)
         self.started_response = False
         self.env = self.get_environ()
         self.remaining_bytes_out = None
@@ -334,7 +334,7 @@ class Gateway_u0(Gateway_10):
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
         req = self.req
-        env_10 = super(Gateway_u0, self).get_environ()
+        env_10 = super().get_environ()
         env = dict(env_10.items())
 
         # Request-URI
@@ -399,7 +399,7 @@ class PathInfoDispatcher:
         path = environ['PATH_INFO'] or '/'
         for p, app in self.apps:
             # The apps list should be sorted by length, descending.
-            if path.startswith('{path!s}/'.format(path=p)) or path == p:
+            if path.startswith(f'{p!s}/') or path == p:
                 environ = environ.copy()
                 environ['SCRIPT_NAME'] = environ.get('SCRIPT_NAME', '') + p
                 environ['PATH_INFO'] = path[len(p) :]

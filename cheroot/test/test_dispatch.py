@@ -33,7 +33,7 @@ def test_dispatch_no_script_name():
                 ('Content-Type', 'text/plain; charset=utf-8'),
             ],
         )
-        return [u'Hello, world!'.encode('utf-8')]
+        return [b'Hello, world!']
 
     # Build a dispatch table.
     d = PathInfoDispatcher(

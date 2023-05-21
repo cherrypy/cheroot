@@ -267,7 +267,7 @@ class DropUnderscoreHeaderReader(HeaderReader):
     """Custom HeaderReader to exclude any headers with underscores in them."""
 
     def _allow_header(self, key_name):
-        orig = super(DropUnderscoreHeaderReader, self)._allow_header(key_name)
+        orig = super()._allow_header(key_name)
         return orig and '_' not in key_name
 
 
@@ -511,7 +511,7 @@ class ChunkedRFile:
         #            if line: chunk_extension = line[0]
 
         if self.maxlen and self.bytes_read + chunk_size > self.maxlen:
-            raise IOError('Request Entity Too Large')
+            raise OSError('Request Entity Too Large')
 
         chunk = self.rfile.read(chunk_size)
         self.bytes_read += len(chunk)
@@ -639,7 +639,7 @@ class ChunkedRFile:
 
             self.bytes_read += len(line)
             if self.maxlen and self.bytes_read > self.maxlen:
-                raise IOError('Request Entity Too Large')
+                raise OSError('Request Entity Too Large')
 
             if line == CRLF:
                 # Normal end of headers
@@ -1082,7 +1082,7 @@ class HTTPRequest:
             )
             try:
                 self.conn.wfile.write(msg)
-            except socket.error as ex:
+            except OSError as ex:
                 if ex.args[0] not in errors.socket_errors_to_ignore:
                     raise
         return True
@@ -1113,7 +1113,7 @@ class HTTPRequest:
     def simple_response(self, status, msg=''):
         """Write a simple response back to the client."""
         status = str(status)
-        proto_status = '%s %s\r\n' % (self.server.protocol, status)
+        proto_status = '{} {}\r\n'.format(self.server.protocol, status)
         content_length = 'Content-Length: %s\r\n' % len(msg)
         content_type = 'Content-Type: text/plain\r\n'
         buf = [
@@ -1143,7 +1143,7 @@ class HTTPRequest:
 
         try:
             self.conn.wfile.write(EMPTY.join(buf))
-        except socket.error as ex:
+        except OSError as ex:
             if ex.args[0] not in errors.socket_errors_to_ignore:
                 raise
 
@@ -1212,7 +1212,7 @@ class HTTPRequest:
             self.outheaders.append(
                 (
                     b'Keep-Alive',
-                    u'timeout={connection_timeout}'.format(
+                    'timeout={connection_timeout}'.format(
                         connection_timeout=self.server.timeout
                     ).encode('ISO-8859-1'),
                 )
@@ -1318,7 +1318,7 @@ class HTTPConnection:
             req.respond()
             if not req.close_connection:
                 return True
-        except socket.error as ex:
+        except OSError as ex:
             errnum = ex.args[0]
             # sadly SSL sockets return a different (longer) time out string
             timeout_errs = 'timed out', 'The read operation timed out'
@@ -1436,7 +1436,7 @@ class HTTPConnection:
                 socket.SO_PEERCRED,
                 struct.calcsize(PEERCRED_STRUCT_DEF),
             )
-        except socket.error as socket_err:
+        except OSError as socket_err:
             """Non-Linux kernels don't support SO_PEERCRED.
 
             Refs:
@@ -1516,7 +1516,7 @@ class HTTPConnection:
             shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN
         except errors.acceptable_sock_shutdown_exceptions:
             pass
-        except socket.error as e:
+        except OSError as e:
             if e.errno not in errors.acceptable_sock_shutdown_error_codes:
                 raise
 
@@ -1565,7 +1565,7 @@ class HTTPServer:
     expired connections (default 0.5).
     """
 
-    version = 'Cheroot/{version!s}'.format(version=__version__)
+    version = f'Cheroot/{__version__!s}'
     """A version string for the HTTPServer."""
 
     software = None
@@ -1725,7 +1725,7 @@ class HTTPServer:
 
     def __str__(self):
         """Render Server instance representing bind address."""
-        return '%s.%s(%r)' % (
+        return '{}.{}({!r})'.format(
             self.__module__,
             self.__class__.__name__,
             self.bind_addr,
@@ -1784,7 +1784,7 @@ class HTTPServer:
         """Run the server forever, and stop it cleanly on exit."""
         try:
             self.start()
-        except (KeyboardInterrupt, IOError):
+        except (KeyboardInterrupt, OSError):
             # The time.sleep call might raise
             # "IOError: [Errno 4] Interrupted function call" on KBInt.
             self.error_log('Keyboard Interrupt: shutting down')
@@ -1816,9 +1816,9 @@ class HTTPServer:
             # AF_UNIX socket
             try:
                 self.bind_unix_socket(self.bind_addr)
-            except socket.error as serr:
-                msg = '%s -- (%s: %s)' % (msg, self.bind_addr, serr)
-                raise socket.error(msg) from serr
+            except OSError as serr:
+                msg = '{} -- ({}: {})'.format(msg, self.bind_addr, serr)
+                raise OSError(msg) from serr
         else:
             # AF_INET or AF_INET6 socket
             # Get the correct address family for our host (allows IPv6
@@ -1848,14 +1848,14 @@ class HTTPServer:
                 try:
                     self.bind(af, socktype, proto)
                     break
-                except socket.error as serr:
-                    msg = '%s -- (%s: %s)' % (msg, sa, serr)
+                except OSError as serr:
+                    msg = '{} -- ({}: {})'.format(msg, sa, serr)
                     if self.socket:
                         self.socket.close()
                     self.socket = None
 
         if not self.socket:
-            raise socket.error(msg)
+            raise OSError(msg)
 
         # Timeout so KeyboardInterrupt can be caught on Win32
         self.socket.settimeout(1)
@@ -1938,7 +1938,7 @@ class HTTPServer:
             traceback (bool): add traceback to output or not
         """
         # Override this in subclasses as desired
-        sys.stderr.write('{msg!s}\n'.format(msg=msg))
+        sys.stderr.write(f'{msg!s}\n')
         sys.stderr.flush()
         if traceback:
             tblines = traceback_.format_exc()
@@ -2017,7 +2017,7 @@ class HTTPServer:
 
         try:
             sock = self.bind_socket(sock, bind_addr)
-        except socket.error:
+        except OSError:
             sock.close()
             raise
 
@@ -2124,7 +2124,7 @@ class HTTPServer:
                     socket.IPV6_V6ONLY,
                     0,
                 )
-            except (AttributeError, socket.error):
+            except (AttributeError, OSError):
                 # Apparently, the socket option is not available in
                 # this machine's TCP stack
                 pass
@@ -2208,7 +2208,7 @@ class HTTPServer:
                 # Touch our own socket to make accept() return immediately.
                 try:
                     host, port = sock.getsockname()[:2]
-                except socket.error as ex:
+                except OSError as ex:
                     if ex.args[0] not in errors.socket_errors_to_ignore:
                         # Changed to use error code and not message
                         # See
@@ -2235,7 +2235,7 @@ class HTTPServer:
                             s.settimeout(1.0)
                             s.connect((host, port))
                             s.close()
-                        except socket.error:
+                        except OSError:
                             if s:
                                 s.close()
             if hasattr(sock, 'close'):
@@ -2291,7 +2291,7 @@ def get_ssl_adapter_class(name='builtin'):
             adapter = getattr(mod, attr_name)
         except AttributeError:
             raise AttributeError(
-                "'%s' object has no attribute '%s'" % (mod_path, attr_name),
+                "'{}' object has no attribute '{}'".format(mod_path, attr_name),
             )
 
     return adapter

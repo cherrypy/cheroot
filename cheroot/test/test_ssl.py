@@ -86,7 +86,7 @@ class HelloWorldGateway(Gateway_10):
             print(env)
             req.write(json.dumps(env).encode('utf-8'))
             return
-        return super(HelloWorldGateway, self).respond()
+        return super().respond()
 
 
 def make_tls_http_server(bind_addr, ssl_adapter, request):
@@ -228,7 +228,7 @@ def test_ssl_adapters(
     )
 
     resp = requests.get(
-        'https://{host!s}:{port!s}/'.format(host=interface, port=port),
+        f'https://{interface!s}:{port!s}/',
         timeout=http_request_timeout,
         verify=tls_ca_certificate_pem_path,
     )
@@ -320,7 +320,7 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
 
         make_https_request = functools.partial(
             requests.get,
-            'https://{host!s}:{port!s}/'.format(host=interface, port=port),
+            f'https://{interface!s}:{port!s}/',
             # Don't wait for the first byte forever:
             timeout=http_request_timeout,
             # Server TLS certificate verification:
@@ -536,7 +536,7 @@ def test_ssl_env(  # noqa: C901  # FIXME
         else:
             assert env['SSL_CLIENT_VERIFY'] == 'SUCCESS'
 
-            with open(cl_pem, 'rt') as f:
+            with open(cl_pem) as f:
                 assert env['SSL_CLIENT_CERT'] in f.read()
 
             for key in {
@@ -661,12 +661,12 @@ def test_http_over_https_error(
 
     fqdn = interface
     if ip_addr is ANY_INTERFACE_IPV6:
-        fqdn = '[{fqdn}]'.format(**locals())
+        fqdn = f'[{fqdn}]'
 
     expect_fallback_response_over_plain_http = adapter_type == 'pyopenssl'
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
-            'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
+            f'http://{fqdn!s}:{port!s}/',
             timeout=http_request_timeout,
         )
         assert resp.status_code == 400
@@ -678,7 +678,7 @@ def test_http_over_https_error(
 
     with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
         requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-            'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
+            f'http://{fqdn!s}:{port!s}/',
             timeout=http_request_timeout,
         )
 
@@ -702,5 +702,5 @@ def test_http_over_https_error(
     err_text = str(underlying_error)
     assert (
         underlying_error.errno == expected_error_code
-    ), 'The underlying error is {underlying_error!r}'.format(**locals())
+    ), f'The underlying error is {underlying_error!r}'
     assert expected_error_text in err_text
