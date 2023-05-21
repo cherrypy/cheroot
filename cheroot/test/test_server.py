@@ -577,6 +577,6 @@ def test_threadpool_multistart_validation(monkeypatch):
     tp = ThreadPool(server=None)
     tp.start()
     with pytest.raises(
-        RuntimeError, match='Threadpools can only be started once.'
+        RuntimeError, match='Threadpools can only be started once.',
     ):
         tp.start()

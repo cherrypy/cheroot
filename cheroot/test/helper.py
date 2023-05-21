@@ -104,7 +104,7 @@ class CherootWebCase(webtest.WebCase):
         if not diff < datetime.timedelta(seconds=seconds):
             raise AssertionError(
                 '{!r} and {!r} are not within {!r} seconds.'.format(
-                    dt1, dt2, seconds
+                    dt1, dt2, seconds,
                 ),
             )
 

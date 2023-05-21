@@ -2299,7 +2299,7 @@ def get_ssl_adapter_class(name='builtin'):
         except AttributeError:
             raise AttributeError(
                 "'{}' object has no attribute '{}'".format(
-                    mod_path, attr_name
+                    mod_path, attr_name,
                 ),
             )
 
