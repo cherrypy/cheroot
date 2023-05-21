@@ -7,6 +7,7 @@ import platform
 
 try:
     import ssl
+
     IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
     del ssl
 except ImportError:

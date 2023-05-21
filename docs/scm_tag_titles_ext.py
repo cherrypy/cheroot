@@ -17,14 +17,19 @@ from cheroot import __version__
 
 _SCM_COMMANDS = {
     'hg': (
-        'hg', 'log',
-        '-l', '1',
-        '--template', '{date|isodate}',
+        'hg',
+        'log',
+        '-l',
+        '1',
+        '--template',
+        '{date|isodate}',
         '-r',
     ),
     'git': (
-        'git', 'log',
-        '-1', '--format=%aI',
+        'git',
+        'log',
+        '-1',
+        '--format=%aI',
     ),
 }
 
@@ -99,7 +104,8 @@ class SCMVersionTitle(SphinxDirective):
         release_section += nodes.paragraph(release_date, release_date)
 
         self.state.nested_parse(
-            inner_content, self.content_offset,
+            inner_content,
+            self.content_offset,
             release_section,
         )
         return [release_section]
@@ -123,7 +129,8 @@ def setup(app: Sphinx) -> None:
         ),
     )
     app.add_directive(
-        'scm-version-title', SCMVersionTitle,
+        'scm-version-title',
+        SCMVersionTitle,
     )
 
     return {

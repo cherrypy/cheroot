@@ -56,10 +56,12 @@ def unix_abstract_sock():
             '{os} does not support an abstract '
             'socket namespace'.format(os=SYS_PLATFORM),
         )
-    return b''.join((
-        b'\x00cheroot-test-socket',
-        ntob(str(uuid.uuid4())),
-    )).decode()
+    return b''.join(
+        (
+            b'\x00cheroot-test-socket',
+            ntob(str(uuid.uuid4())),
+        )
+    ).decode()
 
 
 @pytest.fixture
@@ -289,14 +291,13 @@ def test_peercreds_unix_sock(http_request_timeout, peercreds_enabled_server):
 
 @pytest.mark.skipif(
     not IS_UID_GID_RESOLVABLE,
-    reason='Modules `grp` and `pwd` are not available '
-           'under the current platform',
+    reason='Modules `grp` and `pwd` are not available ' 'under the current platform',
 )
 @unix_only_sock_test
 @non_macos_sock_test
 def test_peercreds_unix_sock_with_lookup(
-        http_request_timeout,
-        peercreds_enabled_server,
+    http_request_timeout,
+    peercreds_enabled_server,
 ):
     """Check that ``PEERCRED`` resolution works when enabled."""
     httpserver = peercreds_enabled_server
@@ -313,6 +314,7 @@ def test_peercreds_unix_sock_with_lookup(
 
     import grp
     import pwd
+
     expected_textcreds = (
         pwd.getpwuid(os.getuid()).pw_name,
         grp.getgrgid(os.getgid()).gr_name,
@@ -359,6 +361,7 @@ def test_high_number_of_file_descriptors(native_server_client, resource_limit):
     def native_process_conn(conn):
         native_process_conn.filenos.add(conn.socket.fileno())
         return _old_process_conn(conn)
+
     native_process_conn.filenos = set()
     native_server_client.server_instance.process_conn = native_process_conn
 
@@ -391,7 +394,9 @@ def test_reuse_port(http_server, ip_addr, mocker):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     s.bind((ip_addr, EPHEMERAL_PORT))
     server = HTTPServer(
-        bind_addr=s.getsockname()[:2], gateway=Gateway, reuse_port=True,
+        bind_addr=s.getsockname()[:2],
+        gateway=Gateway,
+        reuse_port=True,
     )
     spy = mocker.spy(server, 'prepare')
     server.prepare()
@@ -517,10 +522,26 @@ def test_threadpool_threadrange_set(minthreads, maxthreads, inited_maxthreads):
         (0, 0, 'min=0 must be > 0'),
         (0, 1, 'min=0 must be > 0'),
         (0, 2, 'min=0 must be > 0'),
-        (1, 0, 'Expected an integer or the infinity value for the `max` argument but got 0.'),
-        (1, 0.5, 'Expected an integer or the infinity value for the `max` argument but got 0.5.'),
-        (2, 0, 'Expected an integer or the infinity value for the `max` argument but got 0.'),
-        (2, '1', "Expected an integer or the infinity value for the `max` argument but got '1'."),
+        (
+            1,
+            0,
+            'Expected an integer or the infinity value for the `max` argument but got 0.',
+        ),
+        (
+            1,
+            0.5,
+            'Expected an integer or the infinity value for the `max` argument but got 0.5.',
+        ),
+        (
+            2,
+            0,
+            'Expected an integer or the infinity value for the `max` argument but got 0.',
+        ),
+        (
+            2,
+            '1',
+            "Expected an integer or the infinity value for the `max` argument but got '1'.",
+        ),
         (2, 1, 'max=1 must be > min=2'),
     ),
 )

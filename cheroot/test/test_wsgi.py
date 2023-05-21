@@ -42,7 +42,8 @@ def test_connection_keepalive(simple_wsgi_server):
     """Test the connection keepalive works (duh)."""
     session = Session(base_url=simple_wsgi_server['url'])
     pooled = requests.adapters.HTTPAdapter(
-        pool_connections=1, pool_maxsize=1000,
+        pool_connections=1,
+        pool_maxsize=1000,
     )
     session.mount('http://', pooled)
 
@@ -54,10 +55,7 @@ def test_connection_keepalive(simple_wsgi_server):
         return bool(trap)
 
     with ThreadPoolExecutor(max_workers=10 if IS_SLOW_ENV else 50) as pool:
-        tasks = [
-            pool.submit(do_request)
-            for n in range(250 if IS_SLOW_ENV else 1000)
-        ]
+        tasks = [pool.submit(do_request) for n in range(250 if IS_SLOW_ENV else 1000)]
         failures = sum(task.result() for task in tasks)
 
     session.close()

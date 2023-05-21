@@ -38,8 +38,7 @@ def _assert_ssl_exc_contains(exc, *msgs):
     """Check whether SSL exception contains either of messages provided."""
     if len(msgs) < 1:
         raise TypeError(
-            '_assert_ssl_exc_contains() requires '
-            'at least one message to be passed.',
+            '_assert_ssl_exc_contains() requires ' 'at least one message to be passed.',
         )
     err_msg_lower = str(exc).lower()
     return any(m.lower() in err_msg_lower for m in msgs)
@@ -53,7 +52,9 @@ def _loopback_for_cert_thread(context, server):
     # https://github.com/cherrypy/cheroot/issues/302#issuecomment-662592030
     with suppress(ssl.SSLError, OSError):
         with context.wrap_socket(
-                server, do_handshake_on_connect=True, server_side=True,
+            server,
+            do_handshake_on_connect=True,
+            server_side=True,
         ) as ssl_sock:
             # in TLS 1.3 (Python 3.7+, OpenSSL 1.1.1+), the server
             # sends the client session tickets that can be used to
@@ -93,13 +94,15 @@ def _loopback_for_cert(certificate, private_key, certificate_chain):
         # when `close` is called, the SSL shutdown notice will be sent
         # and then python will wait to receive the corollary shutdown.
         thread = threading.Thread(
-            target=_loopback_for_cert_thread, args=(context, server),
+            target=_loopback_for_cert_thread,
+            args=(context, server),
         )
         try:
             thread.start()
             with context.wrap_socket(
-                    client, do_handshake_on_connect=True,
-                    server_side=False,
+                client,
+                do_handshake_on_connect=True,
+                server_side=False,
             ) as ssl_sock:
                 ssl_sock.recv(4)
                 return ssl_sock.getpeercert()
@@ -201,15 +204,21 @@ class BuiltinSSLAdapter(Adapter):
     }
 
     def __init__(
-            self, certificate, private_key, certificate_chain=None,
-            ciphers=None,
+        self,
+        certificate,
+        private_key,
+        certificate_chain=None,
+        ciphers=None,
     ):
         """Set up context in addition to base class properties if available."""
         if ssl is None:
             raise ImportError('You must install the ssl module to use HTTPS.')
 
         super(BuiltinSSLAdapter, self).__init__(
-            certificate, private_key, certificate_chain, ciphers,
+            certificate,
+            private_key,
+            certificate_chain,
+            ciphers,
         )
 
         self.context = ssl.create_default_context(
@@ -268,7 +277,9 @@ class BuiltinSSLAdapter(Adapter):
         EMPTY_RESULT = None, {}
         try:
             s = self.context.wrap_socket(
-                sock, do_handshake_on_connect=True, server_side=True,
+                sock,
+                do_handshake_on_connect=True,
+                server_side=True,
             )
         except ssl.SSLError as ex:
             if ex.errno == ssl.SSL_ERROR_EOF:
@@ -285,11 +296,15 @@ class BuiltinSSLAdapter(Adapter):
                 # Errors that are caught by PyOpenSSL, but thrown by
                 # built-in ssl
                 _block_errors = (
-                    'unknown protocol', 'unknown ca', 'unknown_ca',
+                    'unknown protocol',
+                    'unknown ca',
+                    'unknown_ca',
                     'unknown error',
-                    'https proxy request', 'inappropriate fallback',
+                    'https proxy request',
+                    'inappropriate fallback',
                     'wrong version number',
-                    'no shared cipher', 'certificate unknown',
+                    'no shared cipher',
+                    'certificate unknown',
                     'ccs received early',
                     'certificate verify failed',  # client cert w/o trusted CA
                     'version too low',  # caused by SSL3 connections
@@ -333,8 +348,10 @@ class BuiltinSSLAdapter(Adapter):
             'SSL_CIPHER': cipher[0],
             'SSL_CIPHER_EXPORT': '',
             'SSL_CIPHER_USEKEYSIZE': cipher[2],
-            'SSL_VERSION_INTERFACE': '%s Python/%s' % (
-                HTTPServer.version, sys.version,
+            'SSL_VERSION_INTERFACE': '%s Python/%s'
+            % (
+                HTTPServer.version,
+                sys.version,
             ),
             'SSL_VERSION_LIBRARY': ssl.OPENSSL_VERSION,
             'SSL_CLIENT_VERIFY': 'NONE',

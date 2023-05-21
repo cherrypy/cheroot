@@ -69,32 +69,18 @@ class WorkerThread(threading.Thread):
         self.start_time = None
         self.work_time = 0
         self.stats = {
-            'Requests': lambda s: self.requests_seen + (
-                self.start_time is None
-                and trueyzero
-                or self.conn.requests_seen
-            ),
-            'Bytes Read': lambda s: self.bytes_read + (
-                self.start_time is None
-                and trueyzero
-                or self.conn.rfile.bytes_read
-            ),
-            'Bytes Written': lambda s: self.bytes_written + (
-                self.start_time is None
-                and trueyzero
-                or self.conn.wfile.bytes_written
-            ),
-            'Work Time': lambda s: self.work_time + (
-                self.start_time is None
-                and trueyzero
-                or time.time() - self.start_time
-            ),
-            'Read Throughput': lambda s: s['Bytes Read'](s) / (
-                s['Work Time'](s) or 1e-6
-            ),
-            'Write Throughput': lambda s: s['Bytes Written'](s) / (
-                s['Work Time'](s) or 1e-6
-            ),
+            'Requests': lambda s: self.requests_seen
+            + (self.start_time is None and trueyzero or self.conn.requests_seen),
+            'Bytes Read': lambda s: self.bytes_read
+            + (self.start_time is None and trueyzero or self.conn.rfile.bytes_read),
+            'Bytes Written': lambda s: self.bytes_written
+            + (self.start_time is None and trueyzero or self.conn.wfile.bytes_written),
+            'Work Time': lambda s: self.work_time
+            + (self.start_time is None and trueyzero or time.time() - self.start_time),
+            'Read Throughput': lambda s: s['Bytes Read'](s)
+            / (s['Work Time'](s) or 1e-6),
+            'Write Throughput': lambda s: s['Bytes Written'](s)
+            / (s['Work Time'](s) or 1e-6),
         }
         threading.Thread.__init__(self)
 
@@ -142,8 +128,12 @@ class ThreadPool:
     """
 
     def __init__(
-            self, server, min=10, max=-1, accepted_queue_size=-1,
-            accepted_queue_timeout=10,
+        self,
+        server,
+        min=10,
+        max=-1,
+        accepted_queue_size=-1,
+        accepted_queue_timeout=10,
     ):
         """Initialize HTTP requests queue instance.
 
@@ -228,15 +218,12 @@ class ThreadPool:
         workers = [self._spawn_worker() for i in range(n_new)]
         for worker in workers:
             while not worker.ready:
-                time.sleep(.1)
+                time.sleep(0.1)
         self._threads.extend(workers)
 
     def _spawn_worker(self):
         worker = WorkerThread(self.server)
-        worker.name = (
-            'CP Server {worker_name!s}'.
-            format(worker_name=worker.name)
-        )
+        worker.name = 'CP Server {worker_name!s}'.format(worker_name=worker.name)
         worker.start()
         return worker
 
@@ -326,9 +313,7 @@ class ThreadPool:
         # threads = pop_all(self._threads)
         threads, self._threads[:] = self._threads[:], []
         return (
-            thread
-            for thread in threads
-            if thread is not threading.current_thread()
+            thread for thread in threads if thread is not threading.current_thread()
         )
 
     @property

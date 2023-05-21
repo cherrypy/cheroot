@@ -103,7 +103,6 @@ linkcheck_ignore = [
     r'http://localhost:\d+/',  # local URLs
     r'https://codecov\.io/gh/cherrypy/cheroot/branch/master/graph/badge\.svg',
     r'https://github\.com/cherrypy/cheroot/actions',  # 404 if no auth
-
     # Too many links to GitHub so they cause
     # "429 Client Error: too many requests for url"
     # Ref: https://github.com/sphinx-doc/sphinx/issues/7388
@@ -111,11 +110,9 @@ linkcheck_ignore = [
     r'https://github\.com/cherrypy/cheroot/pull',
     r'https://github\.com/cherrypy/cherrypy/issues',
     r'https://github\.com/cherrypy/cherrypy/pull',
-
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
     # line anchors.
-    r'https://github\.com'
-    r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302',
+    r'https://github\.com' r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302',
     r'https://github\.com'
     r'/python/cpython/blob/c39b52f/Lib/poplib\.py#user-content-L297-L302',
 ]
@@ -132,7 +129,6 @@ nitpick_ignore = [
     ('py:class', '_pyio.BufferedReader'),
     ('py:class', 'unittest.case.TestCase'),
     ('py:meth', 'cheroot.connections.ConnectionManager.get_conn'),
-
     # Ref: https://github.com/pyca/pyopenssl/issues/1012
     ('py:class', 'pyopenssl:OpenSSL.SSL.Context'),
 ]

@@ -12,7 +12,8 @@ import pytest
 from .._compat import IS_MACOS, IS_WINDOWS  # noqa: WPS436
 from ..server import Gateway, HTTPServer
 from ..testing import (  # noqa: F401  # pylint: disable=unused-import
-    native_server, wsgi_server,
+    native_server,
+    wsgi_server,
 )
 from ..testing import get_server_client
 
@@ -48,6 +49,7 @@ def native_server_client(native_server):  # noqa: F811
 @pytest.fixture
 def http_server():
     """Provision a server creator as a fixture."""
+
     def start_srv():
         bind_addr = yield
         if bind_addr is None:

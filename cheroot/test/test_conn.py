@@ -50,8 +50,7 @@ class Controller(helper.Controller):
         """Process file upload and render thank."""
         if not req.environ['REQUEST_METHOD'] == 'POST':
             raise AssertionError(
-                "'POST' != request.method %r" %
-                req.environ['REQUEST_METHOD'],
+                "'POST' != request.method %r" % req.environ['REQUEST_METHOD'],
             )
         return "thanks for '%s'" % req.environ['wsgi.input'].read()
 
@@ -140,6 +139,7 @@ def raw_testing_server(wsgi_server_client):
 
     def _timeout(req, resp):
         return str(wsgi_server.timeout)
+
     app.handlers['/timeout'] = _timeout
     wsgi_server = wsgi_server_client.server_instance
     wsgi_server.wsgi_app = app
@@ -191,10 +191,7 @@ def header_exists(header_name, headers):
 
 def header_has_value(header_name, header_value, headers):
     """Check that a header with a given value is present."""
-    return header_name.lower() in (
-        k.lower() for (k, v) in headers
-        if v == header_value
-    )
+    return header_name.lower() in (k.lower() for (k, v) in headers if v == header_value)
 
 
 def test_HTTP11_persistent_connections(test_client):
@@ -206,7 +203,8 @@ def test_HTTP11_persistent_connections(test_client):
 
     # Make the first request and assert there's no "Connection: close".
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/pov', http_conn=http_connection,
+        '/pov',
+        http_conn=http_connection,
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -216,7 +214,8 @@ def test_HTTP11_persistent_connections(test_client):
 
     # Make another request on the same connection.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/page1', http_conn=http_connection,
+        '/page1',
+        http_conn=http_connection,
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -226,7 +225,8 @@ def test_HTTP11_persistent_connections(test_client):
 
     # Test client-side close.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/page2', http_conn=http_connection,
+        '/page2',
+        http_conn=http_connection,
         headers=[('Connection', 'close')],
     )
     actual_status = int(status_line[:3])
@@ -256,7 +256,8 @@ def test_streaming_11(test_client, set_cl):
 
     # Make the first request and assert there's no "Connection: close".
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/pov', http_conn=http_connection,
+        '/pov',
+        http_conn=http_connection,
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -269,7 +270,8 @@ def test_streaming_11(test_client, set_cl):
         # When a Content-Length is provided, the content should stream
         # without closing the connection.
         status_line, actual_headers, actual_resp_body = test_client.get(
-            '/stream?set_cl=Yes', http_conn=http_connection,
+            '/stream?set_cl=Yes',
+            http_conn=http_connection,
         )
         assert header_exists('Content-Length', actual_headers)
         assert not header_has_value('Connection', 'close', actual_headers)
@@ -283,7 +285,8 @@ def test_streaming_11(test_client, set_cl):
         # streamed output will either close the connection, or use
         # chunked encoding, to determine transfer-length.
         status_line, actual_headers, actual_resp_body = test_client.get(
-            '/stream', http_conn=http_connection,
+            '/stream',
+            http_conn=http_connection,
         )
         assert not header_exists('Content-Length', actual_headers)
         assert actual_status == 200
@@ -311,7 +314,8 @@ def test_streaming_11(test_client, set_cl):
         # TODO: figure out how can this be possible on an closed connection
         # (chunked_response case)
         status_line, actual_headers, actual_resp_body = test_client.head(
-            '/stream', http_conn=http_connection,
+            '/stream',
+            http_conn=http_connection,
         )
         assert actual_status == 200
         assert status_line[4:] == 'OK'
@@ -341,7 +345,8 @@ def test_streaming_10(test_client, set_cl):
 
     # Make the first request and assert Keep-Alive.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/pov', http_conn=http_connection,
+        '/pov',
+        http_conn=http_connection,
         headers=[('Connection', 'Keep-Alive')],
         protocol='HTTP/1.0',
     )
@@ -356,7 +361,8 @@ def test_streaming_10(test_client, set_cl):
         # When a Content-Length is provided, the content should
         # stream without closing the connection.
         status_line, actual_headers, actual_resp_body = test_client.get(
-            '/stream?set_cl=Yes', http_conn=http_connection,
+            '/stream?set_cl=Yes',
+            http_conn=http_connection,
             headers=[('Connection', 'Keep-Alive')],
             protocol='HTTP/1.0',
         )
@@ -372,7 +378,8 @@ def test_streaming_10(test_client, set_cl):
         # When a Content-Length is not provided,
         # the server should close the connection.
         status_line, actual_headers, actual_resp_body = test_client.get(
-            '/stream', http_conn=http_connection,
+            '/stream',
+            http_conn=http_connection,
             headers=[('Connection', 'Keep-Alive')],
             protocol='HTTP/1.0',
         )
@@ -388,7 +395,8 @@ def test_streaming_10(test_client, set_cl):
         # Make another request on the same connection, which should error.
         with pytest.raises(http.client.NotConnected):
             test_client.get(
-                '/pov', http_conn=http_connection,
+                '/pov',
+                http_conn=http_connection,
                 protocol='HTTP/1.0',
             )
 
@@ -438,8 +446,10 @@ def test_keepalive(test_client, http_server_protocol):
     # Test a keep-alive HTTP/1.0 request.
 
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/page3', headers=[('Connection', 'Keep-Alive')],
-        http_conn=http_connection, protocol=http_client_protocol,
+        '/page3',
+        headers=[('Connection', 'Keep-Alive')],
+        http_conn=http_connection,
+        protocol=http_client_protocol,
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -454,7 +464,8 @@ def test_keepalive(test_client, http_server_protocol):
 
     # Remove the keep-alive header again.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/page3', http_conn=http_connection,
+        '/page3',
+        http_conn=http_connection,
         protocol=http_client_protocol,
     )
     actual_status = int(status_line[:3])
@@ -483,8 +494,10 @@ def test_keepalive_conn_management(test_client):
 
     def request(conn, keepalive=True):
         status_line, actual_headers, actual_resp_body = test_client.get(
-            '/page3', headers=[('Connection', 'Keep-Alive')],
-            http_conn=conn, protocol='HTTP/1.0',
+            '/page3',
+            headers=[('Connection', 'Keep-Alive')],
+            http_conn=conn,
+            protocol='HTTP/1.0',
         )
         actual_status = int(status_line[:3])
         assert actual_status == 200
@@ -494,8 +507,7 @@ def test_keepalive_conn_management(test_client):
             assert header_has_value('Connection', 'Keep-Alive', actual_headers)
             assert header_has_value(
                 'Keep-Alive',
-                'timeout={test_client.server_instance.timeout}'.
-                format(**locals()),
+                'timeout={test_client.server_instance.timeout}'.format(**locals()),
                 actual_headers,
             )
         else:
@@ -509,8 +521,7 @@ def test_keepalive_conn_management(test_client):
             if n == count:
                 return
             assert time.time() <= deadline, (
-                'idle conn count mismatch, wanted {count}, got {n}'.
-                format(**locals()),
+                'idle conn count mismatch, wanted {count}, got {n}'.format(**locals()),
             )
 
     disconnect_errors = (
@@ -578,20 +589,27 @@ def test_keepalive_conn_management(test_client):
     ('simulated_exception', 'error_number', 'exception_leaks'),
     (
         pytest.param(
-            socket.error, errno.ECONNRESET, False,
+            socket.error,
+            errno.ECONNRESET,
+            False,
             id='socket.error(ECONNRESET)',
         ),
         pytest.param(
-            socket.error, errno.EPIPE, False,
+            socket.error,
+            errno.EPIPE,
+            False,
             id='socket.error(EPIPE)',
         ),
         pytest.param(
-            socket.error, errno.ENOTCONN, False,
+            socket.error,
+            errno.ENOTCONN,
+            False,
             id='simulated socket.error(ENOTCONN)',
         ),
         pytest.param(
             None,  # <-- don't raise an artificial exception
-            errno.ENOTCONN, False,
+            errno.ENOTCONN,
+            False,
             id='real socket.error(ENOTCONN)',
             marks=pytest.mark.xfail(
                 IS_WINDOWS,
@@ -599,30 +617,42 @@ def test_keepalive_conn_management(test_client):
             ),
         ),
         pytest.param(
-            socket.error, errno.ESHUTDOWN, False,
+            socket.error,
+            errno.ESHUTDOWN,
+            False,
             id='socket.error(ESHUTDOWN)',
         ),
         pytest.param(RuntimeError, 666, True, id='RuntimeError(666)'),
         pytest.param(socket.error, -1, True, id='socket.error(-1)'),
-    ) + (
-            pytest.param(
-                ConnectionResetError, errno.ECONNRESET, False,
-                id='ConnectionResetError(ECONNRESET)',
-            ),
-            pytest.param(
-                BrokenPipeError, errno.EPIPE, False,
-                id='BrokenPipeError(EPIPE)',
-            ),
-            pytest.param(
-                BrokenPipeError, errno.ESHUTDOWN, False,
-                id='BrokenPipeError(ESHUTDOWN)',
-            ),
+    )
+    + (
+        pytest.param(
+            ConnectionResetError,
+            errno.ECONNRESET,
+            False,
+            id='ConnectionResetError(ECONNRESET)',
+        ),
+        pytest.param(
+            BrokenPipeError,
+            errno.EPIPE,
+            False,
+            id='BrokenPipeError(EPIPE)',
+        ),
+        pytest.param(
+            BrokenPipeError,
+            errno.ESHUTDOWN,
+            False,
+            id='BrokenPipeError(ESHUTDOWN)',
+        ),
     ),
 )
 def test_broken_connection_during_tcp_fin(
-        error_number, exception_leaks,
-        mocker, monkeypatch,
-        simulated_exception, test_client,
+    error_number,
+    exception_leaks,
+    mocker,
+    monkeypatch,
+    simulated_exception,
+    test_client,
 ):
     """Test there's no traceback on broken connection during close.
 
@@ -642,22 +672,24 @@ def test_broken_connection_during_tcp_fin(
     <OSError>` happens.
     """
     exc_instance = (
-        None if simulated_exception is None
+        None
+        if simulated_exception is None
         else simulated_exception(error_number, 'Simulated socket error')
     )
     old_close_kernel_socket = (
-        test_client.server_instance.
-        ConnectionClass._close_kernel_socket
+        test_client.server_instance.ConnectionClass._close_kernel_socket
     )
 
     def _close_kernel_socket(self):
         monkeypatch.setattr(  # `socket.shutdown` is read-only otherwise
-            self, 'socket',
+            self,
+            'socket',
             mocker.mock_module.Mock(wraps=self.socket),
         )
         if exc_instance is not None:
             monkeypatch.setattr(
-                self.socket, 'shutdown',
+                self.socket,
+                'shutdown',
                 mocker.mock_module.Mock(side_effect=exc_instance),
             )
         _close_kernel_socket.fin_spy = mocker.spy(self.socket, 'shutdown')
@@ -692,7 +724,8 @@ def test_broken_connection_during_tcp_fin(
         assert _close_kernel_socket.fin_spy.spy_exception is exc_instance
     else:  # real
         assert isinstance(
-            _close_kernel_socket.fin_spy.spy_exception, socket.error,
+            _close_kernel_socket.fin_spy.spy_exception,
+            socket.error,
         )
         assert _close_kernel_socket.fin_spy.spy_exception.errno == error_number
 
@@ -902,8 +935,7 @@ def test_100_Continue(test_client):
         line = response.fp.readline().strip()
         if line:
             pytest.fail(
-                '100 Continue should not output any headers. Got %r' %
-                line,
+                '100 Continue should not output any headers. Got %r' % line,
             )
         else:
             break
@@ -1003,7 +1035,8 @@ def test_No_Message_Body(test_client):
 
     # Make the first request and assert there's no "Connection: close".
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/pov', http_conn=http_connection,
+        '/pov',
+        http_conn=http_connection,
     )
     actual_status = int(status_line[:3])
     assert actual_status == 200
@@ -1013,7 +1046,8 @@ def test_No_Message_Body(test_client):
 
     # Make a 204 request on the same connection.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/custom/204', http_conn=http_connection,
+        '/custom/204',
+        http_conn=http_connection,
     )
     actual_status = int(status_line[:3])
     assert actual_status == 204
@@ -1023,7 +1057,8 @@ def test_No_Message_Body(test_client):
 
     # Make a 304 request on the same connection.
     status_line, actual_headers, actual_resp_body = test_client.get(
-        '/custom/304', http_conn=http_connection,
+        '/custom/304',
+        http_conn=http_connection,
     )
     actual_status = int(status_line[:3])
     assert actual_status == 304
@@ -1037,11 +1072,13 @@ def test_No_Message_Body(test_client):
 
 @pytest.mark.xfail(
     reason=unwrap(
-        trim("""
+        trim(
+            """
         Headers from earlier request leak into the request
         line for a subsequent request, resulting in 400
         instead of 413. See cherrypy/cheroot#69 for details.
-        """),
+        """
+        ),
     ),
 )
 def test_Chunked_Encoding(test_client):
@@ -1110,8 +1147,7 @@ def test_Content_Length_in(test_client):
     actual_status = int(status_line[:3])
     assert actual_status == 413
     expected_resp_body = (
-        b'The entity sent with the request exceeds '
-        b'the maximum allowed bytes.'
+        b'The entity sent with the request exceeds ' b'the maximum allowed bytes.'
     )
     assert actual_resp_body == expected_resp_body
     conn.close()
@@ -1136,7 +1172,8 @@ def test_Content_Length_not_int(test_client):
     ('uri', 'expected_resp_status', 'expected_resp_body'),
     (
         (
-            '/wrong_cl_buffered', 500,
+            '/wrong_cl_buffered',
+            500,
             (
                 b'The requested resource returned more bytes than the '
                 b'declared Content-Length.'
@@ -1147,7 +1184,9 @@ def test_Content_Length_not_int(test_client):
 )
 def test_Content_Length_out(
     test_client,
-    uri, expected_resp_status, expected_resp_body,
+    uri,
+    expected_resp_status,
+    expected_resp_body,
 ):
     """Test response with Content-Length less than the response body.
 
@@ -1170,25 +1209,26 @@ def test_Content_Length_out(
     # the server logs the exception that we had verified from the
     # client perspective. Tell the error_log verification that
     # it can ignore that message.
-    test_client.server_instance.error_log.ignored_msgs.extend((
-        # Python 3.7+:
-        "ValueError('Response body exceeds the declared Content-Length.')",
-        # Python 2.7-3.6 (macOS?):
-        "ValueError('Response body exceeds the declared Content-Length.',)",
-    ))
+    test_client.server_instance.error_log.ignored_msgs.extend(
+        (
+            # Python 3.7+:
+            "ValueError('Response body exceeds the declared Content-Length.')",
+            # Python 2.7-3.6 (macOS?):
+            "ValueError('Response body exceeds the declared Content-Length.',)",
+        )
+    )
 
 
 @pytest.mark.xfail(
     reason='Sometimes this test fails due to low timeout. '
-           'Ref: https://github.com/cherrypy/cherrypy/issues/598',
+    'Ref: https://github.com/cherrypy/cherrypy/issues/598',
 )
 def test_598(test_client):
     """Test serving large file with a read timeout in place."""
     # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
     remote_data_conn = urllib.request.urlopen(
-        '%s://%s:%s/one_megabyte_of_a'
-        % ('http', conn.host, conn.port),
+        '%s://%s:%s/one_megabyte_of_a' % ('http', conn.host, conn.port),
     )
     buf = remote_data_conn.read(512)
     time.sleep(timeout * 0.6)
@@ -1257,9 +1297,14 @@ class FaultyGetMap:
     def __call__(self):
         """Intercept the calls to selector.get_map."""
         sabotage_targets = (
-            conn for _, (_, _, _, conn) in self.original_get_map().items()
-            if isinstance(conn, cheroot.server.HTTPConnection)
-        ) if self.sabotage_conn and not self.conn_closed else ()
+            (
+                conn
+                for _, (_, _, _, conn) in self.original_get_map().items()
+                if isinstance(conn, cheroot.server.HTTPConnection)
+            )
+            if self.sabotage_conn and not self.conn_closed
+            else ()
+        )
 
         for conn in sabotage_targets:
             # close the socket to cause OSError
@@ -1298,7 +1343,8 @@ def test_invalid_selected_connection(test_client, monkeypatch):
     # request a page with connection keep-alive to make sure
     # we'll have a connection to be modified.
     resp_status, _resp_headers, _resp_body = test_client.request(
-        '/page1', headers=[('Connection', 'Keep-Alive')],
+        '/page1',
+        headers=[('Connection', 'Keep-Alive')],
     )
 
     assert resp_status == '200 OK'

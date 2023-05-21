@@ -89,10 +89,16 @@ from .makefile import MakeFile, StreamWriter
 
 
 __all__ = (
-    'HTTPRequest', 'HTTPConnection', 'HTTPServer',
-    'HeaderReader', 'DropUnderscoreHeaderReader',
-    'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
-    'Gateway', 'get_ssl_adapter_class',
+    'HTTPRequest',
+    'HTTPConnection',
+    'HTTPServer',
+    'HeaderReader',
+    'DropUnderscoreHeaderReader',
+    'SizeCheckWrapper',
+    'KnownLengthRFile',
+    'ChunkedRFile',
+    'Gateway',
+    'get_ssl_adapter_class',
 )
 
 
@@ -161,11 +167,28 @@ _STOPPING_FOR_INTERRUPT = object()  # sentinel used during shutdown
 
 
 comma_separated_headers = [
-    b'Accept', b'Accept-Charset', b'Accept-Encoding',
-    b'Accept-Language', b'Accept-Ranges', b'Allow', b'Cache-Control',
-    b'Connection', b'Content-Encoding', b'Content-Language', b'Expect',
-    b'If-Match', b'If-None-Match', b'Pragma', b'Proxy-Authenticate', b'TE',
-    b'Trailer', b'Transfer-Encoding', b'Upgrade', b'Vary', b'Via', b'Warning',
+    b'Accept',
+    b'Accept-Charset',
+    b'Accept-Encoding',
+    b'Accept-Language',
+    b'Accept-Ranges',
+    b'Allow',
+    b'Cache-Control',
+    b'Connection',
+    b'Content-Encoding',
+    b'Content-Language',
+    b'Expect',
+    b'If-Match',
+    b'If-None-Match',
+    b'Pragma',
+    b'Proxy-Authenticate',
+    b'TE',
+    b'Trailer',
+    b'Transfer-Encoding',
+    b'Upgrade',
+    b'Vary',
+    b'Via',
+    b'Warning',
     b'WWW-Authenticate',
 ]
 
@@ -465,7 +488,8 @@ class ChunkedRFile:
 
         if self.maxlen and self.bytes_read > self.maxlen:
             raise errors.MaxSizeExceeded(
-                'Request Entity Too Large', self.maxlen,
+                'Request Entity Too Large',
+                self.maxlen,
             )
 
         line = line.strip().split(SEMICOLON, 1)
@@ -475,15 +499,16 @@ class ChunkedRFile:
             chunk_size = int(chunk_size, 16)
         except ValueError:
             raise ValueError(
-                'Bad chunked transfer size: {chunk_size!r}'.
-                format(chunk_size=chunk_size),
+                'Bad chunked transfer size: {chunk_size!r}'.format(
+                    chunk_size=chunk_size
+                ),
             )
 
         if chunk_size <= 0:
             self.closed = True
             return
 
-#            if line: chunk_extension = line[0]
+        #            if line: chunk_extension = line[0]
 
         if self.maxlen and self.bytes_read + chunk_size > self.maxlen:
             raise IOError('Request Entity Too Large')
@@ -767,7 +792,8 @@ class HTTPRequest:
 
         if not request_line.endswith(CRLF):
             self.simple_response(
-                '400 Bad Request', 'HTTP requires CRLF terminators',
+                '400 Bad Request',
+                'HTTP requires CRLF terminators',
             )
             return False
 
@@ -775,19 +801,22 @@ class HTTPRequest:
             method, uri, req_protocol = request_line.strip().split(SPACE, 2)
             if not req_protocol.startswith(b'HTTP/'):
                 self.simple_response(
-                    '400 Bad Request', 'Malformed Request-Line: bad protocol',
+                    '400 Bad Request',
+                    'Malformed Request-Line: bad protocol',
                 )
                 return False
             rp = req_protocol[5:].split(b'.', 1)
             if len(rp) != 2:
                 self.simple_response(
-                    '400 Bad Request', 'Malformed Request-Line: bad version',
+                    '400 Bad Request',
+                    'Malformed Request-Line: bad version',
                 )
                 return False
             rp = tuple(map(int, rp))  # Minor.Major must be threat as integers
             if rp > (1, 1):
                 self.simple_response(
-                    '505 HTTP Version Not Supported', 'Cannot fulfill request',
+                    '505 HTTP Version Not Supported',
+                    'Cannot fulfill request',
                 )
                 return False
         except (ValueError, IndexError):
@@ -813,7 +842,7 @@ class HTTPRequest:
             self.simple_response('400 Bad Request', 'Malformed Request-URI')
             return False
 
-        uri_is_absolute_form = (scheme or authority)
+        uri_is_absolute_form = scheme or authority
 
         if self.method == b'OPTIONS':
             # TODO: cover this branch with tests
@@ -844,9 +873,7 @@ class HTTPRequest:
             # invalid URIs without raising errors
             # https://tools.ietf.org/html/rfc7230#section-5.3.3
             invalid_path = (
-                _authority != uri
-                or not _port
-                or any((_scheme, _path, _qs, _fragment))
+                _authority != uri or not _port or any((_scheme, _path, _qs, _fragment))
             )
             if invalid_path:
                 self.simple_response(
@@ -860,9 +887,7 @@ class HTTPRequest:
             scheme = qs = fragment = EMPTY
         else:
             disallowed_absolute = (
-                self.strict_mode
-                and not self.proxy_mode
-                and uri_is_absolute_form
+                self.strict_mode and not self.proxy_mode and uri_is_absolute_form
             )
             if disallowed_absolute:
                 # https://tools.ietf.org/html/rfc7230#section-5.3.2
@@ -1046,10 +1071,15 @@ class HTTPRequest:
             # Don't use simple_response here, because it emits headers
             # we don't want. See
             # https://github.com/cherrypy/cherrypy/issues/951
-            msg = b''.join((
-                self.server.protocol.encode('ascii'), SPACE, b'100 Continue',
-                CRLF, CRLF,
-            ))
+            msg = b''.join(
+                (
+                    self.server.protocol.encode('ascii'),
+                    SPACE,
+                    b'100 Continue',
+                    CRLF,
+                    CRLF,
+                )
+            )
             try:
                 self.conn.wfile.write(msg)
             except socket.error as ex:
@@ -1152,8 +1182,7 @@ class HTTPRequest:
                 pass
             else:
                 needs_chunked = (
-                    self.response_protocol == 'HTTP/1.1'
-                    and self.method != b'HEAD'
+                    self.response_protocol == 'HTTP/1.1' and self.method != b'HEAD'
                 )
                 if needs_chunked:
                     # Use the chunked transfer-coding
@@ -1180,12 +1209,14 @@ class HTTPRequest:
                     self.outheaders.append((b'Connection', b'Keep-Alive'))
 
         if (b'Connection', b'Keep-Alive') in self.outheaders:
-            self.outheaders.append((
-                b'Keep-Alive',
-                u'timeout={connection_timeout}'.
-                format(connection_timeout=self.server.timeout).
-                encode('ISO-8859-1'),
-            ))
+            self.outheaders.append(
+                (
+                    b'Keep-Alive',
+                    u'timeout={connection_timeout}'.format(
+                        connection_timeout=self.server.timeout
+                    ).encode('ISO-8859-1'),
+                )
+            )
 
         if (not self.close_connection) and (not self.chunked_read):
             # Read any remaining request body data on the socket.
@@ -1205,16 +1236,20 @@ class HTTPRequest:
                 self.rfile.read(remaining)
 
         if b'date' not in hkeys:
-            self.outheaders.append((
-                b'Date',
-                email.utils.formatdate(usegmt=True).encode('ISO-8859-1'),
-            ))
+            self.outheaders.append(
+                (
+                    b'Date',
+                    email.utils.formatdate(usegmt=True).encode('ISO-8859-1'),
+                )
+            )
 
         if b'server' not in hkeys:
-            self.outheaders.append((
-                b'Server',
-                self.server.server_name.encode('ISO-8859-1'),
-            ))
+            self.outheaders.append(
+                (
+                    b'Server',
+                    self.server.server_name.encode('ISO-8859-1'),
+                )
+            )
 
         proto = self.server.protocol.encode('ascii')
         buf = [proto + SPACE + self.status + CRLF]
@@ -1259,12 +1294,8 @@ class HTTPConnection:
 
         # LRU cached methods:
         # Ref: https://stackoverflow.com/a/14946506/595220
-        self.resolve_peer_creds = (
-            lru_cache(maxsize=1)(self.resolve_peer_creds)
-        )
-        self.get_peer_creds = (
-            lru_cache(maxsize=1)(self.get_peer_creds)
-        )
+        self.resolve_peer_creds = lru_cache(maxsize=1)(self.resolve_peer_creds)
+        self.get_peer_creds = lru_cache(maxsize=1)(self.get_peer_creds)
 
     def communicate(self):  # noqa: C901  # FIXME
         """Read each request and respond appropriately.
@@ -1301,7 +1332,8 @@ class HTTPConnection:
             elif errnum not in errors.socket_errors_to_ignore:
                 self.server.error_log(
                     'socket.error %s' % repr(errnum),
-                    level=logging.WARNING, traceback=True,
+                    level=logging.WARNING,
+                    traceback=True,
                 )
                 self._conditional_error(req, '500 Internal Server Error')
         except (KeyboardInterrupt, SystemExit):
@@ -1312,7 +1344,9 @@ class HTTPConnection:
             self._handle_no_ssl(req)
         except Exception as ex:
             self.server.error_log(
-                repr(ex), level=logging.ERROR, traceback=True,
+                repr(ex),
+                level=logging.ERROR,
+                traceback=True,
             )
             self._conditional_error(req, '500 Internal Server Error')
         return False
@@ -1398,7 +1432,8 @@ class HTTPConnection:
             peer_creds = self.socket.getsockopt(
                 # FIXME: Use LOCAL_CREDS for BSD-like OSs
                 # Ref: https://gist.github.com/LucaFilipozzi/e4f1e118202aff27af6aadebda1b5d91  # noqa
-                socket.SOL_SOCKET, socket.SO_PEERCRED,
+                socket.SOL_SOCKET,
+                socket.SO_PEERCRED,
                 struct.calcsize(PEERCRED_STRUCT_DEF),
             )
         except socket.error as socket_err:
@@ -1472,7 +1507,8 @@ class HTTPConnection:
         """Terminate the connection at the transport level."""
         # Honor ``sock_shutdown`` for PyOpenSSL connections.
         shutdown = getattr(
-            self.socket, 'sock_shutdown',
+            self.socket,
+            'sock_shutdown',
             self.socket.shutdown,
         )
 
@@ -1581,9 +1617,14 @@ class HTTPServer:
     Default is 10. Set to None to have unlimited connections."""
 
     def __init__(
-        self, bind_addr, gateway,
-        minthreads=10, maxthreads=-1, server_name=None,
-        peercreds_enabled=False, peercreds_resolve_enabled=False,
+        self,
+        bind_addr,
+        gateway,
+        minthreads=10,
+        maxthreads=-1,
+        server_name=None,
+        peercreds_enabled=False,
+        peercreds_resolve_enabled=False,
         reuse_port=False,
     ):
         """Initialize HTTPServer instance.
@@ -1602,16 +1643,16 @@ class HTTPServer:
         self.gateway = gateway
 
         self.requests = threadpool.ThreadPool(
-            self, min=minthreads or 1, max=maxthreads,
+            self,
+            min=minthreads or 1,
+            max=maxthreads,
         )
 
         if not server_name:
             server_name = self.version
         self.server_name = server_name
         self.peercreds_enabled = peercreds_enabled
-        self.peercreds_resolve_enabled = (
-            peercreds_resolve_enabled and peercreds_enabled
-        )
+        self.peercreds_resolve_enabled = peercreds_resolve_enabled and peercreds_enabled
         self.reuse_port = reuse_port
         self.clear_stats()
 
@@ -1629,30 +1670,47 @@ class HTTPServer:
             'Threads': lambda s: len(getattr(self.requests, '_threads', [])),
             'Threads Idle': lambda s: getattr(self.requests, 'idle', None),
             'Socket Errors': 0,
-            'Requests': lambda s: (not s['Enabled']) and -1 or sum(
-                (w['Requests'](w) for w in s['Worker Threads'].values()), 0,
+            'Requests': lambda s: (not s['Enabled'])
+            and -1
+            or sum(
+                (w['Requests'](w) for w in s['Worker Threads'].values()),
+                0,
             ),
-            'Bytes Read': lambda s: (not s['Enabled']) and -1 or sum(
-                (w['Bytes Read'](w) for w in s['Worker Threads'].values()), 0,
+            'Bytes Read': lambda s: (not s['Enabled'])
+            and -1
+            or sum(
+                (w['Bytes Read'](w) for w in s['Worker Threads'].values()),
+                0,
             ),
-            'Bytes Written': lambda s: (not s['Enabled']) and -1 or sum(
+            'Bytes Written': lambda s: (not s['Enabled'])
+            and -1
+            or sum(
                 (w['Bytes Written'](w) for w in s['Worker Threads'].values()),
                 0,
             ),
-            'Work Time': lambda s: (not s['Enabled']) and -1 or sum(
-                (w['Work Time'](w) for w in s['Worker Threads'].values()), 0,
+            'Work Time': lambda s: (not s['Enabled'])
+            and -1
+            or sum(
+                (w['Work Time'](w) for w in s['Worker Threads'].values()),
+                0,
             ),
-            'Read Throughput': lambda s: (not s['Enabled']) and -1 or sum(
+            'Read Throughput': lambda s: (not s['Enabled'])
+            and -1
+            or sum(
                 (
                     w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
                     for w in s['Worker Threads'].values()
-                ), 0,
+                ),
+                0,
             ),
-            'Write Throughput': lambda s: (not s['Enabled']) and -1 or sum(
+            'Write Throughput': lambda s: (not s['Enabled'])
+            and -1
+            or sum(
                 (
                     w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
                     for w in s['Worker Threads'].values()
-                ), 0,
+                ),
+                0,
             ),
             'Worker Threads': {},
         }
@@ -1668,7 +1726,8 @@ class HTTPServer:
     def __str__(self):
         """Render Server instance representing bind address."""
         return '%s.%s(%r)' % (
-            self.__module__, self.__class__.__name__,
+            self.__module__,
+            self.__class__.__name__,
             self.bind_addr,
         )
 
@@ -1767,8 +1826,12 @@ class HTTPServer:
             host, port = self.bind_addr
             try:
                 info = socket.getaddrinfo(
-                    host, port, socket.AF_UNSPEC,
-                    socket.SOCK_STREAM, 0, socket.AI_PASSIVE,
+                    host,
+                    port,
+                    socket.AF_UNSPEC,
+                    socket.SOCK_STREAM,
+                    0,
+                    socket.AI_PASSIVE,
                 )
             except socket.gaierror:
                 sock_type = socket.AF_INET
@@ -1816,7 +1879,8 @@ class HTTPServer:
                 raise
             except Exception:
                 self.error_log(
-                    'Error in HTTPServer.serve', level=logging.ERROR,
+                    'Error in HTTPServer.serve',
+                    level=logging.ERROR,
                     traceback=True,
                 )
 
@@ -1885,8 +1949,11 @@ class HTTPServer:
         """Create (or recreate) the actual socket object."""
         sock = self.prepare_socket(
             self.bind_addr,
-            family, type, proto,
-            self.nodelay, self.ssl_adapter,
+            family,
+            type,
+            proto,
+            self.nodelay,
+            self.ssl_adapter,
             self.reuse_port,
         )
         sock = self.socket = self.bind_socket(sock, self.bind_addr)
@@ -1916,26 +1983,27 @@ class HTTPServer:
         except TypeError as typ_err:
             err_msg = str(typ_err)
             if (
-                    'remove() argument 1 must be encoded '
-                    'string without null bytes, not unicode'
-                    not in err_msg
+                'remove() argument 1 must be encoded '
+                'string without null bytes, not unicode' not in err_msg
             ):
                 raise
         except ValueError as val_err:
             err_msg = str(val_err)
             if (
-                    'unlink: embedded null '
-                    'character in path' not in err_msg
-                    and 'embedded null byte' not in err_msg
-                    and 'argument must be a '
-                    'string without NUL characters' not in err_msg  # pypy3
+                'unlink: embedded null ' 'character in path' not in err_msg
+                and 'embedded null byte' not in err_msg
+                and 'argument must be a '
+                'string without NUL characters' not in err_msg  # pypy3
             ):
                 raise
 
         sock = self.prepare_socket(
             bind_addr=bind_addr,
-            family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0,
-            nodelay=self.nodelay, ssl_adapter=self.ssl_adapter,
+            family=socket.AF_UNIX,
+            type=socket.SOCK_STREAM,
+            proto=0,
+            nodelay=self.nodelay,
+            ssl_adapter=self.ssl_adapter,
             reuse_port=self.reuse_port,
         )
 
@@ -2004,8 +2072,14 @@ class HTTPServer:
 
     @classmethod
     def prepare_socket(
-            cls, bind_addr, family, type, proto, nodelay, ssl_adapter,
-            reuse_port=False,
+        cls,
+        bind_addr,
+        family,
+        type,
+        proto,
+        nodelay,
+        ssl_adapter,
+        reuse_port=False,
     ):
         """Create and prepare the socket object."""
         sock = socket.socket(family, type, proto)
@@ -2046,7 +2120,9 @@ class HTTPServer:
         if listening_ipv6:
             try:
                 sock.setsockopt(
-                    socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0,
+                    socket.IPPROTO_IPV6,
+                    socket.IPV6_V6ONLY,
+                    0,
                 )
             except (AttributeError, socket.error):
                 # Apparently, the socket option is not available in
@@ -2121,7 +2197,7 @@ class HTTPServer:
 
         self.ready = False
         if self._start_time is not None:
-            self._run_time += (time.time() - self._start_time)
+            self._run_time += time.time() - self._start_time
         self._start_time = None
 
         self._connections.stop()
@@ -2144,7 +2220,9 @@ class HTTPServer:
                     # localhost won't work if we've bound to a public IP,
                     # but it will if we bound to '0.0.0.0' (INADDR_ANY).
                     for res in socket.getaddrinfo(
-                        host, port, socket.AF_UNSPEC,
+                        host,
+                        port,
+                        socket.AF_UNSPEC,
                         socket.SOCK_STREAM,
                     ):
                         af, socktype, proto, _canonname, _sa = res
@@ -2197,7 +2275,7 @@ def get_ssl_adapter_class(name='builtin'):
     adapter = ssl_adapters[name.lower()]
     if isinstance(adapter, str):
         last_dot = adapter.rfind('.')
-        attr_name = adapter[last_dot + 1:]
+        attr_name = adapter[last_dot + 1 :]
         mod_path = adapter[:last_dot]
 
         try:
@@ -2213,8 +2291,7 @@ def get_ssl_adapter_class(name='builtin'):
             adapter = getattr(mod, attr_name)
         except AttributeError:
             raise AttributeError(
-                "'%s' object has no attribute '%s'"
-                % (mod_path, attr_name),
+                "'%s' object has no attribute '%s'" % (mod_path, attr_name),
             )
 
     return adapter
