@@ -60,7 +60,7 @@ def unix_abstract_sock():
         (
             b'\x00cheroot-test-socket',
             ntob(str(uuid.uuid4())),
-        )
+        ),
     ).decode()
 
 

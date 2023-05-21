@@ -12,7 +12,7 @@ def wsgi_invoke(app, environ):
             {
                 'status': status,
                 'headers': headers,
-            }
+            },
         )
 
     response['body'] = b''.join(
@@ -39,7 +39,7 @@ def test_dispatch_no_script_name():
     d = PathInfoDispatcher(
         [
             ('/', app),
-        ]
+        ],
     )
 
     # Dispatch a request without `SCRIPT_NAME`.

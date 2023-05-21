@@ -1077,7 +1077,7 @@ def test_No_Message_Body(test_client):
         Headers from earlier request leak into the request
         line for a subsequent request, resulting in 400
         instead of 413. See cherrypy/cheroot#69 for details.
-        """
+        """,
         ),
     ),
 )
@@ -1215,7 +1215,7 @@ def test_Content_Length_out(
             "ValueError('Response body exceeds the declared Content-Length.')",
             # Python 2.7-3.6 (macOS?):
             "ValueError('Response body exceeds the declared Content-Length.',)",
-        )
+        ),
     )
 
 

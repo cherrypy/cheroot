@@ -41,5 +41,5 @@ def pytest_load_initial_conftests(early_config, parser, args):
             '<socket.socket fd=-1, family=AF_INET6, '
             'type=SocketKind.SOCK_STREAM, proto=.:'
             'pytest.PytestUnraisableExceptionWarning:_pytest.unraisableexception',
-        )
+        ),
     )

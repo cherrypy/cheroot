@@ -42,7 +42,7 @@ IS_WIN2016 = (
 )
 IS_LIBRESSL_BACKEND = ssl.OPENSSL_VERSION.startswith('LibreSSL')
 IS_PYOPENSSL_SSL_VERSION_1_0 = OpenSSL.SSL.SSLeay_version(
-    OpenSSL.SSL.SSLEAY_VERSION
+    OpenSSL.SSL.SSLEAY_VERSION,
 ).startswith(b'OpenSSL 1.0.')
 PY310_PLUS = sys.version_info[:2] >= (3, 10)
 
@@ -164,7 +164,7 @@ def _thread_except_hook(exceptions, args):
                     args.exc_traceback,
                 ),
             ),
-        )
+        ),
     )
 
 
@@ -569,7 +569,7 @@ def test_ssl_env(  # noqa: C901  # FIXME
                         'Sometimes this test fails due to '
                         'a socket.socket ResourceWarning:',
                         msg,
-                    )
+                    ),
                 ),
             )
         pytest.fail(msg)
@@ -582,7 +582,7 @@ def test_ssl_env(  # noqa: C901  # FIXME
         (
             thread_exceptions[0][0].__name__,
             thread_exceptions[0][1],
-        )
+        ),
     )
 
 

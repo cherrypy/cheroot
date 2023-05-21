@@ -500,7 +500,7 @@ class ChunkedRFile:
         except ValueError:
             raise ValueError(
                 'Bad chunked transfer size: {chunk_size!r}'.format(
-                    chunk_size=chunk_size
+                    chunk_size=chunk_size,
                 ),
             )
 
@@ -1078,7 +1078,7 @@ class HTTPRequest:
                     b'100 Continue',
                     CRLF,
                     CRLF,
-                )
+                ),
             )
             try:
                 self.conn.wfile.write(msg)
@@ -1213,9 +1213,9 @@ class HTTPRequest:
                 (
                     b'Keep-Alive',
                     'timeout={connection_timeout}'.format(
-                        connection_timeout=self.server.timeout
+                        connection_timeout=self.server.timeout,
                     ).encode('ISO-8859-1'),
-                )
+                ),
             )
 
         if (not self.close_connection) and (not self.chunked_read):
@@ -1240,7 +1240,7 @@ class HTTPRequest:
                 (
                     b'Date',
                     email.utils.formatdate(usegmt=True).encode('ISO-8859-1'),
-                )
+                ),
             )
 
         if b'server' not in hkeys:
@@ -1248,7 +1248,7 @@ class HTTPRequest:
                 (
                     b'Server',
                     self.server.server_name.encode('ISO-8859-1'),
-                )
+                ),
             )
 
         proto = self.server.protocol.encode('ascii')

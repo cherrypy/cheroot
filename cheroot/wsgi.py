@@ -301,7 +301,7 @@ class Gateway_10(Gateway):
         env.update(
             (
                 'HTTP_{header_name!s}'.format(
-                    header_name=bton(k).upper().replace('-', '_')
+                    header_name=bton(k).upper().replace('-', '_'),
                 ),
                 bton(v),
             )

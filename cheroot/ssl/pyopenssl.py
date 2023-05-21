@@ -363,7 +363,7 @@ class pyOpenSSLAdapter(Adapter):
                     #   Validity of server's certificate (start time),
                     # 'SSL_SERVER_V_END':
                     #   Validity of server's certificate (end time),
-                }
+                },
             )
 
             for prefix, dn in [
