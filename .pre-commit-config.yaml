@@ -126,7 +126,6 @@ repos:
     alias: mypy-py35
     name: MyPy, for Python 3.5
     additional_dependencies:
-    - cryptography < 3.3  # Python 3.5 compat
     - lxml
     - types-backports
     - types-pyOpenSSL
