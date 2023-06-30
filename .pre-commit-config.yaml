@@ -134,7 +134,22 @@ repos:
     - --install-types
     - --non-interactive
     - --python-version=3.8
-    - --txt-report=.tox/.tmp/.mypy/
+    - --txt-report=.tox/.tmp/.mypy/python-3.8
+    - cheroot/
+    pass_filenames: false
+  - id: mypy
+    alias: mypy-py312
+    name: MyPy, for Python 3.12
+    additional_dependencies:
+    - lxml
+    - types-backports
+    - types-pyOpenSSL
+    - types-requests
+    args:
+    - --install-types
+    - --non-interactive
+    - --python-version=3.12
+    - --txt-report=.tox/.tmp/.mypy/python-3.12
     - cheroot/
     pass_filenames: false
 
