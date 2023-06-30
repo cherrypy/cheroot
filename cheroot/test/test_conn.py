@@ -605,18 +605,18 @@ def test_keepalive_conn_management(test_client):
         pytest.param(RuntimeError, 666, True, id='RuntimeError(666)'),
         pytest.param(socket.error, -1, True, id='socket.error(-1)'),
     ) + (
-            pytest.param(
-                ConnectionResetError, errno.ECONNRESET, False,
-                id='ConnectionResetError(ECONNRESET)',
-            ),
-            pytest.param(
-                BrokenPipeError, errno.EPIPE, False,
-                id='BrokenPipeError(EPIPE)',
-            ),
-            pytest.param(
-                BrokenPipeError, errno.ESHUTDOWN, False,
-                id='BrokenPipeError(ESHUTDOWN)',
-            ),
+        pytest.param(
+            ConnectionResetError, errno.ECONNRESET, False,
+            id='ConnectionResetError(ECONNRESET)',
+        ),
+        pytest.param(
+            BrokenPipeError, errno.EPIPE, False,
+            id='BrokenPipeError(EPIPE)',
+        ),
+        pytest.param(
+            BrokenPipeError, errno.ESHUTDOWN, False,
+            id='BrokenPipeError(ESHUTDOWN)',
+        ),
     ),
 )
 def test_broken_connection_during_tcp_fin(
