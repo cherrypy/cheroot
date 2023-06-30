@@ -10,6 +10,8 @@ on:   # yamllint disable-line rule:truthy
     - patchback/backports/**
     - pre-commit-ci-update-config
   pull_request:
+  schedule:
+  - cron: 1 0 * * *  # Run daily at 0:01 UTC
   workflow_dispatch:
     inputs:
       release-version:
@@ -37,8 +39,6 @@ on:   # yamllint disable-line rule:truthy
           circumstances to ignore the test failures
           and cut the release regardless.
         type: boolean
-  schedule:
-  - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
 concurrency:
   group: >-
