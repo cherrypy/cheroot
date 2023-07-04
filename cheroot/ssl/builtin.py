@@ -269,6 +269,13 @@ class BuiltinSSLAdapter(Adapter):
             s = self.context.wrap_socket(
                 sock, do_handshake_on_connect=True, server_side=True,
             )
+        except (
+            ssl.SSLEOFError,
+            ssl.SSLZeroReturnError,
+        ) as tls_connection_drop_error:
+            raise errors.FatalSSLAlert(
+                *tls_connection_drop_error.args,
+            ) from tls_connection_drop_error
         except ssl.SSLError as ex:
             if ex.errno == ssl.SSL_ERROR_SSL:
                 if _assert_ssl_exc_contains(ex, 'http request'):
