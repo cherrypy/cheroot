@@ -41,7 +41,7 @@ def cheroot_server(server_factory):
             actual_bind_addr = (interface, bind_port)
             httpserver = server_factory(  # create it
                 bind_addr=actual_bind_addr,
-                **conf
+                **conf,
             )
         except OSError:
             pass
