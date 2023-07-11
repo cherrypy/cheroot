@@ -150,7 +150,7 @@ class SSLFileobjectMixin:
         return self._safe_call(
             False,
             super(SSLFileobjectMixin, self).sendall,
-            *args, **kwargs
+            *args, **kwargs,
         )
 
     def send(self, *args, **kwargs):
@@ -158,7 +158,7 @@ class SSLFileobjectMixin:
         return self._safe_call(
             False,
             super(SSLFileobjectMixin, self).send,
-            *args, **kwargs
+            *args, **kwargs,
         )
 
 

@@ -7,7 +7,7 @@ ci:
 
 repos:
 - repo: https://github.com/asottile/add-trailing-comma.git
-  rev: v2.4.0
+  rev: v3.0.0
   hooks:
   - id: add-trailing-comma
 
@@ -78,7 +78,7 @@ repos:
   - id: debug-statements
 
 - repo: https://github.com/adrienverge/yamllint.git
-  rev: v1.30.0
+  rev: v1.32.0
   hooks:
   - id: yamllint
     types:
@@ -126,7 +126,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
-  rev: v1.1.1
+  rev: v1.4.1
   hooks:
   - id: mypy
     alias: mypy-py38
