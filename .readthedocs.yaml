@@ -41,6 +41,5 @@ python:
   - method: pip
     path: .
   - requirements: requirements/tox-build-docs-cp311-linux-x86_64.txt
-  system_packages: false
 
 ...
