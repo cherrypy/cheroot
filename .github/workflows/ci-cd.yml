@@ -2,9 +2,11 @@
 name: CI/CD
 
 on:   # yamllint disable-line rule:truthy
+  merge_group:
   push:
     branches-ignore:
     - dependabot/**
+    - gh-readonly-queue/**  # Temporary merge queue-related GH-made branches
     - maintenance/pip-tools-constraint-lockfiles
     - maintenance/pip-tools-constraint-lockfiles-**
     - patchback/backports/**
