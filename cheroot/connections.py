@@ -299,7 +299,13 @@ class ConnectionManager:
                         f'{tls_connection_drop_error !s}',
                     )
                     return
-                except errors.NoSSLError:
+                except errors.NoSSLError as http_over_https_err:
+                    self.server.error_log(
+                        f'Client {addr !s} attempted to speak plain HTTP into '
+                        'a TCP connection configured for TLS-only traffic — '
+                        'trying to send back a plain HTTP error response: '
+                        f'{http_over_https_err !s}',
+                    )
                     msg = (
                         'The client sent a plain HTTP request, but '
                         'this server only speaks HTTPS on this port.'
