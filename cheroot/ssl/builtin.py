@@ -30,8 +30,6 @@ from .. import errors
 from ..makefile import StreamReader, StreamWriter
 from ..server import HTTPServer
 
-generic_socket_error = OSError
-
 
 def _assert_ssl_exc_contains(exc, *msgs):
     """Check whether SSL exception contains either of messages provided."""
@@ -264,7 +262,6 @@ class BuiltinSSLAdapter(Adapter):
 
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
-        EMPTY_RESULT = None, {}
         try:
             s = self.context.wrap_socket(
                 sock, do_handshake_on_connect=True, server_side=True,
@@ -276,16 +273,25 @@ class BuiltinSSLAdapter(Adapter):
             raise errors.FatalSSLAlert(
                 *tls_connection_drop_error.args,
             ) from tls_connection_drop_error
-        except ssl.SSLError as ex:
-            if ex.errno == ssl.SSL_ERROR_SSL:
-                if _assert_ssl_exc_contains(ex, 'http request'):
-                    # The client is speaking HTTP to an HTTPS server.
-                    raise errors.NoSSLError
-        except generic_socket_error:
-            pass
-        else:
-            return s, self.get_environ(s)
-        return EMPTY_RESULT
+        except ssl.SSLError as generic_tls_error:
+            peer_speaks_plain_http_over_https = (
+                generic_tls_error.errno == ssl.SSL_ERROR_SSL and
+                _assert_ssl_exc_contains(generic_tls_error, 'http request')
+            )
+            if peer_speaks_plain_http_over_https:
+                reraised_connection_drop_exc_cls = errors.NoSSLError
+            else:
+                reraised_connection_drop_exc_cls = errors.FatalSSLAlert
+
+            raise reraised_connection_drop_exc_cls(
+                *generic_tls_error.args,
+            ) from generic_tls_error
+        except OSError as tcp_connection_drop_error:
+            raise errors.FatalSSLAlert(
+                *tcp_connection_drop_error.args,
+            ) from tcp_connection_drop_error
+
+        return s, self.get_environ(s)
 
     def get_environ(self, sock):
         """Create WSGI environ entries to be merged into each request."""

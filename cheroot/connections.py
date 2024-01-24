@@ -292,6 +292,13 @@ class ConnectionManager:
             if self.server.ssl_adapter is not None:
                 try:
                     s, ssl_env = self.server.ssl_adapter.wrap(s)
+                except errors.FatalSSLAlert as tls_connection_drop_error:
+                    self.server.error_log(
+                        f'Client {addr !s} lost — peer dropped the TLS '
+                        'connection suddenly, during handshake: '
+                        f'{tls_connection_drop_error !s}',
+                    )
+                    return
                 except errors.NoSSLError:
                     msg = (
                         'The client sent a plain HTTP request, but '
@@ -310,8 +317,6 @@ class ConnectionManager:
                     except OSError as ex:
                         if ex.args[0] not in errors.socket_errors_to_ignore:
                             raise
-                    return
-                if not s:
                     return
                 mf = self.server.ssl_adapter.makefile
                 # Re-apply our timeout since we may have a new socket object
