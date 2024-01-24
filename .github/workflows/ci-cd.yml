@@ -112,6 +112,7 @@ jobs:
   pre-setup:
     name: ⚙️ Pre-set global build settings
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     defaults:
       run:
         shell: python
@@ -361,6 +362,8 @@ jobs:
     - pre-setup  # transitive, for accessing settings
 
     runs-on: ubuntu-latest
+
+    timeout-minutes: 1
 
     env:
       TOXENV: cleanup-dists,build-dists
