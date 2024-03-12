@@ -209,7 +209,11 @@ class HeaderReader:
             if not line.endswith(CRLF):
                 raise ValueError('HTTP requires CRLF terminators')
 
-            if line[0] in (SPACE, TAB):
+            if line[:1] in (SPACE, TAB):
+                # NOTE: `type(line[0]) is int` and `type(line[:1]) is bytes`.
+                # NOTE: The former causes a the following warning:
+                # NOTE: `BytesWarning('Comparison between bytes and int')`
+                # NOTE: The latter is equivalent and does not.
                 # It's a continuation line.
                 v = line.strip()
             else:
