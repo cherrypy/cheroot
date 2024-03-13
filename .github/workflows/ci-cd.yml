@@ -909,8 +909,7 @@ jobs:
           }},
           Py-${{
             steps.python-install.outputs.python-version
-          }},
-          ${{ needs.pre-setup.outputs.wheel-artifact-name }}
+          }}
 
   check:  # This job does nothing and is only used for the branch protection
     if: always()

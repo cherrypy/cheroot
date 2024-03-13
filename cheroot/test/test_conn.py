@@ -53,7 +53,8 @@ class Controller(helper.Controller):
                 "'POST' != request.method %r" %
                 req.environ['REQUEST_METHOD'],
             )
-        return "thanks for '%s'" % req.environ['wsgi.input'].read()
+        input_contents = req.environ['wsgi.input'].read().decode('utf-8')
+        return f"thanks for '{input_contents !s}'"
 
     def custom_204(req, resp):
         """Render response with status 204."""
@@ -917,7 +918,7 @@ def test_100_Continue(test_client):
     status_line, _actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
     assert actual_status == 200
-    expected_resp_body = ("thanks for '%s'" % body).encode()
+    expected_resp_body = f"thanks for '{body.decode() !s}'".encode()
     assert actual_resp_body == expected_resp_body
     conn.close()
 
@@ -987,7 +988,7 @@ def test_readall_or_close(test_client, max_request_body_size):
     status_line, actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
     assert actual_status == 200
-    expected_resp_body = ("thanks for '%s'" % body).encode()
+    expected_resp_body = f"thanks for '{body.decode() !s}'".encode()
     assert actual_resp_body == expected_resp_body
     conn.close()
 
