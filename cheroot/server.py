@@ -157,7 +157,7 @@ QUOTED_SLASH = b'%2F'
 QUOTED_SLASH_REGEX = re.compile(b''.join((b'(?i)', QUOTED_SLASH)))
 
 
-_STOPPING_FOR_INTERRUPT = object()  # sentinel used during shutdown
+_STOPPING_FOR_INTERRUPT = Exception()  # sentinel used during shutdown
 
 
 comma_separated_headers = [
