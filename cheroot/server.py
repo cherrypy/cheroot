@@ -1729,9 +1729,7 @@ class HTTPServer:
         """Run the server forever, and stop it cleanly on exit."""
         try:
             self.start()
-        except (KeyboardInterrupt, IOError):
-            # The time.sleep call might raise
-            # "IOError: [Errno 4] Interrupted function call" on KBInt.
+        except KeyboardInterrupt:
             self.error_log('Keyboard Interrupt: shutting down')
             self.stop()
             raise
