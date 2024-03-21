@@ -142,9 +142,9 @@ class WorkerThread(threading.Thread):
                 else:
                     conn.close()
                 if is_stats_enabled:
-                    self.requests_seen += self.conn.requests_seen
-                    self.bytes_read += self.conn.rfile.bytes_read
-                    self.bytes_written += self.conn.wfile.bytes_written
+                    self.requests_seen += conn.requests_seen
+                    self.bytes_read += conn.rfile.bytes_read
+                    self.bytes_written += conn.wfile.bytes_written
                     self.work_time += time.time() - self.start_time
                     self.start_time = None
                 self.conn = None
