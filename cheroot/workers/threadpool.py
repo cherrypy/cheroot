@@ -99,41 +99,55 @@ class WorkerThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        """Process incoming HTTP connections.
+        """Set up incoming HTTP connection processing loop.
 
-        Retrieves incoming connections from thread pool.
+        This is the thread's entry-point. It performs lop-layer
+        exception handling and interrupt processing.
+        :exc:`KeyboardInterrupt` and :exc:`SystemExit` bubbling up
+        from the inner-layer code constitute a global server interrupt
+        request. When they happen, the worker thread exits.
+
+        # noqa: DAR401 KeyboardInterrupt SystemExit
         """
         self.server.stats['Worker Threads'][self.name] = self.stats
+        self.ready = True
         try:
-            self.ready = True
-            while True:
-                conn = self.server.requests.get()
-                if conn is _SHUTDOWNREQUEST:
-                    return
-
-                self.conn = conn
-                is_stats_enabled = self.server.stats['Enabled']
-                if is_stats_enabled:
-                    self.start_time = time.time()
-                keep_conn_open = False
-                try:
-                    keep_conn_open = conn.communicate()
-                finally:
-                    if keep_conn_open:
-                        self.server.put_conn(conn)
-                    else:
-                        conn.close()
-                    if is_stats_enabled:
-                        self.requests_seen += self.conn.requests_seen
-                        self.bytes_read += self.conn.rfile.bytes_read
-                        self.bytes_written += self.conn.wfile.bytes_written
-                        self.work_time += time.time() - self.start_time
-                        self.start_time = None
-                    self.conn = None
+            self._process_connections_until_interrupted()
         except (KeyboardInterrupt, SystemExit) as ex:
             self.server.interrupt = ex
         finally:
             self.ready = False
+
+    def _process_connections_until_interrupted(self):
+        """Process incoming HTTP connections in an infinite loop.
+
+        Retrieves incoming connections from thread pool, processing
+        them one by one.
+        """
+        while True:
+            conn = self.server.requests.get()
+            if conn is _SHUTDOWNREQUEST:
+                return
+
+            self.conn = conn
+            is_stats_enabled = self.server.stats['Enabled']
+            if is_stats_enabled:
+                self.start_time = time.time()
+            keep_conn_open = False
+            try:
+                keep_conn_open = conn.communicate()
+            finally:
+                if keep_conn_open:
+                    self.server.put_conn(conn)
+                else:
+                    conn.close()
+                if is_stats_enabled:
+                    self.requests_seen += self.conn.requests_seen
+                    self.bytes_read += self.conn.rfile.bytes_read
+                    self.bytes_written += self.conn.wfile.bytes_written
+                    self.work_time += time.time() - self.start_time
+                    self.start_time = None
+                self.conn = None
 
 
 class ThreadPool:
