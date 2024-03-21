@@ -28,6 +28,7 @@ metaclass
 multi
 namespace
 netloc
+noqa
 PIL
 pipelining
 positionally
