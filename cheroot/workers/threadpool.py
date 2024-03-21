@@ -30,7 +30,7 @@ class TrueyZero:
 
 trueyzero = TrueyZero()
 
-_SHUTDOWNREQUEST = None
+_SHUTDOWNREQUEST = object()
 
 
 class WorkerThread(threading.Thread):
