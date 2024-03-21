@@ -132,6 +132,8 @@ class WorkerThread(threading.Thread):
                     self.conn = None
         except (KeyboardInterrupt, SystemExit) as ex:
             self.server.interrupt = ex
+        finally:
+            self.ready = False
 
 
 class ThreadPool:
