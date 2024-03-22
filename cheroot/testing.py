@@ -50,27 +50,52 @@ def cheroot_server(server_factory):
 
     httpserver.shutdown_timeout = 0  # Speed-up tests teardown
 
-    threading.Thread(target=httpserver.safe_start).start()  # spawn it
+    # FIXME: Expose this thread through a fixture so that it
+    # FIXME: could be awaited in tests.
+    server_thread = threading.Thread(target=httpserver.safe_start)
+    server_thread.start()  # spawn it
     while not httpserver.ready:  # wait until fully initialized and bound
         time.sleep(0.1)
 
-    yield httpserver
-
-    httpserver.stop()  # destroy it
+    try:
+        yield server_thread, httpserver
+    finally:
+        httpserver.stop()  # destroy it
+        server_thread.join()  # wait for the thread to be turn down
 
 
 @pytest.fixture
-def wsgi_server():
+def thread_and_wsgi_server():
+    """Set up and tear down a Cheroot WSGI server instance.
+
+    This emits a tuple of a thread and a server instance.
+    """
+    with cheroot_server(cheroot.wsgi.Server) as (server_thread, srv):
+        yield server_thread, srv
+
+
+@pytest.fixture
+def thread_and_native_server():
+    """Set up and tear down a Cheroot HTTP server instance.
+
+    This emits a tuple of a thread and a server instance.
+    """
+    with cheroot_server(cheroot.server.HTTPServer) as (server_thread, srv):
+        yield server_thread, srv
+
+
+@pytest.fixture
+def wsgi_server(thread_and_wsgi_server):
     """Set up and tear down a Cheroot WSGI server instance."""
-    with cheroot_server(cheroot.wsgi.Server) as srv:
-        yield srv
+    _server_thread, srv = thread_and_wsgi_server
+    yield srv
 
 
 @pytest.fixture
-def native_server():
+def native_server(thread_and_native_server):
     """Set up and tear down a Cheroot HTTP server instance."""
-    with cheroot_server(cheroot.server.HTTPServer) as srv:
-        yield srv
+    _server_thread, srv = thread_and_native_server
+    yield srv
 
 
 class _TestClient:
