@@ -37,6 +37,10 @@ def http_request_timeout():
 @pytest.fixture
 # pylint: disable=redefined-outer-name
 def wsgi_server_thread(thread_and_wsgi_server):  # noqa: F811
+    """Set up and tear down a Cheroot WSGI server instance.
+
+    This exposes the server thread.
+    """
     server_thread, _srv = thread_and_wsgi_server
     return server_thread
 
@@ -44,6 +48,10 @@ def wsgi_server_thread(thread_and_wsgi_server):  # noqa: F811
 @pytest.fixture
 # pylint: disable=redefined-outer-name
 def native_server_thread(thread_and_native_server):  # noqa: F811
+    """Set up and tear down a Cheroot HTTP server instance.
+
+    This exposes the server thread.
+    """
     server_thread, _srv = thread_and_native_server
     return server_thread
 
