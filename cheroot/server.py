@@ -1729,12 +1729,16 @@ class HTTPServer:
         """Run the server forever, and stop it cleanly on exit."""
         try:
             self.start()
-        except KeyboardInterrupt:
-            self.stop()
-            raise
-        except SystemExit:
-            self.stop()
-            raise
+        except KeyboardInterrupt as kb_intr_exc:
+            underlying_interrupt = self.interrupt
+            if not underlying_interrupt:
+                self.interrupt = kb_intr_exc
+            raise kb_intr_exc from underlying_interrupt
+        except SystemExit as sys_exit_exc:
+            underlying_interrupt = self.interrupt
+            if not underlying_interrupt:
+                self.interrupt = sys_exit_exc
+            raise sys_exit_exc from underlying_interrupt
 
     def prepare(self):  # noqa: C901  # FIXME
         """Prepare server to serving requests.
