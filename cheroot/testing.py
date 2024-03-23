@@ -31,7 +31,7 @@ config = {
 
 
 @contextmanager
-def cheroot_server(server_factory):
+def cheroot_server(server_factory):  # noqa: WPS210
     """Set up and tear down a Cheroot server instance."""
     conf = config[server_factory].copy()
     bind_port = conf.pop('bind_addr')[-1]
