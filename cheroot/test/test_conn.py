@@ -1,6 +1,7 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
 import errno
+from re import match as _matches_pattern
 import socket
 import time
 import logging
@@ -698,6 +699,63 @@ def test_broken_connection_during_tcp_fin(
         assert _close_kernel_socket.fin_spy.spy_exception.errno == error_number
 
     assert _close_kernel_socket.exception_leaked is exception_leaks
+
+
+def test_broken_connection_during_http_communication_fallback(  # noqa: WPS118
+        monkeypatch,
+        test_client,
+        testing_server,
+        wsgi_server_thread,
+):
+    """Test that unhandled internal error cascades into shutdown."""
+    def _raise_connection_reset(*_args, **_kwargs):
+        raise ConnectionResetError(666)
+
+    def _read_request_line(self):
+        monkeypatch.setattr(self.conn.rfile, 'close', _raise_connection_reset)
+        monkeypatch.setattr(self.conn.wfile, 'write', _raise_connection_reset)
+        _raise_connection_reset()
+
+    monkeypatch.setattr(
+        test_client.server_instance.ConnectionClass.RequestHandlerClass,
+        'read_request_line',
+        _read_request_line,
+    )
+
+    test_client.get_connection().send(b'GET / HTTP/1.1')
+    wsgi_server_thread.join()  # no extra logs upon server termination
+
+    actual_log_entries = testing_server.error_log.calls[:]
+    testing_server.error_log.calls.clear()  # prevent post-test assertions
+
+    expected_log_entries = (
+        (logging.WARNING, r'^socket\.error 666$'),
+        (
+            logging.INFO,
+            '^Got a connection error while handling a connection '
+            r'from .*:\d{1,5} \(666\)',
+        ),
+        (
+            logging.CRITICAL,
+            r'A fatal exception happened\. Setting the server interrupt flag '
+            r'to ConnectionResetError\(666\) and giving up\.\n\nPlease, '
+            'report this on the Cheroot tracker at '
+            r'<https://github\.com/cherrypy/cheroot/issues/new/choose>, '
+            'providing a full reproducer with as much context and details '
+            r'as possible\.$',
+        ),
+    )
+
+    assert len(actual_log_entries) == len(expected_log_entries)
+
+    for (  # noqa: WPS352
+            (expected_log_level, expected_msg_regex),
+            (actual_msg, actual_log_level, _tb),
+    ) in zip(expected_log_entries, actual_log_entries):
+        assert expected_log_level == actual_log_level
+        assert _matches_pattern(expected_msg_regex, actual_msg) is not None, (
+            f'{actual_msg !r} does not match {expected_msg_regex !r}'
+        )
 
 
 @pytest.mark.parametrize(
