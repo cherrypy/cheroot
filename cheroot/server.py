@@ -1730,11 +1730,9 @@ class HTTPServer:
         try:
             self.start()
         except KeyboardInterrupt:
-            self.error_log('Keyboard Interrupt: shutting down')
             self.stop()
             raise
         except SystemExit:
-            self.error_log('SystemExit raised: shutting down')
             self.stop()
             raise
 
@@ -2113,6 +2111,13 @@ class HTTPServer:
         has completed.
         """
         self._interrupt = _STOPPING_FOR_INTERRUPT
+
+        if isinstance(interrupt, KeyboardInterrupt):
+            self.error_log('Keyboard Interrupt: shutting down')
+
+        if isinstance(interrupt, SystemExit):
+            self.error_log('SystemExit raised: shutting down')
+
         self.stop()
         self._interrupt = interrupt
 
