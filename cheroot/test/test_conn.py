@@ -758,6 +758,54 @@ def test_broken_connection_during_http_communication_fallback(  # noqa: WPS118
         )
 
 
+def test_kb_int_from_http_handler(
+        test_client,
+        testing_server,
+        wsgi_server_thread,
+):
+    """Test that a keyboard interrupt from HTTP handler causes shutdown."""
+    def _trigger_kb_intr(_req, _resp):
+        raise KeyboardInterrupt('simulated test handler keyboard interrupt')
+    testing_server.wsgi_app.handlers['/kb_intr'] = _trigger_kb_intr
+
+    http_conn = test_client.get_connection()
+    http_conn.putrequest('GET', '/kb_intr', skip_host=True)
+    http_conn.putheader('Host', http_conn.host)
+    http_conn.endheaders()
+    wsgi_server_thread.join()  # no extra logs upon server termination
+
+    actual_log_entries = testing_server.error_log.calls[:]
+    testing_server.error_log.calls.clear()  # prevent post-test assertions
+
+    expected_log_entries = (
+        (
+            logging.DEBUG,
+            '^Got a server shutdown request while handling a connection '
+            r'from .*:\d{1,5} \(simulated test handler keyboard interrupt\)$',
+        ),
+        (
+            logging.DEBUG,
+            '^Setting the server interrupt flag to KeyboardInterrupt'
+            r"\('simulated test handler keyboard interrupt'\)$",
+        ),
+        (
+            logging.INFO,
+            '^Keyboard Interrupt: shutting down$',
+        ),
+    )
+
+    assert len(actual_log_entries) == len(expected_log_entries)
+
+    for (  # noqa: WPS352
+            (expected_log_level, expected_msg_regex),
+            (actual_msg, actual_log_level, _tb),
+    ) in zip(expected_log_entries, actual_log_entries):
+        assert expected_log_level == actual_log_level
+        assert _matches_pattern(expected_msg_regex, actual_msg) is not None, (
+            f'{actual_msg !r} does not match {expected_msg_regex !r}'
+        )
+
+
 @pytest.mark.parametrize(
     'timeout_before_headers',
     (
