@@ -88,14 +88,14 @@ def thread_and_native_server():
 def wsgi_server(thread_and_wsgi_server):
     """Set up and tear down a Cheroot WSGI server instance."""
     _server_thread, srv = thread_and_wsgi_server
-    yield srv
+    return srv
 
 
 @pytest.fixture
 def native_server(thread_and_native_server):
     """Set up and tear down a Cheroot HTTP server instance."""
     _server_thread, srv = thread_and_native_server
-    yield srv
+    return srv
 
 
 class _TestClient:

@@ -38,14 +38,14 @@ def http_request_timeout():
 # pylint: disable=redefined-outer-name
 def wsgi_server_thread(thread_and_wsgi_server):  # noqa: F811
     server_thread, _srv = thread_and_wsgi_server
-    yield server_thread
+    return server_thread
 
 
 @pytest.fixture
 # pylint: disable=redefined-outer-name
 def native_server_thread(thread_and_native_server):  # noqa: F811
     server_thread, _srv = thread_and_native_server
-    yield server_thread
+    return server_thread
 
 
 @pytest.fixture
