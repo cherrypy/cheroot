@@ -20,7 +20,7 @@ colorama==0.4.6
     # via pytest-watch
 coverage==7.2.2
     # via
-    #   -r requirements/tox-py311-cp311-darwin-x86_64.in
+    #   -r tox-py311-cp311-darwin-x86_64.in
     #   pytest-cov
 cryptography==40.0.1
     # via
@@ -40,22 +40,20 @@ iniconfig==2.0.0
     # via pytest
 jaraco-context==4.3.0
     # via
-    #   -r requirements/tox-py311-cp311-darwin-x86_64.in
+    #   -r tox-py311-cp311-darwin-x86_64.in
     #   jaraco-text
 jaraco-functools==3.6.0
     # via
-    #   cheroot (setup.cfg)
     #   jaraco-text
     #   tempora
 jaraco-text==3.11.1
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 markdown-it-py==2.2.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
 more-itertools==9.1.0
     # via
-    #   cheroot (setup.cfg)
     #   jaraco-functools
     #   jaraco-text
 packaging==23.0
@@ -66,7 +64,7 @@ packaging==23.0
 pluggy==1.0.0
     # via pytest
 portend==3.1.0
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pprintpp==0.4.0
     # via pytest-clarity
 py==1.11.0
@@ -81,12 +79,12 @@ pydantic==1.10.7
 pygments==2.14.0
     # via rich
 pyopenssl==23.1.1 ; implementation_name != "pypy"
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pypytools==0.6.2
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytest==6.2.5
     # via
-    #   -r requirements/tox-py311-cp311-darwin-x86_64.in
+    #   -r tox-py311-cp311-darwin-x86_64.in
     #   pytest-clarity
     #   pytest-cov
     #   pytest-forked
@@ -96,32 +94,32 @@ pytest==6.2.5
     #   pytest-watch
     #   pytest-xdist
 pytest-clarity==1.0.1
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytest-cov==2.12.0
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytest-forked==1.6.0 ; sys_platform != "win32"
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytest-mock==3.10.0
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytest-rerunfailures==11.1.2
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytest-sugar==0.9.6
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytest-watch==4.2.0
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytest-xdist==3.2.1
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 pytz==2023.3
     # via tempora
 requests==2.28.2
     # via
-    #   -r requirements/tox-py311-cp311-darwin-x86_64.in
+    #   -r tox-py311-cp311-darwin-x86_64.in
     #   requests-toolbelt
     #   requests-unixsocket
 requests-toolbelt==0.10.1
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 requests-unixsocket==0.3.0
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 rich==13.3.3
     # via pytest-clarity
 tempora==5.2.1
@@ -131,10 +129,12 @@ termcolor==2.2.0
 toml==0.10.2
     # via pytest
 trustme==0.9.0
-    # via -r requirements/tox-py311-cp311-darwin-x86_64.in
+    # via -r tox-py311-cp311-darwin-x86_64.in
 typing-extensions==4.5.0
     # via pydantic
-urllib3==1.26.15
-    # via requests
+urllib3==1.26.18
+    # via
+    #   -r tox-py311-cp311-darwin-x86_64.in
+    #   requests
 watchdog==3.0.0
     # via pytest-watch
