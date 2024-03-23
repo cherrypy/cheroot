@@ -85,14 +85,14 @@ def thread_and_native_server():
 
 
 @pytest.fixture
-def wsgi_server(thread_and_wsgi_server):
+def wsgi_server(thread_and_wsgi_server):  # noqa: WPS442
     """Set up and tear down a Cheroot WSGI server instance."""
     _server_thread, srv = thread_and_wsgi_server
     return srv
 
 
 @pytest.fixture
-def native_server(thread_and_native_server):
+def native_server(thread_and_native_server):  # noqa: WPS442
     """Set up and tear down a Cheroot HTTP server instance."""
     _server_thread, srv = thread_and_native_server
     return srv
