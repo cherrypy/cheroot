@@ -806,6 +806,75 @@ def test_kb_int_from_http_handler(
         )
 
 
+def test_unhandled_exception_in_request_handler(
+        mocker,
+        monkeypatch,
+        test_client,
+        testing_server,
+        wsgi_server_thread,
+):
+    """Ensure worker threads are resilient to in-handler exceptions."""
+
+    class SillyMistake(BaseException):  # noqa: WPS418, WPS431
+        """A simulated crash within an HTTP handler."""
+
+    def _trigger_scary_exc(_req, _resp):
+        raise SillyMistake('simulated unhandled exception 💣 in test handler')
+
+    testing_server.wsgi_app.handlers['/scary_exc'] = _trigger_scary_exc
+
+    server_connection_close_spy = mocker.spy(
+        test_client.server_instance.ConnectionClass,
+        'close',
+    )
+
+    http_conn = test_client.get_connection()
+    http_conn.putrequest('GET', '/scary_exc', skip_host=True)
+    http_conn.putheader('Host', http_conn.host)
+    http_conn.endheaders()
+
+    # NOTE: This spy ensure the log entry gets recorded before we're testing
+    # NOTE: them and before server shutdown, preserving their order and making
+    # NOTE: the log entry presence non-flaky.
+    while not server_connection_close_spy.called:  # noqa: WPS328
+        pass
+
+    assert len(testing_server.requests._threads) == 10
+    while testing_server.requests.idle < 10:  # noqa: WPS328
+        pass
+    assert len(testing_server.requests._threads) == 10
+    testing_server.interrupt = SystemExit('test requesting shutdown')
+    assert not testing_server.requests._threads
+    wsgi_server_thread.join()  # no extra logs upon server termination
+
+    actual_log_entries = testing_server.error_log.calls[:]
+    testing_server.error_log.calls.clear()  # prevent post-test assertions
+
+    expected_log_entries = (
+        (
+            logging.ERROR,
+            '^Unhandled error while processing an incoming connection '
+            'SillyMistake'
+            r"\('simulated unhandled exception 💣 in test handler'\)$",
+        ),
+        (
+            logging.INFO,
+            '^SystemExit raised: shutting down$',
+        ),
+    )
+
+    assert len(actual_log_entries) == len(expected_log_entries)
+
+    for (  # noqa: WPS352
+            (expected_log_level, expected_msg_regex),
+            (actual_msg, actual_log_level, _tb),
+    ) in zip(expected_log_entries, actual_log_entries):
+        assert expected_log_level == actual_log_level
+        assert _matches_pattern(expected_msg_regex, actual_msg) is not None, (
+            f'{actual_msg !r} does not match {expected_msg_regex !r}'
+        )
+
+
 @pytest.mark.parametrize(
     'timeout_before_headers',
     (
