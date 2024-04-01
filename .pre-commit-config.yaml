@@ -252,3 +252,5 @@ repos:
       ^\.pre-commit-config\.ya?ml$
     types:
     - yaml
+
+...
