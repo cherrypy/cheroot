@@ -313,7 +313,7 @@ jobs:
         !steps.pre-existing-remote-branch.outputs.info
         && steps.artifacts.outputs.lockfile-updates-needed
       id: pr
-      uses: vsoch/pull-request-action@1.0.18
+      uses: vsoch/pull-request-action@1.1.1
       env:
         BRANCH_PREFIX: ''
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
