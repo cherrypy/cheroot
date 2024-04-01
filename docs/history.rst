@@ -4,9 +4,24 @@
 
    reproducibility
 
-.. _changes:
+**********
+Change log
+**********
 
-History
-*******
+.. only:: not is_release
 
-.. include:: ../CHANGES.rst
+   *To be included in the next release*
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+   .. towncrier-draft-entries:: |release| :sub:`/UNRELEASED DRAFT/`
+
+   Released versions
+   ^^^^^^^^^^^^^^^^^
+
+   .. include:: ../CHANGES.rst
+      :start-after: .. towncrier release notes start
+
+.. only:: is_release
+
+   .. include:: ../CHANGES.rst
+      :start-after: .. towncrier release notes start

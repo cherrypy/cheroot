@@ -5,5 +5,5 @@ jaraco.packaging >= 3.2
 sphinx-tabs >= 1.1.0
 
 furo
-python-dateutil  # `scm_tag_titles_ext` extension dep in docs/
 sphinxcontrib-apidoc >= 0.3.0
+sphinxcontrib-towncrier

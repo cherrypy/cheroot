@@ -134,3 +134,5 @@ After that, you can open `http://localhost:8000/ <http://localhost:8000/>`_ in y
 Read more about `Sphinx`_.
 
 .. _Sphinx: https://www.sphinx-doc.org
+
+.. include:: ../changelog-fragments.d/README.rst
