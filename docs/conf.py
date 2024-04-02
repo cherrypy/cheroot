@@ -128,7 +128,6 @@ nitpicky = True
 # NOTE: consider having a separate ignore file
 # Ref: https://stackoverflow.com/a/30624034/595220
 nitpick_ignore = [
-    ('py:data', 'SIGINT'),
     ('py:const', 'socket.SO_PEERCRED'),
     ('py:class', '_pyio.BufferedWriter'),
     ('py:class', '_pyio.BufferedReader'),

@@ -67,8 +67,8 @@ Internal changes:
 
 - :pr:`350`: Fixed the incarnation of an earlier regression
   of not resetting the serving state
-  on :py:data:`SIGINT` originally fixed by :pr:`322` and
-  :pr:`331` but reintroduced by the changes in :pr:`311`
+  on :py:data:`~signal.SIGINT` originally fixed by :pr:`322`
+  and :pr:`331` but reintroduced by the changes in :pr:`311`
   -- by :user:`liamstask`.
 
 .. scm-version-title:: v8.5.0
@@ -101,8 +101,8 @@ Internal changes:
   regression introduced in the earlier refactoring in v8.4.4
   via :pr:`309` that caused the :py:meth:`~cheroot.server.\
   HTTPServer.serve` method to skip setting
-  ``serving=False`` on :py:data:``SIGINT`` and
-  :py:data:``SIGTERM`` -- by :user:`marc1n` and
+  ``serving=False`` on :py:data:`~signal.SIGINT` and
+  :py:data:`~signal.SIGTERM` -- by :user:`marc1n` and
   :user:`cristicbz`.
 
 .. scm-version-title:: v8.4.5
