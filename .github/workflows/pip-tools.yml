@@ -147,7 +147,6 @@ jobs:
 
 
         python -m piptools compile
-        --allow-unsafe
         ${{
         (
         github.event_name == 'workflow_dispatch'
@@ -159,9 +158,7 @@ jobs:
         )
         || '--upgrade'
         }}
-        --resolver backtracking
         --output-file="requirements/${BASE_NAME}.txt"
-        --strip-extras
         "requirements/${BASE_NAME}.in"
         setup.cfg
 
