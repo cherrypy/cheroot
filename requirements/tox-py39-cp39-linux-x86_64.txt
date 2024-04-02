@@ -147,5 +147,5 @@ urllib3==1.26.18
     # via
     #   -r requirements/tox-py39-cp39-linux-x86_64.in
     #   requests
-watchdog==3.0.0
+watchdog==4.0.0
     # via pytest-watch
