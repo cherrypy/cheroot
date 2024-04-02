@@ -36,7 +36,7 @@ idna==3.6
     # via
     #   requests
     #   trustme
-importlib-resources==6.1.1
+importlib-resources==6.4.0
     # via jaraco-text
 inflect==7.0.0
     # via jaraco-text
