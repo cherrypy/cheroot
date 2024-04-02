@@ -126,7 +126,7 @@ requests-toolbelt==1.0.0
     # via -r requirements/tox-py310-cp310-win32-amd64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py310-cp310-win32-amd64.in
-rich==13.7.0
+rich==13.7.1
     # via pytest-clarity
 tempora==5.5.1
     # via portend
