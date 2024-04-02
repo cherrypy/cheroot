@@ -60,7 +60,7 @@ more-itertools==10.1.0
     #   cheroot (setup.cfg)
     #   jaraco-functools
     #   jaraco-text
-packaging==23.2
+packaging==24.0
     # via
     #   pytest
     #   pytest-rerunfailures
