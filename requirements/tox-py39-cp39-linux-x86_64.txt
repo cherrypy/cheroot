@@ -65,7 +65,7 @@ packaging==23.2
     #   pytest
     #   pytest-rerunfailures
     #   pytest-sugar
-pluggy==1.3.0
+pluggy==1.4.0
     # via pytest
 portend==3.2.0
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
