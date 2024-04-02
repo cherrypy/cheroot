@@ -24,7 +24,7 @@ colorama==0.4.6
     # via
     #   pytest
     #   pytest-watch
-coverage==7.3.2
+coverage==7.4.4
     # via
     #   -r requirements/tox-py39-cp39-win32-amd64.in
     #   pytest-cov
