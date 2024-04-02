@@ -8,7 +8,7 @@ annotated-types==0.6.0
     # via pydantic
 atomicwrites==1.4.1
     # via pytest
-attrs==23.1.0
+attrs==23.2.0
     # via pytest
 autocommand==2.2.2
     # via jaraco-text
