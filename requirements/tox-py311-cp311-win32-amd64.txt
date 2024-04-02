@@ -105,7 +105,7 @@ pytest-clarity==1.0.1
     # via -r requirements/tox-py311-cp311-win32-amd64.in
 pytest-cov==2.12.0
     # via -r requirements/tox-py311-cp311-win32-amd64.in
-pytest-mock==3.12.0
+pytest-mock==3.14.0
     # via -r requirements/tox-py311-cp311-win32-amd64.in
 pytest-rerunfailures==12.0
     # via -r requirements/tox-py311-cp311-win32-amd64.in
