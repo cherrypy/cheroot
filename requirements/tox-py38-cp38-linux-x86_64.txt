@@ -20,7 +20,7 @@ charset-normalizer==3.3.2
     # via requests
 colorama==0.4.6
     # via pytest-watch
-coverage==7.3.2
+coverage==7.4.4
     # via
     #   -r requirements/tox-py38-cp38-linux-x86_64.in
     #   pytest-cov
