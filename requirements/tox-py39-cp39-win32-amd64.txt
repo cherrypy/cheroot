@@ -109,7 +109,7 @@ pytest-mock==3.12.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pytest-rerunfailures==12.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-pytest-sugar==0.9.7
+pytest-sugar==1.0.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pytest-watch==4.2.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
