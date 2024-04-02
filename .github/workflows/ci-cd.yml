@@ -363,7 +363,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 1
+    timeout-minutes: 2
 
     env:
       TOXENV: cleanup-dists,build-dists
