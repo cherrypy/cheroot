@@ -84,7 +84,7 @@ pydantic-core==2.14.5
     # via pydantic
 pygments==2.17.2
     # via rich
-pyopenssl==23.3.0 ; implementation_name != "pypy"
+pyopenssl==24.1.0 ; implementation_name != "pypy"
     # via -r requirements/tox-py39-cp39-darwin-x86_64.in
 pypytools==0.6.2
     # via -r requirements/tox-py39-cp39-darwin-x86_64.in
