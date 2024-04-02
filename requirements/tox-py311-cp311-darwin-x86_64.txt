@@ -136,7 +136,7 @@ toml==0.10.2
     # via pytest
 trustme==1.1.0
     # via -r requirements/tox-py311-cp311-darwin-x86_64.in
-typing-extensions==4.8.0
+typing-extensions==4.10.0
     # via
     #   inflect
     #   pydantic

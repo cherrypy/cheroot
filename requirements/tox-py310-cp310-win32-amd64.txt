@@ -138,7 +138,7 @@ tomli==2.0.1
     # via coverage
 trustme==1.1.0
     # via -r requirements/tox-py310-cp310-win32-amd64.in
-typing-extensions==4.8.0
+typing-extensions==4.10.0
     # via
     #   inflect
     #   pydantic
