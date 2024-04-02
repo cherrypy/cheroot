@@ -7,8 +7,12 @@ Welcome to Cheroot documentation!
    :maxdepth: 1
    :glob:
 
-   contribute
    history
+
+.. toctree::
+   :caption: Contributing
+
+   contributing/guidelines
 
 .. toctree::
    :caption: Reference

@@ -1,4 +1,4 @@
-.. include:: ../.github/CONTRIBUTING.rst
+.. include:: ../../.github/CONTRIBUTING.rst
 
 
 First-time setup
