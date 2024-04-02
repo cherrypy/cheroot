@@ -128,7 +128,7 @@ requests-unixsocket==0.3.0
     # via -r requirements/tox-py310-cp310-win32-amd64.in
 rich==13.7.0
     # via pytest-clarity
-tempora==5.5.0
+tempora==5.5.1
     # via portend
 termcolor==2.4.0
     # via pytest-sugar
