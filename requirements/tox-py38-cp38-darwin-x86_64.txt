@@ -24,7 +24,7 @@ coverage==7.3.2
     # via
     #   -r requirements/tox-py38-cp38-darwin-x86_64.in
     #   pytest-cov
-cryptography==41.0.7
+cryptography==42.0.5
     # via
     #   pyopenssl
     #   trustme
