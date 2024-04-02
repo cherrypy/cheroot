@@ -107,7 +107,7 @@ pytest-cov==2.12.0
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
 pytest-forked==1.6.0 ; sys_platform != "win32"
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
-pytest-mock==3.12.0
+pytest-mock==3.14.0
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
 pytest-rerunfailures==12.0
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
