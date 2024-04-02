@@ -145,5 +145,5 @@ urllib3==1.26.18
     # via
     #   -r requirements/tox-py311-cp311-linux-x86_64.in
     #   requests
-watchdog==3.0.0
+watchdog==4.0.0
     # via pytest-watch
