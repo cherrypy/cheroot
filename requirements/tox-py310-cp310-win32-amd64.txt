@@ -12,7 +12,7 @@ attrs==23.1.0
     # via pytest
 autocommand==2.2.2
     # via jaraco-text
-certifi==2023.11.17
+certifi==2024.2.2
     # via requests
 cffi==1.16.0
     # via cryptography
