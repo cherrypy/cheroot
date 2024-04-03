@@ -183,7 +183,7 @@ jobs:
     - name: Check out src from Git
       if: >-
         steps.request-check.outputs.release-requested != 'true'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: >-
           ${{
@@ -375,7 +375,7 @@ jobs:
         python-version: 3.11
 
     - name: Grab the source from Git
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: >-
           ${{
@@ -566,7 +566,7 @@ jobs:
     - name: Grab the source from Git
       if: >-
         contains(fromJSON('["pre-commit", "spellcheck-docs"]'), matrix.toxenv)
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.inputs.release-committish }}
     - name: Retrieve the project source from an sdist inside the GHA artifact
@@ -1027,7 +1027,7 @@ jobs:
 
     - name: Fetch the src snapshot
       if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 1
         ref: ${{ github.event.inputs.release-committish }}
