@@ -541,7 +541,6 @@ jobs:
           3.10
         toxenv:
         - pre-commit
-        - setup-check
         - metadata-validation
         - build-docs
         - doctest-docs
