@@ -81,7 +81,7 @@ env:
     PYTHONIOENCODING
     PYTHONLEGACYWINDOWSSTDIO
     PYTHONUTF8
-  TOX_VERSION: tox < 4
+  TOX_VERSION: tox < 4.12
 
 run-name: >-
   ${{
