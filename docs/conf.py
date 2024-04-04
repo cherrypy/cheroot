@@ -37,16 +37,10 @@ extensions = [
     'sphinx_tabs.tabs',
     'sphinxcontrib.apidoc',
     'sphinxcontrib.towncrier.ext',  # provides `.. towncrier-draft-entries::`
-]
 
-# Conditional third-party extensions:
-try:
-    import sphinxcontrib.spelling as _sphinxcontrib_spelling
-except ImportError:
-    extensions.append('spelling_stub_ext')
-else:
-    del _sphinxcontrib_spelling  # noqa: WPS100
-    extensions.append('sphinxcontrib.spelling')
+    # In-tree extensions:
+    'spelling_stub_ext',  # auto-loads `sphinxcontrib.spelling` if installed
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
