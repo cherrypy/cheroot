@@ -3,15 +3,28 @@
 # pylint: disable=invalid-name
 """Configuration of Sphinx documentation generator."""
 
-from pathlib import Path
+import os
 import sys
+from pathlib import Path
+
+# -- Path setup --------------------------------------------------------------
+
+PROJECT_ROOT_DIR = Path(__file__).parents[1].resolve()
+IS_RELEASE_ON_RTD = (
+    os.getenv('READTHEDOCS', 'False') == 'True'
+    and os.environ['READTHEDOCS_VERSION_TYPE'] == 'tag'
+)
+if IS_RELEASE_ON_RTD:
+    tags: set[str]
+    # pylint: disable-next=used-before-assignment
+    tags.add('is_release')  # noqa: F821
 
 
 # Make in-tree extension importable in non-tox setups/envs, like RTD.
 # Refs:
 # https://github.com/readthedocs/readthedocs.org/issues/6311
 # https://github.com/readthedocs/readthedocs.org/issues/7182
-sys.path.insert(0, str(Path(__file__).parent.resolve()))
+sys.path.insert(0, str(PROJECT_ROOT_DIR))
 
 
 extensions = [
@@ -23,22 +36,21 @@ extensions = [
     'jaraco.packaging.sphinx',
     'sphinx_tabs.tabs',
     'sphinxcontrib.apidoc',
+    'sphinxcontrib.towncrier.ext',  # provides `.. towncrier-draft-entries::`
+
+    # In-tree extensions:
+    'spelling_stub_ext',  # auto-loads `sphinxcontrib.spelling` if installed
 ]
-
-# Conditional third-party extensions:
-try:
-    import sphinxcontrib.spelling as _sphinxcontrib_spelling
-except ImportError:
-    extensions.append('spelling_stub_ext')
-else:
-    del _sphinxcontrib_spelling  # noqa: WPS100
-    extensions.append('sphinxcontrib.spelling')
-
-# Tree-local extensions:
-extensions.append('scm_tag_titles_ext')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+# This pattern also affects html_static_path and html_extra_path.
+exclude_patterns = [
+    'changelog-fragments.d/**',  # Towncrier-managed change notes
+]
 
 master_doc = 'index'
 
@@ -62,11 +74,6 @@ spelling_show_suggestions = True
 spelling_word_list_filename = [
     'spelling_wordlist.txt',
 ]
-
-scm_version_title_settings = {
-    'scm': 'git',
-    'date_format': '%d %b %Y',
-}
 
 github_url = 'https://github.com'
 github_repo_org = 'cherrypy'
@@ -137,6 +144,15 @@ nitpick_ignore = [
     # Ref: https://github.com/pyca/pyopenssl/issues/1012
     ('py:class', 'pyopenssl:OpenSSL.SSL.Context'),
 ]
+
+# -- Options for towncrier_draft extension -----------------------------------
+
+# or: 'sphinx-version', 'sphinx-release'
+towncrier_draft_autoversion_mode = 'draft'
+towncrier_draft_include_empty = True
+towncrier_draft_working_directory = PROJECT_ROOT_DIR
+towncrier_draft_config_path = 'towncrier.toml'  # relative to cwd
+
 
 # Ref:
 # * https://github.com/djungelorm/sphinx-tabs/issues/26#issuecomment-422160463

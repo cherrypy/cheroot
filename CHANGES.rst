@@ -1,15 +1,33 @@
-.. scm-version-title:: v11.0.0
+=========
+Changelog
+=========
 
-- :issue:`565`: Cheroot requires Python 3.8 or later.
+..
+    You should *NOT* be adding new change log entries to this file, this
+    file is managed by towncrier. You *may* edit previous change logs to
+    fix problems like typo corrections or such.
+    To add a new change log entry, please see
+    https://pip.pypa.io/en/latest/development/contributing/#news-entries
+    we named the news folder "docs/changelog-fragments.d/".
 
-.. scm-version-title:: v10.0.0
+    WARNING: Don't drop the next directive!
+
+.. towncrier release notes start
+
+v10.0.0
+=======
+
+*(2023-05-20)*
 
 - :issue:`504` via :pr:`505`: Cheroot now accepts a
   ``reuse_port`` parameter on the ``HTTPServer`` object.
   Subclasses overriding ``prepare_socket`` will no longer
   work and will need to adapt to the new interface.
 
-.. scm-version-title:: v9.0.0
+v9.0.0
+======
+
+*(2022-11-19)*
 
 - :issue:`252` via :pr:`339`: Cheroot now requires Python
   3.6 or later. Python 3.5 and Python 2.7 are still supported
@@ -17,7 +35,10 @@
   <cherrypy/cheroot/tree/maint/8.x>` and stabilizing
   bugfixes will be accepted to that branch.
 
-.. scm-version-title:: v8.6.0
+v8.6.0
+======
+
+*(2022-01-03)*
 
 Significant improvements:
 
@@ -49,7 +70,10 @@ Internal changes:
   lock-file.
 - Added per-environment lock-files into the tox test environments.
 
-.. scm-version-title:: v8.5.2
+v8.5.2
+======
+
+*(2021-01-18)*
 
 - :issue:`358` via :pr:`359`: Fixed a regression from
   :pr:`199` that made the worker threads exit on invalid
@@ -57,7 +81,10 @@ Internal changes:
   unresponsive once there was no workers left.
   -- by :user:`cameronbrunner`.
 
-.. scm-version-title:: v8.5.1
+v8.5.1
+======
+
+*(2020-12-12)*
 
 - :cp-issue:`1873` via :pr:`340`: Resurrected an
   unintentionally removed feature of interrupting a server
@@ -71,7 +98,10 @@ Internal changes:
   and :pr:`331` but reintroduced by the changes in :pr:`311`
   -- by :user:`liamstask`.
 
-.. scm-version-title:: v8.5.0
+v8.5.0
+======
+
+*(2020-12-05)*
 
 - :issue:`305` via :pr:`311`: In
   :py:class:`~cheroot.connections.ConnectionManager`,
@@ -82,20 +112,29 @@ Internal changes:
 - :issue:`341` via :pr:`342`: Suppress legitimate OS errors
   expected on shutdown -- by :user:`webknjaz`.
 
-.. scm-version-title:: v8.4.8
+v8.4.8
+======
+
+*(2020-11-24)*
 
 - :issue:`317` via :pr:`337`: Fixed a regression in
   8.4.5 where the connections dictionary would change
   size during iteration, leading to a :py:exc:`RuntimeError`
   raised in the logs -- by :user:`liamstask`.
 
-.. scm-version-title:: v8.4.7
+v8.4.7
+======
+
+*(2020-11-15)*
 
 - :pr:`334`: Started filtering out TLS/SSL errors when
   the version requested by the client is unsupported
   -- by :user:`sanderjo` and :user:`Safihre`.
 
-.. scm-version-title:: v8.4.6
+v8.4.6
+======
+
+*(2020-11-15)*
 
 - :issue:`328` via :pr:`322` and :pr:`331`: Fixed a
   regression introduced in the earlier refactoring in v8.4.4
@@ -105,7 +144,10 @@ Internal changes:
   :py:data:`~signal.SIGTERM` -- by :user:`marc1n` and
   :user:`cristicbz`.
 
-.. scm-version-title:: v8.4.5
+v8.4.5
+======
+
+*(2020-08-24)*
 
 - :issue:`312` via :pr:`313`: Fixed a regression introduced
   in the earlier refactoring in v8.4.4 via :pr:`309` that
@@ -117,7 +159,10 @@ Internal changes:
   ConnectionManager.get_conn` to ensure more stability
   -- by :user:`cyraxjoe`.
 
-.. scm-version-title:: v8.4.4
+v8.4.4
+======
+
+*(2020-08-12)*
 
 - :issue:`304` via :pr:`309`: Refactored :py:class:`~\
   cheroot.connections.ConnectionManager` to use :py:meth:`~\
@@ -129,7 +174,10 @@ Internal changes:
   new connections while it is being terminated
   -- by :user:`liamstask`.
 
-.. scm-version-title:: v8.4.3
+v8.4.3
+======
+
+*(2020-08-12)*
 
 - :pr:`282`: Fixed a race condition happening when an HTTP
   client attempts to reuse a persistent HTTP connection after
@@ -142,7 +190,10 @@ Internal changes:
   helps mitigate such race conditions by letting the client
   know not to reuse the connection after that time interval.
 
-.. scm-version-title:: v8.4.2
+v8.4.2
+======
+
+*(2020-07-28)*
 
 - Fixed a significant performance regression introduced in
   v8.1.0 (:issue:`305` via :pr:`308`) - by :user:`mar10`.
@@ -151,14 +202,20 @@ Internal changes:
   connection processing. We've lowered that delay to mitigate
   the problem short-term, better fix is yet to come.
 
-.. scm-version-title:: v8.4.1
+v8.4.1
+======
+
+*(2020-07-26)*
 
 - Prevent :py:exc:`ConnectionAbortedError` traceback from being
   printed out to the terminal output during the app start-up on
   Windows when built-in TLS adapter is used (:issue:`302` via
   :pr:`306`) - by :user:`mxii-ca`.
 
-.. scm-version-title:: v8.4.0
+v8.4.0
+======
+
+*(2020-07-23)*
 
 - Converted management from low-level :py:func:`~select.select` to
   high-level :py:mod:`selectors` (:issue:`249` via :pr:`301`)
@@ -167,14 +224,20 @@ Internal changes:
   This change also introduces a conditional dependency on
   ``selectors2`` as a fall-back for legacy Python interpreters.
 
-.. scm-version-title:: v8.3.1
+v8.3.1
+======
+
+*(2020-07-13)*
 
 - Fixed TLS socket related unclosed resource warnings
   (:pr:`291` and :pr:`298`).
 - Made terminating keep-alive connections more graceful
   (:issue:`263` via :pr:`277`).
 
-.. scm-version-title:: v8.3.0
+v8.3.0
+======
+
+*(2020-02-09)*
 
 - :cp-issue:`910` via :pr:`243`: Provide TLS-related
   details via WSGI environment interface.
@@ -182,13 +245,19 @@ Internal changes:
   for abstract UNIX sockets.
 
 
-.. scm-version-title:: v8.2.1
+v8.2.1
+======
+
+*(2019-10-17)*
 
 - :cp-issue:`1818`: Restore support for ``None``
   default argument to ``WebCase.getPage()``.
 
 
-.. scm-version-title:: v8.2.0
+v8.2.0
+======
+
+*(2019-10-14)*
 
 - Deprecated use of negative timeouts as alias for
   infinite timeouts in ``ThreadPool.stop``.
@@ -196,14 +265,20 @@ Internal changes:
   bypass URI as path if it does not appear absolute.
 
 
-.. scm-version-title:: v8.1.0
+v8.1.0
+======
+
+*(2019-10-09)*
 
 - Workers are now request-based, addressing the
   long-standing issue with keep-alive connections
   (:issue:`91` via :pr:`199`).
 
 
-.. scm-version-title:: v8.0.0
+v8.0.0
+======
+
+*(2019-10-09)*
 
 - :issue:`231` via :pr:`232`: Remove custom ``setup.cfg``
   parser handling, allowing the project (including ``sdist``)
@@ -213,7 +288,10 @@ Internal changes:
   indicated in ``pyproject.toml``).
 
 
-.. scm-version-title:: v7.0.0
+v7.0.0
+======
+
+*(2019-09-26)*
 
 - :pr:`224`: Refactored "open URL" behavior in
   :py:mod:`~cheroot.test.webtest` to rely on `retry_call
@@ -222,7 +300,10 @@ Internal changes:
   positionally, but must pass them as keyword arguments.
 
 
-.. scm-version-title:: v6.6.0
+v6.6.0
+======
+
+*(2019-09-25)*
 
 - Revisit :pr:`85` under :pr:`221`. Now
   ``backports.functools_lru_cache`` is only
@@ -231,14 +312,20 @@ Internal changes:
   threadpool shrink code.
 
 
-.. scm-version-title:: v6.5.8
+v6.5.8
+======
+
+*(2019-09-05)*
 
 - :issue:`222` via :commit:`621f4ee`: Fix
   :py:const:`socket.SO_PEERCRED` constant fallback value
   under PowerPC.
 
 
-.. scm-version-title:: v6.5.7
+v6.5.7
+======
+
+*(2019-09-03)*
 
 - :issue:`198` via :commit:`9f7affe`: Fix race condition when
   toggling stats counting in the middle of request processing.
@@ -249,13 +336,19 @@ Internal changes:
   <https://utcc.utoronto.ca/~cks
   /space/blog/linux/SocketAbstractNamespace>`_.
 
-.. scm-version-title:: v6.5.6
+v6.5.6
+======
+
+*(2019-08-19)*
 
 - :issue:`218` via :pr:`219`: Fix HTTP parser to return 400 on
   invalid major-only HTTP version in Request-Line.
 
 
-.. scm-version-title:: v6.5.5
+v6.5.5
+======
+
+*(2019-04-25)*
 
 - :issue:`99` via :pr:`186`: Sockets now collect statistics (bytes
   read and written) on Python 3 same as Python 2.
@@ -264,7 +357,10 @@ Internal changes:
   under any Python while wrapping a socket.
 
 
-.. scm-version-title:: v6.5.4
+v6.5.4
+======
+
+*(2019-01-01)*
 
 - :issue:`113`: Fix :py:mod:`cheroot.ssl.pyopenssl`
   under Python 3.
@@ -301,12 +397,18 @@ Internal changes:
   * ``PEERCREDS`` lookup
 
 
-.. scm-version-title:: v6.5.3
+v6.5.3
+======
+
+*(2018-12-20)*
 
 - :pr:`149`: Make ``SCRIPT_NAME`` optional per PEP 333.
 
 
-.. scm-version-title:: v6.5.2
+v6.5.2
+======
+
+*(2018-09-03)*
 
 - :issue:`6` via :pr:`109`: Fix import of
   :py:mod:`cheroot.ssl.pyopenssl` by refactoring and separating
@@ -316,20 +418,29 @@ Internal changes:
   of :py:mod:`trustme`
 
 
-.. scm-version-title:: v6.5.1
+v6.5.1
+======
+
+*(2018-09-02)*
 
 - :issue:`93` via :pr:`110`: Improve UNIX socket FS access mode
   in :py:meth:`cheroot.server.HTTPServer.prepare` on a file socket
   when starting to listen to it.
 
 
-.. scm-version-title:: v6.5.0
+v6.5.0
+======
+
+*(2018-08-29)*
 
 - :cp-issue:`1001` via :pr:`52` and :pr:`108`: Add support for
   validating client certificates.
 
 
-.. scm-version-title:: v6.4.0
+v6.4.0
+======
+
+*(2018-08-01)*
 
 - :issue:`68` via :pr:`98`: Factor out parts of
   :py:meth:`cheroot.server.HTTPServer.start` into
@@ -337,31 +448,46 @@ Internal changes:
   :py:meth:`serve() <cheroot.server.HTTPServer.serve>`
 
 
-.. scm-version-title:: v6.3.3
+v6.3.3
+======
+
+*(2018-07-10)*
 
 - Fix bug with returning empty result in
   :py:meth:`cheroot.ssl.builtin.BuiltinSSLAdapter.wrap`
 
 
-.. scm-version-title:: v6.3.2
+v6.3.2
+======
+
+*(2018-06-16)*
 
 - :issue:`100` via :pr:`101`: Respond with HTTP 400 to malicious
   ``Content-Length`` in request headers.
 
 
-.. scm-version-title:: v6.3.1
+v6.3.1
+======
+
+*(2018-05-21)*
 
 - :cp-issue:`1618`: Ignore OpenSSL's 1.1+ Error 0 under Python 2 while
   wrapping a socket.
 
 
-.. scm-version-title:: v6.3.0
+v6.3.0
+======
+
+*(2018-05-17)*
 
 - :pr:`87`: Add ``cheroot`` command and runpy launcher to
   launch a WSGI app from the command-line.
 
 
-.. scm-version-title:: v6.2.4
+v6.2.4
+======
+
+*(2018-04-19)*
 
 - Fix missing ``resolve_peer_creds`` argument in
   :py:class:`cheroot.wsgi.Server` being bypassed into
@@ -372,26 +498,38 @@ Internal changes:
   intentionally.
 
 
-.. scm-version-title:: v6.2.3
+v6.2.3
+======
+
+*(2018-04-14)*
 
 - :pr:`85`: Skip installing dependencies from backports namespace under
   Python 3.
 
 
-.. scm-version-title:: v6.2.2
+v6.2.2
+======
+
+*(2018-04-14)*
 
 - :issue:`84` (:cp-issue:`1704`): Fix regression, causing
   :py:exc:`ModuleNotFoundError` under ``cygwin``.
 
 
-.. scm-version-title:: v6.2.1
+v6.2.1
+======
+
+*(2018-04-10)*
 
 - :pr:`83`: Fix regression, caused by inverted check for Windows OS.
 
 - Add more URLs to distribution metadata
 
 
-.. scm-version-title:: v6.2.0
+v6.2.0
+======
+
+*(2018-04-10)*
 
 - :pr:`37`: Implement PEERCRED lookup over UNIX-socket HTTP connection.
 
@@ -412,7 +550,10 @@ Internal changes:
   * Per-connection caching to reduce lookup cost
 
 
-.. scm-version-title:: v6.1.2
+v6.1.2
+======
+
+*(2018-04-08)*
 
 - :issue:`81`: Fix regression introduced by :pr:`80`.
 
@@ -421,7 +562,10 @@ Internal changes:
     :py:obj:`socket.AF_UNIX`
 
 
-.. scm-version-title:: v6.1.1
+v6.1.1
+======
+
+*(2018-04-07)*
 
 - :pr:`80`: Fix regression introduced by :commit:`68a5769`.
 
@@ -429,7 +573,10 @@ Internal changes:
     :py:attr:`cheroot.server.HTTPServer.bind_addr`
 
 
-.. scm-version-title:: v6.1.0
+v6.1.0
+======
+
+*(2018-04-05)*
 
 - :pr:`67`: Refactor test suite to completely rely on pytest.
 
@@ -456,7 +603,10 @@ Internal changes:
 - Minor refactoring.
 
 
-.. scm-version-title:: v6.0.0
+v6.0.0
+======
+
+*(2017-12-04)*
 
 - Drop support for Python 2.6, 3.1, 3.2, and 3.3.
 
@@ -464,7 +614,10 @@ Internal changes:
   than 2.7.9.
 
 
-.. scm-version-title:: v5.11.0
+v5.11.0
+=======
+
+*(2017-12-04)*
 
 - :cp-issue:`1621`: To support :py:mod:`~cheroot.test.webtest`
   applications that feed absolute URIs to
@@ -474,7 +627,10 @@ Internal changes:
   for calling it in a subclass.
 
 
-.. scm-version-title:: v5.10.0
+v5.10.0
+=======
+
+*(2017-11-23)*
 
 - Minor refactorings of ``cheroot/server.py`` to reduce redundancy
   of behavior.
@@ -484,18 +640,27 @@ Internal changes:
 - Restored license to BSD.
 
 
-.. scm-version-title:: v5.9.2
+v5.9.2
+======
+
+*(2017-11-23)*
 
 - :issue:`61`: Re-release without spurious files in the distribution.
 
 
-.. scm-version-title:: v5.9.1
+v5.9.1
+======
+
+*(2017-11-17)*
 
 - :issue:`58`: Reverted encoding behavior in wsgi module to correct
   regression in CherryPy tests.
 
 
-.. scm-version-title:: v5.9.0
+v5.9.0
+======
+
+*(2017-11-16)*
 
 - :cp-issue:`1088` and :pr:`53`: Avoid using SO_REUSEADDR on Windows
   where it has different semantics.
@@ -509,7 +674,10 @@ Internal changes:
 - License unintentionally changed to MIT. BSD still declared and intended.
 
 
-.. scm-version-title:: v5.8.3
+v5.8.3
+======
+
+*(2017-08-11)*
 
 - Improve HTTP request line validation:
 
@@ -526,14 +694,20 @@ Internal changes:
 - :pr:`44`: Fix EPROTOTYPE @ Mac OS
 
 
-.. scm-version-title:: v5.8.2
+v5.8.2
+======
+
+*(2017-08-07)*
 
 - Fix :pr:`39` regression. Add HTTP request line check:
   absolute URI path must start with a
   forward slash ("/").
 
 
-.. scm-version-title:: v5.8.1
+v5.8.1
+======
+
+*(2017-08-05)*
 
 - CI improvements:
 
@@ -545,7 +719,10 @@ Internal changes:
     Unicode
 
 
-.. scm-version-title:: v5.8.0
+v5.8.0
+======
+
+*(2017-08-01)*
 
 - CI improvements:
 
@@ -568,7 +745,10 @@ Internal changes:
   * Fix decoding of Unicode URIs in WSGI 1.0 gateway
 
 
-.. scm-version-title:: v5.7.0
+v5.7.0
+======
+
+*(2017-06-24)*
 
 - CI improvements:
 
@@ -605,7 +785,10 @@ Internal changes:
 - Cleanup :py:mod:`~cheroot._compat` functions from server module
 
 
-.. scm-version-title:: v5.6.0
+v5.6.0
+======
+
+*(2017-06-20)*
 
 - Fix all :pep:`257` related errors in all non-test modules.
 
@@ -619,7 +802,10 @@ Internal changes:
 - :cp-issue:`1131`: Add missing size hint to SizeCheckWrapper
 
 
-.. scm-version-title:: v5.5.2
+v5.5.2
+======
+
+*(2017-06-18)*
 
 - :pr:`32`: Ignore ``"unknown error"`` and ``"https proxy request"``
   SSL errors.
@@ -629,7 +815,10 @@ Internal changes:
   Ref: :gh:`sabnzbd/sabnzbd#860 <sabnzbd/sabnzbd/issues/860>`
 
 
-.. scm-version-title:: v5.5.1
+v5.5.1
+======
+
+*(2017-06-18)*
 
 - Make AppVeyor list separate tests in corresponding tab.
 
@@ -646,7 +835,10 @@ Internal changes:
   Ref: https://forums.sabnzbd.org/viewtopic.php?f=2&t=22728&p=112251
 
 
-.. scm-version-title:: v5.5.0
+v5.5.0
+======
+
+*(2017-05-02)*
 
 - :issue:`17` via :pr:`25`: Instead of a read_headers function, cheroot now
   supplies a :py:class:`HeaderReader <cheroot.server.HeaderReader>` class to
@@ -665,12 +857,18 @@ Internal changes:
 - :pr:`26`: Configured TravisCI to run tests under OS X.
 
 
-.. scm-version-title:: v5.4.0
+v5.4.0
+======
+
+*(2017-03-19)*
 
 - :pr:`22`: Add "ciphers" parameter to SSLAdapter.
 
 
-.. scm-version-title:: v5.3.0
+v5.3.0
+======
+
+*(2017-03-12)*
 
 - :pr:`8`: Updated style to better conform to :pep:`8`.
 
@@ -681,7 +879,10 @@ Internal changes:
   <https://cheroot.cherrypy.dev/en/latest/history.html>`_.
 
 
-.. scm-version-title:: v5.2.0
+v5.2.0
+======
+
+*(2017-03-02)*
 
 - :issue:`5`: Set ``Server.version`` to Cheroot version instead of CherryPy
   version.
@@ -692,7 +893,10 @@ Internal changes:
 - :issue:`3`: Test suite now runs and many tests pass. Some are still failing.
 
 
-.. scm-version-title:: v5.1.0
+v5.1.0
+======
+
+*(2017-01-22)*
 
 - Removed the WSGI prefix from classes in :py:mod:`cheroot.wsgi`. Kept aliases
   for compatibility.
@@ -704,12 +908,18 @@ Internal changes:
   cheroot distribution.
 
 
-.. scm-version-title:: v5.0.1
+v5.0.1
+======
+
+*(2017-01-14)*
 
 - Fix error in ``parse_request_uri`` created in :commit:`68a5769`.
 
 
-.. scm-version-title:: v5.0.0
+v5.0.0
+======
+
+*(2017-01-14)*
 
 - Initial release based on :gh:`cherrypy.cherrypy.wsgiserver 8.8.0
   <cherrypy/cherrypy/tree/v8.8.0/cherrypy/wsgiserver>`.

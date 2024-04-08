@@ -6,6 +6,56 @@ ci:
   - stubtest
 
 repos:
+- repo: local
+  hooks:
+  - id: changelogs-rst
+    name: changelog filenames
+    language: fail
+    entry: >-
+      Changelog files must be named
+      ####.(
+      bugfix
+      | feature
+      | deprecation
+      | breaking
+      | doc
+      | packaging
+      | contrib
+      | misc
+      )(.#)?(.rst)?
+    exclude: >-
+      (?x)
+      ^
+        docs/changelog-fragments.d/(
+          \.gitignore
+          |(\d+|[0-9a-f]{8}|[0-9a-f]{7}|[0-9a-f]{40})\.(
+            bugfix
+            |feature
+            |deprecation
+            |breaking
+            |doc
+            |packaging
+            |contrib
+            |misc
+          )(\.\d+)?(\.rst)?
+          |README\.rst
+          |\.towncrier-template\.rst\.j2
+        )
+      $
+    files: ^docs/changelog-fragments\.d/
+    types: []
+    types_or:
+    - file
+    - symlink
+  - id: changelogs-user-role
+    name: Changelog files should use a non-broken :user:`name` role
+    language: pygrep
+    entry: :user:([^`]+`?|`[^`]+[\s,])
+    pass_filenames: true
+    types:
+    - file
+    - rst
+
 - repo: https://github.com/asottile/add-trailing-comma.git
   rev: v3.0.0
   hooks:
@@ -27,7 +77,9 @@ repos:
   - id: rst-linter
     exclude: >-
       (?x)
-      CHANGES.rst
+      \.github/CONTRIBUTING\.rst
+      |
+      CHANGES\.rst
       |
       docs/
     files: >-
