@@ -362,7 +362,7 @@ jobs:
         with Path(environ['GITHUB_OUTPUT']).open(
                 mode=FILE_APPEND_MODE,
         ) as outputs_file:
-            print('filename=0001-Generate-a-changelog-entry-for-v${{
+            print('filename=0001-Generate-a-change-log-entry-for-v${{
                 steps.request-check.outputs.release-requested == 'true'
                 && github.event.inputs.release-version
                 || steps.scm-version.outputs.dist-version-for-filenames
@@ -553,7 +553,7 @@ jobs:
         ${{ needs.pre-setup.outputs.git-tag }} in the local Git repo
       run: >-
         git commit -m
-        'Generate a changelog entry for ${{
+        'Generate a change log entry for ${{
             needs.pre-setup.outputs.git-tag
         }}'
     - name: Log the changelog commit
