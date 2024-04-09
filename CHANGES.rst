@@ -14,6 +14,24 @@ Changelog
 
 .. towncrier release notes start
 
+v11.0.0b1
+=========
+
+*(2024-04-09)*
+
+
+Removals and backward incompatible breaking changes
+---------------------------------------------------
+
+- Cheroot requires Python 3.8 or later.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`565`.
+
+
+----
+
+
 v10.0.0
 =======
 
