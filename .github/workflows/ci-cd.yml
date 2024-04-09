@@ -1248,6 +1248,8 @@ jobs:
         }}
       id: existing-remote-tag-check
       run: |
+        set -eEuo pipefail
+
         REMOTE_TAGGED_COMMIT_SHA="$(
           git ls-remote --tags --refs $(git remote get-url origin) '${{
             needs.pre-setup.outputs.git-tag
