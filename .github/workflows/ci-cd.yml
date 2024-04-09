@@ -1236,6 +1236,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Fetch the src snapshot  # IMPORTANT: Must be before the tag check
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+        ref: ${{ github.event.inputs.release-committish }}
     - name: >-
         Check if the requested tag ${{ needs.pre-setup.outputs.git-tag }}
         is present and is pointing at the required commit ${{
@@ -1274,12 +1279,6 @@ jobs:
           echo "already-exists=true" >> "${GITHUB_OUTPUT}"
         fi
 
-    - name: Fetch the src snapshot
-      if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
-        ref: ${{ github.event.inputs.release-committish }}
     - name: Setup git user as [bot]
       if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
       # Refs:
