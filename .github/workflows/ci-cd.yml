@@ -1235,6 +1235,12 @@ jobs:
     - pre-setup  # transitive, for accessing settings
     runs-on: ubuntu-latest
 
+    outputs:
+      pull_request_url: ${{ steps.pr.outputs.pull_request_url }}
+
+    permissions:
+      pull-requests: write
+
     steps:
     - name: Fetch the src snapshot  # IMPORTANT: Must be before the tag check
       uses: actions/checkout@v4
@@ -1335,6 +1341,25 @@ jobs:
         git push --atomic origin
         'release/${{ needs.pre-setup.outputs.dist-version }}'
         '${{ needs.pre-setup.outputs.git-tag }}'
+
+    - name: pull-request-action
+      id: pr
+      uses: vsoch/pull-request-action@1.1.1
+      env:
+        BRANCH_PREFIX: ''
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PULL_REQUEST_BODY: >-
+          Automated changelog generation with the version
+          ${{ needs.pre-setup.outputs.dist-version }}.
+        PULL_REQUEST_BRANCH: ${{ github.event.repository.default_branch }}
+        PULL_REQUEST_FROM_BRANCH: >-
+          release/${{ needs.pre-setup.outputs.dist-version }}
+        PULL_REQUEST_TITLE: >-
+          🔖 Release ${{ needs.pre-setup.outputs.git-tag }}
+    - name: Log the pull request details
+      run: |
+        echo "PR number: ${{ steps.pr.outputs.pull_request_number }}"
+        echo "PR URL: ${{ steps.pr.outputs.pull_request_url }}"
 
   publish-github-release:
     name: >-
