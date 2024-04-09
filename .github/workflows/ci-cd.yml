@@ -1265,9 +1265,11 @@ jobs:
           LAST_HUMAN_COMMIT_SHA=$(git rev-parse "${REMOTE_TAGGED_COMMIT_SHA}"^)
         fi
 
-        if [[ "${LAST_HUMAN_COMMIT_SHA}" == '${{
-          github.event.inputs.release-committish
-        }}' ]]
+        RELEASE_REQUEST_COMMIT_SHA=$(git rev-parse '${{
+          github.event.inputs.release-committish || 'HEAD'
+        }}')
+
+        if [[ "${LAST_HUMAN_COMMIT_SHA}" == "${RELEASE_REQUEST_COMMIT_SHA}" ]]
         then
           echo "already-exists=true" >> "${GITHUB_OUTPUT}"
         fi
