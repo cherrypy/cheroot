@@ -1441,11 +1441,9 @@ jobs:
         artifactErrorsFailBuild: false
         artifacts: |
           dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
-          dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}.crt
-          dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}.sig
+          dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}.sigstore
           dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
-          dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}.crt
-          dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}.sig
+          dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}.sigstore
         artifactContentType: raw  # Because whl and tgz are of different types
         bodyFile: release-notes.md
         discussionCategory: Announcements
