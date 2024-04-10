@@ -15,6 +15,11 @@ Welcome to Cheroot documentation!
    contributing/guidelines
 
 .. toctree::
+   :caption: Maintenance
+
+   contributing/release_guide
+
+.. toctree::
    :caption: Reference
 
    devguide

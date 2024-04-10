@@ -29,6 +29,7 @@ sys.path.insert(0, str(PROJECT_ROOT_DIR))
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',  # autocreate section targets for refs
     'sphinx.ext.doctest',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
@@ -129,6 +130,12 @@ linkcheck_ignore = [
     r'^https://matrix\.to/#',  # these render fully on front-end from anchors
 ]
 linkcheck_workers = 25
+
+# -- Options for sphinx.ext.autosectionlabel extension -----------------------
+
+# Ref:
+# https://www.sphinx-doc.org/en/master/usage/extensions/autosectionlabel.html
+autosectionlabel_maxdepth = 2  # mitigate Towncrier nested subtitles collision
 
 nitpicky = True
 
