@@ -1,0 +1,8 @@
+Fixed compatibility with Python 3.8 in the built-in
+TLS adapter that relies on :py:mod:`python:ssl`.
+
+Modern Python versions communicate specialized exceptions
+:py:exc:`ssl.SSLEOFError` and :py:exc:`ssl.SSLZeroReturnError`
+where the older versions errored out in a very generic way.
+
+-- by :user:`toppk` and :user:`webknjaz`
