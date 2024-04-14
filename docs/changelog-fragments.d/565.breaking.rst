@@ -1,1 +1,4 @@
-Cheroot requires Python 3.8 or later.
+Cheroot dropped support for Python 3.6 and 3.7.
+It now requires Python 3.8 or later.
+
+-- by :user:`jaraco`
