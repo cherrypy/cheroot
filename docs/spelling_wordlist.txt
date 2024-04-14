@@ -28,6 +28,7 @@ memoryview
 metaclass
 multi
 namespace
+natively
 netloc
 noqa
 PIL
