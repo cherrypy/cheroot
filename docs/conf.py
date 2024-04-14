@@ -135,7 +135,7 @@ linkcheck_workers = 25
 
 # Ref:
 # https://www.sphinx-doc.org/en/master/usage/extensions/autosectionlabel.html
-autosectionlabel_maxdepth = 2  # mitigate Towncrier nested subtitles collision
+autosectionlabel_maxdepth = 1  # mitigate Towncrier nested subtitles collision
 
 nitpicky = True
 
