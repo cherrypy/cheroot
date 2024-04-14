@@ -1,3 +1,5 @@
+.. _Adding change notes with your PRs:
+
 Adding change notes with your PRs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
