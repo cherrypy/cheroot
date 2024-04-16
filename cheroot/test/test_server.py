@@ -400,7 +400,7 @@ def test_reuse_port(http_server, ip_addr, mocker):
     assert spy.spy_exception is None
 
 
-ISSUE511 = IS_MACOS
+ISSUE511 = True
 
 
 if not IS_WINDOWS and not ISSUE511:
