@@ -13,10 +13,12 @@ docstrings
 downstreams
 ef
 environ
+errored
 Faux
 Fortran
 hardcoded
 hostname
+inclusivity
 iterable
 linter
 linters
