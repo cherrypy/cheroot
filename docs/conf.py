@@ -105,6 +105,7 @@ intersphinx_mapping = {
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
     'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
     'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
+    'towncrier': ('https://towncrier.rtfd.io/en/latest', None),
 }
 
 linkcheck_ignore = [
