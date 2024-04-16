@@ -14,6 +14,189 @@ Changelog
 
 .. towncrier release notes start
 
+v11.0.0rc0
+==========
+
+*(2024-04-16)*
+
+
+Bug fixes
+---------
+
+- Fixed a flaw where internally unhandled exceptions
+  could crash the worker threads and eventually starve
+  the server of its processing resources. It is no
+  longer and issue and the unhandled errors are now
+  logged and suppressed except for a few expected
+  exceptions that are used for normal interruption
+  requests.
+
+  -- by :user:`cameronbrunner` and :user:`webknjaz`
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`310`, :issue:`346`, :issue:`354`, :issue:`358`, :issue:`365`, :issue:`375`, :issue:`599`, :issue:`641`, :issue:`649`.
+
+- Fixed compatibility with Python 3.8 in the built-in
+  TLS adapter that relies on :py:mod:`python:ssl`.
+
+  Modern Python versions communicate specialized exceptions
+  :py:exc:`ssl.SSLEOFError` and :py:exc:`ssl.SSLZeroReturnError`
+  where the older versions errored out in a very generic way.
+
+  -- by :user:`toppk` and :user:`webknjaz`
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`517`, :issue:`518`.
+
+
+Removals and backward incompatible breaking changes
+---------------------------------------------------
+
+- Cheroot dropped support for Python 3.6 and 3.7.
+  It now requires Python 3.8 or later.
+
+  -- by :user:`jaraco`
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`565`, :issue:`633`.
+
+
+Packaging updates and notes for downstreams
+-------------------------------------------
+
+- Started signing the package distribution artifacts in CI/CD
+  with Sigstore and uploading them to GitHub Releases
+  -- by :user:`webknjaz`.
+
+  *Related commits on GitHub:*
+  :commit:`27a3c944`, :commit:`c45f184e`.
+
+- The minimum version of the ``setuptools-scm`` build dependency
+  has been set to 7. The Git archives are now produced by it
+  natively, instead of relying on a third party plugin which is
+  no longer being used.
+
+  -- by :user:`serhii73`
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`628`.
+
+- The changelog management is now implemented through
+  the :std:doc:`Towncrier <towncrier:index>` tool
+  -- by :user:`webknjaz`.
+
+  The contributors are now expected to :std:ref:`include
+  change log fragment files in their pull requests
+  <adding change notes with your prs>`.
+
+  These news snippets can link one or more issues or pull
+  requests, and be of one or more of the following categories:
+
+  * ``bugfix``: A bug fix for something we deemed an improper undesired
+    behavior that got corrected in the release to match pre-agreed
+    expectations.
+  * ``feature``: A new behavior, public APIs. That sort of stuff.
+  * ``deprecation``: A declaration of future API removals and breaking
+    changes in behavior.
+  * ``breaking``: When something public gets removed in a breaking way.
+    Could be deprecated in an earlier release.
+  * ``doc``: Notable updates to the documentation structure or build
+    process.
+  * ``packaging``: Notes for downstreams about unobvious side effects
+    and tooling. Changes in the test invocation considerations and
+    runtime assumptions.
+  * ``contrib``: Stuff that affects the contributor experience. e.g.
+    Running tests, building the docs, setting up the development
+    environment.
+  * ``misc``: Changes that are hard to assign to any of the above
+    categories.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`654`.
+
+
+Contributor-facing changes
+--------------------------
+
+- Started type-checking the project with MyPy against a
+  range of versions instead of just one — Python 3.8–3.12
+  -- by :user:`webknjaz`.
+
+  *Related commits on GitHub:*
+  :commit:`4fa1e663`, :commit:`676edc4e`, :commit:`be9dbc41`.
+
+- The project how has a :file:`.git-blame-ignore-revs` letting
+  GitHub know which auto-formatting revisions to ignore. It is
+  also possible to integrate it locally, if one wants to do so.
+
+  -- by :user:`webknjaz`
+
+  *Related commits on GitHub:*
+  :commit:`5980a3fb`, :commit:`f8a1cc4d`.
+
+- The project adopted the ``autopep8`` tool to assist with
+  automatic code formatting. It is chosen over ``black``
+  because it is less intrusive which is important to the
+  maintainer as it promotes inclusivity.
+  ``autopep8`` is integrated into the ``pre-commit`` check
+  runner and is configured to only correct :pep:`8`
+  violations, avoiding changes to compliant snippets.
+
+  -- by :user:`webknjaz`
+
+  *Related commits on GitHub:*
+  :commit:`65ba7e69`.
+
+- The continuous integration and pull request merges have been
+  set up to only merge pull requests through merge queues
+  -- by :user:`webknjaz`.
+
+  *Related commits on GitHub:*
+  :commit:`a7149e0c`.
+
+- Documented the upgraded :std:doc:`release process
+  <contributing/release_guide>` -- by :user:`webknjaz`.
+
+  *Related commits on GitHub:*
+  :commit:`df0d1a08`.
+
+- The changelog management is now implemented through
+  the :std:doc:`Towncrier <towncrier:index>` tool
+  -- by :user:`webknjaz`.
+
+  The contributors are now expected to :std:ref:`include
+  change log fragment files in their pull requests
+  <adding change notes with your prs>`.
+
+  These news snippets can link one or more issues or pull
+  requests, and be of one or more of the following categories:
+
+  * ``bugfix``: A bug fix for something we deemed an improper undesired
+    behavior that got corrected in the release to match pre-agreed
+    expectations.
+  * ``feature``: A new behavior, public APIs. That sort of stuff.
+  * ``deprecation``: A declaration of future API removals and breaking
+    changes in behavior.
+  * ``breaking``: When something public gets removed in a breaking way.
+    Could be deprecated in an earlier release.
+  * ``doc``: Notable updates to the documentation structure or build
+    process.
+  * ``packaging``: Notes for downstreams about unobvious side effects
+    and tooling. Changes in the test invocation considerations and
+    runtime assumptions.
+  * ``contrib``: Stuff that affects the contributor experience. e.g.
+    Running tests, building the docs, setting up the development
+    environment.
+  * ``misc``: Changes that are hard to assign to any of the above
+    categories.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`654`.
+
+
+----
+
+
 v10.0.0
 =======
 

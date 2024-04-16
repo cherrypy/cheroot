@@ -1,3 +1,0 @@
-The continuous integration and pull request merges have been
-set up to only merge pull requests through merge queues
--- by :user:`webknjaz`.

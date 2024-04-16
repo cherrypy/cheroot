@@ -1,9 +1,0 @@
-Fixed a flaw where internally unhandled exceptions
-could crash the worker threads and eventually starve
-the server of its processing resources. It is no
-longer and issue and the unhandled errors are now
-logged and suppressed except for a few expected
-exceptions that are used for normal interruption
-requests.
-
--- by :user:`cameronbrunner` and :user:`webknjaz`

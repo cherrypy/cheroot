@@ -1,9 +1,0 @@
-The project adopted the ``autopep8`` tool to assist with
-automatic code formatting. It is chosen over ``black``
-because it is less intrusive which is important to the
-maintainer as it promotes inclusivity.
-``autopep8`` is integrated into the ``pre-commit`` check
-runner and is configured to only correct :pep:`8`
-violations, avoiding changes to compliant snippets.
-
--- by :user:`webknjaz`
