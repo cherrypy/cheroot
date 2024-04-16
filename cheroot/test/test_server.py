@@ -400,15 +400,6 @@ def test_reuse_port(http_server, ip_addr, mocker):
     assert spy.spy_exception is None
 
 
-ISSUE511 = IS_MACOS
-
-
-if not IS_WINDOWS and not ISSUE511:
-    test_high_number_of_file_descriptors = pytest.mark.forked(
-        test_high_number_of_file_descriptors,
-    )
-
-
 @pytest.fixture
 def _garbage_bin():
     """Disable garbage collection when this fixture is in use."""
