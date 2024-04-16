@@ -1,0 +1,2 @@
+Documented the upgraded :std:doc:`release process
+<contributing/release_guide>` -- by :user:`webknjaz`.
