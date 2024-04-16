@@ -49,6 +49,7 @@ refactorings
 Sep
 sep
 signalling
+Sigstore
 ssl
 stdout
 subclasses
