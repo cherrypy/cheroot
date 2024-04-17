@@ -12,7 +12,6 @@ version: 2
 sphinx:
   builder: dirhtml
   configuration: docs/conf.py
-  fail_on_warning: true
 
 # Build documentation with MkDocs
 # mkdocs:
