@@ -949,6 +949,10 @@ jobs:
           python-version: pypy-3.7
         - os: macos-latest
           python-version: pypy-3.7
+        # NOTE: Ubuntu 22.04 PyPy 3.6 jobs are excluded because importing
+        # NOTE: cryptography crashes in that env at the moment.
+        - os: ubuntu-22.04
+          python-version: pypy-3.6
         # NOTE: Python 3.6 is not available for Ubuntu 22.04
         - os: ubuntu-22.04
           python-version: 3.6
