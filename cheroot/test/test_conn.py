@@ -738,7 +738,7 @@ def test_broken_connection_during_http_communication_fallback(  # noqa: WPS118
         (
             logging.CRITICAL,
             r'A fatal exception happened\. Setting the server interrupt flag '
-            r'to ConnectionResetError\(666\) and giving up\.\n\nPlease, '
+            r'to ConnectionResetError\(666,?\) and giving up\.\n\nPlease, '
             'report this on the Cheroot tracker at '
             r'<https://github\.com/cherrypy/cheroot/issues/new/choose>, '
             'providing a full reproducer with as much context and details '
@@ -786,7 +786,7 @@ def test_kb_int_from_http_handler(
         (
             logging.DEBUG,
             '^Setting the server interrupt flag to KeyboardInterrupt'
-            r"\('simulated test handler keyboard interrupt'\)$",
+            r"\('simulated test handler keyboard interrupt',?\)$",
         ),
         (
             logging.INFO,
@@ -855,7 +855,7 @@ def test_unhandled_exception_in_request_handler(
             logging.ERROR,
             '^Unhandled error while processing an incoming connection '
             'SillyMistake'
-            r"\('simulated unhandled exception 💣 in test handler'\)$",
+            r"\('simulated unhandled exception 💣 in test handler',?\)$",
         ),
         (
             logging.INFO,
@@ -938,7 +938,7 @@ def test_remains_alive_post_unhandled_exception(
         (
             logging.ERROR,
             '^Unhandled error while processing an incoming connection '
-            r'ScaryCrash\(666\)$',
+            r'ScaryCrash\(666,?\)$',
         ),
         (
             logging.INFO,
