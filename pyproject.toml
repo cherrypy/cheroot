@@ -81,9 +81,6 @@ docs = [
 	"sphinxcontrib-apidoc>=0.3.0",
 ]
 
-[project.urls]
-Homepage = "https://cheroot.cherrypy.dev"
-
 [project.scripts]
 cheroot = "cheroot.cli:main"
 
