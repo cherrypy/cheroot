@@ -10,4 +10,105 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "cheroot"
+description = "Highly-optimized, pure-python HTTP server"
+authors = [
+	{ name = "CherryPy Team", email = "team@cherrypy.dev" },
+]
+classifiers = [
+	"Development Status :: 5 - Production/Stable",
+	"Environment :: Web Environment",
+	"Intended Audience :: Developers",
+	"Operating System :: OS Independent",
+	"Framework :: CherryPy",
+	"License :: OSI Approved :: BSD License",
+	"Programming Language :: Python",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3 :: Only",
+	"Programming Language :: Python :: 3.8",
+	"Programming Language :: Python :: 3.9",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: Implementation",
+	"Programming Language :: Python :: Implementation :: CPython",
+	"Programming Language :: Python :: Implementation :: Jython",
+	"Programming Language :: Python :: Implementation :: PyPy",
+	"Topic :: Internet :: WWW/HTTP",
+	"Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+	"Topic :: Internet :: WWW/HTTP :: WSGI",
+	"Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
+	"Typing :: Typed",
+]
+keywords = [
+	"http",
+	"server",
+	"ssl",
+	"wsgi",
+]
+requires-python = ">=3.8"
+dependencies = [
+	"importlib_metadata; python_version < '3.8'",
+	"more_itertools >= 2.6",
+	"jaraco.functools",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://cheroot.cherrypy.dev"
+"Chat: Matrix" = "https://matrix.to/#/#cherrypy-space:matrix.org"
+"CI: GitHub" = "https://github.com/cherrypy/cheroot/actions"
+"Docs: RTD" = "https://cheroot.cherrypy.dev"
+"GitHub: issues" = "https://github.com/cherrypy/cheroot/issues"
+"GitHub: repo" = "https://github.com/cherrypy/cheroot"
+"Tidelift: funding" = "https://tidelift.com/subscription/pkg/pypi-cheroot?utm_source=pypi-cheroot&utm_medium=referral&utm_campaign=pypi"
+
+[project.readme]
+file = "README.rst"
+content-type = "text/x-rst"
+
+[project.optional-dependencies]
+docs = [
+	# upstream
+	"sphinx>=1.8.2",
+	"jaraco.packaging>=3.2",
+	"sphinx-tabs>=1.1.0",
+
+	# local
+	"furo",
+	# `scm_tag_titles_ext` extension dep in docs/
+	"python-dateutil",
+	"sphinxcontrib-apidoc>=0.3.0",
+]
+
+[project.urls]
+Homepage = "https://cheroot.cherrypy.dev"
+
+[project.scripts]
+cheroot = "cheroot.cli:main"
+
+[tool.distutils.bdist_wheel]
+# NOTE: "universal = 1" causes `bdist_wheel` to create a wheel that with the
+# NOTE: tag "py2.py3" which implies (and tricks pip into thinking) that this
+# NOTE: wheel contains Python 2 compatible code. This is not true and conflicts
+# NOTE: with the "Requires-Python" field in the metadata that says that we only
+# NOTE: support Python 3.6+.
+# NOTE: We need to keep it at "0" which will produce wheels tagged with "py3"
+# NOTE: when built under Python 3.
+# Ref: https://github.com/pypa/packaging.python.org/issues/726
+universal = 0
+
+[tool.setuptools]
+use-scm-version = "True"
+include-package-data = true
+license-files = ["LICENSE.md"]
+
+[tool.setuptools.packages]
+find = {namespaces = false}
+# These are required during `setup.py` run:
+# These are required in actual runtime:
+
+[tool.setuptools.package-data]
+cheroot = ["py.typed"]
+
 [tool.setuptools_scm]
