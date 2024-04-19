@@ -78,7 +78,7 @@ docs = [
     "furo",
     # `scm_tag_titles_ext` extension dep in docs/
     "python-dateutil",
-    "sphinxcontrib-apidoc>=0.3.0",
+    "sphinxcontrib-apidoc >= 0.3.0",
 ]
 
 [project.scripts]
