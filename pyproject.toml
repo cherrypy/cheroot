@@ -48,7 +48,6 @@ keywords = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "importlib_metadata; python_version < '3.8'",
     "more_itertools >= 2.6",
     "jaraco.functools",
 ]
