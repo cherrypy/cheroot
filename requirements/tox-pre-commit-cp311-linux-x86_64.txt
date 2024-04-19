@@ -60,5 +60,5 @@ virtualenv==20.16.7
     # via pre-commit
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==65.6.0
+setuptools==69.5.1
     # via nodeenv
