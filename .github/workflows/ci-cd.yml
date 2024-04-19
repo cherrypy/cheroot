@@ -1079,6 +1079,7 @@ jobs:
         --parallel-live
         --skip-missing-interpreters false
         --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
+        --skip-pkg-install
     - name: Produce markdown test summary from JUnit
       if: >-
         !cancelled()
