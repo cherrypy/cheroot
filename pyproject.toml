@@ -86,7 +86,4 @@ cheroot = "cheroot.cli:main"
 [tool.setuptools.packages]
 find = {namespaces = false}
 
-[tool.setuptools.package-data]
-cheroot = ["py.typed"]
-
 [tool.setuptools_scm]
