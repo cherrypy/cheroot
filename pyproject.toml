@@ -70,9 +70,9 @@ content-type = "text/x-rst"
 [project.optional-dependencies]
 docs = [
     # upstream
-    "sphinx>=1.8.2",
-    "jaraco.packaging>=3.2",
-    "sphinx-tabs>=1.1.0",
+    "sphinx >= 1.8.2",
+    "jaraco.packaging >= 3.2",
+    "sphinx-tabs >= 1.1.0",
 
     # local
     "furo",
