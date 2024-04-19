@@ -89,8 +89,6 @@ license-files = ["LICENSE.md"]
 
 [tool.setuptools.packages]
 find = {namespaces = false}
-# These are required during `setup.py` run:
-# These are required in actual runtime:
 
 [tool.setuptools.package-data]
 cheroot = ["py.typed"]
