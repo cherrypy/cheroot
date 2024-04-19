@@ -16,7 +16,7 @@ wheel==0.37.1
     # via -r requirements/dist-build-constraints.in
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==60.2.0
+setuptools==69.5.1
     # via
     #   -r requirements/dist-build-constraints.in
     #   setuptools-scm
