@@ -195,7 +195,7 @@ zipp==3.7.0
     # via importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==60.5.0
+setuptools==69.5.1
     # via
     #   jaraco.packaging
     #   pytest-rerunfailures
