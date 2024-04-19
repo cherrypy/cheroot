@@ -83,7 +83,4 @@ docs = [
 [project.scripts]
 cheroot = "cheroot.cli:main"
 
-[tool.setuptools.packages]
-find = {namespaces = false}
-
 [tool.setuptools_scm]
