@@ -3,7 +3,7 @@
 # NOTE: at all times.
 requires = [
     # Essentials
-    "setuptools>=61.2",
+    "setuptools >= 61.2",
 
     # Plugins
     "setuptools-scm >= 7.0.0",
