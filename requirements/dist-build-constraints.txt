@@ -6,7 +6,7 @@
 #
 packaging==23.1
     # via setuptools-scm
-setuptools-scm==7.1.0
+setuptools-scm==8.0.4
     # via -r requirements/dist-build-constraints.in
 tomli==2.0.1
     # via setuptools-scm
