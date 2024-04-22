@@ -3,7 +3,6 @@
 import errno
 from re import match as _matches_pattern
 import socket
-import sys
 import time
 import logging
 import traceback as traceback_
@@ -19,7 +18,6 @@ from cheroot._compat import IS_CI, IS_MACOS, IS_PYPY, IS_WINDOWS
 import cheroot.server
 
 
-IS_PY36 = sys.version_info[:2] == (3, 6)
 IS_SLOW_ENV = IS_MACOS or IS_WINDOWS
 
 
@@ -808,12 +806,6 @@ def test_kb_int_from_http_handler(
         )
 
 
-@pytest.mark.xfail(
-    IS_CI and IS_PYPY and IS_PY36 and not IS_SLOW_ENV,
-    reason='Fails under PyPy 3.6 under Ubuntu 20.04 in CI for unknown reason',
-    # NOTE: Actually covers any Linux
-    strict=False,
-)
 def test_unhandled_exception_in_request_handler(
         mocker,
         monkeypatch,
@@ -883,12 +875,6 @@ def test_unhandled_exception_in_request_handler(
         )
 
 
-@pytest.mark.xfail(
-    IS_CI and IS_PYPY and IS_PY36 and not IS_SLOW_ENV,
-    reason='Fails under PyPy 3.6 under Ubuntu 20.04 in CI for unknown reason',
-    # NOTE: Actually covers any Linux
-    strict=False,
-)
 def test_remains_alive_post_unhandled_exception(
         mocker,
         monkeypatch,
