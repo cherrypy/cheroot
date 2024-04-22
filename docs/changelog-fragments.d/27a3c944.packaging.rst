@@ -1,3 +1,0 @@
-Started signing the package distribution artifacts in CI/CD
-with Sigstore and uploading them to GitHub Releases
--- by :user:`webknjaz`.
