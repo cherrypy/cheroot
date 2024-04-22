@@ -1,6 +1,6 @@
 # START initial autopep8-driven formatting
 # Make nested funcs sparse @ `cheroot.ssl.pyopenssl`:
-commit 6b875871545042ee8414ba05f7743eb9a491f631
+6b875871545042ee8414ba05f7743eb9a491f631
 # Dedent nested tuple items @ `test_conn`:
-commit b234de9e9d3ca6a3ba5ad4efe87f2347045c19b4
+b234de9e9d3ca6a3ba5ad4efe87f2347045c19b4
 # END initial autopep8-driven formatting
