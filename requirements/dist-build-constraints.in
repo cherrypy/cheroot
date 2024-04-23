@@ -2,7 +2,7 @@
 # NOTE: at all times.
 
 # Essentials
-setuptools >= 34.4
+setuptools >= 61.2
 
 # Plugins
 setuptools-scm[toml] >= 7.0.0

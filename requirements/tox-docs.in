@@ -1,7 +1,7 @@
 -r tests.in  # `sphinxcontrib-autodoc` will import all the files
 
 Sphinx >= 1.8.2
-jaraco.packaging >= 3.2
+jaraco.packaging >= 9  # first version to load meta through PEP 517 interface
 sphinx-tabs >= 1.1.0
 
 furo

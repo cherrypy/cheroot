@@ -3,11 +3,87 @@
 # NOTE: at all times.
 requires = [
     # Essentials
-    "setuptools>=34.4",
+    "setuptools >= 61.2",
 
     # Plugins
     "setuptools-scm >= 7.0.0",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "cheroot"
+description = "Highly-optimized, pure-python HTTP server"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Framework :: CherryPy",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: Jython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Internet :: WWW/HTTP :: WSGI",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
+    "Typing :: Typed",
+]
+keywords = [
+    "http",
+    "server",
+    "ssl",
+    "wsgi",
+]
+requires-python = ">= 3.8"
+dependencies = [
+    "more_itertools >= 2.6",
+    "jaraco.functools",
+]
+dynamic = [
+    "version",
+]
+
+[[project.authors]]
+name = "CherryPy Team"
+email = "team@cherrypy.dev"
+
+[project.urls]
+Homepage = "https://cheroot.cherrypy.dev"
+"Chat: Matrix" = "https://matrix.to/#/#cherrypy-space:matrix.org"
+"CI: GitHub" = "https://github.com/cherrypy/cheroot/actions"
+"Docs: RTD" = "https://cheroot.cherrypy.dev"
+"GitHub: issues" = "https://github.com/cherrypy/cheroot/issues"
+"GitHub: repo" = "https://github.com/cherrypy/cheroot"
+"Tidelift: funding" = "https://tidelift.com/subscription/pkg/pypi-cheroot?utm_source=pypi-cheroot&utm_medium=referral&utm_campaign=pypi"
+
+[project.readme]
+file = "README.rst"
+content-type = "text/x-rst"
+
+[project.optional-dependencies]
+docs = [
+    # upstream
+    "sphinx >= 1.8.2",
+    "jaraco.packaging >= 3.2",
+    "sphinx-tabs >= 1.1.0",
+
+    # local
+    "furo",
+    # `scm_tag_titles_ext` extension dep in docs/
+    "python-dateutil",
+    "sphinxcontrib-apidoc >= 0.3.0",
+]
+
+[project.scripts]
+cheroot = "cheroot.cli:main"
 
 [tool.setuptools_scm]

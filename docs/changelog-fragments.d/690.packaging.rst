@@ -1,0 +1,9 @@
+The packaging metadata has been migrated to the
+:file:`pyproject.toml`-based :pep:`621` declaration
+-- by :user:`jaraco` and :user:`webknjaz`.
+
+As a part of this update, the minimum version of the
+``setuptools`` build backend was bumped to 61.2.
+Moreover, any compatibility shims that existed in
+:file:`setup.cfg` and :file:`setup.py` have been
+removed for good.
