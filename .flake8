@@ -32,6 +32,8 @@ extend-exclude =
 # Completely and unconditionally ignore the following errors:
 extend-ignore =
   # Legitimate cases, no need to "fix" these violations:
+  # C81X: reported by deprecated `flake8-commas`, covered by add-trailing-comma
+  C81,
   # E501: "line too long", its function is replaced by `flake8-length`
   E501,
   # W505: "doc line too long", its function is replaced by `flake8-length`

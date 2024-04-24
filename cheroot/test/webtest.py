@@ -242,6 +242,7 @@ class WebCase(unittest.TestCase):
                 'Interactive test failure interceptor support via '
                 'WEBTEST_INTERACTIVE environment variable is deprecated.',
                 DeprecationWarning,
+                stacklevel=1,
             )
         return is_interactive
 
