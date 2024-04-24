@@ -249,7 +249,7 @@ repos:
     - jaraco.text
     - more_itertools
     - portend
-    - pylint-pytest
+    - pylint-pytest ~= 2.0.0a0
     - pyOpenSSL  # needed by pylint-pytest since it picks up pytest's args
     - pypytools
     - pytest-cov  # needed by pylint-pytest since it picks up pytest's args
