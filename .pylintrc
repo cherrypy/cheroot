@@ -32,7 +32,10 @@ ignore-patterns=
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
-#init-hook=
+# This patch injects the project directory into the import path so that the
+# local `pytest` plugin can be imported when `pylint-pytest` invokes it when
+# exploring the fixtures available:
+init-hook="import os, sys; sys.path[:0] = [os.getcwd()]; os.environ['PYTHONPATH'] = sys.path[0]"
 
 # Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
 # number of processors available to use.
@@ -635,7 +638,7 @@ preferred-modules=
 [EXCEPTIONS]
 
 # Exceptions that will emit a warning when being caught. Defaults to
-# "BaseException, Exception".
+# "builtins.BaseException, builtins.Exception".
 overgeneral-exceptions=
-  BaseException,
-  Exception,
+  builtins.BaseException,
+  builtins.Exception,
