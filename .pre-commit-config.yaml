@@ -144,37 +144,20 @@ repos:
     - --strict
 
 - repo: https://github.com/PyCQA/flake8.git
-  rev: 6.0.0
+  rev: 7.0.0
   hooks:
   - id: flake8
-    alias: flake8-no-wps
-    name: flake8 WPS-excluded
     additional_dependencies:
     - darglint ~= 1.8.1
     - flake8-2020 ~= 1.7.0
-    - flake8-annotations ~= 2.9.1; python_version >= "3.7"
-    - flake8-annotations ~= 2.7.0; python_version < "3.7"
+    - flake8-annotations ~= 2.9.1
     - flake8-docstrings ~= 1.6.0
     - flake8-length ~= 0.3.0
     - flake8-logging-format ~= 0.7.5
     - flake8-pytest-style ~= 1.6.0
-    - flake8-spellcheck ~= 0.28.0; python_version >= "3.8"
-    - flake8-spellcheck ~= 0.26.0; python_version < "3.8"
-    language_version: python3
-
-- repo: https://github.com/PyCQA/flake8.git
-  # NOTE: This is kept at v4 for until WPS starts supporting flake v5.
-  rev: 4.0.1  # enforce-version: 4.0.1
-  hooks:
-  - id: flake8
-    alias: flake8-only-wps
-    name: flake8 WPS-only
-    args:
-    - --select
-    - WPS
-    additional_dependencies:
-    - wemake-python-styleguide ~= 0.17.0
-    language_version: python3
+    - flake8-spellcheck ~= 0.28.0
+    - wemake-python-styleguide ~= 0.19.0
+    language_version: python3.11  # flake8-commas doesn't work w/ Python 3.12
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
   rev: v1.1.0
@@ -275,37 +258,5 @@ repos:
     - requests_unixsocket
     - Sphinx
     - trustme  # needed by pylint-pytest since it picks up pytest's args
-
-- repo: local
-  hooks:
-  - id: enforced-flake8-version
-    name: Verify that enforced flake8 version stays unchanged
-    description: >-
-      This is a sanity check and fixer that makes sure that
-      the `flake8` version in this file remains matching the
-      corresponding request in the `# enforce-version` comment.
-    # Using Python here because using
-    # shell test does not always work in CIs:
-    entry: >-
-      python -c 'import pathlib, re, sys;
-      pre_commit_config = pathlib.Path(sys.argv[1]);
-      cfg_txt = pre_commit_config.read_text();
-      new_cfg_txt = re.sub(
-      r"(?P<spaces>\s+)rev:\s(?:\d+\.\d+\.\d+)\s{0,2}"
-      r"#\senforce-version:\s(?P<enforced_version>\d+\.\d+\.\d+)"
-      r"[ \t\f\v]*",
-      r"\g<spaces>rev: \g<enforced_version>  "
-      r"# enforce-version: \g<enforced_version>",
-      cfg_txt,
-      );
-      cfg_txt != new_cfg_txt and
-      pre_commit_config.write_text(new_cfg_txt)
-      '
-    pass_filenames: true
-    language: system
-    files: >-
-      ^\.pre-commit-config\.ya?ml$
-    types:
-    - yaml
 
 ...

@@ -185,7 +185,7 @@ class WorkerThread(threading.Thread):
                 raise SystemExit(
                     str(shutdown_request),
                 ) from shutdown_request
-            except BaseException as unhandled_error:  # noqa: WPS424
+            except BaseException as unhandled_error:  # noqa: B036, WPS424
                 # NOTE: Only a shutdown request should bubble up to the
                 # NOTE: external cleanup code. Otherwise, this thread dies.
                 # NOTE: If this were to happen, the threadpool would still
