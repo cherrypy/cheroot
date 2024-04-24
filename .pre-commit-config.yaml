@@ -258,7 +258,7 @@ repos:
       $
 
 - repo: https://github.com/PyCQA/pylint.git
-  rev: v2.15.9
+  rev: v3.1.0
   hooks:
   - id: pylint
     additional_dependencies:
@@ -267,11 +267,15 @@ repos:
     - jaraco.text
     - more_itertools
     - portend
-    - pylint-pytest < 1.1.0
+    - pylint-pytest
+    - pyOpenSSL  # needed by pylint-pytest since it picks up pytest's args
     - pypytools
+    - pytest-cov  # needed by pylint-pytest since it picks up pytest's args
+    - pytest-xdist  # needed by pylint-pytest since it picks up pytest's args
     - requests_toolbelt
     - requests_unixsocket
     - Sphinx
+    - trustme  # needed by pylint-pytest since it picks up pytest's args
 
 - repo: local
   hooks:
