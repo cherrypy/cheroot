@@ -91,7 +91,7 @@ repos:
   - id: autopep8
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v4.4.0
+  rev: v4.6.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
