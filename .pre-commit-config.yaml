@@ -86,8 +86,7 @@ repos:
       ^.*\.rst$
 
 - repo: https://github.com/hhatto/autopep8.git
-  rev: >-  # v2.0.2 does not yet have config, maybe v2.0.3 will, SHA for now
-    5b9110ba53fecd60cd3091fb66d808e8ced3b2e8
+  rev: v2.1.0
   hooks:
   - id: autopep8
 
