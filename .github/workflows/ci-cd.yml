@@ -770,8 +770,7 @@ jobs:
         os:
         - ubuntu
         python-version:
-        - >-
-          3.10
+        - 3.11
         toxenv:
         - pre-commit
         - metadata-validation
