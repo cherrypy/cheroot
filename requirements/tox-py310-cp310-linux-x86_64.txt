@@ -32,7 +32,7 @@ docopt==0.6.2
     # via pytest-watch
 execnet==2.0.2
     # via pytest-xdist
-idna==3.6
+idna==3.7
     # via
     #   requests
     #   trustme

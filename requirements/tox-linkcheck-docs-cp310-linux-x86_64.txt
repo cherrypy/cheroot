@@ -50,7 +50,7 @@ filelock==3.13.4
     # via virtualenv
 furo==2022.1.2
     # via -r requirements/tox-docs.in
-idna==3.3
+idna==3.7
     # via
     #   requests
     #   trustme
