@@ -33,7 +33,7 @@ pyopenssl < 22.0.0; implementation_name == "pypy" and python_version < "3.8"
 pypytools
 
 pytest-clarity
-pytest-cov==2.12.0
+pytest-cov
 pytest-mock>=1.11.0
 pytest-rerunfailures
 pytest-sugar>=0.9.3
