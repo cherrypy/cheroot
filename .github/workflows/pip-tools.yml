@@ -160,7 +160,7 @@ jobs:
         }}
         --output-file="requirements/${BASE_NAME}.txt"
         "requirements/${BASE_NAME}.in"
-        setup.cfg
+        pyproject.toml
 
 
         git add "requirements/${BASE_NAME}.txt"

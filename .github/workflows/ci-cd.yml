@@ -235,7 +235,7 @@ jobs:
             print(
                 "files-hash-key=${{
                     hashFiles(
-                      'setup.cfg', 'setup.py', 'tox.ini', 'pyproject.toml',
+                      'tox.ini', 'pyproject.toml',
                       '.pre-commit-config.yaml', 'pytest.ini'
                     )
                 }}",
