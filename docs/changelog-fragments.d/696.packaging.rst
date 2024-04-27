@@ -1,0 +1,2 @@
+Declared Python 3.12 as supported officially
+-- by :user:`webknjaz`.
