@@ -26,7 +26,7 @@ coverage==7.5.0
     # via
     #   -r requirements/tox-py38-cp38-win32-amd64.in
     #   pytest-cov
-cryptography==42.0.5
+cryptography==42.0.4
     # via
     #   pyopenssl
     #   trustme
