@@ -136,7 +136,7 @@ pyproject-hooks==1.0.0
     # via build
 pypytools==0.6.2
     # via -r requirements/tests.in
-pytest==6.2.5
+pytest==7.1.3
     # via
     #   -r requirements/tests.in
     #   pytest-clarity
@@ -222,7 +222,7 @@ termcolor==1.1.0
     # via pytest-sugar
 toml==0.10.2
     # via pytest
-tomli==2.0.0
+tomli==2.0.1
     # via
     #   build
     #   coverage
