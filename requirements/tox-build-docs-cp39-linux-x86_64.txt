@@ -139,7 +139,7 @@ pyproject-hooks==1.0.0
     # via build
 pypytools==0.6.2
     # via -r requirements/tests.in
-pytest==6.2.5
+pytest==7.1.3
     # via
     #   -r requirements/tests.in
     #   pytest-clarity

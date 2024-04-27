@@ -136,7 +136,7 @@ pyparsing==3.0.9
     # via packaging
 pypytools==0.6.2
     # via -r requirements/tests.in
-pytest==6.2.5
+pytest==7.1.3
     # via
     #   -r requirements/tests.in
     #   pytest-clarity
