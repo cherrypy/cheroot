@@ -107,7 +107,7 @@ pep517==0.13.0
     # via build
 platformdirs==2.5.3
     # via virtualenv
-pluggy==1.0.0
+pluggy==1.5.0
     # via pytest
 portend==3.1.0
     # via -r requirements/tests.in
@@ -136,7 +136,7 @@ pyparsing==3.0.9
     # via packaging
 pypytools==0.6.2
     # via -r requirements/tests.in
-pytest==7.1.3
+pytest==8.1.2
     # via
     #   -r requirements/tests.in
     #   pytest-clarity

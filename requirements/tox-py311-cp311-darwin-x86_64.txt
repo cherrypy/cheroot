@@ -4,8 +4,6 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-py311-cp311-darwin-x86_64.txt --strip-extras pyproject.toml requirements/tox-py311-cp311-darwin-x86_64.in
 #
-attrs==23.2.0
-    # via pytest
 autocommand==2.2.2
     # via jaraco-text
 backports-tarfile==1.1.1
@@ -73,9 +71,7 @@ portend==3.2.0
 pprintpp==0.4.0
     # via pytest-clarity
 py==1.11.0
-    # via
-    #   pypytools
-    #   pytest
+    # via pypytools
 pycparser==2.22
     # via cffi
 pygments==2.17.2
@@ -84,7 +80,7 @@ pyopenssl==24.1.0 ; implementation_name != "pypy"
     # via -r requirements/tox-py311-cp311-darwin-x86_64.in
 pypytools==0.6.2
     # via -r requirements/tox-py311-cp311-darwin-x86_64.in
-pytest==7.1.3
+pytest==8.1.2
     # via
     #   -r requirements/tox-py311-cp311-darwin-x86_64.in
     #   pytest-clarity
@@ -125,8 +121,6 @@ tempora==5.5.1
     # via portend
 termcolor==2.4.0
     # via pytest-sugar
-tomli==2.0.1
-    # via pytest
 trustme==1.1.0
     # via -r requirements/tox-py311-cp311-darwin-x86_64.in
 typeguard==4.2.1
