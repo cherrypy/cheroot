@@ -80,7 +80,7 @@ pyopenssl==24.1.0 ; implementation_name != "pypy"
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
 pypytools==0.6.2
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
-pytest==8.1.2
+pytest==8.2.0
     # via
     #   -r requirements/tox-py311-cp311-linux-x86_64.in
     #   pytest-clarity
@@ -96,7 +96,7 @@ pytest-cov==5.0.0
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
 pytest-mock==3.14.0
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
-pytest-rerunfailures==13.0
+pytest-rerunfailures==14.0
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
 pytest-sugar==1.0.0
     # via -r requirements/tox-py311-cp311-linux-x86_64.in
