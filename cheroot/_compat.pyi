@@ -3,6 +3,7 @@ from typing import Any, ContextManager, Optional, Type, Union
 def suppress(*exceptions: Type[BaseException]) -> ContextManager[None]: ...
 
 IS_ABOVE_OPENSSL10: Optional[bool]
+IS_ABOVE_OPENSSL31: Optional[bool]
 IS_CI: bool
 IS_GITHUB_ACTIONS_WORKFLOW: bool
 IS_PYPY: bool
