@@ -161,7 +161,7 @@ pytz==2021.3
     # via
     #   babel
     #   tempora
-requests==2.27.1
+requests==2.32.0
     # via
     #   -r requirements/tests.in
     #   requests-toolbelt

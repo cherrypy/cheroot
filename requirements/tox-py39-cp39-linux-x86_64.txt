@@ -110,7 +110,7 @@ pytest-xdist==3.6.1
     # via -r requirements/tox-py39-cp39-linux-x86_64.in
 pytz==2024.1
     # via tempora
-requests==2.31.0
+requests==2.32.0
     # via
     #   -r requirements/tox-py39-cp39-linux-x86_64.in
     #   requests-toolbelt
