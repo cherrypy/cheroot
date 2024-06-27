@@ -6,9 +6,9 @@
 #
 autocommand==2.2.2
     # via jaraco-text
-backports-tarfile==1.1.1
+backports-tarfile==1.2.0
     # via jaraco-context
-certifi==2024.2.2
+certifi==2024.6.2
     # via requests
 cffi==1.16.0
     # via cryptography
@@ -20,11 +20,11 @@ colorama==0.4.6
     # via
     #   pytest
     #   pytest-watch
-coverage==7.5.0
+coverage==7.5.4
     # via
     #   -r requirements/tox-py39-cp39-win32-amd64.in
     #   pytest-cov
-cryptography==42.0.5
+cryptography==42.0.8
     # via
     #   pyopenssl
     #   trustme
@@ -38,9 +38,9 @@ idna==3.7
     # via
     #   requests
     #   trustme
-importlib-metadata==7.1.0
+importlib-metadata==8.0.0
     # via typeguard
-inflect==7.2.1
+inflect==7.3.0
     # via jaraco-text
 iniconfig==2.0.0
     # via pytest
@@ -53,19 +53,19 @@ jaraco-functools==4.0.1
     #   cheroot (pyproject.toml)
     #   jaraco-text
     #   tempora
-jaraco-text==3.12.0
+jaraco-text==3.12.1
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 markdown-it-py==3.0.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
-more-itertools==10.2.0
+more-itertools==10.3.0
     # via
     #   cheroot (pyproject.toml)
     #   inflect
     #   jaraco-functools
     #   jaraco-text
-packaging==24.0
+packaging==24.1
     # via
     #   pytest
     #   pytest-rerunfailures
@@ -80,13 +80,13 @@ py==1.11.0
     # via pypytools
 pycparser==2.22
     # via cffi
-pygments==2.17.2
+pygments==2.18.0
     # via rich
 pyopenssl==24.1.0 ; implementation_name != "pypy"
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pypytools==0.6.2
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-pytest==8.2.0
+pytest==8.2.2
     # via
     #   -r requirements/tox-py39-cp39-win32-amd64.in
     #   pytest-clarity
@@ -110,9 +110,7 @@ pytest-watch==4.2.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 pytest-xdist==3.6.1
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-pytz==2024.1
-    # via tempora
-requests==2.31.0
+requests==2.32.3
     # via
     #   -r requirements/tox-py39-cp39-win32-amd64.in
     #   requests-toolbelt
@@ -123,7 +121,7 @@ requests-unixsocket==0.3.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
 rich==13.7.1
     # via pytest-clarity
-tempora==5.5.1
+tempora==5.6.0
     # via portend
 termcolor==2.4.0
     # via pytest-sugar
@@ -133,17 +131,15 @@ tomli==2.0.1
     #   pytest
 trustme==1.1.0
     # via -r requirements/tox-py39-cp39-win32-amd64.in
-typeguard==4.2.1
+typeguard==4.3.0
     # via inflect
-typing-extensions==4.11.0
-    # via
-    #   inflect
-    #   typeguard
-urllib3==1.26.18
+typing-extensions==4.12.2
+    # via typeguard
+urllib3==1.26.19
     # via
     #   -r requirements/tox-py39-cp39-win32-amd64.in
     #   requests
-watchdog==4.0.0
+watchdog==4.0.1
     # via pytest-watch
-zipp==3.18.1
+zipp==3.19.2
     # via importlib-metadata
