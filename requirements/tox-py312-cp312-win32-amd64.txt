@@ -6,7 +6,7 @@
 #
 autocommand==2.2.2
     # via jaraco-text
-certifi==2024.2.2
+certifi==2024.7.4
     # via requests
 cffi==1.16.0
     # via cryptography

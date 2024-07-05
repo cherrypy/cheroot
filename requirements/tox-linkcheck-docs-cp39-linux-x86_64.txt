@@ -14,7 +14,7 @@ beautifulsoup4==4.10.0
     # via furo
 build==1.2.1
     # via jaraco-packaging
-certifi==2021.10.8
+certifi==2024.7.4
     # via requests
 cffi==1.15.0
     # via cryptography
