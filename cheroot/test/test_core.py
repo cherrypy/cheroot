@@ -189,6 +189,21 @@ def test_parse_uri_invalid_uri(test_client):
     c.close()
 
 
+def test_parse_invalid_line_fold(test_client):
+    """Check that server responds with Bad Request to invalid GET queries.
+
+    Invalid field line test case: the first should not begin with whitespace.
+    """
+    c = test_client.get_connection()
+    c._output(u'GET / HTTP/1.1\r\n I-am-misfolded!\r\n\r\n'.encode('utf-8'))
+    c._send_output()
+    response = _get_http_response(c, method='GET')
+    response.begin()
+    assert response.status == HTTP_BAD_REQUEST
+    assert response.read(26) == b'Illegal continuation line.'
+    c.close()
+
+
 @pytest.mark.parametrize(
     'uri',
     (
