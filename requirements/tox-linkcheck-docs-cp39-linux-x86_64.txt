@@ -238,7 +238,7 @@ virtualenv==20.25.3
     # via build
 watchdog==2.1.6
     # via pytest-watch
-zipp==3.18.1
+zipp==3.19.1
     # via
     #   importlib-metadata
     #   importlib-resources
