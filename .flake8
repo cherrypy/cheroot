@@ -139,6 +139,8 @@ per-file-ignores =
 # Count the number of occurrences of each error/warning code and print a report:
 statistics = true
 
+# ## Plugin-provided settings: ##
+
 # flake8-eradicate
 # E800:
 eradicate-whitelist-extend = isort:\s+\w+
