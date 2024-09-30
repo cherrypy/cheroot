@@ -28,7 +28,7 @@ repos:
       ^
         docs/changelog-fragments.d/(
           \.gitignore
-          |(\d+|[0-9a-f]{8}|[0-9a-f]{7}|[0-9a-f]{40})\.(
+          |(\d+|[0-9a-f]{8}|[0-9a-f]{7}|[0-9a-f]{40}|\+[^.]+)\.(
             bugfix
             |feature
             |deprecation
