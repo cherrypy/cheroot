@@ -91,11 +91,18 @@ extend-ignore =
 # Let's not overcomplicate the code:
 max-complexity = 10
 
-# Accessibility/large fonts and PEP8 friendly:
+# Accessibility/large fonts and PEP8 friendly.
+# This is being flexibly extended through the `flake8-length`:
 max-line-length = 79
 
 # Allow certain violations in certain files:
+# Please keep both sections of this list sorted, as it will be easier for others to find and add entries in the future
 per-file-ignores =
+  # The following ignores have been researched and should be considered permanent
+  # each should be preceded with an explanation of each of the error codes
+  # If other ignores are added for a specific file in the section following this,
+  # these will need to be added to that line as well.
+
   # There are multiple `assert`s (S101)
   # and subprocesses (import – S404; call – S603) in tests:
   cheroot/test/test_*.py: S101, S404, S603
