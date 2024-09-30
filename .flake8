@@ -17,6 +17,8 @@ extend-exclude =
   .pytest_cache,
   # Temp dir of pytest-testmon
   .tmontmp,
+  # Countless third-party libs in venvs
+  .tox,
   # Occasional virtualenv dir
   .venv,
   # VS Code
