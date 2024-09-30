@@ -163,8 +163,10 @@ rst-roles =
   # Built-in Sphinx roles:
   class,
   data,
+  file,
   exc,
   meth,
+  mod,
   term,
   py:class,
   py:data,
