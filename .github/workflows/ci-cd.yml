@@ -64,6 +64,7 @@ env:
   PIP_NO_PYTHON_VERSION_WARNING: 1
   PIP_NO_WARN_SCRIPT_LOCATION: 1
   PRE_COMMIT_COLOR: always
+  PROJECT_NAME: cheroot
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
   PYTHONIOENCODING: utf-8
   PYTHONUTF8: 1
@@ -333,11 +334,12 @@ jobs:
 
         FILE_APPEND_MODE = 'a'
 
+        dist_file_prj_base_name = '${{ env.PROJECT_NAME }}'.replace('-', '_')
         with Path(environ['GITHUB_OUTPUT']).open(
                 mode=FILE_APPEND_MODE,
         ) as outputs_file:
             print(
-                "sdist=cheroot-${{
+                f"sdist={dist_file_prj_base_name !s}-${{
                     steps.request-check.outputs.release-requested == 'true'
                     && github.event.inputs.release-version
                     || steps.scm-version.outputs.dist-version
@@ -345,7 +347,7 @@ jobs:
                 file=outputs_file,
             )
             print(
-                "wheel=cheroot-${{
+                f"wheel={dist_file_prj_base_name !s}-${{
                     steps.request-check.outputs.release-requested == 'true'
                     && github.event.inputs.release-version
                     || steps.scm-version.outputs.dist-version
@@ -509,10 +511,13 @@ jobs:
         -i
         -e 's/:commit:`\([0-9a-f]\+\)`/${{
           ''
-        }}https:\/\/github.com\/cherrypy\/cheroot\/commit\/\1/g'
+        }}https:\/\/github.com\/cherrypy\/${{
+          env.PROJECT_NAME
+        }}\/commit\/\1/g'
         -e 's/:gh:`\([-.a-zA-Z0-9]\+\)`/https:\/\/github.com\/\1/g'
         -e 's/:\(issue\|pr\):`\([0-9]\+\)`/#\2/g'
         -e 's/:user:`\([-.a-zA-Z0-9]\+\)`/@\1/g'
+        -e 's/|project|/${{ env.PROJECT_NAME }}/g'
         '${{ needs.pre-setup.outputs.changelog-draft-name-rst }}'
       shell: bash
     - name: Install pandoc via apt
@@ -1177,7 +1182,7 @@ jobs:
     environment:
       name: pypi
       url: >-
-        https://pypi.org/project/cheroot/${{
+        https://pypi.org/project/${{ env.PROJECT_NAME }}/${{
           needs.pre-setup.outputs.dist-version
         }}
 
@@ -1208,7 +1213,7 @@ jobs:
     environment:
       name: testpypi
       url: >-
-        https://test.pypi.org/project/cheroot/${{
+        https://test.pypi.org/project/${{ env.PROJECT_NAME }}/${{
           needs.pre-setup.outputs.dist-version
         }}
 
@@ -1324,7 +1329,9 @@ jobs:
       run: >-
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
-        -m 'Published at https://pypi.org/project/cheroot/${{
+        -m 'Published at https://pypi.org/project/${{
+          env.PROJECT_NAME
+        }}/${{
           needs.pre-setup.outputs.dist-version
         }}'
         -m 'This release has been produced by the following workflow run: ${{
@@ -1419,7 +1426,9 @@ jobs:
         echo '## 📝 Release notes' | tee -a release-notes.md
         echo | tee -a release-notes.md
         echo | tee -a release-notes.md
-        echo '📦 PyPI page: https://pypi.org/project/cheroot/${{
+        echo '📦 PyPI page: https://pypi.org/project/${{
+          env.PROJECT_NAME
+        }}/${{
           needs.pre-setup.outputs.dist-version
         }}' | tee -a release-notes.md
         echo | tee -a release-notes.md
