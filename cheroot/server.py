@@ -197,6 +197,7 @@ class HeaderReader:
         if hdict is None:
             hdict = {}
 
+        k = None
         while True:
             line = rfile.readline()
             if not line:
@@ -215,6 +216,8 @@ class HeaderReader:
                 # NOTE: `BytesWarning('Comparison between bytes and int')`
                 # NOTE: The latter is equivalent and does not.
                 # It's a continuation line.
+                if k is None:
+                    raise ValueError('Illegal continuation line.')
                 v = line.strip()
             else:
                 try:
