@@ -1,0 +1,4 @@
+The server has been updated to respond 400 to requests in
+which the first header field line begins with whitespace,
+instead of 500.
+-- by :user:`kenballus`
