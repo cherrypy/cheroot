@@ -244,7 +244,7 @@ zipp==3.18.1
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==69.5.1
+setuptools==70.0.0
     # via
     #   pytest-rerunfailures
     #   sphinx
