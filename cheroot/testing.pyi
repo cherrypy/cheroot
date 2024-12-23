@@ -3,7 +3,7 @@ from typing import Any, Iterator, Optional, TypeVar
 from .server import HTTPServer
 from .wsgi import Server
 
-T = TypeVar('T', bound=HTTPServer)
+T = TypeVar("T", bound=HTTPServer)
 
 EPHEMERAL_PORT: int
 NO_INTERFACE: Optional[str]

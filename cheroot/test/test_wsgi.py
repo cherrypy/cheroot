@@ -22,16 +22,16 @@ def simple_wsgi_server():
     port = portend.find_available_local_port()
 
     def app(_environ, start_response):
-        status = '200 OK'
-        response_headers = [('Content-type', 'text/plain')]
+        status = "200 OK"
+        response_headers = [("Content-type", "text/plain")]
         start_response(status, response_headers)
-        return [b'Hello world!']
+        return [b"Hello world!"]
 
-    host = '::'
+    host = "::"
     addr = host, port
     server = wsgi.Server(addr, app, timeout=600 if IS_SLOW_ENV else 20)
     # pylint: disable=possibly-unused-variable
-    url = 'http://localhost:{port}/'.format(**locals())
+    url = "http://localhost:{port}/".format(**locals())
     # pylint: disable=possibly-unused-variable
     with server._run_in_thread() as thread:
         yield locals()
@@ -40,24 +40,22 @@ def simple_wsgi_server():
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_connection_keepalive(simple_wsgi_server):
     """Test the connection keepalive works (duh)."""
-    session = Session(base_url=simple_wsgi_server['url'])
+    session = Session(base_url=simple_wsgi_server["url"])
     pooled = requests.adapters.HTTPAdapter(
-        pool_connections=1, pool_maxsize=1000,
+        pool_connections=1,
+        pool_maxsize=1000,
     )
-    session.mount('http://', pooled)
+    session.mount("http://", pooled)
 
     def do_request():
         with ExceptionTrap(requests.exceptions.ConnectionError) as trap:
-            resp = session.get('info')
+            resp = session.get("info")
             resp.raise_for_status()
         print_tb(trap.tb)
         return bool(trap)
 
     with ThreadPoolExecutor(max_workers=10 if IS_SLOW_ENV else 50) as pool:
-        tasks = [
-            pool.submit(do_request)
-            for n in range(250 if IS_SLOW_ENV else 1000)
-        ]
+        tasks = [pool.submit(do_request) for n in range(250 if IS_SLOW_ENV else 1000)]
         failures = sum(task.result() for task in tasks)
 
     session.close()
@@ -66,20 +64,20 @@ def test_connection_keepalive(simple_wsgi_server):
 
 def test_gateway_start_response_called_twice(monkeypatch):
     """Verify that repeat calls of ``Gateway.start_response()`` fail."""
-    monkeypatch.setattr(wsgi.Gateway, 'get_environ', lambda self: {})
+    monkeypatch.setattr(wsgi.Gateway, "get_environ", lambda self: {})
     wsgi_gateway = wsgi.Gateway(None)
     wsgi_gateway.started_response = True
 
-    err_msg = '^WSGI start_response called a second time with no exc_info.$'
+    err_msg = "^WSGI start_response called a second time with no exc_info.$"
     with pytest.raises(RuntimeError, match=err_msg):
-        wsgi_gateway.start_response('200', (), None)
+        wsgi_gateway.start_response("200", (), None)
 
 
 def test_gateway_write_needs_start_response_called_before(monkeypatch):
     """Check that calling ``Gateway.write()`` needs started response."""
-    monkeypatch.setattr(wsgi.Gateway, 'get_environ', lambda self: {})
+    monkeypatch.setattr(wsgi.Gateway, "get_environ", lambda self: {})
     wsgi_gateway = wsgi.Gateway(None)
 
-    err_msg = '^WSGI write called before start_response.$'
+    err_msg = "^WSGI write called before start_response.$"
     with pytest.raises(RuntimeError, match=err_msg):
         wsgi_gateway.write(None)  # The actual arg value is unimportant

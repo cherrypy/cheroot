@@ -25,7 +25,7 @@ class BufferedWriter(io.BufferedWriter):
             return len(b)
 
     def _flush_unlocked(self):
-        self._checkClosed('flush of closed file')
+        self._checkClosed("flush of closed file")
         while self._write_buf:
             try:
                 # ssl sockets only except 'bytes', not bytearrays
@@ -39,7 +39,7 @@ class BufferedWriter(io.BufferedWriter):
 class StreamReader(io.BufferedReader):
     """Socket stream reader."""
 
-    def __init__(self, sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
+    def __init__(self, sock, mode="r", bufsize=io.DEFAULT_BUFFER_SIZE):
         """Initialize socket stream reader."""
         super().__init__(socket.SocketIO(sock, mode), bufsize)
         self.bytes_read = 0
@@ -58,7 +58,7 @@ class StreamReader(io.BufferedReader):
 class StreamWriter(BufferedWriter):
     """Socket stream writer."""
 
-    def __init__(self, sock, mode='w', bufsize=io.DEFAULT_BUFFER_SIZE):
+    def __init__(self, sock, mode="w", bufsize=io.DEFAULT_BUFFER_SIZE):
         """Initialize socket stream writer."""
         super().__init__(socket.SocketIO(sock, mode), bufsize)
         self.bytes_written = 0
@@ -70,7 +70,7 @@ class StreamWriter(BufferedWriter):
         return res
 
 
-def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
+def MakeFile(sock, mode="r", bufsize=io.DEFAULT_BUFFER_SIZE):
     """File object attached to a socket object."""
-    cls = StreamReader if 'r' in mode else StreamWriter
+    cls = StreamReader if "r" in mode else StreamWriter
     return cls(sock, mode, bufsize)

@@ -7,44 +7,45 @@ import platform
 
 try:
     import ssl
+
     IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
     del ssl
 except ImportError:
     IS_ABOVE_OPENSSL10 = None
 
 
-IS_CI = bool(os.getenv('CI'))
-IS_GITHUB_ACTIONS_WORKFLOW = bool(os.getenv('GITHUB_WORKFLOW'))
+IS_CI = bool(os.getenv("CI"))
+IS_GITHUB_ACTIONS_WORKFLOW = bool(os.getenv("GITHUB_WORKFLOW"))
 
 
-IS_PYPY = platform.python_implementation() == 'PyPy'
+IS_PYPY = platform.python_implementation() == "PyPy"
 
 
 SYS_PLATFORM = platform.system()
-IS_WINDOWS = SYS_PLATFORM == 'Windows'
-IS_LINUX = SYS_PLATFORM == 'Linux'
-IS_MACOS = SYS_PLATFORM == 'Darwin'
-IS_SOLARIS = SYS_PLATFORM == 'SunOS'
+IS_WINDOWS = SYS_PLATFORM == "Windows"
+IS_LINUX = SYS_PLATFORM == "Linux"
+IS_MACOS = SYS_PLATFORM == "Darwin"
+IS_SOLARIS = SYS_PLATFORM == "SunOS"
 
 PLATFORM_ARCH = platform.machine()
-IS_PPC = PLATFORM_ARCH.startswith('ppc')
+IS_PPC = PLATFORM_ARCH.startswith("ppc")
 
 
-def ntob(n, encoding='ISO-8859-1'):
+def ntob(n, encoding="ISO-8859-1"):
     """Return the native string as bytes in the given encoding."""
     assert_native(n)
     # In Python 3, the native string type is unicode
     return n.encode(encoding)
 
 
-def ntou(n, encoding='ISO-8859-1'):
+def ntou(n, encoding="ISO-8859-1"):
     """Return the native string as Unicode with the given encoding."""
     assert_native(n)
     # In Python 3, the native string type is unicode
     return n
 
 
-def bton(b, encoding='ISO-8859-1'):
+def bton(b, encoding="ISO-8859-1"):
     """Return the byte string as native string in the given encoding."""
     return b.decode(encoding)
 
@@ -57,7 +58,7 @@ def assert_native(n):
 
     """
     if not isinstance(n, str):
-        raise TypeError('n must be a native str (got %s)' % type(n).__name__)
+        raise TypeError("n must be a native str (got %s)" % type(n).__name__)
 
 
 def extract_bytes(mv):
@@ -80,5 +81,5 @@ def extract_bytes(mv):
         return mv
 
     raise ValueError(
-        'extract_bytes() only accepts bytes and memoryview/buffer',
+        "extract_bytes() only accepts bytes and memoryview/buffer",
     )
