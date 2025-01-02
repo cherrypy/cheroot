@@ -35,8 +35,8 @@ def _assert_ssl_exc_contains(exc, *msgs):
     """Check whether SSL exception contains either of messages provided."""
     if len(msgs) < 1:
         raise TypeError(
-            "_assert_ssl_exc_contains() requires " "at least one message to be passed.",
-        )
+            '_assert_ssl_exc_contains() requires '
+            'at least one message to be passed.', )
     err_msg_lower = str(exc).lower()
     return any(m.lower() in err_msg_lower for m in msgs)
 
@@ -71,7 +71,7 @@ def _loopback_for_cert_thread(context, server):
             # tickets and close the connection cleanly.
             # Note that, as this is essentially a race condition,
             # the error may still occur ocasionally.
-            ssl_sock.send(b"0000")
+            ssl_sock.send(b'0000')
 
 
 def _loopback_for_cert(certificate, private_key, certificate_chain):
@@ -153,13 +153,13 @@ class BuiltinSSLAdapter(Adapter):
 
     # from mod_ssl/pkg.sslmod/ssl_engine_vars.c ssl_var_lookup_ssl_cert
     CERT_KEY_TO_ENV = {
-        "version": "M_VERSION",
-        "serialNumber": "M_SERIAL",
-        "notBefore": "V_START",
-        "notAfter": "V_END",
-        "subject": "S_DN",
-        "issuer": "I_DN",
-        "subjectAltName": "SAN",
+        'version': 'M_VERSION',
+        'serialNumber': 'M_SERIAL',
+        'notBefore': 'V_START',
+        'notAfter': 'V_END',
+        'subject': 'S_DN',
+        'issuer': 'I_DN',
+        'subjectAltName': 'SAN',
         # not parsed by the Python standard library
         # - A_SIG
         # - A_KEY
@@ -171,21 +171,21 @@ class BuiltinSSLAdapter(Adapter):
 
     # from mod_ssl/pkg.sslmod/ssl_engine_vars.c ssl_var_lookup_ssl_cert_dn_rec
     CERT_KEY_TO_LDAP_CODE = {
-        "countryName": "C",
-        "stateOrProvinceName": "ST",
+        'countryName': 'C',
+        'stateOrProvinceName': 'ST',
         # NOTE: mod_ssl also provides 'stateOrProvinceName' as 'SP'
         # for compatibility with SSLeay
-        "localityName": "L",
-        "organizationName": "O",
-        "organizationalUnitName": "OU",
-        "commonName": "CN",
-        "title": "T",
-        "initials": "I",
-        "givenName": "G",
-        "surname": "S",
-        "description": "D",
-        "userid": "UID",
-        "emailAddress": "Email",
+        'localityName': 'L',
+        'organizationName': 'O',
+        'organizationalUnitName': 'OU',
+        'commonName': 'CN',
+        'title': 'T',
+        'initials': 'I',
+        'givenName': 'G',
+        'surname': 'S',
+        'description': 'D',
+        'userid': 'UID',
+        'emailAddress': 'Email',
         # not provided by mod_ssl
         # - dnQualifier: DNQ
         # - domainComponent: DC
@@ -209,7 +209,7 @@ class BuiltinSSLAdapter(Adapter):
     ):
         """Set up context in addition to base class properties if available."""
         if ssl is None:
-            raise ImportError("You must install the ssl module to use HTTPS.")
+            raise ImportError('You must install the ssl module to use HTTPS.')
 
         super(BuiltinSSLAdapter, self).__init__(
             certificate,
@@ -227,13 +227,13 @@ class BuiltinSSLAdapter(Adapter):
             self.context.set_ciphers(ciphers)
 
         self._server_env = self._make_env_cert_dict(
-            "SSL_SERVER",
+            'SSL_SERVER',
             _parse_cert(certificate, private_key, self.certificate_chain),
         )
         if not self._server_env:
             return
         cert = None
-        with open(certificate, mode="rt") as f:
+        with open(certificate, mode='rt') as f:
             cert = f.read()
 
         # strip off any keys by only taking the first certificate
@@ -244,7 +244,7 @@ class BuiltinSSLAdapter(Adapter):
         if cert_end == -1:
             return
         cert_end += len(ssl.PEM_FOOTER)
-        self._server_env["SSL_SERVER_CERT"] = cert[cert_start:cert_end]
+        self._server_env['SSL_SERVER_CERT'] = cert[cert_start:cert_end]
 
     @property
     def context(self):
@@ -287,7 +287,7 @@ class BuiltinSSLAdapter(Adapter):
         except ssl.SSLError as generic_tls_error:
             peer_speaks_plain_http_over_https = (
                 generic_tls_error.errno == ssl.SSL_ERROR_SSL
-                and _assert_ssl_exc_contains(generic_tls_error, "http request")
+                and _assert_ssl_exc_contains(generic_tls_error, 'http request')
             )
             if peer_speaks_plain_http_over_https:
                 reraised_connection_drop_exc_cls = errors.NoSSLError
@@ -308,19 +308,19 @@ class BuiltinSSLAdapter(Adapter):
         """Create WSGI environ entries to be merged into each request."""
         cipher = sock.cipher()
         ssl_environ = {
-            "wsgi.url_scheme": "https",
-            "HTTPS": "on",
-            "SSL_PROTOCOL": cipher[1],
-            "SSL_CIPHER": cipher[0],
-            "SSL_CIPHER_EXPORT": "",
-            "SSL_CIPHER_USEKEYSIZE": cipher[2],
-            "SSL_VERSION_INTERFACE": "%s Python/%s"
+            'wsgi.url_scheme': 'https',
+            'HTTPS': 'on',
+            'SSL_PROTOCOL': cipher[1],
+            'SSL_CIPHER': cipher[0],
+            'SSL_CIPHER_EXPORT': '',
+            'SSL_CIPHER_USEKEYSIZE': cipher[2],
+            'SSL_VERSION_INTERFACE': '%s Python/%s'
             % (
                 HTTPServer.version,
                 sys.version,
             ),
-            "SSL_VERSION_LIBRARY": ssl.OPENSSL_VERSION,
-            "SSL_CLIENT_VERIFY": "NONE",
+            'SSL_VERSION_LIBRARY': ssl.OPENSSL_VERSION,
+            'SSL_CLIENT_VERIFY': 'NONE',
             # 'NONE' - client did not provide a cert (overriden below)
         }
 
@@ -328,32 +328,32 @@ class BuiltinSSLAdapter(Adapter):
         with suppress(AttributeError):
             compression = sock.compression()
             if compression is not None:
-                ssl_environ["SSL_COMPRESS_METHOD"] = compression
+                ssl_environ['SSL_COMPRESS_METHOD'] = compression
 
         # Python 3.6+
         with suppress(AttributeError):
-            ssl_environ["SSL_SESSION_ID"] = sock.session.id.hex()
+            ssl_environ['SSL_SESSION_ID'] = sock.session.id.hex()
         with suppress(AttributeError):
             target_cipher = cipher[:2]
             for cip in sock.context.get_ciphers():
-                if target_cipher == (cip["name"], cip["protocol"]):
-                    ssl_environ["SSL_CIPHER_ALGKEYSIZE"] = cip["alg_bits"]
+                if target_cipher == (cip['name'], cip['protocol']):
+                    ssl_environ['SSL_CIPHER_ALGKEYSIZE'] = cip['alg_bits']
                     break
 
         # Python 3.7+ sni_callback
         with suppress(AttributeError):
-            ssl_environ["SSL_TLS_SNI"] = sock.sni
+            ssl_environ['SSL_TLS_SNI'] = sock.sni
 
         if self.context and self.context.verify_mode != ssl.CERT_NONE:
             client_cert = sock.getpeercert()
             if client_cert:
                 # builtin ssl **ALWAYS** validates client certificates
                 # and terminates the connection on failure
-                ssl_environ["SSL_CLIENT_VERIFY"] = "SUCCESS"
+                ssl_environ['SSL_CLIENT_VERIFY'] = 'SUCCESS'
                 ssl_environ.update(
-                    self._make_env_cert_dict("SSL_CLIENT", client_cert),
+                    self._make_env_cert_dict('SSL_CLIENT', client_cert),
                 )
-                ssl_environ["SSL_CLIENT_CERT"] = ssl.DER_cert_to_PEM_cert(
+                ssl_environ['SSL_CLIENT_CERT'] = ssl.DER_cert_to_PEM_cert(
                     sock.getpeercert(binary_form=True),
                 ).strip()
 
@@ -379,22 +379,22 @@ class BuiltinSSLAdapter(Adapter):
 
         env = {}
         for cert_key, env_var in self.CERT_KEY_TO_ENV.items():
-            key = "%s_%s" % (env_prefix, env_var)
+            key = '%s_%s' % (env_prefix, env_var)
             value = parsed_cert.get(cert_key)
-            if env_var == "SAN":
+            if env_var == 'SAN':
                 env.update(self._make_env_san_dict(key, value))
-            elif env_var.endswith("_DN"):
+            elif env_var.endswith('_DN'):
                 env.update(self._make_env_dn_dict(key, value))
             else:
                 env[key] = str(value)
 
         # mod_ssl 2.1+; Python 3.2+
         # number of days until the certificate expires
-        if "notBefore" in parsed_cert:
-            remain = ssl.cert_time_to_seconds(parsed_cert["notAfter"])
-            remain -= ssl.cert_time_to_seconds(parsed_cert["notBefore"])
+        if 'notBefore' in parsed_cert:
+            remain = ssl.cert_time_to_seconds(parsed_cert['notAfter'])
+            remain -= ssl.cert_time_to_seconds(parsed_cert['notBefore'])
             remain /= 60 * 60 * 24
-            env["%s_V_REMAIN" % (env_prefix,)] = str(int(remain))
+            env['%s_V_REMAIN' % (env_prefix,)] = str(int(remain))
 
         return env
 
@@ -412,11 +412,11 @@ class BuiltinSSLAdapter(Adapter):
         dns_count = 0
         email_count = 0
         for attr_name, val in cert_value:
-            if attr_name == "DNS":
-                env["%s_DNS_%i" % (env_prefix, dns_count)] = val
+            if attr_name == 'DNS':
+                env['%s_DNS_%i' % (env_prefix, dns_count)] = val
                 dns_count += 1
-            elif attr_name == "Email":
-                env["%s_Email_%i" % (env_prefix, email_count)] = val
+            elif attr_name == 'Email':
+                env['%s_Email_%i' % (env_prefix, email_count)] = val
                 email_count += 1
 
         # other mod_ssl SAN vars:
@@ -438,24 +438,24 @@ class BuiltinSSLAdapter(Adapter):
         for rdn in cert_value:
             for attr_name, val in rdn:
                 attr_code = self.CERT_KEY_TO_LDAP_CODE.get(attr_name)
-                dn.append("%s=%s" % (attr_code or attr_name, val))
+                dn.append('%s=%s' % (attr_code or attr_name, val))
                 if not attr_code:
                     continue
                 dn_attrs.setdefault(attr_code, [])
                 dn_attrs[attr_code].append(val)
 
         env = {
-            env_prefix: ",".join(dn),
+            env_prefix: ','.join(dn),
         }
         for attr_code, values in dn_attrs.items():
-            env["%s_%s" % (env_prefix, attr_code)] = ",".join(values)
+            env['%s_%s' % (env_prefix, attr_code)] = ','.join(values)
             if len(values) == 1:
                 continue
             for i, val in enumerate(values):
-                env["%s_%s_%i" % (env_prefix, attr_code, i)] = val
+                env['%s_%s_%i' % (env_prefix, attr_code, i)] = val
         return env
 
-    def makefile(self, sock, mode="r", bufsize=DEFAULT_BUFFER_SIZE):
+    def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
         """Return socket file object."""
-        cls = StreamReader if "r" in mode else StreamWriter
+        cls = StreamReader if 'r' in mode else StreamWriter
         return cls(sock, mode, bufsize)

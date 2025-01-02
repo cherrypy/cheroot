@@ -15,17 +15,17 @@ import cheroot.wsgi
 
 EPHEMERAL_PORT = 0
 NO_INTERFACE = None  # Using this or '' will cause an exception
-ANY_INTERFACE_IPV4 = "0.0.0.0"
-ANY_INTERFACE_IPV6 = "::"
+ANY_INTERFACE_IPV4 = '0.0.0.0'
+ANY_INTERFACE_IPV6 = '::'
 
 config = {
     cheroot.wsgi.Server: {
-        "bind_addr": (NO_INTERFACE, EPHEMERAL_PORT),
-        "wsgi_app": None,
+        'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
+        'wsgi_app': None,
     },
     cheroot.server.HTTPServer: {
-        "bind_addr": (NO_INTERFACE, EPHEMERAL_PORT),
-        "gateway": cheroot.server.Gateway,
+        'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
+        'gateway': cheroot.server.Gateway,
     },
 }
 
@@ -34,7 +34,7 @@ config = {
 def cheroot_server(server_factory):  # noqa: WPS210
     """Set up and tear down a Cheroot server instance."""
     conf = config[server_factory].copy()
-    bind_port = conf.pop("bind_addr")[-1]
+    bind_port = conf.pop('bind_addr')[-1]
 
     for interface in ANY_INTERFACE_IPV6, ANY_INTERFACE_IPV4:
         try:
@@ -107,7 +107,7 @@ class _TestClient:
         self._http_connection = self.get_connection()
 
     def get_connection(self):
-        name = "{interface}:{port}".format(
+        name = '{interface}:{port}'.format(
             interface=self._interface,
             port=self._port,
         )
@@ -121,10 +121,10 @@ class _TestClient:
     def request(
         self,
         uri,
-        method="GET",
+        method='GET',
         headers=None,
         http_conn=None,
-        protocol="HTTP/1.1",
+        protocol='HTTP/1.1',
     ):
         return webtest.openURL(
             uri,
@@ -167,9 +167,9 @@ def _get_conn_data(bind_addr):
 
     interface = webtest.interface(host)
 
-    if ":" in interface and not _probe_ipv6_sock(interface):
-        interface = "127.0.0.1"
-        if ":" in host:
+    if ':' in interface and not _probe_ipv6_sock(interface):
+        interface = '127.0.0.1'
+        if ':' in host:
             host = interface
 
     return interface, host, port
