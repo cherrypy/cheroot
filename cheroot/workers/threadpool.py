@@ -16,7 +16,7 @@ import queue
 from jaraco.functools import pass_none
 
 
-__all__ = ('WorkerThread', 'ThreadPool')
+__all__ = ("WorkerThread", "ThreadPool")
 
 
 class TrueyZero:
@@ -70,32 +70,18 @@ class WorkerThread(threading.Thread):
         self.start_time = None
         self.work_time = 0
         self.stats = {
-            'Requests': lambda s: self.requests_seen + (
-                self.start_time is None
-                and trueyzero
-                or self.conn.requests_seen
-            ),
-            'Bytes Read': lambda s: self.bytes_read + (
-                self.start_time is None
-                and trueyzero
-                or self.conn.rfile.bytes_read
-            ),
-            'Bytes Written': lambda s: self.bytes_written + (
-                self.start_time is None
-                and trueyzero
-                or self.conn.wfile.bytes_written
-            ),
-            'Work Time': lambda s: self.work_time + (
-                self.start_time is None
-                and trueyzero
-                or time.time() - self.start_time
-            ),
-            'Read Throughput': lambda s: s['Bytes Read'](s) / (
-                s['Work Time'](s) or 1e-6
-            ),
-            'Write Throughput': lambda s: s['Bytes Written'](s) / (
-                s['Work Time'](s) or 1e-6
-            ),
+            "Requests": lambda s: self.requests_seen
+            + (self.start_time is None and trueyzero or self.conn.requests_seen),
+            "Bytes Read": lambda s: self.bytes_read
+            + (self.start_time is None and trueyzero or self.conn.rfile.bytes_read),
+            "Bytes Written": lambda s: self.bytes_written
+            + (self.start_time is None and trueyzero or self.conn.wfile.bytes_written),
+            "Work Time": lambda s: self.work_time
+            + (self.start_time is None and trueyzero or time.time() - self.start_time),
+            "Read Throughput": lambda s: s["Bytes Read"](s)
+            / (s["Work Time"](s) or 1e-6),
+            "Write Throughput": lambda s: s["Bytes Written"](s)
+            / (s["Work Time"](s) or 1e-6),
         }
         threading.Thread.__init__(self)
 
@@ -113,14 +99,14 @@ class WorkerThread(threading.Thread):
 
         # noqa: DAR401 KeyboardInterrupt SystemExit
         """
-        self.server.stats['Worker Threads'][self.name] = self.stats
+        self.server.stats["Worker Threads"][self.name] = self.stats
         self.ready = True
         try:
             self._process_connections_until_interrupted()
         except (KeyboardInterrupt, SystemExit) as interrupt_exc:
             interrupt_cause = interrupt_exc.__cause__ or interrupt_exc
             self.server.error_log(
-                f'Setting the server interrupt flag to {interrupt_cause !r}',
+                f"Setting the server interrupt flag to {interrupt_cause !r}",
                 level=logging.DEBUG,
             )
             self.server.interrupt = interrupt_cause
@@ -129,12 +115,12 @@ class WorkerThread(threading.Thread):
             # NOTE: of the worker. It is only reachable when exceptions happen
             # NOTE: in the `finally` branch of the internal try/except block.
             self.server.error_log(
-                'A fatal exception happened. Setting the server interrupt flag'
-                f' to {underlying_exc !r} and giving up.'
-                '\N{NEW LINE}\N{NEW LINE}'
-                'Please, report this on the Cheroot tracker at '
-                '<https://github.com/cherrypy/cheroot/issues/new/choose>, '
-                'providing a full reproducer with as much context and details as possible.',
+                "A fatal exception happened. Setting the server interrupt flag"
+                f" to {underlying_exc !r} and giving up."
+                "\N{NEW LINE}\N{NEW LINE}"
+                "Please, report this on the Cheroot tracker at "
+                "<https://github.com/cherrypy/cheroot/issues/new/choose>, "
+                "providing a full reproducer with as much context and details as possible.",
                 level=logging.CRITICAL,
                 traceback=True,
             )
@@ -158,7 +144,7 @@ class WorkerThread(threading.Thread):
                 return
 
             self.conn = conn
-            is_stats_enabled = self.server.stats['Enabled']
+            is_stats_enabled = self.server.stats["Enabled"]
             if is_stats_enabled:
                 self.start_time = time.time()
             keep_conn_open = False
@@ -167,9 +153,9 @@ class WorkerThread(threading.Thread):
             except ConnectionError as connection_error:
                 keep_conn_open = False  # Drop the connection cleanly
                 self.server.error_log(
-                    'Got a connection error while handling a '
-                    f'connection from {conn.remote_addr !s}:'
-                    f'{conn.remote_port !s} ({connection_error !s})',
+                    "Got a connection error while handling a "
+                    f"connection from {conn.remote_addr !s}:"
+                    f"{conn.remote_port !s} ({connection_error !s})",
                     level=logging.INFO,
                 )
                 continue
@@ -177,9 +163,9 @@ class WorkerThread(threading.Thread):
                 # Shutdown request
                 keep_conn_open = False  # Drop the connection cleanly
                 self.server.error_log(
-                    'Got a server shutdown request while handling a '
-                    f'connection from {conn.remote_addr !s}:'
-                    f'{conn.remote_port !s} ({shutdown_request !s})',
+                    "Got a server shutdown request while handling a "
+                    f"connection from {conn.remote_addr !s}:"
+                    f"{conn.remote_port !s} ({shutdown_request !s})",
                     level=logging.DEBUG,
                 )
                 raise SystemExit(
@@ -193,8 +179,8 @@ class WorkerThread(threading.Thread):
                 # NOTE: the calling code would fail to schedule processing
                 # NOTE: of new requests.
                 self.server.error_log(
-                    'Unhandled error while processing an incoming '
-                    f'connection {unhandled_error !r}',
+                    "Unhandled error while processing an incoming "
+                    f"connection {unhandled_error !r}",
                     level=logging.ERROR,
                     traceback=True,
                 )
@@ -231,8 +217,12 @@ class ThreadPool:
     """
 
     def __init__(
-            self, server, min=10, max=-1, accepted_queue_size=-1,
-            accepted_queue_timeout=10,
+        self,
+        server,
+        min=10,
+        max=-1,
+        accepted_queue_size=-1,
+        accepted_queue_timeout=10,
     ):
         """Initialize HTTP requests queue instance.
 
@@ -250,21 +240,21 @@ class ThreadPool:
         :raises TypeError: if the max is not an integer or inf
         """
         if min < 1:
-            raise ValueError(f'min={min!s} must be > 0')
+            raise ValueError(f"min={min!s} must be > 0")
 
-        if max == float('inf'):
+        if max == float("inf"):
             pass
         elif not isinstance(max, int) or max == 0:
             raise TypeError(
-                'Expected an integer or the infinity value for the `max` '
-                f'argument but got {max!r}.',
+                "Expected an integer or the infinity value for the `max` "
+                f"argument but got {max!r}.",
             )
         elif max < 0:
-            max = float('inf')
+            max = float("inf")
 
         if max < min:
             raise ValueError(
-                f'max={max!s} must be > min={min!s} (or infinity for no max)',
+                f"max={max!s} must be > min={min!s} (or infinity for no max)",
             )
 
         self.server = server
@@ -282,7 +272,7 @@ class ThreadPool:
         :raises RuntimeError: if the pool is already started
         """
         if self._threads:
-            raise RuntimeError('Threadpools can only be started once.')
+            raise RuntimeError("Threadpools can only be started once.")
         self.grow(self.min)
 
     @property
@@ -317,15 +307,12 @@ class ThreadPool:
         workers = [self._spawn_worker() for i in range(n_new)]
         for worker in workers:
             while not worker.ready:
-                time.sleep(.1)
+                time.sleep(0.1)
         self._threads.extend(workers)
 
     def _spawn_worker(self):
         worker = WorkerThread(self.server)
-        worker.name = (
-            'CP Server {worker_name!s}'.
-            format(worker_name=worker.name)
-        )
+        worker.name = "CP Server {worker_name!s}".format(worker_name=worker.name)
         worker.start()
         return worker
 
@@ -362,8 +349,8 @@ class ThreadPool:
         if timeout is not None and timeout < 0:
             timeout = None
             warnings.warning(
-                'In the future, negative timeouts to Server.stop() '
-                'will be equivalent to a timeout of zero.',
+                "In the future, negative timeouts to Server.stop() "
+                "will be equivalent to a timeout of zero.",
                 stacklevel=2,
             )
 
@@ -415,9 +402,7 @@ class ThreadPool:
         # threads = pop_all(self._threads)
         threads, self._threads[:] = self._threads[:], []
         return (
-            thread
-            for thread in threads
-            if thread is not threading.current_thread()
+            thread for thread in threads if thread is not threading.current_thread()
         )
 
     @property

@@ -4,6 +4,6 @@ from importlib import metadata
 
 
 try:
-    __version__ = metadata.version('cheroot')
+    __version__ = metadata.version("cheroot")
 except Exception:
-    __version__ = 'unknown'
+    __version__ = "unknown"

@@ -6,7 +6,13 @@ DEFAULT_BUFFER_SIZE: int
 class BuiltinSSLAdapter(Adapter):
     CERT_KEY_TO_ENV: Any
     CERT_KEY_TO_LDAP_CODE: Any
-    def __init__(self, certificate, private_key, certificate_chain: Any | None = ..., ciphers: Any | None = ...) -> None: ...
+    def __init__(
+        self,
+        certificate,
+        private_key,
+        certificate_chain: Any | None = ...,
+        ciphers: Any | None = ...,
+    ) -> None: ...
     @property
     def context(self): ...
     @context.setter

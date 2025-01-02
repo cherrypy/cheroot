@@ -18,6 +18,7 @@ except ImportError:
     try:
         from ctypes import windll, WinError
         import ctypes.wintypes
+
         _SetHandleInformation = windll.kernel32.SetHandleInformation
         _SetHandleInformation.argtypes = [
             ctypes.wintypes.HANDLE,
@@ -26,6 +27,7 @@ except ImportError:
         ]
         _SetHandleInformation.restype = ctypes.wintypes.BOOL
     except ImportError:
+
         def prevent_socket_inheritance(sock):
             """Stub inheritance prevention.
 
@@ -33,11 +35,13 @@ except ImportError:
             """
             pass
     else:
+
         def prevent_socket_inheritance(sock):
             """Mark the given socket fd as non-inheritable (Windows)."""
             if not _SetHandleInformation(sock.fileno(), 1, 0):
                 raise WinError()
 else:
+
     def prevent_socket_inheritance(sock):
         """Mark the given socket fd as non-inheritable (POSIX)."""
         fd = sock.fileno()
@@ -97,10 +101,7 @@ class _ThreadsafeSelector:
         Returns entries ready to read in the form:
             (socket_file_descriptor, connection)
         """
-        return (
-            (key.fd, key.data)
-            for key, _ in self._selector.select(timeout=timeout)
-        )
+        return ((key.fd, key.data) for key, _ in self._selector.select(timeout=timeout))
 
     def close(self):
         """Close the selector."""
@@ -129,7 +130,8 @@ class ConnectionManager:
 
         self._selector.register(
             server.socket.fileno(),
-            selectors.EVENT_READ, data=server,
+            selectors.EVENT_READ,
+            data=server,
         )
 
     def put(self, conn):
@@ -145,7 +147,9 @@ class ConnectionManager:
             self.server.process_conn(conn)
         else:
             self._selector.register(
-                conn.socket.fileno(), selectors.EVENT_READ, data=conn,
+                conn.socket.fileno(),
+                selectors.EVENT_READ,
+                data=conn,
             )
 
     def _expire(self, threshold):
@@ -235,7 +239,7 @@ class ConnectionManager:
                 self._remove_invalid_sockets()
                 continue
 
-            for (sock_fd, conn) in active_list:
+            for sock_fd, conn in active_list:
                 if conn is self.server:
                     # New connection
                     new_conn = self._from_server_socket(self.server.socket)
@@ -280,10 +284,10 @@ class ConnectionManager:
     def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
         try:
             s, addr = server_socket.accept()
-            if self.server.stats['Enabled']:
-                self.server.stats['Accepts'] += 1
+            if self.server.stats["Enabled"]:
+                self.server.stats["Accepts"] += 1
             prevent_socket_inheritance(s)
-            if hasattr(s, 'settimeout'):
+            if hasattr(s, "settimeout"):
                 s.settimeout(self.server.timeout)
 
             mf = MakeFile
@@ -294,39 +298,39 @@ class ConnectionManager:
                     s, ssl_env = self.server.ssl_adapter.wrap(s)
                 except errors.FatalSSLAlert as tls_connection_drop_error:
                     self.server.error_log(
-                        f'Client {addr !s} lost — peer dropped the TLS '
-                        'connection suddenly, during handshake: '
-                        f'{tls_connection_drop_error !s}',
+                        f"Client {addr !s} lost — peer dropped the TLS "
+                        "connection suddenly, during handshake: "
+                        f"{tls_connection_drop_error !s}",
                     )
                     return
                 except errors.NoSSLError as http_over_https_err:
                     self.server.error_log(
-                        f'Client {addr !s} attempted to speak plain HTTP into '
-                        'a TCP connection configured for TLS-only traffic — '
-                        'trying to send back a plain HTTP error response: '
-                        f'{http_over_https_err !s}',
+                        f"Client {addr !s} attempted to speak plain HTTP into "
+                        "a TCP connection configured for TLS-only traffic — "
+                        "trying to send back a plain HTTP error response: "
+                        f"{http_over_https_err !s}",
                     )
                     msg = (
-                        'The client sent a plain HTTP request, but '
-                        'this server only speaks HTTPS on this port.'
+                        "The client sent a plain HTTP request, but "
+                        "this server only speaks HTTPS on this port."
                     )
                     buf = [
-                        '%s 400 Bad Request\r\n' % self.server.protocol,
-                        'Content-Length: %s\r\n' % len(msg),
-                        'Content-Type: text/plain\r\n\r\n',
+                        "%s 400 Bad Request\r\n" % self.server.protocol,
+                        "Content-Length: %s\r\n" % len(msg),
+                        "Content-Type: text/plain\r\n\r\n",
                         msg,
                     ]
 
-                    wfile = mf(s, 'wb', io.DEFAULT_BUFFER_SIZE)
+                    wfile = mf(s, "wb", io.DEFAULT_BUFFER_SIZE)
                     try:
-                        wfile.write(''.join(buf).encode('ISO-8859-1'))
+                        wfile.write("".join(buf).encode("ISO-8859-1"))
                     except OSError as ex:
                         if ex.args[0] not in errors.socket_errors_to_ignore:
                             raise
                     return
                 mf = self.server.ssl_adapter.makefile
                 # Re-apply our timeout since we may have a new socket object
-                if hasattr(s, 'settimeout'):
+                if hasattr(s, "settimeout"):
                     s.settimeout(self.server.timeout)
 
             conn = self.server.ConnectionClass(self.server, s, mf)
@@ -338,10 +342,10 @@ class ConnectionManager:
                     # figure out if AF_INET or AF_INET6.
                     if len(s.getsockname()) == 2:
                         # AF_INET
-                        addr = ('0.0.0.0', 0)
+                        addr = ("0.0.0.0", 0)
                     else:
                         # AF_INET6
-                        addr = ('::', 0)
+                        addr = ("::", 0)
                 conn.remote_addr = addr[0]
                 conn.remote_port = addr[1]
 
@@ -354,8 +358,8 @@ class ConnectionManager:
             # accept() by default
             return
         except OSError as ex:
-            if self.server.stats['Enabled']:
-                self.server.stats['Socket Errors'] += 1
+            if self.server.stats["Enabled"]:
+                self.server.stats["Socket Errors"] += 1
             if ex.args[0] in errors.socket_error_eintr:
                 # I *think* this is right. EINTR should occur when a signal
                 # is received during the accept() call; all docs say retry
@@ -376,7 +380,7 @@ class ConnectionManager:
 
     def close(self):
         """Close all monitored connections."""
-        for (_, conn) in self._selector.connections:
+        for _, conn in self._selector.connections:
             if conn is not self.server:  # server closes its own socket
                 conn.close()
         self._selector.close()

@@ -69,7 +69,7 @@ class AbstractSocket(BindLocation):
 
     def __init__(self, abstract_socket):
         """Initialize."""
-        self.bind_addr = '\x00{sock_path}'.format(sock_path=abstract_socket)
+        self.bind_addr = "\x00{sock_path}".format(sock_path=abstract_socket)
 
 
 class Application:
@@ -78,8 +78,8 @@ class Application:
     @classmethod
     def resolve(cls, full_path):
         """Read WSGI app/Gateway path string and import application module."""
-        mod_path, _, app_path = full_path.partition(':')
-        app = getattr(import_module(mod_path), app_path or 'application')
+        mod_path, _, app_path = full_path.partition(":")
+        app = getattr(import_module(mod_path), app_path or "application")
         # suppress the `TypeError` exception, just in case `app` is not a class
         with suppress(TypeError):
             if issubclass(app, server.Gateway):
@@ -91,8 +91,8 @@ class Application:
         """Initialize."""
         if not callable(wsgi_app):
             raise TypeError(
-                'Application must be a callable object or '
-                'cheroot.server.Gateway subclass',
+                "Application must be a callable object or "
+                "cheroot.server.Gateway subclass",
             )
         self.wsgi_app = wsgi_app
 
@@ -101,7 +101,7 @@ class Application:
         args = {
             arg: value
             for arg, value in vars(parsed_args).items()
-            if not arg.startswith('_') and value is not None
+            if not arg.startswith("_") and value is not None
         }
         args.update(vars(self))
         return args
@@ -121,11 +121,11 @@ class GatewayYo:
     def server(self, parsed_args):
         """Server."""
         server_args = vars(self)
-        server_args['bind_addr'] = parsed_args['bind_addr']
+        server_args["bind_addr"] = parsed_args["bind_addr"]
         if parsed_args.max is not None:
-            server_args['maxthreads'] = parsed_args.max
+            server_args["maxthreads"] = parsed_args.max
         if parsed_args.numthreads is not None:
-            server_args['minthreads'] = parsed_args.numthreads
+            server_args["minthreads"] = parsed_args.numthreads
         return server.HTTPServer(**server_args)
 
 
@@ -135,12 +135,12 @@ def parse_wsgi_bind_location(bind_addr_string):
     # this is the first condition to verify, otherwise the urlparse
     # validation would detect //@<value> as a valid url with a hostname
     # with value: "<value>" and port: None
-    if bind_addr_string.startswith('@'):
+    if bind_addr_string.startswith("@"):
         return AbstractSocket(bind_addr_string[1:])
 
     # try and match for an IP/hostname and port
     match = urllib.parse.urlparse(
-        '//{addr}'.format(addr=bind_addr_string),
+        "//{addr}".format(addr=bind_addr_string),
     )
     try:
         addr = match.hostname
@@ -160,69 +160,69 @@ def parse_wsgi_bind_addr(bind_addr_string):
 
 
 _arg_spec = {
-    '_wsgi_app': {
-        'metavar': 'APP_MODULE',
-        'type': Application.resolve,
-        'help': 'WSGI application callable or cheroot.server.Gateway subclass',
+    "_wsgi_app": {
+        "metavar": "APP_MODULE",
+        "type": Application.resolve,
+        "help": "WSGI application callable or cheroot.server.Gateway subclass",
     },
-    '--bind': {
-        'metavar': 'ADDRESS',
-        'dest': 'bind_addr',
-        'type': parse_wsgi_bind_addr,
-        'default': '[::1]:8000',
-        'help': 'Network interface to listen on (default: [::1]:8000)',
+    "--bind": {
+        "metavar": "ADDRESS",
+        "dest": "bind_addr",
+        "type": parse_wsgi_bind_addr,
+        "default": "[::1]:8000",
+        "help": "Network interface to listen on (default: [::1]:8000)",
     },
-    '--chdir': {
-        'metavar': 'PATH',
-        'type': os.chdir,
-        'help': 'Set the working directory',
+    "--chdir": {
+        "metavar": "PATH",
+        "type": os.chdir,
+        "help": "Set the working directory",
     },
-    '--server-name': {
-        'dest': 'server_name',
-        'type': str,
-        'help': 'Web server name to be advertised via Server HTTP header',
+    "--server-name": {
+        "dest": "server_name",
+        "type": str,
+        "help": "Web server name to be advertised via Server HTTP header",
     },
-    '--threads': {
-        'metavar': 'INT',
-        'dest': 'numthreads',
-        'type': int,
-        'help': 'Minimum number of worker threads',
+    "--threads": {
+        "metavar": "INT",
+        "dest": "numthreads",
+        "type": int,
+        "help": "Minimum number of worker threads",
     },
-    '--max-threads': {
-        'metavar': 'INT',
-        'dest': 'max',
-        'type': int,
-        'help': 'Maximum number of worker threads',
+    "--max-threads": {
+        "metavar": "INT",
+        "dest": "max",
+        "type": int,
+        "help": "Maximum number of worker threads",
     },
-    '--timeout': {
-        'metavar': 'INT',
-        'dest': 'timeout',
-        'type': int,
-        'help': 'Timeout in seconds for accepted connections',
+    "--timeout": {
+        "metavar": "INT",
+        "dest": "timeout",
+        "type": int,
+        "help": "Timeout in seconds for accepted connections",
     },
-    '--shutdown-timeout': {
-        'metavar': 'INT',
-        'dest': 'shutdown_timeout',
-        'type': int,
-        'help': 'Time in seconds to wait for worker threads to cleanly exit',
+    "--shutdown-timeout": {
+        "metavar": "INT",
+        "dest": "shutdown_timeout",
+        "type": int,
+        "help": "Time in seconds to wait for worker threads to cleanly exit",
     },
-    '--request-queue-size': {
-        'metavar': 'INT',
-        'dest': 'request_queue_size',
-        'type': int,
-        'help': 'Maximum number of queued connections',
+    "--request-queue-size": {
+        "metavar": "INT",
+        "dest": "request_queue_size",
+        "type": int,
+        "help": "Maximum number of queued connections",
     },
-    '--accepted-queue-size': {
-        'metavar': 'INT',
-        'dest': 'accepted_queue_size',
-        'type': int,
-        'help': 'Maximum number of active requests in queue',
+    "--accepted-queue-size": {
+        "metavar": "INT",
+        "dest": "accepted_queue_size",
+        "type": int,
+        "help": "Maximum number of active requests in queue",
     },
-    '--accepted-queue-timeout': {
-        'metavar': 'INT',
-        'dest': 'accepted_queue_timeout',
-        'type': int,
-        'help': 'Timeout in seconds for putting requests into queue',
+    "--accepted-queue-timeout": {
+        "metavar": "INT",
+        "dest": "accepted_queue_timeout",
+        "type": int,
+        "help": "Timeout in seconds for putting requests into queue",
     },
 }
 
@@ -230,14 +230,14 @@ _arg_spec = {
 def main():
     """Create a new Cheroot instance with arguments from the command line."""
     parser = argparse.ArgumentParser(
-        description='Start an instance of the Cheroot WSGI/HTTP server.',
+        description="Start an instance of the Cheroot WSGI/HTTP server.",
     )
     for arg, spec in _arg_spec.items():
         parser.add_argument(arg, **spec)
     raw_args = parser.parse_args()
 
     # ensure cwd in sys.path
-    '' in sys.path or sys.path.insert(0, '')
+    "" in sys.path or sys.path.insert(0, "")
 
     # create a server based on the arguments provided
     raw_args._wsgi_app.server(raw_args).safe_start()
