@@ -8,16 +8,16 @@ from .._compat import IS_LINUX, IS_MACOS, IS_SOLARIS, IS_WINDOWS  # noqa: WPS130
 
 
 @pytest.mark.parametrize(
-    ("err_names", "err_nums"),
+    ('err_names', 'err_nums'),
     (
-        (("", "some-nonsense-name"), []),
+        (('', 'some-nonsense-name'), []),
         (
             (
-                "EPROTOTYPE",
-                "EAGAIN",
-                "EWOULDBLOCK",
-                "WSAEWOULDBLOCK",
-                "EPIPE",
+                'EPROTOTYPE',
+                'EAGAIN',
+                'EWOULDBLOCK',
+                'WSAEWOULDBLOCK',
+                'EPIPE',
             ),
             (91, 11, 32)
             if IS_LINUX

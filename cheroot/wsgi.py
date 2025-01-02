@@ -148,12 +148,12 @@ class Gateway(server.Gateway):
         try:
             for chunk in filter(None, response):
                 if not isinstance(chunk, bytes):
-                    raise ValueError("WSGI Applications must yield bytes")
+                    raise ValueError('WSGI Applications must yield bytes')
                 self.write(chunk)
         finally:
             # Send headers if not already sent
             self.req.ensure_headers_sent()
-            if hasattr(response, "close"):
+            if hasattr(response, 'close'):
                 response.close()
 
     def start_response(self, status, headers, exc_info=None):  # noqa: WPS238
@@ -162,8 +162,8 @@ class Gateway(server.Gateway):
         # if and only if the exc_info argument is provided."
         if self.started_response and not exc_info:
             raise RuntimeError(
-                "WSGI start_response called a second " "time with no exc_info.",
-            )
+                'WSGI start_response called a second '
+                'time with no exc_info.', )
         self.started_response = True
 
         # "if exc_info is provided, and the HTTP headers have already been
@@ -178,13 +178,13 @@ class Gateway(server.Gateway):
         for k, v in headers:
             if not isinstance(k, str):
                 raise TypeError(
-                    "WSGI response header key %r is not of type str." % k,
+                    'WSGI response header key %r is not of type str.' % k,
                 )
             if not isinstance(v, str):
                 raise TypeError(
-                    "WSGI response header value %r is not of type str." % v,
+                    'WSGI response header value %r is not of type str.' % v,
                 )
-            if k.lower() == "content-length":
+            if k.lower() == 'content-length':
                 self.remaining_bytes_out = int(v)
             out_header = ntob(k), ntob(v)
             self.req.outheaders.append(out_header)
@@ -201,8 +201,8 @@ class Gateway(server.Gateway):
         "Latin-1" set.
         """
         if not isinstance(status, str):
-            raise TypeError("WSGI response status is not of type str.")
-        return status.encode("ISO-8859-1")
+            raise TypeError('WSGI response status is not of type str.')
+        return status.encode('ISO-8859-1')
 
     def write(self, chunk):
         """WSGI callable to write unbuffered data to the client.
@@ -211,7 +211,7 @@ class Gateway(server.Gateway):
         data from the iterable returned by the WSGI application).
         """
         if not self.started_response:
-            raise RuntimeError("WSGI write called before start_response.")
+            raise RuntimeError('WSGI write called before start_response.')
 
         chunklen = len(chunk)
         rbo = self.remaining_bytes_out
@@ -219,9 +219,9 @@ class Gateway(server.Gateway):
             if not self.req.sent_headers:
                 # Whew. We can send a 500 to the client.
                 self.req.simple_response(
-                    "500 Internal Server Error",
-                    "The requested resource returned more bytes than the "
-                    "declared Content-Length.",
+                    '500 Internal Server Error',
+                    'The requested resource returned more bytes than the '
+                    'declared Content-Length.',
                 )
             else:
                 # Dang. We have probably already sent data. Truncate the chunk
@@ -236,7 +236,7 @@ class Gateway(server.Gateway):
             rbo -= chunklen
             if rbo < 0:
                 raise ValueError(
-                    "Response body exceeds the declared Content-Length.",
+                    'Response body exceeds the declared Content-Length.',
                 )
 
 
@@ -253,41 +253,41 @@ class Gateway_10(Gateway):
             # set a non-standard environ entry so the WSGI app can know what
             # the *real* server protocol is (and what features to support).
             # See http://www.faqs.org/rfcs/rfc2145.html.
-            "ACTUAL_SERVER_PROTOCOL": req.server.protocol,
-            "PATH_INFO": bton(req.path),
-            "QUERY_STRING": bton(req.qs),
-            "REMOTE_ADDR": req_conn.remote_addr or "",
-            "REMOTE_PORT": str(req_conn.remote_port or ""),
-            "REQUEST_METHOD": bton(req.method),
-            "REQUEST_URI": bton(req.uri),
-            "SCRIPT_NAME": "",
-            "SERVER_NAME": req.server.server_name,
+            'ACTUAL_SERVER_PROTOCOL': req.server.protocol,
+            'PATH_INFO': bton(req.path),
+            'QUERY_STRING': bton(req.qs),
+            'REMOTE_ADDR': req_conn.remote_addr or '',
+            'REMOTE_PORT': str(req_conn.remote_port or ''),
+            'REQUEST_METHOD': bton(req.method),
+            'REQUEST_URI': bton(req.uri),
+            'SCRIPT_NAME': '',
+            'SERVER_NAME': req.server.server_name,
             # Bah. "SERVER_PROTOCOL" is actually the REQUEST protocol.
-            "SERVER_PROTOCOL": bton(req.request_protocol),
-            "SERVER_SOFTWARE": req.server.software,
-            "wsgi.errors": sys.stderr,
-            "wsgi.input": req.rfile,
-            "wsgi.input_terminated": bool(req.chunked_read),
-            "wsgi.multiprocess": False,
-            "wsgi.multithread": True,
-            "wsgi.run_once": False,
-            "wsgi.url_scheme": bton(req.scheme),
-            "wsgi.version": self.version,
+            'SERVER_PROTOCOL': bton(req.request_protocol),
+            'SERVER_SOFTWARE': req.server.software,
+            'wsgi.errors': sys.stderr,
+            'wsgi.input': req.rfile,
+            'wsgi.input_terminated': bool(req.chunked_read),
+            'wsgi.multiprocess': False,
+            'wsgi.multithread': True,
+            'wsgi.run_once': False,
+            'wsgi.url_scheme': bton(req.scheme),
+            'wsgi.version': self.version,
         }
 
         if isinstance(req.server.bind_addr, str):
             # AF_UNIX. This isn't really allowed by WSGI, which doesn't
             # address unix domain sockets. But it's better than nothing.
-            env["SERVER_PORT"] = ""
+            env['SERVER_PORT'] = ''
             try:
-                env["X_REMOTE_PID"] = str(req_conn.peer_pid)
-                env["X_REMOTE_UID"] = str(req_conn.peer_uid)
-                env["X_REMOTE_GID"] = str(req_conn.peer_gid)
+                env['X_REMOTE_PID'] = str(req_conn.peer_pid)
+                env['X_REMOTE_UID'] = str(req_conn.peer_uid)
+                env['X_REMOTE_GID'] = str(req_conn.peer_gid)
 
-                env["X_REMOTE_USER"] = str(req_conn.peer_user)
-                env["X_REMOTE_GROUP"] = str(req_conn.peer_group)
+                env['X_REMOTE_USER'] = str(req_conn.peer_user)
+                env['X_REMOTE_GROUP'] = str(req_conn.peer_group)
 
-                env["REMOTE_USER"] = env["X_REMOTE_USER"]
+                env['REMOTE_USER'] = env['X_REMOTE_USER']
             except RuntimeError:
                 """Unable to retrieve peer creds data.
 
@@ -295,13 +295,13 @@ class Gateway_10(Gateway):
                 unsupported socket type, or disabled.
                 """
         else:
-            env["SERVER_PORT"] = str(req.server.bind_addr[1])
+            env['SERVER_PORT'] = str(req.server.bind_addr[1])
 
         # Request headers
         env.update(
             (
-                "HTTP_{header_name!s}".format(
-                    header_name=bton(k).upper().replace("-", "_")
+                'HTTP_{header_name!s}'.format(
+                    header_name=bton(k).upper().replace('-', '_'),
                 ),
                 bton(v),
             )
@@ -309,12 +309,12 @@ class Gateway_10(Gateway):
         )
 
         # CONTENT_TYPE/CONTENT_LENGTH
-        ct = env.pop("HTTP_CONTENT_TYPE", None)
+        ct = env.pop('HTTP_CONTENT_TYPE', None)
         if ct is not None:
-            env["CONTENT_TYPE"] = ct
-        cl = env.pop("HTTP_CONTENT_LENGTH", None)
+            env['CONTENT_TYPE'] = ct
+        cl = env.pop('HTTP_CONTENT_LENGTH', None)
         if cl is not None:
-            env["CONTENT_LENGTH"] = cl
+            env['CONTENT_LENGTH'] = cl
 
         if req.conn.ssl_env:
             env.update(req.conn.ssl_env)
@@ -329,7 +329,7 @@ class Gateway_u0(Gateway_10):
     and values in both Python 2 and Python 3.
     """
 
-    version = "u", 0
+    version = 'u', 0
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
@@ -338,15 +338,15 @@ class Gateway_u0(Gateway_10):
         env = dict(env_10.items())
 
         # Request-URI
-        enc = env.setdefault("wsgi.url_encoding", "utf-8")
+        enc = env.setdefault('wsgi.url_encoding', 'utf-8')
         try:
-            env["PATH_INFO"] = req.path.decode(enc)
-            env["QUERY_STRING"] = req.qs.decode(enc)
+            env['PATH_INFO'] = req.path.decode(enc)
+            env['QUERY_STRING'] = req.qs.decode(enc)
         except UnicodeDecodeError:
             # Fall back to latin 1 so apps can transcode if needed.
-            env["wsgi.url_encoding"] = "ISO-8859-1"
-            env["PATH_INFO"] = env_10["PATH_INFO"]
-            env["QUERY_STRING"] = env_10["QUERY_STRING"]
+            env['wsgi.url_encoding'] = 'ISO-8859-1'
+            env['PATH_INFO'] = env_10['PATH_INFO']
+            env['QUERY_STRING'] = env_10['QUERY_STRING']
 
         env.update(env.items())
 
@@ -379,7 +379,7 @@ class PathInfoDispatcher:
 
         # The path_prefix strings must start, but not end, with a slash.
         # Use "" instead of "/".
-        self.apps = [(p.rstrip("/"), a) for p, a in apps]
+        self.apps = [(p.rstrip('/'), a) for p, a in apps]
 
     def __call__(self, environ, start_response):
         """Process incoming WSGI request.
@@ -396,23 +396,23 @@ class PathInfoDispatcher:
                 HTTP response body
 
         """
-        path = environ["PATH_INFO"] or "/"
+        path = environ['PATH_INFO'] or '/'
         for p, app in self.apps:
             # The apps list should be sorted by length, descending.
-            if path.startswith("{path!s}/".format(path=p)) or path == p:
+            if path.startswith('{path!s}/'.format(path=p)) or path == p:
                 environ = environ.copy()
-                environ["SCRIPT_NAME"] = environ.get("SCRIPT_NAME", "") + p
-                environ["PATH_INFO"] = path[len(p) :]
+                environ['SCRIPT_NAME'] = environ.get('SCRIPT_NAME', '') + p
+                environ['PATH_INFO'] = path[len(p):]
                 return app(environ, start_response)
 
         start_response(
-            "404 Not Found",
+            '404 Not Found',
             [
-                ("Content-Type", "text/plain"),
-                ("Content-Length", "0"),
+                ('Content-Type', 'text/plain'),
+                ('Content-Length', '0'),
             ],
         )
-        return [""]
+        return ['']
 
 
 # compatibility aliases

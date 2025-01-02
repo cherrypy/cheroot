@@ -99,16 +99,16 @@ class SSLFileobjectMixin:
             except SSL.WantWriteError:
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError as e:
-                if is_reader and e.args == (-1, "Unexpected EOF"):
-                    return b""
+                if is_reader and e.args == (-1, 'Unexpected EOF'):
+                    return b''
 
                 errnum = e.args[0]
                 if is_reader and errnum in errors.socket_errors_to_ignore:
-                    return b""
+                    return b''
                 raise socket.error(errnum)
             except SSL.Error as e:
-                if is_reader and e.args == (-1, "Unexpected EOF"):
-                    return b""
+                if is_reader and e.args == (-1, 'Unexpected EOF'):
+                    return b''
 
                 thirdarg = None
                 try:
@@ -116,14 +116,14 @@ class SSLFileobjectMixin:
                 except IndexError:
                     pass
 
-                if thirdarg == "http request":
+                if thirdarg == 'http request':
                     # The client is talking HTTP to an HTTPS server.
                     raise errors.NoSSLError()
 
                 raise errors.FatalSSLAlert(*e.args)
 
             if time.time() - start > self.ssl_timeout:
-                raise socket.timeout("timed out")
+                raise socket.timeout('timed out')
 
     def recv(self, size):
         """Receive message of a size from the socket."""
@@ -178,44 +178,44 @@ class SSLConnectionProxyMeta:
     def __new__(mcl, name, bases, nmspc):
         """Attach a list of proxy methods to a new class."""
         proxy_methods = (
-            "get_context",
-            "pending",
-            "send",
-            "write",
-            "recv",
-            "read",
-            "renegotiate",
-            "bind",
-            "listen",
-            "connect",
-            "accept",
-            "setblocking",
-            "fileno",
-            "close",
-            "get_cipher_list",
-            "getpeername",
-            "getsockname",
-            "getsockopt",
-            "setsockopt",
-            "makefile",
-            "get_app_data",
-            "set_app_data",
-            "state_string",
-            "sock_shutdown",
-            "get_peer_certificate",
-            "want_read",
-            "want_write",
-            "set_connect_state",
-            "set_accept_state",
-            "connect_ex",
-            "sendall",
-            "settimeout",
-            "gettimeout",
-            "shutdown",
+            'get_context',
+            'pending',
+            'send',
+            'write',
+            'recv',
+            'read',
+            'renegotiate',
+            'bind',
+            'listen',
+            'connect',
+            'accept',
+            'setblocking',
+            'fileno',
+            'close',
+            'get_cipher_list',
+            'getpeername',
+            'getsockname',
+            'getsockopt',
+            'setsockopt',
+            'makefile',
+            'get_app_data',
+            'set_app_data',
+            'state_string',
+            'sock_shutdown',
+            'get_peer_certificate',
+            'want_read',
+            'want_write',
+            'set_connect_state',
+            'set_accept_state',
+            'connect_ex',
+            'sendall',
+            'settimeout',
+            'gettimeout',
+            'shutdown',
         )
-        proxy_methods_no_args = ("shutdown",)
+        proxy_methods_no_args = ('shutdown',)
 
-        proxy_props = ("family",)
+        proxy_props = ('family',)
 
         def lock_decorator(method):
             """Create a proxy method for a new class."""
@@ -223,7 +223,8 @@ class SSLConnectionProxyMeta:
             def proxy_wrapper(self, *args):
                 self._lock.acquire()
                 try:
-                    new_args = args[:] if method not in proxy_methods_no_args else []
+                    new_args = args[:] if method not in proxy_methods_no_args else [
+                    ]
                     return getattr(self._ssl_conn, method)(*new_args)
                 finally:
                     self._lock.release()
@@ -297,7 +298,7 @@ class pyOpenSSLAdapter(Adapter):
     ):
         """Initialize OpenSSL Adapter instance."""
         if SSL is None:
-            raise ImportError("You must install pyOpenSSL to use HTTPS.")
+            raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
         super(pyOpenSSLAdapter, self).__init__(
             certificate,
@@ -339,23 +340,23 @@ class pyOpenSSLAdapter(Adapter):
     def get_environ(self):
         """Return WSGI environ entries to be merged into each request."""
         ssl_environ = {
-            "wsgi.url_scheme": "https",
-            "HTTPS": "on",
-            "SSL_VERSION_INTERFACE": "%s %s/%s Python/%s"
+            'wsgi.url_scheme': 'https',
+            'HTTPS': 'on',
+            'SSL_VERSION_INTERFACE': '%s %s/%s Python/%s'
             % (
                 cheroot_server.HTTPServer.version,
                 OpenSSL.version.__title__,
                 OpenSSL.version.__version__,
                 sys.version,
             ),
-            "SSL_VERSION_LIBRARY": SSL.SSLeay_version(
+            'SSL_VERSION_LIBRARY': SSL.SSLeay_version(
                 SSL.SSLEAY_VERSION,
             ).decode(),
         }
 
         if self.certificate:
             # Server certificate attributes
-            with open(self.certificate, "rb") as cert_file:
+            with open(self.certificate, 'rb') as cert_file:
                 cert = crypto.load_certificate(
                     crypto.FILETYPE_PEM,
                     cert_file.read(),
@@ -363,43 +364,43 @@ class pyOpenSSLAdapter(Adapter):
 
             ssl_environ.update(
                 {
-                    "SSL_SERVER_M_VERSION": cert.get_version(),
-                    "SSL_SERVER_M_SERIAL": cert.get_serial_number(),
+                    'SSL_SERVER_M_VERSION': cert.get_version(),
+                    'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
                     # 'SSL_SERVER_V_START':
                     #   Validity of server's certificate (start time),
                     # 'SSL_SERVER_V_END':
                     #   Validity of server's certificate (end time),
-                }
+                },
             )
 
             for prefix, dn in [
-                ("I", cert.get_issuer()),
-                ("S", cert.get_subject()),
+                ('I', cert.get_issuer()),
+                ('S', cert.get_subject()),
             ]:
                 # X509Name objects don't seem to have a way to get the
                 # complete DN string. Use str() and slice it instead,
                 # because str(dn) == "<X509Name object '/C=US/ST=...'>"
                 dnstr = str(dn)[18:-2]
 
-                wsgikey = "SSL_SERVER_%s_DN" % prefix
+                wsgikey = 'SSL_SERVER_%s_DN' % prefix
                 ssl_environ[wsgikey] = dnstr
 
                 # The DN should be of the form: /k1=v1/k2=v2, but we must allow
                 # for any value to contain slashes itself (in a URL).
                 while dnstr:
-                    pos = dnstr.rfind("=")
-                    dnstr, value = dnstr[:pos], dnstr[pos + 1 :]
-                    pos = dnstr.rfind("/")
-                    dnstr, key = dnstr[:pos], dnstr[pos + 1 :]
+                    pos = dnstr.rfind('=')
+                    dnstr, value = dnstr[:pos], dnstr[pos + 1:]
+                    pos = dnstr.rfind('/')
+                    dnstr, key = dnstr[:pos], dnstr[pos + 1:]
                     if key and value:
-                        wsgikey = "SSL_SERVER_%s_DN_%s" % (prefix, key)
+                        wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
                         ssl_environ[wsgikey] = value
 
         return ssl_environ
 
-    def makefile(self, sock, mode="r", bufsize=-1):
+    def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
-        cls = SSLFileobjectStreamReader if "r" in mode else SSLFileobjectStreamWriter
+        cls = SSLFileobjectStreamReader if 'r' in mode else SSLFileobjectStreamWriter
         if SSL and isinstance(sock, ssl_conn_type):
             wrapped_socket = cls(sock, mode, bufsize)
             wrapped_socket.ssl_timeout = sock.gettimeout()
