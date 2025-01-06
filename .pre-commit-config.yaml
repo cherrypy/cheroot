@@ -67,7 +67,7 @@ repos:
   - id: no_optional
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  rev: v1.5.1
+  rev: v1.5.5
   hooks:
   - id: remove-tabs
 
@@ -86,12 +86,12 @@ repos:
       ^.*\.rst$
 
 - repo: https://github.com/hhatto/autopep8.git
-  rev: v2.1.0
+  rev: v2.3.1
   hooks:
   - id: autopep8
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v4.6.0
+  rev: v5.0.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
@@ -134,7 +134,7 @@ repos:
   - id: debug-statements
 
 - repo: https://github.com/adrienverge/yamllint.git
-  rev: v1.32.0
+  rev: v1.35.1
   hooks:
   - id: yamllint
     types:
@@ -144,7 +144,7 @@ repos:
     - --strict
 
 - repo: https://github.com/PyCQA/flake8.git
-  rev: 7.0.0
+  rev: 7.1.1
   hooks:
   - id: flake8
     additional_dependencies:
@@ -165,7 +165,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
-  rev: v1.4.1
+  rev: v1.14.1
   hooks:
   - id: mypy
     alias: mypy-py38
@@ -240,7 +240,7 @@ repos:
       $
 
 - repo: https://github.com/PyCQA/pylint.git
-  rev: v3.1.0
+  rev: v3.3.3
   hooks:
   - id: pylint
     additional_dependencies:
