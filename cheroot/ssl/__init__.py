@@ -44,6 +44,6 @@ class Adapter(metaclass=ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def makefile(self, sock, mode="r", bufsize=-1):
+    def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
         raise NotImplementedError  # pragma: no cover

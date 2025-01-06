@@ -38,18 +38,18 @@ def _configure_spelling_ext(app: Sphinx, config: _SphinxConfig) -> None:
                 return False
 
             logger.debug(
-                "Known version words: %r",  # noqa: WPS323
+                'Known version words: %r',  # noqa: WPS323
                 known_version_words,
             )
             logger.debug(
-                "Ignoring %r because it is a known version",  # noqa: WPS323
+                'Ignoring %r because it is a known version',  # noqa: WPS323
                 word,
             )
 
             return True
 
     app.config.spelling_filters = [VersionFilter]
-    app.setup_extension("sphinxcontrib.spelling")
+    app.setup_extension('sphinxcontrib.spelling')
 
 
 class SpellingNoOpDirective(SphinxDirective):
@@ -65,11 +65,11 @@ class SpellingNoOpDirective(SphinxDirective):
 def setup(app: Sphinx) -> None:
     """Initialize the extension."""
     if _EnchantTokenizeFilterBase is object:
-        app.add_directive("spelling", SpellingNoOpDirective)
+        app.add_directive('spelling', SpellingNoOpDirective)
     else:
-        app.connect("config-inited", _configure_spelling_ext)
+        app.connect('config-inited', _configure_spelling_ext)
 
     return {
-        "parallel_read_safe": True,
-        "version": __version__,
+        'parallel_read_safe': True,
+        'version': __version__,
     }

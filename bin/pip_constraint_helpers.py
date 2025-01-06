@@ -7,11 +7,11 @@ import subprocess  # noqa: S404
 import sys
 
 PYTHON_IMPLEMENTATION_MAP = {  # noqa: WPS407
-    "cpython": "cp",
-    "ironpython": "ip",
-    "jython": "jy",
-    "python": "py",
-    "pypy": "pp",
+    'cpython': 'cp',
+    'ironpython': 'ip',
+    'jython': 'jy',
+    'python': 'py',
+    'pypy': 'pp',
 }
 PYTHON_IMPLEMENTATION = platform.python_implementation()
 
@@ -34,10 +34,10 @@ def get_runtime_python_tag():
     python_tag_prefix = PYTHON_IMPLEMENTATION_MAP.get(sys_impl, sys_impl)
 
     # pylint: disable=possibly-unused-variable
-    python_minor_ver_tag = "".join(map(str, python_minor_ver))
+    python_minor_ver_tag = ''.join(map(str, python_minor_ver))
 
     return (
-        "{python_tag_prefix!s}{python_minor_ver_tag!s}".format(**locals())  # noqa: WPS421
+        '{python_tag_prefix!s}{python_minor_ver_tag!s}'.format(**locals())  # noqa: WPS421
     )
 
 
@@ -54,20 +54,20 @@ def get_constraint_file_path(req_dir, toxenv, python_tag):
     # pylint: disable=possibly-unused-variable
     platform_machine = platform.machine().lower()
 
-    if toxenv in {"py", "python"}:
-        extra_prefix = "py" if PYTHON_IMPLEMENTATION == "PyPy" else ""
-        toxenv = "{prefix}py{ver}".format(
+    if toxenv in {'py', 'python'}:
+        extra_prefix = 'py' if PYTHON_IMPLEMENTATION == 'PyPy' else ''
+        toxenv = '{prefix}py{ver}'.format(
             prefix=extra_prefix,
             ver=python_tag[2:],
         )
 
-    if sys_platform == "linux2":
-        sys_platform = "linux"
+    if sys_platform == 'linux2':
+        sys_platform = 'linux'
 
     constraint_name = (
-        "tox-{toxenv}-{python_tag}-{sys_platform}-{platform_machine}".format(**locals())  # noqa: WPS421
+        'tox-{toxenv}-{python_tag}-{sys_platform}-{platform_machine}'.format(**locals())  # noqa: WPS421
     )
-    return os.path.join(req_dir, os.path.extsep.join((constraint_name, "txt")))
+    return os.path.join(req_dir, os.path.extsep.join((constraint_name, 'txt')))
 
 
 def make_pip_cmd(pip_args, constraint_file_path):
@@ -78,14 +78,14 @@ def make_pip_cmd(pip_args, constraint_file_path):
 
     :returns: pip command.
     """
-    pip_cmd = [sys.executable, "-m", "pip"] + pip_args
+    pip_cmd = [sys.executable, '-m', 'pip'] + pip_args
     if os.path.isfile(constraint_file_path):
-        pip_cmd += ["--constraint", constraint_file_path]
+        pip_cmd += ['--constraint', constraint_file_path]
     else:
         print_info(
-            "WARNING: The expected pinned constraints file for the current "
+            'WARNING: The expected pinned constraints file for the current '
             'env does not exist (should be "{constraint_file_path}").'.format(
-                **locals()
+                **locals(),
             ),  # noqa: WPS421
         )
     return pip_cmd
@@ -97,6 +97,6 @@ def run_cmd(cmd):
     :param cmd: The command to invoke.
     """
     print_info(
-        "Invoking the following command: {cmd}".format(cmd=" ".join(cmd)),
+        'Invoking the following command: {cmd}'.format(cmd=' '.join(cmd)),
     )
     subprocess.check_call(cmd)  # noqa: S603

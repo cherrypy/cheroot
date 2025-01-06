@@ -10,12 +10,12 @@ def wsgi_invoke(app, environ):
     def start_response(status, headers):
         response.update(
             {
-                "status": status,
-                "headers": headers,
-            }
+                'status': status,
+                'headers': headers,
+            },
         )
 
-    response["body"] = b"".join(
+    response['body'] = b''.join(
         app(environ, start_response),
     )
 
@@ -28,31 +28,31 @@ def test_dispatch_no_script_name():
     # Bare bones WSGI hello world app (from PEP 333).
     def app(environ, start_response):
         start_response(
-            "200 OK",
+            '200 OK',
             [
-                ("Content-Type", "text/plain; charset=utf-8"),
+                ('Content-Type', 'text/plain; charset=utf-8'),
             ],
         )
-        return ["Hello, world!".encode("utf-8")]
+        return ['Hello, world!'.encode('utf-8')]
 
     # Build a dispatch table.
     d = PathInfoDispatcher(
         [
-            ("/", app),
-        ]
+            ('/', app),
+        ],
     )
 
     # Dispatch a request without `SCRIPT_NAME`.
     response = wsgi_invoke(
         d,
         {
-            "PATH_INFO": "/foo",
+            'PATH_INFO': '/foo',
         },
     )
     assert response == {
-        "status": "200 OK",
-        "headers": [
-            ("Content-Type", "text/plain; charset=utf-8"),
+        'status': '200 OK',
+        'headers': [
+            ('Content-Type', 'text/plain; charset=utf-8'),
         ],
-        "body": b"Hello, world!",
+        'body': b'Hello, world!',
     }
