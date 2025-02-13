@@ -56,8 +56,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  dists-artifact-name: python-package-distributions
-
   FORCE_COLOR: 1  # Request colored output from CLI tools supporting it
   MYPY_FORCE_COLOR: 1  # MyPy's color enforcement
   PIP_DISABLE_PIP_VERSION_CHECK: 1
@@ -126,6 +124,9 @@ jobs:
         shell: python
 
     outputs:
+      # NOTE: These aren't env vars because the `${{ env }}` context is
+      # NOTE: inaccessible when passing inputs to reusable workflows.
+      dists-artifact-name: python-package-distributions
       dist-version: >-
         ${{
             steps.request-check.outputs.release-requested == 'true'
@@ -764,7 +765,8 @@ jobs:
     - name: Store the distribution packages
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         # NOTE: Exact expected file names are specified here
         # NOTE: as a safety measure — if anything weird ends
         # NOTE: up being in this dir or not all dists will be
@@ -829,7 +831,8 @@ jobs:
       uses: re-actors/checkout-python-sdist@release/v1
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-        workflow-artifact-name: ${{ env.dists-artifact-name }}
+        workflow-artifact-name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
     - name: >-
         Calculate Python interpreter version hash value
@@ -884,7 +887,8 @@ jobs:
       if: matrix.toxenv == 'metadata-validation'
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
 
     - name: >-
@@ -970,7 +974,8 @@ jobs:
       uses: re-actors/checkout-python-sdist@release/v1
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-        workflow-artifact-name: ${{ env.dists-artifact-name }}
+        workflow-artifact-name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
     - name: Figure out if the interpreter ABI is stable
       id: py-abi
@@ -1050,7 +1055,8 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
 
     - name: >-
@@ -1223,7 +1229,8 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
         Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
@@ -1263,7 +1270,8 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
         Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
@@ -1438,7 +1446,8 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: Fetch the GHA artifact with the version patch
       uses: actions/download-artifact@v4
