@@ -1277,7 +1277,7 @@ jobs:
           ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
-        Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
+        Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository-url: https://test.pypi.org/legacy/
