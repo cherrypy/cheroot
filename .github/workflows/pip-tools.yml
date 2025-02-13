@@ -202,11 +202,18 @@ jobs:
         }}'
         -1
         HEAD
+    - name: Make a GHA artifact suffix
+      if: steps.constraints.outputs.patch
+      id: random
+      run: >-
+        echo uuid=$(python -c 'import uuid; print(uuid.uuid4())')
+        >> "${GITHUB_OUTPUT}"
+      shell: bash  # windows compat
     - name: Save the package bump patch as a GHA artifact
       if: steps.constraints.outputs.patch
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: pip-constraints-git-patches
+        name: pip-constraints-git-patches--${{ steps.random.outputs.uuid }}
         path: ${{ runner.temp }}/patches/${{ steps.constraints.outputs.patch }}
 
   check:  # This job does nothing and is only used for the branch protection
@@ -251,10 +258,11 @@ jobs:
     - name: Download all the dists
       id: artifacts-download
       continue-on-error: true  # and judge whether there's updates later
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        name: pip-constraints-git-patches
+        merge-multiple: true
         path: ${{ runner.temp }}/patches/
+        pattern: pip-constraints-git-patches--*
     - name: >-
         Determine whether any change suggestions to lockfiles
         have been produced
