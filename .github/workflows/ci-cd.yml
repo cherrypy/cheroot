@@ -4,14 +4,14 @@ name: CI/CD
 
 on:
   merge_group:
-  push:
+  push:  # publishes to TestPyPI pushes to the main branch
     branches-ignore:
-    - dependabot/**
+    - dependabot/**  # Dependabot always creates PRs
     - gh-readonly-queue/**  # Temporary merge queue-related GH-made branches
-    - maintenance/pip-tools-constraint-lockfiles
-    - maintenance/pip-tools-constraint-lockfiles-**
-    - patchback/backports/**
-    - pre-commit-ci-update-config
+    - maintenance/pip-tools-constraint-lockfiles  # Lock files through PRs
+    - maintenance/pip-tools-constraint-lockfiles-**  # Lock files through PRs
+    - patchback/backports/**  # Patchback always creates PRs
+    - pre-commit-ci-update-config  # pre-commit.ci always creates a PR
   pull_request:
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
@@ -58,9 +58,9 @@ concurrency:
 env:
   FORCE_COLOR: 1  # Request colored output from CLI tools supporting it
   MYPY_FORCE_COLOR: 1  # MyPy's color enforcement
-  PIP_DISABLE_PIP_VERSION_CHECK: 1
-  PIP_NO_PYTHON_VERSION_WARNING: 1
-  PIP_NO_WARN_SCRIPT_LOCATION: 1
+  PIP_DISABLE_PIP_VERSION_CHECK: 1  # Hide "there's a newer pip" message
+  PIP_NO_PYTHON_VERSION_WARNING: 1  # Hide "this Python is deprecated" message
+  PIP_NO_WARN_SCRIPT_LOCATION: 1  # Hide "script dir is not in $PATH" message
   PRE_COMMIT_COLOR: always
   PROJECT_NAME: cheroot
   PUBLISHING_TO_TESTPYPI_ENABLED: true
