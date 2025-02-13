@@ -862,7 +862,7 @@ jobs:
     - name: Retrieve the project source from an sdist inside the GHA artifact
       if: >-
         !contains(fromJSON('["pre-commit", "spellcheck-docs"]'), matrix.toxenv)
-      uses: re-actors/checkout-python-sdist@release/v1
+      uses: re-actors/checkout-python-sdist@release/v2
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
         workflow-artifact-name: >-
@@ -1006,7 +1006,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Retrieve the project source from an sdist inside the GHA artifact
-      uses: re-actors/checkout-python-sdist@release/v1
+      uses: re-actors/checkout-python-sdist@release/v2
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
         workflow-artifact-name: >-
