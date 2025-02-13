@@ -1,6 +1,6 @@
 ---
 
-name: CI/CD
+name: 🧪
 
 on:
   merge_group:
@@ -1203,7 +1203,9 @@ jobs:
         jobs: ${{ toJSON(needs) }}
 
   publish-pypi:
-    name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
+    name: >-
+      📦
+      Publish ${{ needs.pre-setup.outputs.git-tag }} to PyPI
     needs:
     - check
     - pre-setup  # transitive, for accessing settings
@@ -1236,11 +1238,15 @@ jobs:
           ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
-        Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
+        📦
+        Publish ${{ needs.pre-setup.outputs.git-tag }} to PyPI
+        🔏
       uses: pypa/gh-action-pypi-publish@release/v1
 
   publish-testpypi:
-    name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
+    name: >-
+      📦
+      Publish ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
     needs:
     - check
     - pre-setup  # transitive, for accessing settings
@@ -1277,13 +1283,16 @@ jobs:
           ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
-        Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
+        📦
+        Publish ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
+        🔏
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository-url: https://test.pypi.org/legacy/
 
   post-release-repo-update:
     name: >-
+      🏷️
       Publish post-release Git tag
       for ${{ needs.pre-setup.outputs.git-tag }}
     needs:
@@ -1378,6 +1387,7 @@ jobs:
         }}'
 
     - name: >-
+        🏷️
         Tag the release in the local Git repo
         as ${{ needs.pre-setup.outputs.git-tag }}
       if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
@@ -1399,6 +1409,7 @@ jobs:
         '${{ needs.pre-setup.outputs.git-tag }}'
 
     - name: >-
+        🏷️
         Push ${{ needs.pre-setup.outputs.git-tag }} tag corresponding
         to the just published release back to GitHub
       if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
@@ -1428,6 +1439,7 @@ jobs:
 
   publish-github-release:
     name: >-
+      🏷️
       Publish a GitHub Release for
       ${{ needs.pre-setup.outputs.git-tag }}
     needs:
