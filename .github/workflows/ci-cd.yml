@@ -1538,7 +1538,7 @@ jobs:
       shell: bash
 
     - name: Sign the dists with Sigstore
-      uses: sigstore/gh-action-sigstore-python@v2.1.1
+      uses: sigstore/gh-action-sigstore-python@v3.0.0
       with:
         inputs: >-
           dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
@@ -1554,9 +1554,9 @@ jobs:
         artifactErrorsFailBuild: false
         artifacts: |
           dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
-          dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}.sigstore
+          dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}.sigstore.json
           dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
-          dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}.sigstore
+          dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}.sigstore.json
         artifactContentType: raw  # Because whl and tgz are of different types
         bodyFile: release-notes.md
         discussionCategory: Announcements
