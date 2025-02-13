@@ -246,8 +246,10 @@ jobs:
             print(
                 "files-hash-key=${{
                     hashFiles(
-                      'tox.ini', 'pyproject.toml',
-                      '.pre-commit-config.yaml', 'pytest.ini'
+                      'tox.ini',
+                      'pyproject.toml',
+                      '.pre-commit-config.yaml',
+                      'pytest.ini'
                     )
                 }}",
                 file=outputs_file,
@@ -1198,7 +1200,8 @@ jobs:
         allowed-failures: >-
           ${{
             fromJSON(needs.pre-setup.outputs.is-yolo-mode)
-            && 'lint, tests' || ''
+            && 'lint, tests'
+            || ''
           }}
         jobs: ${{ toJSON(needs) }}
 
