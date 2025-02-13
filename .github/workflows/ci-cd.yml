@@ -713,10 +713,7 @@ jobs:
         -m '${{ needs.pre-setup.outputs.git-tag }}'
         '${{ needs.pre-setup.outputs.git-tag }}'
         --
-        ${{
-          fromJSON(needs.pre-setup.outputs.release-requested)
-          && github.event.inputs.release-committish || ''
-        }}
+        ${{ github.event.inputs.release-committish }}
 
     - name: Install tomlkit Python distribution package
       if: >-
