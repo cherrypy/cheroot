@@ -736,6 +736,11 @@ jobs:
         git diff --color=always
         git update-index --assume-unchanged pyproject.toml
 
+    - name: Set static timestamp for dist build reproducibility
+      # ... from the last Git commit since it's immutable
+      run: >-
+        echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)"
+        >> "${GITHUB_ENV}"
     - name: Build dists
       run: >-
         python -m
