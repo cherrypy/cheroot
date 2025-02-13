@@ -1220,7 +1220,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 1
+    timeout-minutes: 2  # docker+network are slow sometimes
 
     environment:
       name: pypi
@@ -1265,7 +1265,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 1
+    timeout-minutes: 2  # docker+network are slow sometimes
 
     environment:
       name: testpypi
@@ -1453,7 +1453,7 @@ jobs:
       && needs.post-release-repo-update.result == 'success'
     runs-on: ubuntu-latest
 
-    timeout-minutes: 1
+    timeout-minutes: 3
 
     permissions:
       contents: write
