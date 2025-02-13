@@ -49,6 +49,9 @@ jobs:
           matrix.os
       }}
     runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 2
+
     strategy:
       matrix:
         python-version:
@@ -235,6 +238,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 1
+
     steps:
     - name: Decide whether the needed jobs succeeded or failed
       uses: re-actors/alls-green@release/v1
@@ -247,6 +252,8 @@ jobs:
     needs:
     - check
     runs-on: Ubuntu-latest
+
+    timeout-minutes: 1
 
     environment: pip-tools
 

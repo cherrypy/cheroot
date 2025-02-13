@@ -410,6 +410,8 @@ jobs:
     - pre-setup
     runs-on: ubuntu-latest
 
+    timeout-minutes: 1
+
     env:
       TOXENV: make-changelog
 
@@ -794,6 +796,8 @@ jobs:
         - spellcheck-docs
       fail-fast: false
 
+    timeout-minutes: 3
+
     env:
       TOXENV: ${{ matrix.toxenv }}
 
@@ -913,6 +917,9 @@ jobs:
     - build
     - pre-setup  # transitive, for accessing settings
     runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 7
+
     strategy:
       matrix:
         python-version:
@@ -1168,6 +1175,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 1
+
     steps:
     - name: Decide whether the needed jobs succeeded or failed
       uses: re-actors/alls-green@release/v1
@@ -1190,6 +1199,8 @@ jobs:
       && fromJSON(needs.pre-setup.outputs.release-requested)
 
     runs-on: ubuntu-latest
+
+    timeout-minutes: 1
 
     environment:
       name: pypi
@@ -1227,6 +1238,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 1
+
     environment:
       name: testpypi
       url: >-
@@ -1262,6 +1275,8 @@ jobs:
       && needs.publish-pypi.result == 'success'
 
     runs-on: ubuntu-latest
+
+    timeout-minutes: 1
 
     outputs:
       pull_request_url: ${{ steps.pr.outputs.pull_request_url }}
@@ -1403,6 +1418,8 @@ jobs:
       always()
       && needs.post-release-repo-update.result == 'success'
     runs-on: ubuntu-latest
+
+    timeout-minutes: 1
 
     permissions:
       contents: write
