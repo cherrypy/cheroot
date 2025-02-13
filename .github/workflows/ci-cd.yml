@@ -642,6 +642,22 @@ jobs:
           }}
         ref: ${{ github.event.inputs.release-committish }}
 
+    - name: Fetch the GHA artifact with the version patch
+      uses: actions/download-artifact@v4
+      with:
+        name: changelog
+    - name: Apply the changelog patch but do not commit it
+      run: git apply '${{ needs.pre-setup.outputs.changelog-patch-name }}'
+      shell: bash
+    - name: Delete the changelog patch file
+      run: rm -fv '${{ needs.pre-setup.outputs.changelog-patch-name }}'
+      shell: bash
+    - name: Pretend that changelog updates never happened
+      run: |
+        git diff --color=always
+        git update-index --assume-unchanged $(git ls-files --modified)
+      shell: bash
+
     - name: >-
         Calculate Python interpreter version hash value
         for use in the cache key
