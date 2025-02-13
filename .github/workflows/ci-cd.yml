@@ -65,6 +65,7 @@ env:
   PIP_NO_WARN_SCRIPT_LOCATION: 1
   PRE_COMMIT_COLOR: always
   PROJECT_NAME: cheroot
+  PUBLISHING_TO_TESTPYPI_ENABLED: true
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
   PYTHONIOENCODING: utf-8
   PYTHONUTF8: 1
@@ -151,6 +152,7 @@ jobs:
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
       upstream-repository-id: ${{ env.UPSTREAM_REPOSITORY_ID }}
+      publishing-to-testpypi-enabled: ${{ env.PUBLISHING_TO_TESTPYPI_ENABLED }}
       changelog-patch-name: ${{ steps.changelog-patch-name.outputs.filename }}
       changelog-draft-name-md: >-
         ${{ steps.changelog-draft-name.outputs.filename-base }}.md
@@ -1240,6 +1242,7 @@ jobs:
         || fromJSON(needs.pre-setup.outputs.release-requested)
       )
       && needs.pre-setup.outputs.upstream-repository-id == github.repository_id
+      && fromJSON(needs.pre-setup.outputs.publishing-to-testpypi-enabled)
 
     runs-on: ubuntu-latest
 
