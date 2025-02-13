@@ -249,7 +249,8 @@ jobs:
                       'tox.ini',
                       'pyproject.toml',
                       '.pre-commit-config.yaml',
-                      'pytest.ini'
+                      'pytest.ini',
+                      'dependencies/**/*'
                     )
                 }}",
                 file=outputs_file,
