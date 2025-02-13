@@ -2,7 +2,7 @@
 
 name: CodeQL
 
-on:   # yamllint disable-line rule:truthy
+on:
   push:
     branches:
     - main

@@ -2,7 +2,7 @@
 
 name: CI/CD
 
-on:   # yamllint disable-line rule:truthy
+on:
   merge_group:
   push:
     branches-ignore:

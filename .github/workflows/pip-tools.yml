@@ -2,7 +2,7 @@
 
 name: pip-tools
 
-on:   # yamllint disable-line rule:truthy
+on:
   workflow_dispatch:
     inputs:
       package-distribuition:
