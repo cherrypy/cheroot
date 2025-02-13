@@ -757,6 +757,7 @@ jobs:
         --parallel-live
         --skip-missing-interpreters false
         --skip-pkg-install
+        --quiet
     - name: Verify that the artifacts with expected names got created
       run: >-
         ls -1
@@ -914,6 +915,7 @@ jobs:
         --parallel-live
         --skip-missing-interpreters false
         --skip-pkg-install
+        --quiet
 
   tests:
     name: >-
@@ -1112,6 +1114,7 @@ jobs:
         --skip-missing-interpreters false
         --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
         --skip-pkg-install
+        --quiet
     - name: Produce markdown test summary from JUnit
       if: >-
         !cancelled()
