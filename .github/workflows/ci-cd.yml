@@ -1176,7 +1176,9 @@ jobs:
     - check
     - pre-setup  # transitive, for accessing settings
     if: >-
-      fromJSON(needs.pre-setup.outputs.release-requested)
+      always()
+      && needs.check.result == 'success'
+      && fromJSON(needs.pre-setup.outputs.release-requested)
     runs-on: ubuntu-latest
 
     environment:
@@ -1206,8 +1208,12 @@ jobs:
     - check
     - pre-setup  # transitive, for accessing settings
     if: >-
-      fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-      || fromJSON(needs.pre-setup.outputs.release-requested)
+      always()
+      && needs.check.result == 'success'
+      && (
+        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
+        || fromJSON(needs.pre-setup.outputs.release-requested)
+      )
     runs-on: ubuntu-latest
 
     environment:
@@ -1240,6 +1246,9 @@ jobs:
     needs:
     - publish-pypi
     - pre-setup  # transitive, for accessing settings
+    if: >-
+      always()
+      && needs.publish-pypi.result == 'success'
     runs-on: ubuntu-latest
 
     outputs:
@@ -1378,6 +1387,9 @@ jobs:
     needs:
     - post-release-repo-update
     - pre-setup  # transitive, for accessing settings
+    if: >-
+      always()
+      && needs.post-release-repo-update.result == 'success'
     runs-on: ubuntu-latest
 
     permissions:
