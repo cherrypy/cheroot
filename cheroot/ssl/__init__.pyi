@@ -8,13 +8,7 @@ class Adapter(metaclass=ABCMeta):
     ciphers: Any
     context: Any
     @abstractmethod
-    def __init__(
-        self,
-        certificate,
-        private_key,
-        certificate_chain: Any | None = ...,
-        ciphers: Any | None = ...,
-    ): ...
+    def __init__(self, certificate, private_key, certificate_chain: Any | None = ..., ciphers: Any | None = ...): ...
     @abstractmethod
     def bind(self, sock): ...
     @abstractmethod

@@ -73,7 +73,6 @@ def native_server_client(native_server):  # noqa: F811
 @pytest.fixture
 def http_server():
     """Provision a server creator as a fixture."""
-
     def start_srv():
         bind_addr = yield
         if bind_addr is None:

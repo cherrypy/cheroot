@@ -19,51 +19,51 @@ thisdir = os.path.abspath(os.path.dirname(__file__))
 
 
 config = {
-    "bind_addr": ("127.0.0.1", 54583),
-    "server": "wsgi",
-    "wsgi_app": None,
+    'bind_addr': ('127.0.0.1', 54583),
+    'server': 'wsgi',
+    'wsgi_app': None,
 }
 
 
 class CherootWebCase(webtest.WebCase):
     """Helper class for a web app test suite."""
 
-    script_name = ""
-    scheme = "http"
+    script_name = ''
+    scheme = 'http'
 
     available_servers = {
-        "wsgi": cheroot.wsgi.Server,
-        "native": cheroot.server.HTTPServer,
+        'wsgi': cheroot.wsgi.Server,
+        'native': cheroot.server.HTTPServer,
     }
 
     @classmethod
     def setup_class(cls):
         """Create and run one HTTP server per class."""
         conf = config.copy()
-        conf.update(getattr(cls, "config", {}))
+        conf.update(getattr(cls, 'config', {}))
 
-        s_class = conf.pop("server", "wsgi")
+        s_class = conf.pop('server', 'wsgi')
         server_factory = cls.available_servers.get(s_class)
         if server_factory is None:
-            raise RuntimeError("Unknown server in config: %s" % conf["server"])
+            raise RuntimeError('Unknown server in config: %s' % conf['server'])
         cls.httpserver = server_factory(**conf)
 
         cls.HOST, cls.PORT = cls.httpserver.bind_addr
         if cls.httpserver.ssl_adapter is None:
-            ssl = ""
-            cls.scheme = "http"
+            ssl = ''
+            cls.scheme = 'http'
         else:
-            ssl = " (ssl)"
+            ssl = ' (ssl)'
             cls.HTTP_CONN = http.client.HTTPSConnection
-            cls.scheme = "https"
+            cls.scheme = 'https'
 
         v = sys.version.split()[0]
-        log.info("Python version used to run this test script: %s", v)
-        log.info("Cheroot version: %s", cheroot.__version__)
-        log.info("HTTP server version: %s%s", cls.httpserver.protocol, ssl)
-        log.info("PID: %s", os.getpid())
+        log.info('Python version used to run this test script: %s', v)
+        log.info('Cheroot version: %s', cheroot.__version__)
+        log.info('HTTP server version: %s%s', cls.httpserver.protocol, ssl)
+        log.info('PID: %s', os.getpid())
 
-        if hasattr(cls, "setup_server"):
+        if hasattr(cls, 'setup_server'):
             # Clear the wsgi server so that
             # it can be updated with the new root
             cls.setup_server()
@@ -72,7 +72,7 @@ class CherootWebCase(webtest.WebCase):
     @classmethod
     def teardown_class(cls):
         """Cleanup HTTP server."""
-        if hasattr(cls, "setup_server"):
+        if hasattr(cls, 'setup_server'):
             cls.stop()
 
     @classmethod
@@ -86,7 +86,7 @@ class CherootWebCase(webtest.WebCase):
     def stop(cls):
         """Terminate HTTP server."""
         cls.httpserver.stop()
-        td = getattr(cls, "teardown", None)
+        td = getattr(cls, 'teardown', None)
         if td:
             td()
 
@@ -103,7 +103,8 @@ class CherootWebCase(webtest.WebCase):
             diff = dt2 - dt1
         if not diff < datetime.timedelta(seconds=seconds):
             raise AssertionError(
-                "%r and %r are not within %r seconds." % (dt1, dt2, seconds),
+                '%r and %r are not within %r seconds.' %
+                (dt1, dt2, seconds),
             )
 
 
@@ -120,8 +121,8 @@ class Response:
 
     def __init__(self):
         """Initialize HTTP response."""
-        self.status = "200 OK"
-        self.headers = {"Content-Type": "text/html"}
+        self.status = '200 OK'
+        self.headers = {'Content-Type': 'text/html'}
         self.body = None
 
     def output(self):
@@ -129,11 +130,11 @@ class Response:
         if self.body is None:
             return []
         elif isinstance(self.body, str):
-            return [self.body.encode("iso-8859-1")]
+            return [self.body.encode('iso-8859-1')]
         elif isinstance(self.body, bytes):
             return [self.body]
         else:
-            return [x.encode("iso-8859-1") for x in self.body]
+            return [x.encode('iso-8859-1') for x in self.body]
 
 
 class Controller:
@@ -145,17 +146,21 @@ class Controller:
         try:
             # Python 3 supports unicode attribute names
             # Python 2 encodes them
-            handler = self.handlers[environ["PATH_INFO"]]
+            handler = self.handlers[environ['PATH_INFO']]
         except KeyError:
-            resp.status = "404 Not Found"
+            resp.status = '404 Not Found'
         else:
             output = handler(req, resp)
-            if output is not None and not any(
-                resp.status.startswith(status_code) for status_code in ("204", "304")
+            if (
+                output is not None
+                and not any(
+                    resp.status.startswith(status_code)
+                    for status_code in ('204', '304')
+                )
             ):
                 resp.body = output
                 try:
-                    resp.headers.setdefault("Content-Length", str(len(output)))
+                    resp.headers.setdefault('Content-Length', str(len(output)))
                 except TypeError:
                     if not isinstance(output, types.GeneratorType):
                         raise

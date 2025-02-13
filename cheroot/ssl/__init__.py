@@ -15,11 +15,8 @@ class Adapter(metaclass=ABCMeta):
 
     @abstractmethod
     def __init__(
-        self,
-        certificate,
-        private_key,
-        certificate_chain=None,
-        ciphers=None,
+            self, certificate, private_key, certificate_chain=None,
+            ciphers=None,
     ):
         """Set up certificates, private key ciphers and reset context."""
         self.certificate = certificate
@@ -44,6 +41,6 @@ class Adapter(metaclass=ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def makefile(self, sock, mode="r", bufsize=-1):
+    def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
         raise NotImplementedError  # pragma: no cover

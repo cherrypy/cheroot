@@ -39,19 +39,18 @@ def interface(host):
     If the server is listening on '0.0.0.0' (INADDR_ANY)
     or '::' (IN6ADDR_ANY), this will return the proper localhost.
     """
-    if host == "0.0.0.0":
+    if host == '0.0.0.0':
         # INADDR_ANY, which should respond on localhost.
-        return "127.0.0.1"
-    if host == "::":
+        return '127.0.0.1'
+    if host == '::':
         # IN6ADDR_ANY, which should respond on localhost.
-        return "::1"
+        return '::1'
     return host
 
 
 try:
     # Jython support
-    if sys.platform[:4] == "java":
-
+    if sys.platform[:4] == 'java':
         def getchar():
             """Get a key press."""
             # Hopefully this is enough
@@ -86,8 +85,8 @@ class NonDataProperty:
 
     def __init__(self, fget):
         """Initialize a non-data property."""
-        assert fget is not None, "fget cannot be none"
-        assert callable(fget), "fget must be callable"
+        assert fget is not None, 'fget cannot be none'
+        assert callable(fget), 'fget must be callable'
         self.fget = fget
 
     def __get__(self, obj, objtype=None):
@@ -100,12 +99,12 @@ class NonDataProperty:
 class WebCase(unittest.TestCase):
     """Helper web test suite base."""
 
-    HOST = "127.0.0.1"
+    HOST = '127.0.0.1'
     PORT = 8000
     HTTP_CONN = http.client.HTTPConnection
-    PROTOCOL = "HTTP/1.1"
+    PROTOCOL = 'HTTP/1.1'
 
-    scheme = "http"
+    scheme = 'http'
     url = None
     ssl_context = None
 
@@ -113,7 +112,7 @@ class WebCase(unittest.TestCase):
     headers = None
     body = None
 
-    encoding = "utf-8"
+    encoding = 'utf-8'
 
     time = None
 
@@ -123,7 +122,7 @@ class WebCase(unittest.TestCase):
 
         * from :py:mod:`python:http.client`.
         """
-        cls_name = "{scheme}Connection".format(scheme=self.scheme.upper())
+        cls_name = '{scheme}Connection'.format(scheme=self.scheme.upper())
         return getattr(http.client, cls_name)
 
     def get_conn(self, auto_open=False):
@@ -148,12 +147,16 @@ class WebCase(unittest.TestCase):
         except (TypeError, AttributeError):
             pass
 
-        self.HTTP_CONN = self.get_conn(auto_open=auto_open) if on else self._Conn
+        self.HTTP_CONN = (
+            self.get_conn(auto_open=auto_open)
+            if on
+            else self._Conn
+        )
 
     @property
     def persistent(self):
         """Presence of the persistent HTTP connection."""
-        return hasattr(self.HTTP_CONN, "__class__")
+        return hasattr(self.HTTP_CONN, '__class__')
 
     @persistent.setter
     def persistent(self, on):
@@ -168,13 +171,8 @@ class WebCase(unittest.TestCase):
         return interface(self.HOST)
 
     def getPage(
-        self,
-        url,
-        headers=None,
-        method="GET",
-        body=None,
-        protocol=None,
-        raise_subcls=(),
+        self, url, headers=None, method='GET', body=None,
+        protocol=None, raise_subcls=(),
     ):
         """Open the url with debugging support.
 
@@ -200,9 +198,9 @@ class WebCase(unittest.TestCase):
         ServerError.on = False
 
         if isinstance(url, str):
-            url = url.encode("utf-8")
+            url = url.encode('utf-8')
         if isinstance(body, str):
-            body = body.encode("utf-8")
+            body = body.encode('utf-8')
 
         # for compatibility, support raise_subcls is None
         raise_subcls = raise_subcls or ()
@@ -211,14 +209,8 @@ class WebCase(unittest.TestCase):
         self.time = None
         start = time.time()
         result = openURL(
-            url,
-            headers,
-            method,
-            body,
-            self.HOST,
-            self.PORT,
-            self.HTTP_CONN,
-            protocol or self.PROTOCOL,
+            url, headers, method, body, self.HOST, self.PORT,
+            self.HTTP_CONN, protocol or self.PROTOCOL,
             raise_subcls=raise_subcls,
             ssl_context=self.ssl_context,
         )
@@ -227,7 +219,8 @@ class WebCase(unittest.TestCase):
 
         # Build a list of request cookies from the previous response cookies.
         self.cookies = [
-            ("Cookie", v) for k, v in self.headers if k.lower() == "set-cookie"
+            ('Cookie', v) for k, v in self.headers
+            if k.lower() == 'set-cookie'
         ]
 
         if ServerError.on:
@@ -242,12 +235,12 @@ class WebCase(unittest.TestCase):
         the value can be numeric or a string like true or
         False or 1 or 0.
         """
-        env_str = os.environ.get("WEBTEST_INTERACTIVE", "True")
+        env_str = os.environ.get('WEBTEST_INTERACTIVE', 'True')
         is_interactive = bool(json.loads(env_str.lower()))
         if is_interactive:
             warnings.warn(
-                "Interactive test failure interceptor support via "
-                "WEBTEST_INTERACTIVE environment variable is deprecated.",
+                'Interactive test failure interceptor support via '
+                'WEBTEST_INTERACTIVE environment variable is deprecated.',
                 DeprecationWarning,
                 stacklevel=1,
             )
@@ -256,49 +249,49 @@ class WebCase(unittest.TestCase):
     console_height = 30
 
     def _handlewebError(self, msg):  # noqa: C901  # FIXME
-        print("")
-        print("    ERROR: %s" % msg)
+        print('')
+        print('    ERROR: %s' % msg)
 
         if not self.interactive:
             raise self.failureException(msg)
 
         p = (
-            "    Show: "
-            "[B]ody [H]eaders [S]tatus [U]RL; "
-            "[I]gnore, [R]aise, or sys.e[X]it >> "
+            '    Show: '
+            '[B]ody [H]eaders [S]tatus [U]RL; '
+            '[I]gnore, [R]aise, or sys.e[X]it >> '
         )
         sys.stdout.write(p)
         sys.stdout.flush()
         while True:
             i = getchar().upper()
-            if not isinstance(i, type("")):
-                i = i.decode("ascii")
-            if i not in "BHSUIRX":
+            if not isinstance(i, type('')):
+                i = i.decode('ascii')
+            if i not in 'BHSUIRX':
                 continue
             print(i.upper())  # Also prints new line
-            if i == "B":
+            if i == 'B':
                 for x, line in enumerate(self.body.splitlines()):
                     if (x + 1) % self.console_height == 0:
                         # The \r and comma should make the next line overwrite
-                        sys.stdout.write("<-- More -->\r")
+                        sys.stdout.write('<-- More -->\r')
                         m = getchar().lower()
                         # Erase our "More" prompt
-                        sys.stdout.write("            \r")
-                        if m == "q":
+                        sys.stdout.write('            \r')
+                        if m == 'q':
                             break
                     print(line)
-            elif i == "H":
+            elif i == 'H':
                 pprint.pprint(self.headers)
-            elif i == "S":
+            elif i == 'S':
                 print(self.status)
-            elif i == "U":
+            elif i == 'U':
                 print(self.url)
-            elif i == "I":
+            elif i == 'I':
                 # return without raising the normal exception
                 return
-            elif i == "R":
+            elif i == 'R':
                 raise self.failureException(msg)
-            elif i == "X":
+            elif i == 'X':
                 sys.exit()
             sys.stdout.write(p)
             sys.stdout.flush()
@@ -310,7 +303,11 @@ class WebCase(unittest.TestCase):
 
     def status_matches(self, expected):
         """Check whether actual status matches expected."""
-        actual = self.status_code if isinstance(expected, int) else self.status
+        actual = (
+            self.status_code
+            if isinstance(expected, int) else
+            self.status
+        )
         return expected == actual
 
     def assertStatus(self, status, msg=None):
@@ -322,7 +319,7 @@ class WebCase(unittest.TestCase):
         if any(map(self.status_matches, always_iterable(status))):
             return
 
-        tmpl = "Status {self.status} does not match {status}"
+        tmpl = 'Status {self.status} does not match {status}'
         msg = msg or tmpl.format(**locals())
         self._handlewebError(msg)
 
@@ -336,9 +333,9 @@ class WebCase(unittest.TestCase):
 
         if msg is None:
             if value is None:
-                msg = "%r not in headers" % key
+                msg = '%r not in headers' % key
             else:
-                msg = "%r:%r not in headers" % (key, value)
+                msg = '%r:%r not in headers' % (key, value)
         self._handlewebError(msg)
 
     def assertHeaderIn(self, key, values, msg=None):
@@ -351,18 +348,18 @@ class WebCase(unittest.TestCase):
                     return matches
 
         if msg is None:
-            msg = "%(key)r not in %(values)r" % vars()
+            msg = '%(key)r not in %(values)r' % vars()
         self._handlewebError(msg)
 
     def assertHeaderItemValue(self, key, value, msg=None):
         """Fail if the header does not contain the specified value."""
         actual_value = self.assertHeader(key, msg=msg)
-        header_values = map(str.strip, actual_value.split(","))
+        header_values = map(str.strip, actual_value.split(','))
         if value in header_values:
             return value
 
         if msg is None:
-            msg = "%r not in %r" % (value, header_values)
+            msg = '%r not in %r' % (value, header_values)
         self._handlewebError(msg)
 
     def assertNoHeader(self, key, msg=None):
@@ -371,7 +368,7 @@ class WebCase(unittest.TestCase):
         matches = [k for k, v in self.headers if k.lower() == lowkey]
         if matches:
             if msg is None:
-                msg = "%r in headers" % key
+                msg = '%r in headers' % key
             self._handlewebError(msg)
 
     def assertNoHeaderItemValue(self, key, value, msg=None):
@@ -381,7 +378,7 @@ class WebCase(unittest.TestCase):
         matches = [k for k, v in hdrs if k.lower() == lowkey and v == value]
         if matches:
             if msg is None:
-                msg = "%r:%r in %r" % (key, value, hdrs)
+                msg = '%r:%r in %r' % (key, value, hdrs)
             self._handlewebError(msg)
 
     def assertBody(self, value, msg=None):
@@ -390,9 +387,8 @@ class WebCase(unittest.TestCase):
             value = value.encode(self.encoding)
         if value != self.body:
             if msg is None:
-                msg = "expected body:\n%r\n\nactual body:\n%r" % (
-                    value,
-                    self.body,
+                msg = 'expected body:\n%r\n\nactual body:\n%r' % (
+                    value, self.body,
                 )
             self._handlewebError(msg)
 
@@ -402,7 +398,7 @@ class WebCase(unittest.TestCase):
             value = value.encode(self.encoding)
         if value not in self.body:
             if msg is None:
-                msg = "%r not in body: %s" % (value, self.body)
+                msg = '%r not in body: %s' % (value, self.body)
             self._handlewebError(msg)
 
     def assertNotInBody(self, value, msg=None):
@@ -411,7 +407,7 @@ class WebCase(unittest.TestCase):
             value = value.encode(self.encoding)
         if value in self.body:
             if msg is None:
-                msg = "%r found in body" % value
+                msg = '%r found in body' % value
             self._handlewebError(msg)
 
     def assertMatchesBody(self, pattern, msg=None, flags=0):
@@ -420,11 +416,11 @@ class WebCase(unittest.TestCase):
             pattern = pattern.encode(self.encoding)
         if re.search(pattern, self.body, flags) is None:
             if msg is None:
-                msg = "No match for %r in body" % pattern
+                msg = 'No match for %r in body' % pattern
             self._handlewebError(msg)
 
 
-methods_with_bodies = ("POST", "PUT", "PATCH")
+methods_with_bodies = ('POST', 'PUT', 'PATCH')
 
 
 def cleanHeaders(headers, method, body, host, port):
@@ -436,34 +432,34 @@ def cleanHeaders(headers, method, body, host, port):
     # [This specifies the host:port of the server, not the client.]
     found = False
     for k, _v in headers:
-        if k.lower() == "host":
+        if k.lower() == 'host':
             found = True
             break
     if not found:
         if port == 80:
-            headers.append(("Host", host))
+            headers.append(('Host', host))
         else:
-            headers.append(("Host", "%s:%s" % (host, port)))
+            headers.append(('Host', '%s:%s' % (host, port)))
 
     if method in methods_with_bodies:
         # Stick in default type and length headers if not present
         found = False
         for k, v in headers:
-            if k.lower() == "content-type":
+            if k.lower() == 'content-type':
                 found = True
                 break
         if not found:
             headers.append(
-                ("Content-Type", "application/x-www-form-urlencoded"),
+                ('Content-Type', 'application/x-www-form-urlencoded'),
             )
-            headers.append(("Content-Length", str(len(body or ""))))
+            headers.append(('Content-Length', str(len(body or ''))))
 
     return headers
 
 
 def shb(response):
     """Return status, headers, body the way we like from a response."""
-    resp_status_line = "%s %s" % (response.status, response.reason)
+    resp_status_line = '%s %s' % (response.status, response.reason)
 
     return resp_status_line, response.getheaders(), response.read()
 
@@ -493,46 +489,38 @@ def openURL(*args, raise_subcls=(), **kwargs):
 
 
 def _open_url_once(
-    url,
-    headers=None,
-    method="GET",
-    body=None,
-    host="127.0.0.1",
-    port=8000,
-    http_conn=http.client.HTTPConnection,
-    protocol="HTTP/1.1",
-    ssl_context=None,
+    url, headers=None, method='GET', body=None,
+    host='127.0.0.1', port=8000, http_conn=http.client.HTTPConnection,
+    protocol='HTTP/1.1', ssl_context=None,
 ):
     """Open the given HTTP resource and return status, headers, and body."""
     headers = cleanHeaders(headers, method, body, host, port)
 
     # Allow http_conn to be a class or an instance
-    if hasattr(http_conn, "host"):
+    if hasattr(http_conn, 'host'):
         conn = http_conn
     else:
         kw = {}
         if ssl_context:
-            kw["context"] = ssl_context
+            kw['context'] = ssl_context
         conn = http_conn(interface(host), port, **kw)
     conn._http_vsn_str = protocol
-    conn._http_vsn = int("".join([x for x in protocol if x.isdigit()]))
+    conn._http_vsn = int(''.join([x for x in protocol if x.isdigit()]))
     if isinstance(url, bytes):
         url = url.decode()
     conn.putrequest(
-        method.upper(),
-        url,
-        skip_host=True,
+        method.upper(), url, skip_host=True,
         skip_accept_encoding=True,
     )
     for key, value in headers:
-        conn.putheader(key, value.encode("Latin-1"))
+        conn.putheader(key, value.encode('Latin-1'))
     conn.endheaders()
     if body is not None:
         conn.send(body)
     # Handle response
     response = conn.getresponse()
     s, h, b = shb(response)
-    if not hasattr(http_conn, "host"):
+    if not hasattr(http_conn, 'host'):
         # We made our own conn instance. Close it.
         conn.close()
     return s, h, b
@@ -562,7 +550,7 @@ def strip_netloc(url):
     """
     parsed = urllib.parse.urlparse(url)
     _scheme, _netloc, path, params, query, _fragment = parsed
-    stripped = "", "", path, params, query, ""
+    stripped = '', '', path, params, query, ''
     return urllib.parse.urlunparse(stripped)
 
 
@@ -596,6 +584,6 @@ def server_error(exc=None):
         return False
     else:
         ServerError.on = True
-        print("")
-        print("".join(traceback.format_exception(*exc)))
+        print('')
+        print(''.join(traceback.format_exception(*exc)))
         return True
