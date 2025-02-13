@@ -113,11 +113,15 @@ run-name: >-
 jobs:
   pre-setup:
     name: ⚙️ Pre-set global build settings
+
     runs-on: ubuntu-latest
+
     timeout-minutes: 1
+
     defaults:
       run:
         shell: python
+
     outputs:
       dist-version: >-
         ${{
@@ -1179,6 +1183,7 @@ jobs:
       always()
       && needs.check.result == 'success'
       && fromJSON(needs.pre-setup.outputs.release-requested)
+
     runs-on: ubuntu-latest
 
     environment:
@@ -1214,6 +1219,7 @@ jobs:
         fromJSON(needs.pre-setup.outputs.is-untagged-devel)
         || fromJSON(needs.pre-setup.outputs.release-requested)
       )
+
     runs-on: ubuntu-latest
 
     environment:
@@ -1249,6 +1255,7 @@ jobs:
     if: >-
       always()
       && needs.publish-pypi.result == 'success'
+
     runs-on: ubuntu-latest
 
     outputs:
