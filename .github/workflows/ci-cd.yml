@@ -1562,7 +1562,6 @@ jobs:
         discussionCategory: Announcements
         draft: false
         name: ${{ needs.pre-setup.outputs.git-tag }}
-        # omitBody: false
         omitBodyDuringUpdate: true
         omitName: false
         omitNameDuringUpdate: true
