@@ -149,7 +149,7 @@ jobs:
           && true || false
         }}
       cache-key-files: >-
-        ${{ steps.calc-cache-key-files.outputs.files-hash-key }}
+        ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
       git-tag: ${{ steps.git-tag.outputs.tag }}
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
@@ -210,75 +210,19 @@ jobs:
           }}
         ref: ${{ github.event.inputs.release-committish }}
     - name: >-
-        Calculate Python interpreter version hash value
-        for use in the cache key
-      if: >-
-        steps.request-check.outputs.release-requested != 'true'
-      id: calc-cache-key-py
-      run: |
-        from hashlib import sha512
-        from os import environ
-        from pathlib import Path
-        from sys import version
-
-        FILE_APPEND_MODE = 'a'
-
-        hash = sha512(version.encode()).hexdigest()
-
-        with Path(environ['GITHUB_OUTPUT']).open(
-                mode=FILE_APPEND_MODE,
-        ) as outputs_file:
-            print(f'py-hash-key={hash}', file=outputs_file)
-    - name: >-
         Calculate dependency files' combined hash value
         for use in the cache key
       if: >-
         steps.request-check.outputs.release-requested != 'true'
       id: calc-cache-key-files
-      run: |
-        from os import environ
-        from pathlib import Path
-
-        FILE_APPEND_MODE = 'a'
-
-        with Path(environ['GITHUB_OUTPUT']).open(
-                mode=FILE_APPEND_MODE,
-        ) as outputs_file:
-            print(
-                "files-hash-key=${{
-                    hashFiles(
-                      'tox.ini',
-                      'pyproject.toml',
-                      '.pre-commit-config.yaml',
-                      'pytest.ini',
-                      'dependencies/**/*'
-                    )
-                }}",
-                file=outputs_file,
-            )
-    - name: Get pip cache dir
-      id: pip-cache-dir
-      if: >-
-        steps.request-check.outputs.release-requested != 'true'
-      run: >-
-        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
-      shell: bash
+      uses: ./.github/actions/cache-keys
     - name: Set up pip cache
       if: >-
         steps.request-check.outputs.release-requested != 'true'
-      uses: actions/cache@v4
+      uses: ./.github/actions/cache-pip-deps
       with:
-        path: ${{ steps.pip-cache-dir.outputs.dir }}
-        key: >-
-          ${{ runner.os }}-pip-${{
-          steps.calc-cache-key-py.outputs.py-hash-key }}-${{
-          steps.calc-cache-key-files.outputs.files-hash-key }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{
-              steps.calc-cache-key-py.outputs.py-hash-key
-          }}-
-          ${{ runner.os }}-pip-
-          ${{ runner.os }}-
+        cache-key-for-dep-files: >-
+          ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
     - name: Drop Git tags from HEAD for non-release requests
       if: >-
         steps.request-check.outputs.release-requested != 'true'
@@ -439,44 +383,11 @@ jobs:
         fetch-depth: 1  # Enough for this job to generate the changelog
         ref: ${{ github.event.inputs.release-committish }}
 
-    - name: >-
-        Calculate Python interpreter version hash value
-        for use in the cache key
-      id: calc-cache-key-py
-      run: |
-        from hashlib import sha512
-        from os import environ
-        from pathlib import Path
-        from sys import version
-
-        FILE_APPEND_MODE = 'a'
-
-        hash = sha512(version.encode()).hexdigest()
-
-        with Path(environ['GITHUB_OUTPUT']).open(
-                mode=FILE_APPEND_MODE,
-        ) as outputs_file:
-            print(f'py-hash-key={hash}', file=outputs_file)
-      shell: python
     - name: Set up pip cache
-      uses: actions/cache@v4.0.0
+      uses: ./.github/actions/cache-pip-deps
       with:
-        path: >-
-          ${{
-              runner.os == 'Linux'
-              && '~/.cache/pip'
-              || '~/Library/Caches/pip'
-          }}
-        key: >-
-          ${{ runner.os }}-pip-${{
-          steps.calc-cache-key-py.outputs.py-hash-key }}-${{
-          needs.pre-setup.outputs.cache-key-files }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{
-            steps.calc-cache-key-py.outputs.py-hash-key
-          }}-
-          ${{ runner.os }}-pip-
-          ${{ runner.os }}-
+        cache-key-for-dep-files: >-
+          ${{ needs.pre-setup.outputs.cache-key-files }}
     - name: Install tox
       run: >-
         python -m
@@ -659,42 +570,11 @@ jobs:
         git update-index --assume-unchanged $(git ls-files --modified)
       shell: bash
 
-    - name: >-
-        Calculate Python interpreter version hash value
-        for use in the cache key
-      id: calc-cache-key-py
-      run: |
-        from hashlib import sha512
-        from os import environ
-        from pathlib import Path
-        from sys import version
-
-        FILE_APPEND_MODE = 'a'
-
-        hash = sha512(version.encode()).hexdigest()
-
-        with Path(environ['GITHUB_OUTPUT']).open(
-                mode=FILE_APPEND_MODE,
-        ) as outputs_file:
-            print(f'py-hash-key={hash}', file=outputs_file)
-      shell: python
-    - name: Get pip cache dir
-      id: pip-cache-dir
-      run: >-
-        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
     - name: Set up pip cache
-      uses: actions/cache@v4
+      uses: ./.github/actions/cache-pip-deps
       with:
-        path: ${{ steps.pip-cache-dir.outputs.dir }}
-        key: >-
-          ${{ runner.os }}-pip-${{
-          steps.calc-cache-key-py.outputs.py-hash-key }}-${{
-          needs.pre-setup.outputs.cache-key-files }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{
-              steps.calc-cache-key-py.outputs.py-hash-key
-          }}-
-          ${{ runner.os }}-pip-
+        cache-key-for-dep-files: >-
+          ${{ needs.pre-setup.outputs.cache-key-files }}
     - name: Install tox
       run: >-
         python -m
@@ -868,42 +748,11 @@ jobs:
         workflow-artifact-name: >-
           ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
-    - name: >-
-        Calculate Python interpreter version hash value
-        for use in the cache key
-      id: calc-cache-key-py
-      run: |
-        from hashlib import sha512
-        from os import environ
-        from pathlib import Path
-        from sys import version
-
-        FILE_APPEND_MODE = 'a'
-
-        hash = sha512(version.encode()).hexdigest()
-
-        with Path(environ['GITHUB_OUTPUT']).open(
-                mode=FILE_APPEND_MODE,
-        ) as outputs_file:
-            print(f'py-hash-key={hash}', file=outputs_file)
-      shell: python
-    - name: Get pip cache dir
-      id: pip-cache
-      run: >-
-        echo "dir=$(pip cache dir)" >> "${GITHUB_OUTPUT}"
     - name: Set up pip cache
-      uses: actions/cache@v4
+      uses: ./.github/actions/cache-pip-deps
       with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key: >-
-          ${{ runner.os }}-pip-${{
-          steps.calc-cache-key-py.outputs.py-hash-key }}-${{
-          needs.pre-setup.outputs.cache-key-files }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{
-              steps.calc-cache-key-py.outputs.py-hash-key
-          }}-
-          ${{ runner.os }}-pip-
+        cache-key-for-dep-files: >-
+          ${{ needs.pre-setup.outputs.cache-key-files }}
     - name: Install tox
       run: >-
         python -m
@@ -1012,65 +861,11 @@ jobs:
         workflow-artifact-name: >-
           ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
-    - name: Figure out if the interpreter ABI is stable
-      id: py-abi
-      run: |
-        from os import environ
-        from sys import version_info
-
-        FILE_APPEND_MODE = 'a'
-
-        is_stable_abi = version_info.releaselevel == 'final'
-
-        with open(
-                environ['GITHUB_OUTPUT'],
-                mode=FILE_APPEND_MODE,
-        ) as outputs_file:
-            print(
-                'is-stable-abi={is_stable_abi}'.
-                format(is_stable_abi=str(is_stable_abi).lower()),
-                file=outputs_file,
-            )
-      shell: python
-    - name: >-
-        Calculate Python interpreter version hash value
-        for use in the cache key
-      if: fromJSON(steps.py-abi.outputs.is-stable-abi)
-      id: calc-cache-key-py
-      run: |
-        from hashlib import sha512
-        from os import environ
-        from sys import version
-
-        FILE_APPEND_MODE = 'a'
-
-        hash = sha512(version.encode()).hexdigest()
-
-        with open(
-                environ['GITHUB_OUTPUT'], mode=FILE_APPEND_MODE,
-        ) as outputs_file:
-            print(f'py-hash-key={hash}', file=outputs_file)
-      shell: python
-    - name: Get pip cache dir
-      if: fromJSON(steps.py-abi.outputs.is-stable-abi)
-      id: pip-cache-dir
-      run: >-
-        echo "dir=$(python -m pip cache dir)" >> "${GITHUB_OUTPUT}"
-      shell: bash
     - name: Set up pip cache
-      if: fromJSON(steps.py-abi.outputs.is-stable-abi)
-      uses: actions/cache@v4
+      uses: ./.github/actions/cache-pip-deps
       with:
-        path: ${{ steps.pip-cache-dir.outputs.dir }}
-        key: >-
-          ${{ runner.os }}-pip-${{
-          steps.calc-cache-key-py.outputs.py-hash-key }}-${{
-          needs.pre-setup.outputs.cache-key-files }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{
-              steps.calc-cache-key-py.outputs.py-hash-key
-          }}-
-          ${{ runner.os }}-pip-
+        cache-key-for-dep-files: >-
+          ${{ needs.pre-setup.outputs.cache-key-files }}
 
     - name: Upgrade pip with `requires_python`
       run: >-
