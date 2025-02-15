@@ -82,9 +82,18 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        cache: pip
-        cache-dependency-path: requirements/**
         python-version: ${{ matrix.python-version }}
+
+    - name: >-
+        Calculate dependency files' combined hash value
+        for use in the cache key
+      id: calc-cache-key-files
+      uses: ./.github/actions/cache-keys
+    - name: Set up pip cache
+      uses: ./.github/actions/cache-pip-deps
+      with:
+        cache-key-for-dep-files: >-
+          ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
 
     - name: Upgrade pip with `requires_python`
       run: >-
