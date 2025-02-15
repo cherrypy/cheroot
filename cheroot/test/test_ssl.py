@@ -17,7 +17,7 @@ import requests
 import trustme
 
 from .._compat import bton, ntob, ntou
-from .._compat import IS_ABOVE_OPENSSL10, IS_CI, IS_PYPY
+from .._compat import IS_ABOVE_OPENSSL10, IS_ABOVE_OPENSSL31, IS_CI, IS_PYPY
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
 from ..server import HTTPServer, get_ssl_adapter_class
 from ..testing import (
@@ -597,7 +597,8 @@ def test_https_over_http_error(http_server, ip_addr):
             ),
         ).request('GET', '/')
     expected_substring = (
-        'wrong version number' if IS_ABOVE_OPENSSL10
+        'record layer failure' if IS_ABOVE_OPENSSL31
+        else 'wrong version number' if IS_ABOVE_OPENSSL10
         else 'unknown protocol'
     )
     assert expected_substring in ssl_err.value.args[-1]
