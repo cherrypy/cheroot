@@ -160,9 +160,6 @@ ENV/
 .project
 .pydevproject
 
-# test results in junit format and XML coverage for CIs
-/.test-results/
-
 # coverage results
 /.coverage
 /coverage.xml
