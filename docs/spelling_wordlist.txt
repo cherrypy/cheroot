@@ -2,6 +2,7 @@ AppVeyor
 Args
 backend
 backports
+bca
 bugfixes
 builtin
 b'xb
@@ -28,10 +29,12 @@ linter
 linters
 linux
 localhost
+loopback
 macOS
 makefile
 memoryview
 metaclass
+mixin
 multi
 namespace
 natively
@@ -41,6 +44,7 @@ PIL
 pipelining
 positionally
 pre
+preconfigure
 py
 pytest
 pythonic
@@ -74,6 +78,7 @@ unclosed
 unfilterable
 unregister
 unregisters
+uptime
 uri
 url
 username
