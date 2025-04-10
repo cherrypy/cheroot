@@ -45,7 +45,7 @@ class HelloController(helper.Controller):
     def _munge(string):
         """Encode PATH_INFO correctly depending on Python version.
 
-        WSGI 1.0 is a mess around unicode. Create endpoints
+        WSGI 1.0 is a mess around Unicode. Create endpoints
         that match the PATH_INFO that it produces.
         """
         return string.encode('utf-8').decode('latin-1')
@@ -119,7 +119,7 @@ def test_normal_request(test_client):
 
 
 def test_query_string_request(test_client):
-    """Check that GET param is parsed well."""
+    """Check that GET parameter is parsed well."""
     status_line, _, actual_resp_body = test_client.get(
         '/query_string?test=True',
     )

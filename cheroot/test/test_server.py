@@ -64,7 +64,7 @@ def unix_abstract_sock():
 
 @pytest.fixture
 def unix_file_sock():
-    """Yield a unix file socket."""
+    """Yield a UNIX file socket."""
     tmp_sock_fh, tmp_sock_fname = tempfile.mkstemp()
 
     yield tmp_sock_fname

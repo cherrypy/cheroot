@@ -1516,9 +1516,9 @@ class HTTPServer:
     features used in the response."""
 
     request_queue_size = 5
-    """The 'backlog' arg to socket.listen(); max queued connections.
+    """The 'backlog' argument to ``socket.listen()``.
 
-    (default 5)."""
+    Maximum queued connections (default 5)."""
 
     shutdown_timeout = 5
     """The total time to wait for worker threads to cleanly exit.
@@ -1567,7 +1567,8 @@ class HTTPServer:
 
     peercreds_enabled = False
     """
-    If :py:data:`True`, peer creds will be looked up via UNIX domain socket.
+    Whether :py:data:`True`, peer credentials will be looked up via UNIX
+    domain socket.
     """
 
     peercreds_resolve_enabled = False
@@ -1872,10 +1873,14 @@ class HTTPServer:
     def error_log(self, msg='', level=20, traceback=False):
         """Write error message to log.
 
-        Args:
-            msg (str): error message
-            level (int): logging level
-            traceback (bool): add traceback to output or not
+        :param msg: error message
+        :type msg: str
+
+        :param level: logging level
+        :type level: int
+
+        :param traceback: add traceback to output or not
+        :type traceback: bool
         """
         # Override this in subclasses as desired
         sys.stderr.write('{msg!s}\n'.format(msg=msg))

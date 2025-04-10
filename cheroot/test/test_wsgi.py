@@ -39,7 +39,7 @@ def simple_wsgi_server():
 
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_connection_keepalive(simple_wsgi_server):
-    """Test the connection keepalive works (duh)."""
+    """Test the connection keep-alive works (duh)."""
     session = Session(base_url=simple_wsgi_server['url'])
     pooled = requests.adapters.HTTPAdapter(
         pool_connections=1, pool_maxsize=1000,

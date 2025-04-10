@@ -97,7 +97,7 @@ class Application:
         self.wsgi_app = wsgi_app
 
     def server_args(self, parsed_args):
-        """Return keyword args for Server class."""
+        """Return keyword arguments for Server class."""
         args = {
             arg: value
             for arg, value in vars(parsed_args).items()

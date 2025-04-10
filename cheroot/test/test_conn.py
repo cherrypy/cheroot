@@ -89,7 +89,7 @@ class Controller(helper.Controller):
     def _munge(string):
         """Encode PATH_INFO correctly depending on Python version.
 
-        WSGI 1.0 is a mess around unicode. Create endpoints
+        WSGI 1.0 is a mess around Unicode. Create endpoints
         that match the PATH_INFO that it produces.
         """
         return string.encode('utf-8').decode('latin-1')

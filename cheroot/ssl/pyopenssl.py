@@ -241,7 +241,7 @@ class SSLConnection(metaclass=SSLConnectionProxyMeta):
 
 
 class pyOpenSSLAdapter(Adapter):
-    """A wrapper for integrating pyOpenSSL with Cheroot."""
+    """A wrapper for integrating :doc:`pyOpenSSL <pyopenssl:index>`."""
 
     certificate = None
     """The file name of the server's TLS certificate."""
