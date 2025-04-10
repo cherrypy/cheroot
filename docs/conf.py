@@ -68,7 +68,8 @@ apidoc_toc_file = None
 
 spelling_ignore_acronyms = True
 spelling_ignore_importable_modules = True
-spelling_ignore_pypi_package_names = True
+# PyPI lookup because of https://github.com/sphinx-contrib/spelling/issues/227
+spelling_ignore_pypi_package_names = False
 spelling_ignore_python_builtins = True
 spelling_ignore_wiki_words = True
 spelling_show_suggestions = True
