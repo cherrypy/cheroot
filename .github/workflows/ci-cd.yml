@@ -828,7 +828,6 @@ jobs:
         os:
         - ubuntu-22.04
         - ubuntu-20.04
-        - macos-11.0
         - macos-13
         - windows-2019
         - windows-2022
