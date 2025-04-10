@@ -16,13 +16,13 @@ a change log for the respective version. It is important to
 understand that including unnecessary low-level implementation
 related details generates noise that is not particularly useful
 to the end-users most of the time. And so such details should be
-recorded in the Git history rather than a changelog.
+recorded in the Git history rather than a change log.
 
 Alright! So how do I add a news fragment?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *Cheroot* uses `towncrier <https://pypi.org/project/towncrier/>`_
-for changelog management.
+for change log management.
 To submit a change note about your PR, add a text file into the
 ``docs/changelog-fragments.d/`` folder. It should contain an
 explanation of what applying this PR will change in the way
@@ -79,8 +79,8 @@ feature, in which case two fragments should be added. It is not
 necessary to make a separate documentation fragment for documentation
 changes accompanying the relevant code changes.
 
-Examples for adding changelog entries to your Pull Requests
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Examples for adding change log entries to your Pull Requests
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 File :file:`docs/changelog-fragments.d/77.doc.rst`:
 
@@ -91,7 +91,7 @@ File :file:`docs/changelog-fragments.d/77.doc.rst`:
 
 File :file:`docs/changelog-fragments.d/384.feature.rst` (could be symlinked
 to :file:`docs/changelog-fragments.d/384.doc.rst` so it shows up in several
-changelog sections, and to :file:`docs/changelog-fragments.d/385.feature.rst`
+change log sections, and to :file:`docs/changelog-fragments.d/385.feature.rst`
 and :file:`docs/changelog-fragments.d/406.feature.rst` referencing several
 pull requests at once):
 

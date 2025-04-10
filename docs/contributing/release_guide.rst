@@ -25,15 +25,15 @@ Pre-release activities
    page. Make sure the content looks consistent, uses the same
    writing style, targets the end-users and adheres to our
    documented guidelines.
-   Most of the changelog sections will typically use the past
+   Most of the change log sections will typically use the past
    tense or another way to relay the effect of the changes for
    the users, since the previous release.
    It should not target core contributors as the information
    they are normally interested in is already present in the
    Git history.
-   Update the changelog fragments if you see any problems with
-   this changelog section.
-3. If you are satisfied with the above, inspect the changelog
+   Update the change log fragments if you see any problems with
+   this change log section.
+3. If you are satisfied with the above, inspect the change log
    section categories in the draft. Presence of the breaking
    changes or features will hint you what version number
    segment to bump for the release.
@@ -41,7 +41,7 @@ Pre-release activities
 .. seealso::
 
    :ref:`Adding change notes with your PRs`
-       Writing beautiful changelogs for humans
+       Writing beautiful change logs for humans
 
 
 The release stage

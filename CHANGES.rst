@@ -59,7 +59,7 @@ Packaging updates and notes for downstreams
   *Related commits on GitHub:*
   :commit:`27a3c944`, :commit:`c45f184e`.
 
-- The changelog management is now implemented through
+- The change log management is now implemented through
   the :std:doc:`Towncrier <towncrier:index>` tool
   -- by :user:`webknjaz`.
 
@@ -138,7 +138,7 @@ Contributor-facing changes
   *Related commits on GitHub:*
   :commit:`df0d1a08`.
 
-- The changelog management is now implemented through
+- The change log management is now implemented through
   the :std:doc:`Towncrier <towncrier:index>` tool
   -- by :user:`webknjaz`.
 
