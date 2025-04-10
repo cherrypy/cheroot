@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-build-dists-cp310-linux-x86_64.txt --strip-extras requirements/tox-build-dists-cp310-linux-x86_64.in
 #
-build==0.7.0
+build==1.2.1
     # via -r requirements/tox-build-dists-cp310-linux-x86_64.in
 packaging==21.3
     # via build

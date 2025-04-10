@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/tox-build-dists-cp311-linux-x86_64.txt --strip-extras requirements/tox-build-dists-cp311-linux-x86_64.in setup.cfg
 #
-build==0.7.0
+build==1.2.1
     # via -r requirements/tox-build-dists-cp311-linux-x86_64.in
 jaraco-functools==3.5.2
     # via cheroot (setup.cfg)

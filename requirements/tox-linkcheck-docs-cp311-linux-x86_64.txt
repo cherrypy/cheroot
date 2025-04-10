@@ -14,7 +14,7 @@ babel==2.11.0
     # via sphinx
 beautifulsoup4==4.11.1
     # via furo
-build==0.9.0
+build==1.2.1
     # via jaraco-packaging
 certifi==2022.9.24
     # via requests
