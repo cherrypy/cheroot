@@ -900,38 +900,6 @@ jobs:
         --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
         --notest
 
-    - name: Windows system info
-      run: systeminfo
-      if: >-
-        startsWith(matrix.os, 'windows-')
-    - name: >-
-        Log platform.platform()
-      run: >-
-        python -m platform
-    - name: >-
-        Log platform.version()
-      run: >-
-        python -c "import platform;
-        print(platform.version())"
-    - name: >-
-        Log platform.uname()
-      run: >-
-        python -c "import platform;
-        print(platform.uname())"
-    - name: >-
-        Log platform.release()
-      run: >-
-        python -c "import platform;
-        print(platform.release())"
-    - name: Log stdlib OpenSSL version
-      run: >-
-        python -c
-        "import ssl; print('\nOPENSSL_VERSION: '
-        + ssl.OPENSSL_VERSION + '\nOPENSSL_VERSION_INFO: '
-        + repr(ssl.OPENSSL_VERSION_INFO)
-        + '\nOPENSSL_VERSION_NUMBER: '
-        + repr(ssl.OPENSSL_VERSION_NUMBER))"
-
     - name: Run the testing
       run: >-
         python -m
