@@ -854,8 +854,7 @@ jobs:
         --no-cov
         -vvvvv
         --lf
-      tox-tool-deps: >-
-        'tox < 4.12'
+      tox-tool-deps: tox
       xfail: >-
         ${{
           fromJSON(needs.pre-setup.outputs.is-yolo-mode)
