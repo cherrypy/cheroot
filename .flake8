@@ -103,6 +103,10 @@ per-file-ignores =
   # If other ignores are added for a specific file in the section following this,
   # these will need to be added to that line as well.
 
+  # FIXME: toxfile is currently rather complicated, allowing these temporarily:
+  # WPS202 Found too many module members: 8 > 7
+  toxfile.py: WPS202
+
   # There are multiple `assert`s (S101)
   # and subprocesses (import – S404; call – S603) in tests:
   cheroot/test/test_*.py: S101, S404, S603

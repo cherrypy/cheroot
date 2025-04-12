@@ -536,7 +536,8 @@ jobs:
       TOXENV: cleanup-dists,build-dists
 
     outputs:
-      dists-base64-hash: ${{ steps.dist-hashes.outputs.combined-hash }}
+      dists-base64-hash: >-
+        ${{ steps.tox-run.outputs.combined-dists-base64-encoded-sha256-hash }}
 
     steps:
     - name: Switch to using Python 3.11
@@ -652,6 +653,7 @@ jobs:
         echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)"
         >> "${GITHUB_ENV}"
     - name: Build dists
+      id: tox-run
       run: >-
         python -m
         tox
@@ -665,17 +667,6 @@ jobs:
         ls -1
         'dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}'
         'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
-    - name: Generate dist hashes to be used for provenance
-      id: dist-hashes
-      run: >-
-        echo "combined-hash=$(
-        sha256sum
-        '${{ needs.pre-setup.outputs.sdist-artifact-name }}'
-        '${{ needs.pre-setup.outputs.wheel-artifact-name }}'
-        | base64 -w0
-        )"
-        >> "${GITHUB_OUTPUT}"
-      working-directory: dist
     - name: Store the distribution packages
       uses: actions/upload-artifact@v4
       with:
