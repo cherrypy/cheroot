@@ -148,7 +148,7 @@ jobs:
           )
           && true || false
         }}
-      cache-key-files: >-
+      cache-key-for-dep-files: >-
         ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
       git-tag: ${{ steps.git-tag.outputs.tag }}
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
@@ -219,9 +219,9 @@ jobs:
     - name: Set up pip cache
       if: >-
         steps.request-check.outputs.release-requested != 'true'
-      uses: ./.github/actions/cache-pip-deps
+      uses: re-actors/cache-python-deps@release/v1
       with:
-        cache-key-for-dep-files: >-
+        cache-key-for-dependency-files: >-
           ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
     - name: Drop Git tags from HEAD for non-release requests
       if: >-
@@ -384,10 +384,10 @@ jobs:
         ref: ${{ github.event.inputs.release-committish }}
 
     - name: Set up pip cache
-      uses: ./.github/actions/cache-pip-deps
+      uses: re-actors/cache-python-deps@release/v1
       with:
-        cache-key-for-dep-files: >-
-          ${{ needs.pre-setup.outputs.cache-key-files }}
+        cache-key-for-dependency-files: >-
+          ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
     - name: Install tox
       run: >-
         python -m
@@ -572,10 +572,10 @@ jobs:
       shell: bash
 
     - name: Set up pip cache
-      uses: ./.github/actions/cache-pip-deps
+      uses: re-actors/cache-python-deps@release/v1
       with:
-        cache-key-for-dep-files: >-
-          ${{ needs.pre-setup.outputs.cache-key-files }}
+        cache-key-for-dependency-files: >-
+          ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
     - name: Install tox
       run: >-
         python -m
