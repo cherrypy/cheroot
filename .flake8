@@ -105,7 +105,8 @@ per-file-ignores =
 
   # FIXME: toxfile is currently rather complicated, allowing these temporarily:
   # WPS202 Found too many module members: 8 > 7
-  toxfile.py: WPS202
+  # WPS226 Found string literal over-use: %s%s> %s > 3
+  toxfile.py: WPS202, WPS226
 
   # There are multiple `assert`s (S101)
   # and subprocesses (import – S404; call – S603) in tests:

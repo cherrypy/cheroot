@@ -41,12 +41,52 @@ def _log_info_before_run_commands(msg: str) -> None:
     )
 
 
+def _log_warning_before_run_commands(msg: str) -> None:
+    logger.warning(
+        '%s%s> %s',  # noqa: WPS323
+        'toxfile',
+        ':tox_before_run_commands',
+        msg,
+    )
+
+
 @impl
-def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS213
+def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
     """Display test runtime info when in GitHub Actions CI/CD.
+
+    This also injects ``SOURCE_DATE_EPOCH`` env var into build-dists.
 
     :param tox_env: A tox environment object.
     """
+    if tox_env.name == 'build-dists':
+        _log_debug_before_run_commands(
+            'Setting the Git HEAD-based epoch for reproducibility in GHA...',
+        )
+        git_executable = 'git'
+        git_log_cmd = (  # noqa: WPS317
+            git_executable,
+            '-c', 'core.pager=',  # prevents ANSI escape sequences
+            'log',
+            '-1',
+            '--pretty=%ct',  # noqa: WPS323
+        )
+        tox_env.conf['allowlist_externals'].append(git_executable)
+        git_log_outcome = tox_env.execute(git_log_cmd, StdinSource.OFF)
+        tox_env.conf['allowlist_externals'].pop()
+        if git_log_outcome.exit_code:
+            _log_warning_before_run_commands(
+                f'Failed to look up Git HEAD timestamp. {git_log_outcome !s}',
+            )
+            return
+
+        git_head_timestamp = git_log_outcome.out.strip()
+
+        _log_info_before_run_commands(
+            f'Setting `SOURCE_DATE_EPOCH={git_head_timestamp !s}` environment '
+            'variable to facilitate build reproducibility...',
+        )
+        tox_env.environment_variables['SOURCE_DATE_EPOCH'] = git_head_timestamp
+
     if tox_env.name not in {'py', 'python'} or not IS_GITHUB_ACTIONS_RUNTIME:
         _log_debug_before_run_commands(
             'Not logging runtime info because this is not a test run on '
