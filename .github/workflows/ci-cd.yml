@@ -548,8 +548,7 @@ jobs:
       python-version: 3.11  # FIXME??
       runner-vm-os: ubuntu-latest
       timeout-minutes: 2
-      # toxenv: build-dists
-      toxenv: cleanup-dists,build-dists  # FIXME??
+      toxenv: build-dists
       tox-tool-deps: tox
       xfail: false
 

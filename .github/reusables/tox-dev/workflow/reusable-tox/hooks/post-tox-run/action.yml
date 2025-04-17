@@ -19,8 +19,7 @@ runs:
   using: composite
   steps:
   - name: Verify that the artifacts with expected names got created
-    # if: fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
-    if: fromJSON(inputs.calling-job-context).toxenv == 'cleanup-dists,build-dists'
+    if: fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
     run: >
       # Verify that the artifacts with expected names got created
 
@@ -38,8 +37,7 @@ runs:
       }}'
     shell: bash
   - name: Store the distribution packages
-    # if: fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
-    if: fromJSON(inputs.calling-job-context).toxenv == 'cleanup-dists,build-dists'
+    if: fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
     uses: actions/upload-artifact@v4
     with:
       name: >-

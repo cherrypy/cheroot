@@ -19,10 +19,8 @@ runs:
   using: composite
   steps:
   - name: Drop Git tags from HEAD for non-tag-create events
-    # if: >-
-    #   fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
     if: >-
-      fromJSON(inputs.calling-job-context).toxenv == 'cleanup-dists,build-dists'
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
       && !fromJSON(
         fromJSON(
           inputs.job-dependencies-context
@@ -35,10 +33,8 @@ runs:
     shell: bash
 
   - name: Setup git user as [bot]
-    # if: >-
-    #   fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
     if: >-
-      fromJSON(inputs.calling-job-context).toxenv == 'cleanup-dists,build-dists'
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
       && (
         fromJSON(
           fromJSON(
@@ -60,10 +56,8 @@ runs:
         ).pre-setup.outputs.git-tag
       }}
       for setuptools-scm to set the desired version
-    # if: >-
-    #   fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
     if: >-
-      fromJSON(inputs.calling-job-context).toxenv == 'cleanup-dists,build-dists'
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
       && fromJSON(
         fromJSON(
           inputs.job-dependencies-context
@@ -86,10 +80,8 @@ runs:
     shell: bash
 
   - name: Install tomlkit Python distribution package
-    # if: >-
-    #   fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
     if: >-
-      fromJSON(inputs.calling-job-context).toxenv == 'cleanup-dists,build-dists'
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
       && fromJSON(
         fromJSON(
           inputs.job-dependencies-context
@@ -99,10 +91,8 @@ runs:
       python -m pip install --user tomlkit
     shell: bash
   - name: Instruct setuptools-scm not to add a local version part
-    # if: >-
-    #   fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
     if: >-
-      fromJSON(inputs.calling-job-context).toxenv == 'cleanup-dists,build-dists'
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
       && fromJSON(
         fromJSON(
           inputs.job-dependencies-context
@@ -122,10 +112,8 @@ runs:
       pyproject_toml_path.write_text(patched_pyproject_toml_txt)
     shell: python
   - name: Pretend that pyproject.toml is unchanged
-    # if: >-
-    #   fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
     if: >-
-      fromJSON(inputs.calling-job-context).toxenv == 'cleanup-dists,build-dists'
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
       && fromJSON(
         fromJSON(
           inputs.job-dependencies-context
