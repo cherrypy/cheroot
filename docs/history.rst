@@ -13,7 +13,7 @@ Change log
    *To be included in the next release*
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. towncrier-draft-entries:: |release| :sub:`/UNRELEASED DRAFT/`
+   .. towncrier-draft-entries:: |version| :sub:`/UNRELEASED DRAFT/`
 
    Released versions
    ^^^^^^^^^^^^^^^^^
