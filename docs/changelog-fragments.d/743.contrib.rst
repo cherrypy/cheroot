@@ -2,5 +2,5 @@ The test infrastructure has been updated to start using
 the upstream reusable workflow :file:`reusable-tox.yml`
 from :gh:`tox-dev/workflow` -- by :user:`webknjaz`.
 
-This chance allows us to deduplicate the commonly used
+This chance allows us to de-duplicate the commonly used
 CI shape.
