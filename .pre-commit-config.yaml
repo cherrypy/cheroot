@@ -257,7 +257,7 @@ repos:
       $
 
 - repo: https://github.com/PyCQA/pylint.git
-  rev: v3.3.6
+  rev: v3.1.0
   hooks:
   - id: pylint
     additional_dependencies:
