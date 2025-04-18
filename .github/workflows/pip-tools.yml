@@ -90,9 +90,9 @@ jobs:
       id: calc-cache-key-files
       uses: ./.github/actions/cache-keys
     - name: Set up pip cache
-      uses: ./.github/actions/cache-pip-deps
+      uses: re-actors/cache-python-deps@release/v1
       with:
-        cache-key-for-dep-files: >-
+        cache-key-for-dependency-files: >-
           ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
 
     - name: Upgrade pip with `requires_python`
