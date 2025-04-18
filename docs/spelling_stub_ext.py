@@ -48,6 +48,12 @@ def _configure_spelling_ext(app: Sphinx, config: _SphinxConfig) -> None:
 
             return True
 
+    # Resetting the release and version strings works around problems
+    # with `setuptools-scm` generated versions being tokenized
+    # by the spell checker incorrectly.
+    app.config.release = 'dummy'
+    app.config.version = 'dummy'
+
     app.config.spelling_filters = [VersionFilter]
     app.setup_extension('sphinxcontrib.spelling')
 

@@ -2,8 +2,6 @@ AppVeyor
 Args
 backend
 backports
-bc
-bca
 bugfixes
 builtin
 b'xb
@@ -15,7 +13,6 @@ chunked
 dev
 docstrings
 downstreams
-ef
 environ
 errored
 Faux
@@ -23,7 +20,6 @@ fd
 Fortran
 hardcoded
 hostname
-gb
 inclusivity
 iterable
 linter
