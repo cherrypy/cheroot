@@ -582,8 +582,7 @@ def server_error(exc=None):
 
     if ignore_all or exc[0] in ignored_exceptions:
         return False
-    else:
-        ServerError.on = True
-        print('')
-        print(''.join(traceback.format_exception(*exc)))
-        return True
+    ServerError.on = True
+    print('')
+    print(''.join(traceback.format_exception(*exc)))
+    return True

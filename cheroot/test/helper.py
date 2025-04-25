@@ -129,12 +129,11 @@ class Response:
         """Generate iterable response body object."""
         if self.body is None:
             return []
-        elif isinstance(self.body, str):
+        if isinstance(self.body, str):
             return [self.body.encode('iso-8859-1')]
-        elif isinstance(self.body, bytes):
+        if isinstance(self.body, bytes):
             return [self.body]
-        else:
-            return [x.encode('iso-8859-1') for x in self.body]
+        return [x.encode('iso-8859-1') for x in self.body]
 
 
 class Controller:

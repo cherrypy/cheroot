@@ -1664,8 +1664,7 @@ class HTTPServer:
         """Return server uptime."""
         if self._start_time is None:
             return self._run_time
-        else:
-            return self._run_time + (time.time() - self._start_time)
+        return self._run_time + (time.time() - self._start_time)
 
     def __str__(self):
         """Render Server instance representing bind address."""

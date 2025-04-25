@@ -377,5 +377,4 @@ class pyOpenSSLAdapter(Adapter):
             return wrapped_socket
         # This is from past:
         # TODO: figure out what it's meant for
-        else:
-            return cheroot_server.CP_fileobject(sock, mode, bufsize)
+        return cheroot_server.CP_fileobject(sock, mode, bufsize)
