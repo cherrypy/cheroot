@@ -231,10 +231,10 @@ class _TestGateway(Gateway):
         if req_uri == PEERCRED_IDS_URI:
             peer_creds = conn.peer_pid, conn.peer_uid, conn.peer_gid
             self.send_payload('|'.join(map(str, peer_creds)))
-            return
+            return None
         elif req_uri == PEERCRED_TEXTS_URI:
             self.send_payload('!'.join((conn.peer_user, conn.peer_group)))
-            return
+            return None
         return super(_TestGateway, self).respond()
 
     def send_payload(self, payload):

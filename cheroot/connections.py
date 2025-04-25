@@ -299,7 +299,7 @@ class ConnectionManager:
                         'connection suddenly, during handshake: '
                         f'{tls_connection_drop_error !s}',
                     )
-                    return
+                    return None
                 except errors.NoSSLError as http_over_https_err:
                     self.server.error_log(
                         f'Client {addr !s} attempted to speak plain HTTP into '
@@ -324,7 +324,7 @@ class ConnectionManager:
                     except OSError as ex:
                         if ex.args[0] not in errors.socket_errors_to_ignore:
                             raise
-                    return
+                    return None
                 mf = self.server.ssl_adapter.makefile
                 # Re-apply our timeout since we may have a new socket object
                 if hasattr(s, 'settimeout'):
@@ -353,7 +353,7 @@ class ConnectionManager:
             # The only reason for the timeout in start() is so we can
             # notice keyboard interrupts on Win32, which don't interrupt
             # accept() by default
-            return
+            return None
         except OSError as ex:
             if self.server.stats['Enabled']:
                 self.server.stats['Socket Errors'] += 1
@@ -364,15 +364,15 @@ class ConnectionManager:
                 # will then go ahead and poll for and handle the signal
                 # elsewhere. See
                 # https://github.com/cherrypy/cherrypy/issues/707.
-                return
+                return None
             if ex.args[0] in errors.socket_errors_nonblocking:
                 # Just try again. See
                 # https://github.com/cherrypy/cherrypy/issues/479.
-                return
+                return None
             if ex.args[0] in errors.socket_errors_to_ignore:
                 # Our socket was closed.
                 # See https://github.com/cherrypy/cherrypy/issues/686.
-                return
+                return None
             raise
 
     def close(self):

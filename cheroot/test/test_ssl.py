@@ -85,7 +85,7 @@ class HelloWorldGateway(Gateway_10):
             req.status = b'200 OK'
             req.ensure_headers_sent()
             req.write(b'Hello world!')
-            return
+            return None
         if req_uri == '/env':
             req.status = b'200 OK'
             req.ensure_headers_sent()
@@ -95,7 +95,7 @@ class HelloWorldGateway(Gateway_10):
             env.pop('wsgi.input')
             print(env)
             req.write(json.dumps(env).encode('utf-8'))
-            return
+            return None
         return super(HelloWorldGateway, self).respond()
 
 

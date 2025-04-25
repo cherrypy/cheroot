@@ -28,7 +28,7 @@ class HelloController(helper.Controller):
         """Render Hello world or set 411."""
         if req.environ.get('Content-Length', None) is None:
             resp.status = '411 Length Required'
-            return
+            return None
         return 'Hello world!'
 
     def query_string(req, resp):
