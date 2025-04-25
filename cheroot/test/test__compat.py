@@ -9,7 +9,7 @@ from cheroot._compat import bton, extract_bytes, ntob, ntou
     ('func', 'inp', 'out'),
     (
         (ntob, 'bar', b'bar'),
-        (ntou, 'bar', u'bar'),
+        (ntou, 'bar', 'bar'),
         (bton, b'bar', 'bar'),
     ),
 )
@@ -34,7 +34,7 @@ def test_compat_functions_negative_nonnative(func):
 
 def test_ntou_escape():
     """Check that ``ntou`` supports escape-encoding under Python 2."""
-    expected = u'hišřії'
+    expected = 'hišřії'
     actual = ntou('hi\u0161\u0159\u0456\u0457', encoding='escape')
     assert actual == expected
 
@@ -58,4 +58,4 @@ def test_extract_bytes_invalid():
             match=r'^extract_bytes\(\) only accepts bytes '
             'and memoryview/buffer$',
     ):
-        extract_bytes(u'some юнікод їїї')
+        extract_bytes('some юнікод їїї')

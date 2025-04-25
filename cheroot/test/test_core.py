@@ -180,7 +180,7 @@ def test_parse_uri_invalid_uri(test_client):
     Invalid request line test case: it should only contain US-ASCII.
     """
     c = test_client.get_connection()
-    c._output(u'GET /йопта! HTTP/1.1'.encode('utf-8'))
+    c._output('GET /йопта! HTTP/1.1'.encode('utf-8'))
     c._send_output()
     response = _get_http_response(c, method='GET')
     response.begin()
