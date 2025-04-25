@@ -4,3 +4,5 @@
 # Dedent nested tuple items @ `test_conn`:
 b234de9e9d3ca6a3ba5ad4efe87f2347045c19b4
 # END initial autopep8-driven formatting
+
+39bf4f0995b4b8373d5080dadb875a579bc091bb  # Format all Python modules with `isort`
