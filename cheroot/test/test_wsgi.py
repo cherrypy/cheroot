@@ -4,10 +4,11 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from traceback import print_tb
 
 import pytest
+
 import portend
 import requests
-from requests_toolbelt.sessions import BaseUrlSession as Session
 from jaraco.context import ExceptionTrap
+from requests_toolbelt.sessions import BaseUrlSession as Session
 
 from cheroot import wsgi
 from cheroot._compat import IS_MACOS, IS_WINDOWS

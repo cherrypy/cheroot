@@ -5,6 +5,7 @@ import platform
 import subprocess  # noqa: S404
 import sys
 
+
 PYTHON_IMPLEMENTATION_MAP = {  # noqa: WPS407
     'cpython': 'cp',
     'ironpython': 'ip',

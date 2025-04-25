@@ -65,27 +65,26 @@ And now for a trivial doctest to exercise the test suite
 True
 """
 
-import os
-import io
-import re
+import contextlib
 import email.utils
-import socket
-import sys
-import time
-import traceback as traceback_
+import io
 import logging
+import os
 import platform
 import queue
-import contextlib
+import re
+import socket
+import sys
 import threading
+import time
+import traceback as traceback_
 import urllib.parse
 from functools import lru_cache
 
-from . import connections, errors, __version__
-from ._compat import bton
-from ._compat import IS_PPC
-from .workers import threadpool
+from . import __version__, connections, errors
+from ._compat import IS_PPC, bton
 from .makefile import MakeFile, StreamWriter
+from .workers import threadpool
 
 
 __all__ = (

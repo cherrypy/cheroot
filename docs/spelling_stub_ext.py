@@ -10,6 +10,7 @@ from sphinx.util.nodes import nodes
 
 from cheroot import __version__
 
+
 try:
     from enchant.tokenize import (  # noqa: WPS433
         Filter as _EnchantTokenizeFilterBase,

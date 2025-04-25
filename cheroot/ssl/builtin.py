@@ -12,6 +12,7 @@ import sys
 import threading
 from contextlib import suppress
 
+
 try:
     import ssl
 except ImportError:
@@ -25,10 +26,10 @@ except ImportError:
     except ImportError:
         DEFAULT_BUFFER_SIZE = -1
 
-from . import Adapter
 from .. import errors
 from ..makefile import StreamReader, StreamWriter
 from ..server import HTTPServer
+from . import Adapter
 
 
 def _assert_ssl_exc_contains(exc, *msgs):

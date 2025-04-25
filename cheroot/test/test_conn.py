@@ -1,21 +1,22 @@
 """Tests for TCP connection handling, including proper and timely close."""
 
 import errno
-from re import match as _matches_pattern
+import http.client
+import logging
 import socket
 import time
-import logging
 import traceback as traceback_
-from collections import namedtuple
-import http.client
 import urllib.request
+from collections import namedtuple
+from re import match as _matches_pattern
 
 import pytest
+
 from jaraco.text import trim, unwrap
 
-from cheroot.test import helper, webtest
-from cheroot._compat import IS_CI, IS_MACOS, IS_PYPY, IS_WINDOWS
 import cheroot.server
+from cheroot._compat import IS_CI, IS_MACOS, IS_PYPY, IS_WINDOWS
+from cheroot.test import helper, webtest
 
 
 IS_SLOW_ENV = IS_MACOS or IS_WINDOWS

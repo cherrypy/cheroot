@@ -28,8 +28,8 @@ as you want in one instance by using a PathInfoDispatcher::
 import sys
 
 from . import server
+from ._compat import bton, ntob
 from .workers import threadpool
-from ._compat import ntob, bton
 
 
 class Server(server.HTTPServer):

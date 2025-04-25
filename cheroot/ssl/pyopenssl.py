@@ -55,10 +55,10 @@ import sys
 import threading
 import time
 
+
 try:
     import OpenSSL.version
-    from OpenSSL import SSL
-    from OpenSSL import crypto
+    from OpenSSL import SSL, crypto
 
     try:
         ssl_conn_type = SSL.Connection
@@ -67,9 +67,12 @@ try:
 except ImportError:
     SSL = None
 
-from . import Adapter
-from .. import errors, server as cheroot_server
+from .. import (
+    errors,
+    server as cheroot_server,
+)
 from ..makefile import StreamReader, StreamWriter
+from . import Adapter
 
 
 class SSLFileobjectMixin:

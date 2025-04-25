@@ -7,6 +7,7 @@ import os
 import sys
 from pathlib import Path
 
+
 # -- Path setup --------------------------------------------------------------
 
 PROJECT_ROOT_DIR = Path(__file__).parents[1].resolve()

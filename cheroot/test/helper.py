@@ -1,18 +1,18 @@
 """A library of helper functions for the Cheroot test suite."""
 
 import datetime
+import http.client
 import logging
 import os
 import sys
-import time
 import threading
+import time
 import types
-import http.client
 
 import cheroot.server
 import cheroot.wsgi
-
 from cheroot.test import webtest
+
 
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))

@@ -12,12 +12,12 @@ import pytest
 from .._compat import IS_MACOS, IS_WINDOWS  # noqa: WPS436
 from ..server import Gateway, HTTPServer
 from ..testing import (  # noqa: F401  # pylint: disable=unused-import
+    get_server_client,
     native_server,
-    thread_and_wsgi_server,
     thread_and_native_server,
+    thread_and_wsgi_server,
     wsgi_server,
 )
-from ..testing import get_server_client
 
 
 @pytest.fixture

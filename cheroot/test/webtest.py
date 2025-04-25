@@ -15,22 +15,22 @@ the traceback to stdout, and keep any assertions you have from running
 be of further significance to your tests).
 """
 
+import functools
+import http.client
+import json
+import os
 import pprint
 import re
 import socket
 import sys
 import time
 import traceback
-import os
-import json
 import unittest  # pylint: disable=deprecated-module,preferred-module
-import warnings
-import functools
-import http.client
 import urllib.parse
+import warnings
 
-from more_itertools.more import always_iterable
 import jaraco.functools
+from more_itertools.more import always_iterable
 
 
 def interface(host):
@@ -64,8 +64,8 @@ try:
             return msvcrt.getch()
 except ImportError:
     # Unix getchr
-    import tty
     import termios
+    import tty
 
     def getchar():
         """Get a key press."""

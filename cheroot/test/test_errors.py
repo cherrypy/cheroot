@@ -4,7 +4,12 @@ import pytest
 
 from cheroot import errors
 
-from .._compat import IS_LINUX, IS_MACOS, IS_SOLARIS, IS_WINDOWS  # noqa: WPS130
+from .._compat import (  # noqa: WPS130
+    IS_LINUX,
+    IS_MACOS,
+    IS_SOLARIS,
+    IS_WINDOWS,
+)
 
 
 @pytest.mark.parametrize(

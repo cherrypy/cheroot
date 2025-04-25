@@ -6,24 +6,23 @@ import socket
 import tempfile
 import threading
 import types
-import uuid
 import urllib.parse  # noqa: WPS301
+import uuid
 
 import pytest
+
 import requests
 import requests_unixsocket
-
 from pypytools.gc.custom import DefaultGc
 
-from .._compat import bton, ntob
-from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM
+from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
-from ..workers.threadpool import ThreadPool
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
     EPHEMERAL_PORT,
 )
+from ..workers.threadpool import ThreadPool
 
 
 IS_SLOW_ENV = IS_MACOS or IS_WINDOWS

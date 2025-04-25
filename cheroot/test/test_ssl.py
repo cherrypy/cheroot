@@ -1,6 +1,7 @@
 """Tests for TLS support."""
 
 import functools
+import http.client
 import json
 import os
 import ssl
@@ -9,16 +10,25 @@ import sys
 import threading
 import time
 import traceback
-import http.client
+
+import pytest
 
 import OpenSSL.SSL
-import pytest
 import requests
 import trustme
 
-from .._compat import bton, ntob, ntou
-from .._compat import IS_ABOVE_OPENSSL10, IS_ABOVE_OPENSSL31, IS_CI, IS_PYPY
-from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS
+from .._compat import (
+    IS_ABOVE_OPENSSL10,
+    IS_ABOVE_OPENSSL31,
+    IS_CI,
+    IS_LINUX,
+    IS_MACOS,
+    IS_PYPY,
+    IS_WINDOWS,
+    bton,
+    ntob,
+    ntou,
+)
 from ..server import HTTPServer, get_ssl_adapter_class
 from ..testing import (
     ANY_INTERFACE_IPV4,

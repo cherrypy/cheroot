@@ -2,22 +2,23 @@
 
 import io
 import os
+import selectors
 import socket
 import threading
 import time
-import selectors
 from contextlib import suppress
 
 from . import errors
 from ._compat import IS_WINDOWS
 from .makefile import MakeFile
 
+
 try:
     import fcntl
 except ImportError:
     try:
-        from ctypes import windll, WinError
         import ctypes.wintypes
+        from ctypes import WinError, windll
         _SetHandleInformation = windll.kernel32.SetHandleInformation
         _SetHandleInformation.argtypes = [
             ctypes.wintypes.HANDLE,

@@ -31,11 +31,10 @@ import argparse
 import os
 import sys
 import urllib.parse  # noqa: WPS301
-from importlib import import_module
 from contextlib import suppress
+from importlib import import_module
 
-from . import server
-from . import wsgi
+from . import server, wsgi
 
 
 class BindLocation:

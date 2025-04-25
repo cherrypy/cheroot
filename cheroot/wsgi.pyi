@@ -1,5 +1,6 @@
-from . import server
 from typing import Any
+
+from . import server
 
 class Server(server.HTTPServer):
     wsgi_version: Any

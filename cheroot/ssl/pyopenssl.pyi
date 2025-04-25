@@ -1,7 +1,9 @@
-from . import Adapter
-from ..makefile import StreamReader, StreamWriter
-from OpenSSL import SSL
 from typing import Any, Type
+
+from OpenSSL import SSL
+
+from ..makefile import StreamReader, StreamWriter
+from . import Adapter
 
 ssl_conn_type: Type[SSL.Connection]
 

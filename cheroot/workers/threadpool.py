@@ -7,11 +7,11 @@
 
 import collections
 import logging
+import queue
+import socket
 import threading
 import time
-import socket
 import warnings
-import queue
 
 from jaraco.functools import pass_none
 

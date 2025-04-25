@@ -2,7 +2,7 @@
 
 import pytest
 
-from cheroot._compat import extract_bytes, ntob, ntou, bton
+from cheroot._compat import bton, extract_bytes, ntob, ntou
 
 
 @pytest.mark.parametrize(

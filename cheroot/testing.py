@@ -1,17 +1,18 @@
 """Pytest fixtures and other helpers for doing testing by end-users."""
 
-from contextlib import closing, contextmanager
 import errno
+import http.client
 import socket
 import threading
 import time
-import http.client
+from contextlib import closing, contextmanager
 
 import pytest
 
 import cheroot.server
-from cheroot.test import webtest
 import cheroot.wsgi
+from cheroot.test import webtest
+
 
 EPHEMERAL_PORT = 0
 NO_INTERFACE = None  # Using this or '' will cause an exception
