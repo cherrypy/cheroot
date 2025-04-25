@@ -1624,33 +1624,33 @@ class HTTPServer:
         self.stats = {
             'Enabled': False,
             'Bind Address': lambda s: repr(self.bind_addr),
-            'Run time': lambda s: (not s['Enabled']) and -1 or self.runtime(),
+            'Run time': lambda s: ((not s['Enabled']) and -1) or self.runtime(),
             'Accepts': 0,
             'Accepts/sec': lambda s: s['Accepts'] / self.runtime(),
             'Queue': lambda s: getattr(self.requests, 'qsize', None),
             'Threads': lambda s: len(getattr(self.requests, '_threads', [])),
             'Threads Idle': lambda s: getattr(self.requests, 'idle', None),
             'Socket Errors': 0,
-            'Requests': lambda s: (not s['Enabled']) and -1 or sum(
+            'Requests': lambda s: ((not s['Enabled']) and -1) or sum(
                 (w['Requests'](w) for w in s['Worker Threads'].values()), 0,
             ),
-            'Bytes Read': lambda s: (not s['Enabled']) and -1 or sum(
+            'Bytes Read': lambda s: ((not s['Enabled']) and -1) or sum(
                 (w['Bytes Read'](w) for w in s['Worker Threads'].values()), 0,
             ),
-            'Bytes Written': lambda s: (not s['Enabled']) and -1 or sum(
+            'Bytes Written': lambda s: ((not s['Enabled']) and -1) or sum(
                 (w['Bytes Written'](w) for w in s['Worker Threads'].values()),
                 0,
             ),
-            'Work Time': lambda s: (not s['Enabled']) and -1 or sum(
+            'Work Time': lambda s: ((not s['Enabled']) and -1) or sum(
                 (w['Work Time'](w) for w in s['Worker Threads'].values()), 0,
             ),
-            'Read Throughput': lambda s: (not s['Enabled']) and -1 or sum(
+            'Read Throughput': lambda s: ((not s['Enabled']) and -1) or sum(
                 (
                     w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
                     for w in s['Worker Threads'].values()
                 ), 0,
             ),
-            'Write Throughput': lambda s: (not s['Enabled']) and -1 or sum(
+            'Write Throughput': lambda s: ((not s['Enabled']) and -1) or sum(
                 (
                     w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
                     for w in s['Worker Threads'].values()

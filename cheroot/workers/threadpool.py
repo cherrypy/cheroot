@@ -71,23 +71,23 @@ class WorkerThread(threading.Thread):
         self.work_time = 0
         self.stats = {
             'Requests': lambda s: self.requests_seen + (
-                self.start_time is None
-                and trueyzero
+                (self.start_time is None
+                and trueyzero)
                 or self.conn.requests_seen
             ),
             'Bytes Read': lambda s: self.bytes_read + (
-                self.start_time is None
-                and trueyzero
+                (self.start_time is None
+                and trueyzero)
                 or self.conn.rfile.bytes_read
             ),
             'Bytes Written': lambda s: self.bytes_written + (
-                self.start_time is None
-                and trueyzero
+                (self.start_time is None
+                and trueyzero)
                 or self.conn.wfile.bytes_written
             ),
             'Work Time': lambda s: self.work_time + (
-                self.start_time is None
-                and trueyzero
+                (self.start_time is None
+                and trueyzero)
                 or time.time() - self.start_time
             ),
             'Read Throughput': lambda s: s['Bytes Read'](s) / (
