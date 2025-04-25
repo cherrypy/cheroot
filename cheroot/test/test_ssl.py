@@ -231,7 +231,7 @@ def test_ssl_adapters(
     )
 
     resp = requests.get(
-        'https://{host!s}:{port!s}/'.format(host=interface, port=port),
+        f'https://{interface!s}:{port!s}/',
         timeout=http_request_timeout,
         verify=tls_ca_certificate_pem_path,
     )
@@ -322,7 +322,7 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
 
         make_https_request = functools.partial(
             requests.get,
-            'https://{host!s}:{port!s}/'.format(host=interface, port=port),
+            f'https://{interface!s}:{port!s}/',
 
             # Don't wait for the first byte forever:
             timeout=http_request_timeout,
@@ -601,10 +601,7 @@ def test_https_over_http_error(http_server, ip_addr):
     interface, _host, port = _get_conn_data(httpserver.bind_addr)
     with pytest.raises(ssl.SSLError) as ssl_err:
         http.client.HTTPSConnection(
-            '{interface}:{port}'.format(
-                interface=interface,
-                port=port,
-            ),
+            f'{interface}:{port}',
         ).request('GET', '/')
     expected_substring = (
         'record layer failure' if IS_ABOVE_OPENSSL31
@@ -674,7 +671,7 @@ def test_http_over_https_error(
     )
     if expect_fallback_response_over_plain_http:
         resp = requests.get(
-            'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
+            f'http://{fqdn!s}:{port!s}/',
             timeout=http_request_timeout,
         )
         assert resp.status_code == 400
@@ -686,7 +683,7 @@ def test_http_over_https_error(
 
     with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
         requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-            'http://{host!s}:{port!s}/'.format(host=fqdn, port=port),
+            f'http://{fqdn!s}:{port!s}/',
             timeout=http_request_timeout,
         )
 

@@ -478,8 +478,7 @@ class ChunkedRFile:
             chunk_size = int(chunk_size, 16)
         except ValueError:
             raise ValueError(
-                'Bad chunked transfer size: {chunk_size!r}'.
-                format(chunk_size=chunk_size),
+                f'Bad chunked transfer size: {chunk_size!r}',
             )
 
         if chunk_size <= 0:
@@ -1185,8 +1184,7 @@ class HTTPRequest:
         if (b'Connection', b'Keep-Alive') in self.outheaders:
             self.outheaders.append((
                 b'Keep-Alive',
-                u'timeout={connection_timeout}'.
-                format(connection_timeout=self.server.timeout).
+                f'timeout={self.server.timeout}'.
                 encode('ISO-8859-1'),
             ))
 
@@ -1532,7 +1530,7 @@ class HTTPServer:
     expired connections (default 0.5).
     """
 
-    version = 'Cheroot/{version!s}'.format(version=__version__)
+    version = f'Cheroot/{__version__!s}'
     """A version string for the HTTPServer."""
 
     software = None
@@ -1882,7 +1880,7 @@ class HTTPServer:
         :type traceback: bool
         """
         # Override this in subclasses as desired
-        sys.stderr.write('{msg!s}\n'.format(msg=msg))
+        sys.stderr.write(f'{msg!s}\n')
         sys.stderr.flush()
         if traceback:
             tblines = traceback_.format_exc()

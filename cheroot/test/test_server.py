@@ -52,8 +52,8 @@ def unix_abstract_sock():
     """Return an abstract UNIX socket address."""
     if not IS_LINUX:
         pytest.skip(
-            '{os} does not support an abstract '
-            'socket namespace'.format(os=SYS_PLATFORM),
+            f'{SYS_PLATFORM} does not support an abstract '
+            'socket namespace',
         )
     return b''.join((
         b'\x00cheroot-test-socket',
@@ -126,7 +126,7 @@ def test_stop_interrupts_serve():
 )
 def test_server_interrupt(exc_cls):
     """Check that assigning interrupt stops the server."""
-    interrupt_msg = 'should catch {uuid!s}'.format(uuid=uuid.uuid4())
+    interrupt_msg = f'should catch {uuid.uuid4()!s}'
     raise_marker_sentinel = object()
 
     httpserver = HTTPServer(

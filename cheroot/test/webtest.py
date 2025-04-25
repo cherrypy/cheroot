@@ -122,7 +122,7 @@ class WebCase(unittest.TestCase):
 
         * from :py:mod:`python:http.client`.
         """
-        cls_name = '{scheme}Connection'.format(scheme=self.scheme.upper())
+        cls_name = f'{self.scheme.upper()}Connection'
         return getattr(http.client, cls_name)
 
     def get_conn(self, auto_open=False):

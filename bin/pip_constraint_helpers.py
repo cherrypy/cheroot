@@ -57,10 +57,7 @@ def get_constraint_file_path(req_dir, toxenv, python_tag):
 
     if toxenv in {'py', 'python'}:
         extra_prefix = 'py' if PYTHON_IMPLEMENTATION == 'PyPy' else ''
-        toxenv = '{prefix}py{ver}'.format(
-            prefix=extra_prefix,
-            ver=python_tag[2:],
-        )
+        toxenv = f'{extra_prefix}py{python_tag[2:]}'
 
     if sys_platform == 'linux2':
         sys_platform = 'linux'

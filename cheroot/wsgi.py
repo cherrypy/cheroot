@@ -387,7 +387,7 @@ class PathInfoDispatcher:
         path = environ['PATH_INFO'] or '/'
         for p, app in self.apps:
             # The apps list should be sorted by length, descending.
-            if path.startswith('{path!s}/'.format(path=p)) or path == p:
+            if path.startswith(f'{p!s}/') or path == p:
                 environ = environ.copy()
                 environ['SCRIPT_NAME'] = environ.get('SCRIPT_NAME', '') + p
                 environ['PATH_INFO'] = path[len(p):]

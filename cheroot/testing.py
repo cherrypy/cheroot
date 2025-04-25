@@ -108,10 +108,7 @@ class _TestClient:
         self._http_connection = self.get_connection()
 
     def get_connection(self):
-        name = '{interface}:{port}'.format(
-            interface=self._interface,
-            port=self._port,
-        )
+        name = f'{self._interface}:{self._port}'
         conn_cls = (
             http.client.HTTPConnection
             if self.server_instance.ssl_adapter is None else
