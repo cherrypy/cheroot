@@ -27,8 +27,14 @@ from cheroot.cli import (
         ('foo', ('foo', None)),
         ('123456789', ('123456789', None)),
         # unix sockets
-        ('/tmp/cheroot.sock', '/tmp/cheroot.sock'),
-        ('/tmp/some-random-file-name', '/tmp/some-random-file-name'),
+        (
+            '/tmp/cheroot.sock',  # noqa: S108  # false-positive, no disk use
+            '/tmp/cheroot.sock',  # noqa: S108  # false-positive, no disk use
+        ),
+        (
+            '/tmp/some-random-file-name',  # noqa: S108  # false-positive
+            '/tmp/some-random-file-name',  # noqa: S108  # false-positive
+        ),
         # abstract sockets
         ('@cheroot', '\x00cheroot'),
     ),
