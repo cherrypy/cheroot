@@ -121,7 +121,7 @@ class SSLFileobjectMixin:
 
                 if thirdarg == 'http request':
                     # The client is talking HTTP to an HTTPS server.
-                    raise errors.NoSSLError()
+                    raise errors.NoSSLError
 
                 raise errors.FatalSSLAlert(*e.args)
 

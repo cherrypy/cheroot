@@ -272,7 +272,7 @@ class SizeCheckWrapper:
 
     def _check_length(self):
         if self.maxlen and self.bytes_read > self.maxlen:
-            raise errors.MaxSizeExceeded()
+            raise errors.MaxSizeExceeded
 
     def read(self, size=None):
         """Read a chunk from ``rfile`` buffer and return it.
