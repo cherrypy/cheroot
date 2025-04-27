@@ -1462,8 +1462,7 @@ def test_598(test_client):
     # Initialize a persistent HTTP connection
     conn = test_client.get_connection()
     remote_data_conn = urllib.request.urlopen(
-        '%s://%s:%s/one_megabyte_of_a'
-        % ('http', conn.host, conn.port),
+        f'http://{conn.host!s}:{conn.port!s}/one_megabyte_of_a',
     )
     buf = remote_data_conn.read(512)
     time.sleep(timeout * 0.6)
