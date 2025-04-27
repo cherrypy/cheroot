@@ -336,6 +336,7 @@ class WebCase(unittest.TestCase):
             else:
                 msg = '%r:%r not in headers' % (key, value)
         self._handlewebError(msg)
+        return None
 
     def assertHeaderIn(self, key, values, msg=None):
         """Fail if header indicated by key doesn't have one of the values."""
@@ -349,6 +350,7 @@ class WebCase(unittest.TestCase):
         if msg is None:
             msg = '%(key)r not in %(values)r' % vars()
         self._handlewebError(msg)
+        return None
 
     def assertHeaderItemValue(self, key, value, msg=None):
         """Fail if the header does not contain the specified value."""
@@ -360,6 +362,7 @@ class WebCase(unittest.TestCase):
         if msg is None:
             msg = '%r not in %r' % (value, header_values)
         self._handlewebError(msg)
+        return None
 
     def assertNoHeader(self, key, msg=None):
         """Fail if key in self.headers."""
