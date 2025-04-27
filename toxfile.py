@@ -109,7 +109,7 @@ def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
         )
 
     _log_info_before_run_commands('Logging platform information...')
-    print(  # noqa: WPS421
+    print(  # noqa: T201, WPS421
         'Current platform information:\n'
         f'{platform.platform()=}'
         f'{platform.system()=}'
@@ -119,7 +119,7 @@ def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
     )
 
     _log_info_before_run_commands('Logging current OpenSSL module...')
-    print(  # noqa: WPS421
+    print(  # noqa: T201, WPS421
         'Current OpenSSL module:\n'
         f'{ssl.OPENSSL_VERSION=}\n'
         f'{ssl.OPENSSL_VERSION_INFO=}\n'
@@ -169,7 +169,7 @@ def tox_after_run_commands(tox_env: ToxEnv) -> None:
             encoding=UNICODE_ENCODING,
             mode=FILE_APPEND_MODE,
         ) as outputs_file:
-            print(  # noqa: WPS421
+            print(  # noqa: T201, WPS421
                 'combined-dists-base64-encoded-sha256-hash='
                 f'{emulated_base64_w0_output !s}',
                 file=outputs_file,
