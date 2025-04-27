@@ -1,9 +1,9 @@
 """Implementation of the SSL adapter base interface."""
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 
-class Adapter(metaclass=ABCMeta):
+class Adapter(ABC):
     """Base class for SSL driver library adapters.
 
     Required methods:
