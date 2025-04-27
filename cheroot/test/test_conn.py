@@ -26,17 +26,20 @@ timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 
-class Controller(helper.Controller):
-    """Controller for serving WSGI apps."""
+class WSGICallables:
+    """Standalone WSGI apps."""
 
+    @staticmethod
     def hello(req, resp):
         """Render Hello world."""
         return 'Hello, world!'
 
+    @staticmethod
     def pov(req, resp):
         """Render ``pov`` value."""
         return pov
 
+    @staticmethod
     def stream(req, resp):
         """Render streaming response."""
         if 'set_cl' in req.environ['QUERY_STRING']:
@@ -48,6 +51,7 @@ class Controller(helper.Controller):
 
         return content()
 
+    @staticmethod
     def upload(req, resp):
         """Process file upload and render thank."""
         if not req.environ['REQUEST_METHOD'] == 'POST':
@@ -58,35 +62,42 @@ class Controller(helper.Controller):
         input_contents = req.environ['wsgi.input'].read().decode('utf-8')
         return f"thanks for '{input_contents !s}'"
 
+    @staticmethod
     def custom_204(req, resp):
         """Render response with status 204."""
         resp.status = '204'
         return 'Code = 204'
 
+    @staticmethod
     def custom_304(req, resp):
         """Render response with status 304."""
         resp.status = '304'
         return 'Code = 304'
 
+    @staticmethod
     def err_before_read(req, resp):
         """Render response with status 500."""
         resp.status = '500 Internal Server Error'
         return 'ok'
 
+    @staticmethod
     def one_megabyte_of_a(req, resp):
         """Render 1MB response."""
         return ['a' * 1024] * 1024
 
+    @staticmethod
     def wrong_cl_buffered(req, resp):
         """Render buffered response with invalid length value."""
         resp.headers['Content-Length'] = '5'
         return 'I have too many bytes'
 
+    @staticmethod
     def wrong_cl_unbuffered(req, resp):
         """Render unbuffered response with invalid length value."""
         resp.headers['Content-Length'] = '5'
         return ['I too', ' have too many bytes']
 
+    @staticmethod
     def _munge(string):
         """Encode PATH_INFO correctly depending on Python version.
 
@@ -95,20 +106,24 @@ class Controller(helper.Controller):
         """
         return string.encode('utf-8').decode('latin-1')
 
+
+class Controller(helper.Controller):
+    """Controller for serving WSGI apps."""
+
     handlers = {
-        '/hello': hello,
-        '/pov': pov,
-        '/page1': pov,
-        '/page2': pov,
-        '/page3': pov,
-        '/stream': stream,
-        '/upload': upload,
-        '/custom/204': custom_204,
-        '/custom/304': custom_304,
-        '/err_before_read': err_before_read,
-        '/one_megabyte_of_a': one_megabyte_of_a,
-        '/wrong_cl_buffered': wrong_cl_buffered,
-        '/wrong_cl_unbuffered': wrong_cl_unbuffered,
+        '/hello': WSGICallables.hello,
+        '/pov': WSGICallables.pov,
+        '/page1': WSGICallables.pov,
+        '/page2': WSGICallables.pov,
+        '/page3': WSGICallables.pov,
+        '/stream': WSGICallables.stream,
+        '/upload': WSGICallables.upload,
+        '/custom/204': WSGICallables.custom_204,
+        '/custom/304': WSGICallables.custom_304,
+        '/err_before_read': WSGICallables.err_before_read,
+        '/one_megabyte_of_a': WSGICallables.one_megabyte_of_a,
+        '/wrong_cl_buffered': WSGICallables.wrong_cl_buffered,
+        '/wrong_cl_unbuffered': WSGICallables.wrong_cl_unbuffered,
     }
 
 

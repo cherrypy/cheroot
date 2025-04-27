@@ -17,13 +17,24 @@ HTTP_OK = 200
 HTTP_VERSION_NOT_SUPPORTED = 505
 
 
-class HelloController(helper.Controller):
+def _munge(string):
+    """Encode PATH_INFO correctly depending on Python version.
+
+    WSGI 1.0 is a mess around Unicode. Create endpoints
+    that match the PATH_INFO that it produces.
+    """
+    return string.encode('utf-8').decode('latin-1')
+
+
+class WSGICallables:
     """Controller for serving WSGI apps."""
 
+    @staticmethod
     def hello(req, resp):
         """Render Hello world."""
         return 'Hello world!'
 
+    @staticmethod
     def body_required(req, resp):
         """Render Hello world or set 411."""
         if req.environ.get('Content-Length', None) is None:
@@ -31,10 +42,12 @@ class HelloController(helper.Controller):
             return None
         return 'Hello world!'
 
+    @staticmethod
     def query_string(req, resp):
         """Render QUERY_STRING value."""
         return req.environ.get('QUERY_STRING', '')
 
+    @staticmethod
     def asterisk(req, resp):
         """Render request method value."""
         # pylint: disable=possibly-unused-variable
@@ -42,29 +55,25 @@ class HelloController(helper.Controller):
         tmpl = 'Got asterisk URI path with {method} method'
         return tmpl.format(**locals())
 
-    def _munge(string):
-        """Encode PATH_INFO correctly depending on Python version.
 
-        WSGI 1.0 is a mess around Unicode. Create endpoints
-        that match the PATH_INFO that it produces.
-        """
-        return string.encode('utf-8').decode('latin-1')
+class HelloController(helper.Controller):
+    """Controller for serving WSGI apps."""
 
     handlers = {
-        '/hello': hello,
-        '/no_body': hello,
-        '/body_required': body_required,
-        '/query_string': query_string,
+        '/hello': WSGICallables.hello,
+        '/no_body': WSGICallables.hello,
+        '/body_required': WSGICallables.body_required,
+        '/query_string': WSGICallables.query_string,
         # FIXME: Unignore the pylint rules in pylint >= 2.15.4.
         # Refs:
         # * https://github.com/PyCQA/pylint/issues/6592
         # * https://github.com/PyCQA/pylint/pull/7395
         # pylint: disable-next=too-many-function-args
-        _munge('/привіт'): hello,
+        _munge('/привіт'): WSGICallables.hello,
         # pylint: disable-next=too-many-function-args
-        _munge('/Юххууу'): hello,
-        '/\xa0Ðblah key 0 900 4 data': hello,
-        '/*': asterisk,
+        _munge('/Юххууу'): WSGICallables.hello,
+        '/\xa0Ðblah key 0 900 4 data': WSGICallables.hello,
+        '/*': WSGICallables.asterisk,
     }
 
 
