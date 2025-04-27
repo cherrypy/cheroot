@@ -544,7 +544,7 @@ def test_ssl_env(  # noqa: C901  # FIXME
         else:
             assert env['SSL_CLIENT_VERIFY'] == 'SUCCESS'
 
-            with open(cl_pem, 'rt') as f:
+            with open(cl_pem) as f:
                 assert env['SSL_CLIENT_CERT'] in f.read()
 
             for key in {

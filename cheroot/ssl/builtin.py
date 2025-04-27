@@ -225,7 +225,7 @@ class BuiltinSSLAdapter(Adapter):
         if not self._server_env:
             return
         cert = None
-        with open(certificate, mode='rt') as f:
+        with open(certificate) as f:
             cert = f.read()
 
         # strip off any keys by only taking the first certificate
