@@ -1171,7 +1171,7 @@ def test_100_Continue(test_client):
     response = conn.response_class(conn.sock, method='POST')
 
     # ...assert and then skip the 100 response
-    version, status, reason = response._read_status()
+    _version, status, _reason = response._read_status()
     assert status == 100
     while True:
         line = response.fp.readline().strip()
@@ -1247,7 +1247,7 @@ def test_readall_or_close(test_client, max_request_body_size):
     response = conn.response_class(conn.sock, method='POST')
 
     # ...assert and then skip the 100 response
-    version, status, reason = response._read_status()
+    _version, status, _reason = response._read_status()
     assert status == 100
     skip = True
     while skip:
@@ -1259,7 +1259,7 @@ def test_readall_or_close(test_client, max_request_body_size):
 
     # ...get the final response
     response.begin()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    status_line, _actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
     assert actual_status == 200
     expected_resp_body = f"thanks for '{body.decode() !s}'".encode()
@@ -1360,7 +1360,7 @@ def test_Chunked_Encoding(test_client):
     conn.endheaders()
     conn.send(body)
     response = conn.getresponse()
-    status_line, actual_headers, actual_resp_body = webtest.shb(response)
+    status_line, _actual_headers, actual_resp_body = webtest.shb(response)
     actual_status = int(status_line[:3])
     assert actual_status == 413
     conn.close()

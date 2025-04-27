@@ -1986,7 +1986,7 @@ class HTTPServer:
 
     @staticmethod
     def _make_socket_reusable(socket_, bind_addr):
-        host, port = bind_addr[:2]
+        _host, port = bind_addr[:2]
         IS_EPHEMERAL_PORT = port == 0
 
         if socket_.family not in {socket.AF_INET, socket.AF_INET6}:
