@@ -318,9 +318,8 @@ class WebCase(unittest.TestCase):
         if any(map(self.status_matches, always_iterable(status))):
             return
 
-        tmpl = 'Status {self.status} does not match {status}'
-        msg = msg or tmpl.format(**locals())
-        self._handlewebError(msg)
+        tmpl = f'Status {self.status} does not match {status}'
+        self._handlewebError(msg or tmpl)
 
     def assertHeader(self, key, value=None, msg=None):
         """Fail if (key, [value]) not in self.headers."""
