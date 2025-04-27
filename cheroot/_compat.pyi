@@ -1,4 +1,4 @@
-from typing import Any, ContextManager, Optional, Type, Union
+from typing import ContextManager, Optional, Type, Union
 
 def suppress(*exceptions: Type[BaseException]) -> ContextManager[None]: ...
 
