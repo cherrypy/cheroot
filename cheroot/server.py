@@ -567,13 +567,12 @@ class ChunkedRFile:
                     remaining = min(size - len(data), newline_pos)
                     data += self.buffer[:remaining]
                     self.buffer = self.buffer[remaining:]
+            elif newline_pos == -1:
+                data += self.buffer
+                self.buffer = EMPTY
             else:
-                if newline_pos == -1:
-                    data += self.buffer
-                    self.buffer = EMPTY
-                else:
-                    data += self.buffer[:newline_pos]
-                    self.buffer = self.buffer[newline_pos:]
+                data += self.buffer[:newline_pos]
+                self.buffer = self.buffer[newline_pos:]
 
     def readlines(self, sizehint=0):
         """Read all lines from ``rfile`` buffer and return them.
@@ -1002,10 +1001,9 @@ class HTTPRequest:
             # Both server and client are HTTP/1.1
             if self.inheaders.get(b'Connection', b'') == b'close':
                 self.close_connection = True
-        else:
-            # Either the server or client (or both) are HTTP/1.0
-            if self.inheaders.get(b'Connection', b'') != b'Keep-Alive':
-                self.close_connection = True
+        # Either the server or client (or both) are HTTP/1.0
+        elif self.inheaders.get(b'Connection', b'') != b'Keep-Alive':
+            self.close_connection = True
 
         # Transfer-Encoding support
         te = None
@@ -1176,10 +1174,9 @@ class HTTPRequest:
                 # Both server and client are HTTP/1.1 or better
                 if self.close_connection:
                     self.outheaders.append((b'Connection', b'close'))
-            else:
-                # Server and/or client are HTTP/1.0
-                if not self.close_connection:
-                    self.outheaders.append((b'Connection', b'Keep-Alive'))
+            # Server and/or client are HTTP/1.0
+            elif not self.close_connection:
+                self.outheaders.append((b'Connection', b'Keep-Alive'))
 
         if (b'Connection', b'Keep-Alive') in self.outheaders:
             self.outheaders.append((
