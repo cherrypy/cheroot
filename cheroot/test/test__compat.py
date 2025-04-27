@@ -34,7 +34,7 @@ def test_compat_functions_negative_nonnative(func):
 
 def test_ntou_escape():
     """Check that ``ntou`` supports escape-encoding under Python 2."""
-    expected = 'hišřії'
+    expected = 'hišřії'  # noqa: RUF001  # This is intended
     actual = ntou('hi\u0161\u0159\u0456\u0457', encoding='escape')
     assert actual == expected
 
