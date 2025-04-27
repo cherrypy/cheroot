@@ -249,7 +249,7 @@ class WebCase(unittest.TestCase):
     console_height = 30
 
     def _handlewebError(self, msg):  # noqa: C901  # FIXME
-        print('')
+        print()
         print('    ERROR: %s' % msg)
 
         if not self.interactive:
@@ -583,6 +583,6 @@ def server_error(exc=None):
     if ignore_all or exc[0] in ignored_exceptions:
         return False
     ServerError.on = True
-    print('')
+    print()
     print(''.join(traceback.format_exception(*exc)))
     return True
