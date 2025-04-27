@@ -841,10 +841,8 @@ class HTTPRequest:
             uri_split = urllib.parse.urlsplit(b''.join((b'//', uri)))
             _scheme, _authority, _path, _qs, _fragment = uri_split
             _port = EMPTY
-            try:
+            with contextlib.suppress(ValueError):
                 _port = uri_split.port
-            except ValueError:
-                pass
 
             # FIXME: use third-party validation to make checks against RFC
             # the validation doesn't take into account, that urllib parses
@@ -2052,14 +2050,12 @@ class HTTPServer:
             and host in {'::', '::0', '::0.0.0.0'}
         )
         if listening_ipv6:
-            try:
+            with contextlib.suppress(AttributeError, socket.error):
+                # The IPv6 socket options are sometimes not available on some
+                # machine's TCP stacks; Is the kernel compiled without it?
                 sock.setsockopt(
                     socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0,
                 )
-            except (AttributeError, socket.error):
-                # Apparently, the socket option is not available in
-                # this machine's TCP stack
-                pass
 
         return sock
 

@@ -15,6 +15,7 @@ the traceback to stdout, and keep any assertions you have from running
 be of further significance to your tests).
 """
 
+import contextlib
 import functools
 import http.client
 import json
@@ -142,10 +143,8 @@ class WebCase(unittest.TestCase):
         As this class only allows for a single open connection, if
         self already has an open connection, it will be closed.
         """
-        try:
+        with contextlib.suppress(TypeError, AttributeError):
             self.HTTP_CONN.close()
-        except (TypeError, AttributeError):
-            pass
 
         self.HTTP_CONN = (
             self.get_conn(auto_open=auto_open)

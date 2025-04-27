@@ -67,6 +67,8 @@ try:
 except ImportError:
     SSL = None
 
+import contextlib
+
 from .. import (
     errors,
     server as cheroot_server,
@@ -114,10 +116,8 @@ class SSLFileobjectMixin:
                     return b''
 
                 thirdarg = None
-                try:
+                with contextlib.suppress(IndexError):
                     thirdarg = e.args[0][0][2]
-                except IndexError:
-                    pass
 
                 if thirdarg == 'http request':
                     # The client is talking HTTP to an HTTPS server.

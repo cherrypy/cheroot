@@ -25,6 +25,7 @@ as you want in one instance by using a PathInfoDispatcher::
     server = wsgi.Server(addr, d)
 """
 
+import contextlib
 import sys
 
 from . import server
@@ -355,10 +356,8 @@ class PathInfoDispatcher:
             apps (dict[str,object]|list[tuple[str,object]]): URI prefix
                 and WSGI app pairs
         """
-        try:
+        with contextlib.suppress(AttributeError):
             apps = list(apps.items())
-        except AttributeError:
-            pass
 
         # Sort the apps by len(path), descending
         def by_path_len(app):

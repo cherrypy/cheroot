@@ -6,6 +6,7 @@
 """
 
 import collections
+import contextlib
 import logging
 import queue
 import socket
@@ -304,10 +305,8 @@ class ThreadPool:
         # Remove any dead threads from our list
         for t in [t for t in self._threads if not t.is_alive()]:
             self._threads.remove(t)
-            try:
+            with contextlib.suppress(IndexError):
                 self._pending_shutdowns.popleft()
-            except IndexError:
-                pass
 
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
