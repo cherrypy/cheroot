@@ -2218,7 +2218,7 @@ def get_ssl_adapter_class(name='builtin'):
         try:
             mod = sys.modules[mod_path]
             if mod is None:
-                raise KeyError()
+                raise KeyError
         except KeyError:
             # The last [''] is important.
             mod = __import__(mod_path, globals(), locals(), [''])

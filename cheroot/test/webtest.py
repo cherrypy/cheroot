@@ -224,7 +224,7 @@ class WebCase(unittest.TestCase):
         ]
 
         if ServerError.on:
-            raise ServerError()
+            raise ServerError
         return result
 
     @NonDataProperty

@@ -432,7 +432,7 @@ class CloseResponse:
 
     def __getitem__(self, index):
         """Ensure we don't have a body."""
-        raise IndexError()
+        raise IndexError
 
     def output(self):
         """Return self to hook the close method."""

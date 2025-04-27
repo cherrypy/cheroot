@@ -171,7 +171,7 @@ def test_serving_is_false_and_stop_returns_after_ctrlc():
 
     # Simulate a Ctrl-C on the first call to `run`.
     def raise_keyboard_interrupt(*args, **kwargs):
-        raise KeyboardInterrupt()
+        raise KeyboardInterrupt
 
     httpserver._connections._selector.select = raise_keyboard_interrupt
 
