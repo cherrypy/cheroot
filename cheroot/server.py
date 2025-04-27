@@ -1387,7 +1387,7 @@ class HTTPConnection:
             raise NotImplementedError(
                 'SO_PEERCRED is only supported in Linux kernel and WSL',
             )
-        elif not self.peercreds_enabled:
+        if not self.peercreds_enabled:
             raise RuntimeError(
                 'Peer creds lookup is disabled within this server',
             )
@@ -1444,7 +1444,7 @@ class HTTPConnection:
                 'It can only be done under UNIX-like OS '
                 'but not under the Google App Engine',
             )
-        elif not self.peercreds_resolve_enabled:
+        if not self.peercreds_resolve_enabled:
             raise RuntimeError(
                 'UID/GID lookup is disabled within this server',
             )
