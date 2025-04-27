@@ -370,7 +370,7 @@ class ThreadPool:
 
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
-        for worker in self._threads:
+        for _worker in self._threads:
             self._queue.put(_SHUTDOWNREQUEST)
 
         ignored_errors = (

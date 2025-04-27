@@ -191,8 +191,8 @@ def testing_server(raw_testing_server, monkeypatch):
 
         assert c_msg in raw_testing_server.error_log.ignored_msgs, (
             'Found error in the error log: '
-            "message = '{c_msg}', level = '{c_level}'\n"
-            '{c_traceback}'.format(**locals()),
+            f"message = '{c_msg}', level = '{c_level}'\n"
+            f'{c_traceback}',
         )
 
 

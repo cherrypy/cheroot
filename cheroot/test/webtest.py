@@ -443,7 +443,7 @@ def cleanHeaders(headers, method, body, host, port):
     if method in methods_with_bodies:
         # Stick in default type and length headers if not present
         found = False
-        for k, v in headers:
+        for k, _v in headers:
             if k.lower() == 'content-type':
                 found = True
                 break
