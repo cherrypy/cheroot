@@ -528,14 +528,14 @@ def test_ssl_env(  # noqa: C901  # FIXME
         assert env['HTTPS'] == 'on'
 
         # ensure these are present
-        for key in {'SSL_VERSION_INTERFACE', 'SSL_VERSION_LIBRARY'}:
+        for key in 'SSL_VERSION_INTERFACE', 'SSL_VERSION_LIBRARY':
             assert key in env
 
         # pyOpenSSL generates the env before the handshake completes
         if adapter_type == 'pyopenssl':
             return
 
-        for key in {'SSL_PROTOCOL', 'SSL_CIPHER'}:
+        for key in 'SSL_PROTOCOL', 'SSL_CIPHER':
             assert key in env
 
         # client certificate env
@@ -547,10 +547,10 @@ def test_ssl_env(  # noqa: C901  # FIXME
             with open(cl_pem) as f:
                 assert env['SSL_CLIENT_CERT'] in f.read()
 
-            for key in {
+            for key in (
                 'SSL_CLIENT_M_VERSION', 'SSL_CLIENT_M_SERIAL',
                 'SSL_CLIENT_I_DN', 'SSL_CLIENT_S_DN',
-            }:
+            ):
                 assert key in env
 
     # builtin ssl environment generation may use a loopback socket
