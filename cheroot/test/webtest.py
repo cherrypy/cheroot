@@ -264,7 +264,7 @@ class WebCase(unittest.TestCase):
         sys.stdout.flush()
         while True:
             i = getchar().upper()
-            if not isinstance(i, type('')):
+            if not isinstance(i, str):
                 i = i.decode('ascii')
             if i not in 'BHSUIRX':
                 continue
