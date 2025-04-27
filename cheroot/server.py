@@ -214,7 +214,7 @@ class HeaderReader:
             if not line.endswith(CRLF):
                 raise ValueError('HTTP requires CRLF terminators')
 
-            if line[:1] in (SPACE, TAB):
+            if line[:1] in {SPACE, TAB}:
                 # NOTE: `type(line[0]) is int` and `type(line[:1]) is bytes`.
                 # NOTE: The former causes a the following warning:
                 # NOTE: `BytesWarning('Comparison between bytes and int')`
@@ -1098,7 +1098,7 @@ class HTTPRequest:
             content_type.encode('ISO-8859-1'),
         ]
 
-        if status[:3] in ('413', '414'):
+        if status[:3] in {'413', '414'}:
             # Request Entity Too Large / Request-URI Too Long
             self.close_connection = True
             if self.response_protocol == 'HTTP/1.1':
@@ -1154,7 +1154,7 @@ class HTTPRequest:
             # "All 1xx (informational), 204 (no content),
             # and 304 (not modified) responses MUST NOT
             # include a message-body." So no point chunking.
-            if status < 200 or status in (204, 205, 304):
+            if status < 200 or status in {204, 205, 304}:
                 pass
             else:
                 needs_chunked = (
@@ -1707,7 +1707,7 @@ class HTTPServer:
     @bind_addr.setter
     def bind_addr(self, value):
         """Set the interface on which to listen for connections."""
-        if isinstance(value, tuple) and value[0] in ('', None):
+        if isinstance(value, tuple) and value[0] in {'', None}:
             # Despite the socket module docs, using '' does not
             # allow AI_PASSIVE to work. Passing None instead
             # returns '0.0.0.0' like we want. In other words:
@@ -1989,7 +1989,7 @@ class HTTPServer:
         host, port = bind_addr[:2]
         IS_EPHEMERAL_PORT = port == 0
 
-        if socket_.family not in (socket.AF_INET, socket.AF_INET6):
+        if socket_.family not in {socket.AF_INET, socket.AF_INET6}:
             raise ValueError('Cannot reuse a non-IP socket')
 
         if IS_EPHEMERAL_PORT:
@@ -2049,7 +2049,7 @@ class HTTPServer:
         listening_ipv6 = (
             hasattr(socket, 'AF_INET6')
             and family == socket.AF_INET6
-            and host in ('::', '::0', '::0.0.0.0')
+            and host in {'::', '::0', '::0.0.0.0'}
         )
         if listening_ipv6:
             try:
@@ -2075,11 +2075,11 @@ class HTTPServer:
         # FIXME: keep requested bind_addr separate real bound_addr (port
         # is different in case of ephemeral port 0)
         bind_addr = socket_.getsockname()
-        if socket_.family in (
+        if socket_.family in {
             # Windows doesn't have socket.AF_UNIX, so not using it in check
             socket.AF_INET,
             socket.AF_INET6,
-        ):
+        }:
             """UNIX domain sockets are strings or bytes.
 
             In case of bytes with a leading null-byte it's an abstract socket.

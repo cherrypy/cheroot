@@ -387,10 +387,10 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
         if IS_MACOS and IS_PYPY and adapter_type == 'pyopenssl':
             expected_substrings = ('tlsv1 alert unknown ca',)
         if (
-                tls_verify_mode in (
+                tls_verify_mode in {
                     ssl.CERT_REQUIRED,
                     ssl.CERT_OPTIONAL,
-                )
+                }
                 and not is_trusted_cert
                 and tls_client_identity == 'localhost'
         ):
