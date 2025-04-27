@@ -16,7 +16,7 @@ import warnings
 from jaraco.functools import pass_none
 
 
-__all__ = ('WorkerThread', 'ThreadPool')
+__all__ = ('ThreadPool', 'WorkerThread')
 
 
 class TrueyZero:
