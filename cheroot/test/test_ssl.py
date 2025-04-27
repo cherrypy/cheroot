@@ -363,9 +363,9 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
         if issue_237:
             pytest.xfail('Test sometimes fails')
 
-        expected_ssl_errors = requests.exceptions.SSLError,
+        expected_ssl_errors = (requests.exceptions.SSLError,)
         if IS_WINDOWS or IS_GITHUB_ACTIONS_WORKFLOW:
-            expected_ssl_errors += requests.exceptions.ConnectionError,
+            expected_ssl_errors += (requests.exceptions.ConnectionError,)
         with pytest.raises(expected_ssl_errors) as ssl_err:
             make_https_request().close()
 
