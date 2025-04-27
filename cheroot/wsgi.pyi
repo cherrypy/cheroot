@@ -42,7 +42,6 @@ class PathInfoDispatcher:
     def __init__(self, apps): ...
     def __call__(self, environ, start_response): ...
 
-
 WSGIServer = Server
 WSGIGateway = Gateway
 WSGIGateway_u0 = Gateway_u0
