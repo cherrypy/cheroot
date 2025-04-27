@@ -155,7 +155,7 @@ jobs:
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
       upstream-repository-id: ${{ env.UPSTREAM_REPOSITORY_ID }}
       publishing-to-testpypi-enabled: ${{ env.PUBLISHING_TO_TESTPYPI_ENABLED }}
-      is-debug-mode: ${{ runner.debug == '1' && false || true }}
+      is-debug-mode: ${{ toJSON(runner.debug == '1') }}
       changelog-patch-name: ${{ steps.changelog-patch-name.outputs.filename }}
       changelog-draft-name-md: >-
         ${{ steps.changelog-draft-name.outputs.filename-base }}.md
