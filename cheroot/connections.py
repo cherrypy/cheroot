@@ -32,7 +32,6 @@ except ImportError:
 
             Dummy function, since neither fcntl nor ctypes are available.
             """
-            pass
     else:
         def prevent_socket_inheritance(sock):
             """Mark the given socket fd as non-inheritable (Windows)."""
