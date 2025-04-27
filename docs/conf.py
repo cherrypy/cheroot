@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name
 """Configuration of Sphinx documentation generator."""
+from __future__ import annotations
 
 import os
 import sys
