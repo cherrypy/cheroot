@@ -666,7 +666,7 @@ def test_http_over_https_error(
 
     expect_fallback_response_over_plain_http = (
 
-            adapter_type == 'pyopenssl'
+        adapter_type == 'pyopenssl'
 
     )
     if expect_fallback_response_over_plain_http:
