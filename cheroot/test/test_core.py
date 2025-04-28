@@ -311,25 +311,31 @@ def test_large_request(test_client_with_defaults):
     (
         (
             b'GET /',  # missing proto
-            HTTP_BAD_REQUEST, b'Malformed Request-Line',
+            HTTP_BAD_REQUEST,
+            b'Malformed Request-Line',
         ),
         (
             b'GET / HTTPS/1.1',  # invalid proto
-            HTTP_BAD_REQUEST, b'Malformed Request-Line: bad protocol',
+            HTTP_BAD_REQUEST,
+            b'Malformed Request-Line: bad protocol',
         ),
         (
             b'GET / HTTP/1',  # invalid version
-            HTTP_BAD_REQUEST, b'Malformed Request-Line: bad version',
+            HTTP_BAD_REQUEST,
+            b'Malformed Request-Line: bad version',
         ),
         (
             b'GET / HTTP/2.15',  # invalid ver
-            HTTP_VERSION_NOT_SUPPORTED, b'Cannot fulfill request',
+            HTTP_VERSION_NOT_SUPPORTED,
+            b'Cannot fulfill request',
         ),
     ),
 )
 def test_malformed_request_line(
-    test_client, request_line,
-    status_code, expected_body,
+    test_client,
+    request_line,
+    status_code,
+    expected_body,
 ):
     """Test missing or invalid HTTP version in Request-Line."""
     c = test_client.get_connection()

@@ -65,7 +65,8 @@ def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
         git_executable = 'git'
         git_log_cmd = (  # noqa: WPS317
             git_executable,
-            '-c', 'core.pager=',  # prevents ANSI escape sequences
+            '-c',
+            'core.pager=',  # prevents ANSI escape sequences
             'log',
             '-1',
             '--pretty=%ct',  # noqa: WPS323
@@ -75,14 +76,14 @@ def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
         tox_env.conf['allowlist_externals'].pop()
         if git_log_outcome.exit_code:
             _log_warning_before_run_commands(
-                f'Failed to look up Git HEAD timestamp. {git_log_outcome !s}',
+                f'Failed to look up Git HEAD timestamp. {git_log_outcome!s}',
             )
             return
 
         git_head_timestamp = git_log_outcome.out.strip()
 
         _log_info_before_run_commands(
-            f'Setting `SOURCE_DATE_EPOCH={git_head_timestamp !s}` environment '
+            f'Setting `SOURCE_DATE_EPOCH={git_head_timestamp!s}` environment '
             'variable to facilitate build reproducibility...',
         )
         tox_env.environment_variables['SOURCE_DATE_EPOCH'] = git_head_timestamp
@@ -104,7 +105,7 @@ def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
         tox_env.conf['allowlist_externals'].pop()
     else:
         _log_debug_before_run_commands(
-            f'Not running {systeminfo_executable !s} because this is '
+            f'Not running {systeminfo_executable!s} because this is '
             'not Windows...',
         )
 
@@ -142,7 +143,7 @@ def _compute_sha256sum(file_path: Path) -> str:
 
 def _produce_sha256sum_line(file_path: Path) -> str:
     sha256_str = _compute_sha256sum(file_path)
-    return f'{sha256_str !s}  {file_path.name !s}'
+    return f'{sha256_str!s}  {file_path.name!s}'
 
 
 @impl
@@ -171,7 +172,7 @@ def tox_after_run_commands(tox_env: ToxEnv) -> None:
         ) as outputs_file:
             print(  # noqa: T201, WPS421
                 'combined-dists-base64-encoded-sha256-hash='
-                f'{emulated_base64_w0_output !s}',
+                f'{emulated_base64_w0_output!s}',
                 file=outputs_file,
             )
 

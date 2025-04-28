@@ -52,6 +52,7 @@ def interface(host):
 try:
     # Jython support
     if sys.platform[:4] == 'java':
+
         def getchar():
             """Get a key press."""
             # Hopefully this is enough
@@ -147,9 +148,7 @@ class WebCase(unittest.TestCase):
             self.HTTP_CONN.close()
 
         self.HTTP_CONN = (
-            self.get_conn(auto_open=auto_open)
-            if on
-            else self._Conn
+            self.get_conn(auto_open=auto_open) if on else self._Conn
         )
 
     @property
@@ -170,8 +169,13 @@ class WebCase(unittest.TestCase):
         return interface(self.HOST)
 
     def getPage(
-        self, url, headers=None, method='GET', body=None,
-        protocol=None, raise_subcls=(),
+        self,
+        url,
+        headers=None,
+        method='GET',
+        body=None,
+        protocol=None,
+        raise_subcls=(),
     ):
         """Open the url with debugging support.
 
@@ -208,8 +212,14 @@ class WebCase(unittest.TestCase):
         self.time = None
         start = time.time()
         result = openURL(
-            url, headers, method, body, self.HOST, self.PORT,
-            self.HTTP_CONN, protocol or self.PROTOCOL,
+            url,
+            headers,
+            method,
+            body,
+            self.HOST,
+            self.PORT,
+            self.HTTP_CONN,
+            protocol or self.PROTOCOL,
             raise_subcls=raise_subcls,
             ssl_context=self.ssl_context,
         )
@@ -218,8 +228,7 @@ class WebCase(unittest.TestCase):
 
         # Build a list of request cookies from the previous response cookies.
         self.cookies = [
-            ('Cookie', v) for k, v in self.headers
-            if k.lower() == 'set-cookie'
+            ('Cookie', v) for k, v in self.headers if k.lower() == 'set-cookie'
         ]
 
         if ServerError.on:
@@ -302,11 +311,7 @@ class WebCase(unittest.TestCase):
 
     def status_matches(self, expected):
         """Check whether actual status matches expected."""
-        actual = (
-            self.status_code
-            if isinstance(expected, int) else
-            self.status
-        )
+        actual = self.status_code if isinstance(expected, int) else self.status
         return expected == actual
 
     def assertStatus(self, status, msg=None):
@@ -389,7 +394,8 @@ class WebCase(unittest.TestCase):
         if value != self.body:
             if msg is None:
                 msg = 'expected body:\n%r\n\nactual body:\n%r' % (
-                    value, self.body,
+                    value,
+                    self.body,
                 )
             self._handlewebError(msg)
 
@@ -490,9 +496,15 @@ def openURL(*args, raise_subcls=(), **kwargs):
 
 
 def _open_url_once(
-    url, headers=None, method='GET', body=None,
-    host='127.0.0.1', port=8000, http_conn=http.client.HTTPConnection,
-    protocol='HTTP/1.1', ssl_context=None,
+    url,
+    headers=None,
+    method='GET',
+    body=None,
+    host='127.0.0.1',
+    port=8000,
+    http_conn=http.client.HTTPConnection,
+    protocol='HTTP/1.1',
+    ssl_context=None,
 ):
     """Open the given HTTP resource and return status, headers, and body."""
     headers = cleanHeaders(headers, method, body, host, port)
@@ -510,7 +522,9 @@ def _open_url_once(
     if isinstance(url, bytes):
         url = url.decode()
     conn.putrequest(
-        method.upper(), url, skip_host=True,
+        method.upper(),
+        url,
+        skip_host=True,
         skip_accept_encoding=True,
     )
     for key, value in headers:

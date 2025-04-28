@@ -43,7 +43,8 @@ def test_connection_keepalive(simple_wsgi_server):
     """Test the connection keep-alive works (duh)."""
     session = Session(base_url=simple_wsgi_server['url'])
     pooled = requests.adapters.HTTPAdapter(
-        pool_connections=1, pool_maxsize=1000,
+        pool_connections=1,
+        pool_maxsize=1000,
     )
     session.mount('http://', pooled)
 

@@ -4,6 +4,7 @@
 
    cli
 """
+
 import sys
 
 import pytest
@@ -50,6 +51,7 @@ def test_parse_wsgi_bind_addr(raw_bind_addr, expected_bind_addr):
 @pytest.fixture
 def wsgi_app(monkeypatch):
     """Return a WSGI app stub."""
+
     class WSGIAppMock:
         """Mock of a wsgi module."""
 
@@ -69,6 +71,7 @@ def wsgi_app(monkeypatch):
             It has an empty body because we are expecting to verify that
             the same method is return no the actual execution of it.
             """
+
     app = WSGIAppMock()
     # patch sys.modules, to include the an instance of WSGIAppMock
     # under a specific namespace

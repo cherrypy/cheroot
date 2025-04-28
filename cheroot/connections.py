@@ -19,6 +19,7 @@ except ImportError:
     try:
         import ctypes.wintypes
         from ctypes import WinError, windll
+
         _SetHandleInformation = windll.kernel32.SetHandleInformation
         _SetHandleInformation.argtypes = [
             ctypes.wintypes.HANDLE,
@@ -27,17 +28,20 @@ except ImportError:
         ]
         _SetHandleInformation.restype = ctypes.wintypes.BOOL
     except ImportError:
+
         def prevent_socket_inheritance(sock):
             """Stub inheritance prevention.
 
             Dummy function, since neither fcntl nor ctypes are available.
             """
     else:
+
         def prevent_socket_inheritance(sock):
             """Mark the given socket fd as non-inheritable (Windows)."""
             if not _SetHandleInformation(sock.fileno(), 1, 0):
                 raise WinError()
 else:
+
     def prevent_socket_inheritance(sock):
         """Mark the given socket fd as non-inheritable (POSIX)."""
         fd = sock.fileno()
@@ -129,7 +133,8 @@ class ConnectionManager:
 
         self._selector.register(
             server.socket.fileno(),
-            selectors.EVENT_READ, data=server,
+            selectors.EVENT_READ,
+            data=server,
         )
 
     def put(self, conn):
@@ -145,7 +150,9 @@ class ConnectionManager:
             self.server.process_conn(conn)
         else:
             self._selector.register(
-                conn.socket.fileno(), selectors.EVENT_READ, data=conn,
+                conn.socket.fileno(),
+                selectors.EVENT_READ,
+                data=conn,
             )
 
     def _expire(self, threshold):
@@ -235,7 +242,7 @@ class ConnectionManager:
                 self._remove_invalid_sockets()
                 continue
 
-            for (sock_fd, conn) in active_list:
+            for sock_fd, conn in active_list:
                 if conn is self.server:
                     # New connection
                     new_conn = self._from_server_socket(self.server.socket)
@@ -294,17 +301,17 @@ class ConnectionManager:
                     s, ssl_env = self.server.ssl_adapter.wrap(s)
                 except errors.FatalSSLAlert as tls_connection_drop_error:
                     self.server.error_log(
-                        f'Client {addr !s} lost — peer dropped the TLS '
+                        f'Client {addr!s} lost — peer dropped the TLS '
                         'connection suddenly, during handshake: '
-                        f'{tls_connection_drop_error !s}',
+                        f'{tls_connection_drop_error!s}',
                     )
                     return None
                 except errors.NoSSLError as http_over_https_err:
                     self.server.error_log(
-                        f'Client {addr !s} attempted to speak plain HTTP into '
+                        f'Client {addr!s} attempted to speak plain HTTP into '
                         'a TCP connection configured for TLS-only traffic — '
                         'trying to send back a plain HTTP error response: '
-                        f'{http_over_https_err !s}',
+                        f'{http_over_https_err!s}',
                     )
                     msg = (
                         'The client sent a plain HTTP request, but '
@@ -376,7 +383,7 @@ class ConnectionManager:
 
     def close(self):
         """Close all monitored connections."""
-        for (_, conn) in self._selector.connections:
+        for _, conn in self._selector.connections:
             if conn is not self.server:  # server closes its own socket
                 conn.close()
         self._selector.close()
