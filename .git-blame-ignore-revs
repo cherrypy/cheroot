@@ -8,3 +8,5 @@ b234de9e9d3ca6a3ba5ad4efe87f2347045c19b4
 39bf4f0995b4b8373d5080dadb875a579bc091bb  # Format all Python modules with `isort`
 
 0c6ee756904012796b92638ee362026ec5bbd16a  # Format w/ add-trailing-comma + autopep8
+
+cebe3fad062ea98dfd2221814c8c228ca963b94e  # Mass-format everything with Ruff
