@@ -1,0 +1,216 @@
+line-length = 79  # Accessibility-friendly
+
+namespace-packages = [
+  "bin/",
+  "cheroot/test/",
+  "docs/",
+]
+
+[lint]
+ignore = [
+  "CPY001",  # Skip copyright notice requirement at top of files
+
+  # Legitimate cases, no need to "fix" these violations:
+  # E501: "line too long", its function is replaced by `flake8-length`
+  "E501",
+  # W505: "doc line too long", its function is replaced by `flake8-length`
+  "W505",
+
+  "A001",  # builtin-variable-shadowing  # FIXME
+  "A002",  # builtin-argument-shadowing  # FIXME / noqa
+
+  # FIXME: These `flake8-annotations` errors need fixing and removal
+  # ANN001: Missing type annotation for function argument 'argv'
+  "ANN001",
+  # ANN002: Missing type annotation for *exceptions
+  "ANN002",
+  # ANN003: Missing type annotation for **kwargs
+  "ANN003",
+  # ANN201: Missing return type annotation for public function
+  "ANN201",
+  # ANN202: Missing return type annotation for protected function
+  "ANN202",
+  # ANN204: Missing return type annotation for special method
+  "ANN204",
+  # ANN205: Missing return type annotation for staticmethod
+  "ANN205",
+  # ANN206: Missing return type annotation for classmethod
+  "ANN206",
+  "ANN401",  # any-type  # FIXME
+
+  "ARG001",  # unused-function-argument  # FIXME
+  "ARG002",  # unused-method-argument  # FIXME
+  "ARG005",  # unused-lambda-argument  # FIXME
+
+  "B904",  # raise-without-from-inside-except  # FIXME
+
+  "BLE001",  # blind-except  # FIXME / noqa
+
+  # Refs:
+  # * https://github.com/astral-sh/ruff/issues/6606
+  # * https://github.com/astral-sh/ruff/pull/13286
+  "DOC201",  # Ruff doesn't understand sphinx-native param lists
+  "DOC402",  # docstring-missing-yields  # Ruff doesn't understand sphinx-native param lists
+  "DOC501",  # docstring-missing-exception  # Ruff doesn't understand sphinx-native param lists
+
+  "EM101",  # raw-string-in-exception  # FIXME
+  "EM102",  # f-string-in-exception  # FIXME
+
+  # Ref: https://github.com/astral-sh/ruff/issues/4845#issuecomment-2816845547
+  "ERA001",  # False-positives in commented-out code
+
+  "FBT002",  # boolean-default-value-positional-argument  # FIXME / noqa
+  "FBT003",  # boolean-positional-value-in-call  # FIXME / noqa
+
+  "FIX001",  # line-contains-fixme  # FIXME
+  "FIX002",  # line-contains-todo  # FIXME / noqa
+
+  "FLY002",  # static-join-to-f-string  # FIXME
+
+  "FURB101",  # read-whole-file  # FIXME
+  "FURB116",  # f-string-number-format  # FIXME
+
+  "N801",  # invalid-class-name  # FIXME / noqa
+  "N802",  # invalid-function-name  # FIXME
+  "N806",  # non-lowercase-variable-in-function  # FIXME
+  "N818",  # error-suffix-on-exception-name  # FIXME / noqa
+
+  "PERF102",  # incorrect-dict-iterator  # FIXME
+  "PERF203",  # try-except-in-loop  # FIXME / noqa
+
+  "PGH004",  # blanket-noqa  # FIXME
+
+  "PLC0415",  # import-outside-top-level  # FIXME
+  "PLC2701",  # import-private-name  # FIXME
+
+  "PLR0911",  # too-many-return-statements  # FIXME
+  "PLR0912",  # too-many-branches  # FIXME
+  "PLR0913",  # too-many-arguments  # FIXME / noqa
+  "PLR0914",  # too-many-locals  # FIXME / noqa
+  "PLR0915",  # too-many-statements  # FIXME / noqa
+  "PLR0916",  # too-many-boolean-expressions  # FIXME
+  "PLR0917",  # too-many-positional-arguments  # FIXME / noqa
+  "PLR1702",  # too-many-nested-blocks  # FIXME
+  "PLR2004",  # magic-value-comparison  # FIXME
+  "PLR6104",  # non-augmented-assignment  # FIXME
+  "PLR6301",  # no-self-use  # FIXME / noqa
+
+  "PLW1514",  # unspecified-encoding  # FIXME
+
+  "PTH100",  # os-path-abspath  # FIXME
+  "PTH101",  # os-chmod  # FIXME
+  "PTH108",  # os-unlink  # FIXME
+  "PTH113",  # os-path-isfile  # FIXME
+  "PTH118",  # os-path-join  # FIXME
+  "PTH120",  # os-path-dirname  # FIXME
+  "PTH123",  # builtin-open  # FIXME
+
+  "PYI001",  # unprefixed-type-param  # FIXME
+  "PYI024",  # collections-named-tuple  # FIXME
+
+  "RUF005",  # collection-literal-concatenation  # FIXME
+  "RUF012",  # mutable-class-default  # FIXME
+  "RUF043",  # pytest-raises-ambiguous-pattern  # FIXME
+  "RUF048",  # map-int-version-parsing  # FIXME
+  "RUF052",  # used-dummy-variable  # FIXME
+  "RUF100",  # Ruff doesn't know about WPS
+  "RUF102",  # Ruff doesn't know about WPS
+
+  "S104",  # hardcoded-bind-all-interfaces  # FIXME / noqa
+
+  "SIM102",  # collapsible-if  # FIXME
+  "SIM108",  # if-else-block-instead-of-if-exp  # FIXME
+  "SIM117",  # multiple-with-statements  # FIXME
+
+  "SLF001",  # private-member-access  # FIXME / noqa
+
+  "T201",  # print  # FIXME
+  "T203",  # p-print  # FIXME
+
+  "TC002",  # typing-only-third-party-import  # FIXME
+
+  "TD001",   # invalid-todo-tag  # FIXME
+  "TD002",   # missing-todo-author  # FIXME
+  "TD003",   # missing-todo-link  # FIXME
+  "TD004",   # missing-todo-colon  # FIXME
+  "TD005",   # missing-todo-description  # FIXME
+
+  "TID252",  # relative-imports  # TODO: figure this out
+
+  "TRY003",  # raise-vanilla-args  # controversial
+  "TRY004",  # type-check-without-type-error  # FIXME
+  "TRY300",  # try-consider-else  # FIXME
+  "TRY301",  # raise-within-try  # FIXME
+
+  "UP006",  # non-pep585-annotation  # FIXME
+  "UP007",  # non-pep604-annotation-union  # FIXME
+  "UP008",  # super-call-with-parameters  # FIXME
+  "UP024",  # os-error-alias  # FIXME
+  "UP030",  # format-literals  # FIXME
+  "UP031",  # printf-string-formatting  # FIXME
+  "UP045",  # non-pep604-annotation-optional  # FIXME
+]
+preview = true  # Live dangerously
+select = [
+  "ALL",
+]
+task-tags = [
+  "FIXME",
+  "NOTE",
+  "Ref",
+  "Refs",
+  "TODO",
+]
+
+[lint.flake8-pytest-style]
+parametrize-values-type = "tuple"
+
+[lint.flake8-quotes]
+inline-quotes = "single"
+
+[lint.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+lines-after-imports = 2
+section-order = [
+  "future",
+  "standard-library",
+  "testing",
+  "frameworks",
+  "platforms",
+  "third-party",
+  "first-party",
+  "local-folder",
+]
+
+[lint.isort.sections]
+frameworks = [
+  # "awx",
+  # "django",
+]
+platforms = [
+  # "awx_plugins.interfaces",
+]
+testing = [
+  "hypothesis",
+  "pytest",
+  "pytest_mock",
+  "pytest_subtests",
+]
+
+
+[lint.per-file-ignores]
+# Exceptions for test files
+"cheroot/test/**.py" = [
+  "ARG002",  # Allow unused arguments in instance methods (required for test stubs)
+  "ARG004",  # unused-static-method-argument (hit in WSGI test apps)
+  "PLC2701",  # Allow importing internal files needed for testing
+  # "PLR6301",  # Allow 'self' parameter in method definitions (required for test stubs)
+  "S101",  # Allow use of `assert` in test files
+  "S404",  # Allow importing 'subprocess' module to testing call external tools needed by these hooks
+  "S603",  # subprocess-without-shell-equals-true
+  "SLF001",  # Private member accessed
+]
+
+[lint.pydocstyle]
+convention = "pep257"
