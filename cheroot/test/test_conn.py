@@ -903,24 +903,22 @@ def test_remains_alive_post_unhandled_exception(
     class ScaryCrash(BaseException):  # noqa: WPS418, WPS431
         """A simulated crash during HTTP parsing."""
 
-    _orig_read_request_line = (
-        test_client.server_instance.
-        ConnectionClass.RequestHandlerClass.
-        read_request_line
-    )
+    _orig_conn_class = test_client.server_instance.ConnectionClass
+    _orig_req_handler_class = _orig_conn_class.RequestHandlerClass
+    _orig_read_request_line = _orig_req_handler_class.read_request_line
 
     def _read_request_line(self):
         _orig_read_request_line(self)
         raise ScaryCrash(666)
 
     monkeypatch.setattr(
-        test_client.server_instance.ConnectionClass.RequestHandlerClass,
+        _orig_req_handler_class,
         'read_request_line',
         _read_request_line,
     )
 
     server_connection_close_spy = mocker.spy(
-        test_client.server_instance.ConnectionClass,
+        _orig_conn_class,
         'close',
     )
 
