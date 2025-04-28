@@ -6,6 +6,9 @@ namespace-packages = [
   "docs/",
 ]
 
+[format]
+quote-style = "single"
+
 [lint]
 ignore = [
   "CPY001",  # Skip copyright notice requirement at top of files
