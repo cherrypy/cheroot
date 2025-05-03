@@ -665,6 +665,7 @@ jobs:
         runner-vm-os:
         - ubuntu-24.04-arm
         - ubuntu-24.04
+        - macos-15
         - windows-2022
         - ubuntu-22.04
         - macos-13
