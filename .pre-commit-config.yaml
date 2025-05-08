@@ -56,7 +56,7 @@ repos:
     - file
     - rst
 
-- repo: https://github.com/Kludex/no-optional
+- repo: https://github.com/Kludex/no-optional.git
   rev: 0.4.0
   hooks:
   - id: no_optional
