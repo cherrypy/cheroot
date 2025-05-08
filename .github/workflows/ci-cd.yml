@@ -118,7 +118,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 1
+    timeout-minutes: 2  # network is slow sometimes when fetching from Git
 
     defaults:
       run:
