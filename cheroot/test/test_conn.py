@@ -8,6 +8,7 @@ import time
 import traceback as traceback_
 import urllib.request
 from collections import namedtuple
+from contextlib import suppress as _suppress_exceptions
 from re import match as _matches_pattern
 
 import pytest
@@ -950,7 +951,9 @@ def test_remains_alive_post_unhandled_exception(
     _orig_read_request_line = _orig_req_handler_class.read_request_line
 
     def _read_request_line(self):
-        _orig_read_request_line(self)
+        with _suppress_exceptions(TimeoutError):
+            _orig_read_request_line(self)
+
         raise ScaryCrash(666)
 
     monkeypatch.setattr(
