@@ -228,7 +228,7 @@ typing-extensions==4.11.0
     #   domdf-python-tools
     #   inflect
     #   typeguard
-urllib3==1.26.18
+urllib3==1.26.19
     # via
     #   -r requirements/tests.in
     #   requests
