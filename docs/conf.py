@@ -116,8 +116,10 @@ linkcheck_ignore = [
     # Too many links to GitHub so they cause
     # "429 Client Error: too many requests for url"
     # Ref: https://github.com/sphinx-doc/sphinx/issues/7388
+    r'https://github.com/cherrypy/cheroot/commit'
     r'https://github\.com/cherrypy/cheroot/issues',
     r'https://github\.com/cherrypy/cheroot/pull',
+    r'https://github.com/cherrypy/cherrypy/commit'
     r'https://github\.com/cherrypy/cherrypy/issues',
     r'https://github\.com/cherrypy/cherrypy/pull',
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
