@@ -625,7 +625,17 @@ jobs:
           && needs.pre-setup.outputs.sdist-artifact-name
           || ''
         }}
-      timeout-minutes: 3
+      # NOTE: `pre-commit` and `sphinxcontrib-spellcheck` both depend on Git.
+      # NOTE: They may get slower due to network I/O, hence bigger timeout.
+      timeout-minutes: >-
+        ${{
+          !contains(
+            fromJSON('["pre-commit", "spellcheck-docs"]'),
+            matrix.toxenv
+          )
+          && 4
+          || 2
+        }}
       toxenv: >-
         ${{ matrix.toxenv }}
       tox-tool-deps: tox
