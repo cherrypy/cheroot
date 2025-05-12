@@ -685,6 +685,13 @@ jobs:
           python-version: pypy-3.11
         - runner-vm-os: windows-2019
           python-version: pypy-3.11
+        # NOTE: macOS PyPy 3.11 jobs are excluded because they flakily
+        # NOTE: crash `pytest-xdist` workers.
+        # NOTE: They should be re-added once it's fixed.
+        - runner-vm-os: macos-15
+          python-version: pypy-3.11
+        - runner-vm-os: macos-13
+          python-version: pypy-3.11
 
     uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@208490c75f7f6b81e2698cc959f24d264c462d57  # yamllint disable-line rule:line-length
     with:
