@@ -17,7 +17,7 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
 
-    timeout-minutes: 1
+    timeout-minutes: 2
 
     permissions:
       actions: read
