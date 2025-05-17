@@ -132,6 +132,13 @@ linkcheck_ignore = [
     r'^https://matrix\.to/#',  # these render fully on front-end from anchors
     r'^https://stackoverflow\.com/',  # these generate HTTP 403 Forbidden
 ]
+linkcheck_anchors_ignore = [
+    r'^!',  # default
+    # ignore anchors that start with a '/', e.g. Wikipedia media files:
+    # https://en.wikipedia.org/wiki/Walrus#/media/File:Pacific_Walrus_-_Bull_(8247646168).jpg
+    r'\/.*',
+    r'issuecomment-\d+',  # GitHub comments
+]
 linkcheck_workers = 25
 
 # -- Options for sphinx.ext.autosectionlabel extension -----------------------
