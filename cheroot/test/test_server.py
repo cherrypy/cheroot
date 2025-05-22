@@ -570,3 +570,32 @@ def test_threadpool_multistart_validation(monkeypatch):
         match='Threadpools can only be started once.',
     ):
         tp.start()
+
+
+def test_overload_results_in_suitable_http_error(request):
+    """A server that can't keep up with requests returns a 503 HTTP error."""
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway
+    )
+    # Can only handle on request in parallel:
+    httpserver.requests = ThreadPool(
+         min=1, max=1, accepted_queue_size=1,
+         accepted_queue_timeout=0, server=httpserver
+    )
+
+    httpserver.prepare()
+    serve_thread = threading.Thread(target=httpserver.serve)
+    serve_thread.start()
+    request.addfinalizer(httpserver.stop)
+    # Stop the thread pool to ensure the queue fills up:
+    httpserver.requests.stop()
+
+    host, port = httpserver.bind_addr
+
+    # Use up the very limited thread pool queue we've set up, so future
+    # requests fail:
+    httpserver.requests._queue.put(None)
+
+    response = requests.get(f"http://{host}:{port}", timeout=5)
+    assert response.status_code == 503

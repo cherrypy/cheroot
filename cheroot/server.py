@@ -1658,6 +1658,8 @@ class HTTPServer:
         self.reuse_port = reuse_port
         self.clear_stats()
 
+        self._unservicable_conns = queue.Queue()
+
     def clear_stats(self):
         """Reset server stat counters.."""
         self._start_time = None
@@ -1866,8 +1868,26 @@ class HTTPServer:
         self.ready = True
         self._start_time = time.time()
 
+    def _serve_unservicable(self):
+        """Serve connections we can't handle a 503."""
+        while self.ready:
+            conn = self._unservicable_conns.get()
+            if conn is None:
+                return
+            request = HTTPRequest(self, conn)
+            try:
+                request.simple_response("503 Service Unavailable")
+            except Exception as ex:
+                self.server.error_log(
+                    repr(ex),
+                    level=logging.ERROR,
+                    traceback=True,
+                )
+            conn.close()
+
     def serve(self):
         """Serve requests, after invoking :func:`prepare()`."""
+        threading.Thread(target=self._serve_unservicable).start()
         while self.ready and not self.interrupt:
             try:
                 self._connections.run(self.expiration_interval)
@@ -2162,8 +2182,7 @@ class HTTPServer:
         try:
             self.requests.put(conn)
         except queue.Full:
-            # Just drop the conn. TODO: write 503 back?
-            conn.close()
+            self._unservicable_conns.put(conn)
 
     @property
     def interrupt(self):
@@ -2201,6 +2220,7 @@ class HTTPServer:
             return  # already stopped
 
         self.ready = False
+        self._unservicable_conns.put(None)
         if self._start_time is not None:
             self._run_time += time.time() - self._start_time
         self._start_time = None
