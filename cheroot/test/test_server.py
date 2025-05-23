@@ -576,12 +576,15 @@ def test_overload_results_in_suitable_http_error(request):
     """A server that can't keep up with requests returns a 503 HTTP error."""
     httpserver = HTTPServer(
         bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
-        gateway=Gateway
+        gateway=Gateway,
     )
     # Can only handle on request in parallel:
     httpserver.requests = ThreadPool(
-         min=1, max=1, accepted_queue_size=1,
-         accepted_queue_timeout=0, server=httpserver
+        min=1,
+        max=1,
+        accepted_queue_size=1,
+        accepted_queue_timeout=0,
+        server=httpserver,
     )
 
     httpserver.prepare()
@@ -597,5 +600,5 @@ def test_overload_results_in_suitable_http_error(request):
     # requests fail:
     httpserver.requests._queue.put(None)
 
-    response = requests.get(f"http://{host}:{port}", timeout=5)
+    response = requests.get(f'http://{host}:{port}', timeout=5)
     assert response.status_code == 503

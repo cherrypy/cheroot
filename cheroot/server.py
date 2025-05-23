@@ -1876,7 +1876,7 @@ class HTTPServer:
                 return
             request = HTTPRequest(self, conn)
             try:
-                request.simple_response("503 Service Unavailable")
+                request.simple_response('503 Service Unavailable')
             except Exception as ex:
                 self.server.error_log(
                     repr(ex),
