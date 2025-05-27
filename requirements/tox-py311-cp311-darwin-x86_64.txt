@@ -8,7 +8,7 @@ autocommand==2.2.2
     # via jaraco-text
 backports-tarfile==1.1.1
     # via jaraco-context
-certifi==2024.2.2
+certifi==2024.7.4
     # via requests
 cffi==1.16.0
     # via cryptography
