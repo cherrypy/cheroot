@@ -1,6 +1,5 @@
 """Tests for the HTTP server."""
 
-from http import HTTPStatus
 import os
 import queue
 import socket
@@ -9,6 +8,7 @@ import threading
 import types
 import urllib.parse  # noqa: WPS301
 import uuid
+from http import HTTPStatus
 
 import pytest
 
@@ -575,15 +575,18 @@ def test_threadpool_multistart_validation(monkeypatch):
 
 def test_overload_results_in_suitable_http_error(request):
     """A server that can't keep up with requests returns a 503 HTTP error."""
-    localhost = "127.0.0.1"
+    localhost = '127.0.0.1'
     httpserver = HTTPServer(
         bind_addr=(localhost, EPHEMERAL_PORT),
-        gateway=Gateway
+        gateway=Gateway,
     )
     # Can only handle on request in parallel:
     httpserver.requests = ThreadPool(
-         min=1, max=1, accepted_queue_size=1,
-         accepted_queue_timeout=0, server=httpserver
+        min=1,
+        max=1,
+        accepted_queue_size=1,
+        accepted_queue_timeout=0,
+        server=httpserver,
     )
 
     httpserver.prepare()
@@ -599,5 +602,5 @@ def test_overload_results_in_suitable_http_error(request):
     # requests fail:
     httpserver.requests._queue.put(None)
 
-    response = requests.get(f"http://127.0.0.1:{port}", timeout=20)
+    response = requests.get(f'http://127.0.0.1:{port}', timeout=20)
     assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE.value
