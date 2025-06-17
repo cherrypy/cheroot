@@ -101,6 +101,36 @@ __all__ = (
 )
 
 
+if sys.version_info[:2] >= (3, 13):
+    from queue import (
+        Queue as QueueWithShutdown,
+        ShutDown as QueueShutDown,
+    )
+else:
+
+    class QueueShutDown(Exception):
+        """Queue has been shut down."""
+
+    class QueueWithShutdown(queue.Queue):
+        """Add shutdown() similar to Python 3.13+ Queue."""
+
+        _queue_shut_down: bool = False
+
+        def shutdown(self, immediate=False):
+            if immediate:
+                while True:
+                    try:
+                        self.get_nowait()
+                    except queue.Empty:
+                        break
+            self._queue_shut_down = True
+
+        def get(self, *args, **kwargs):
+            if self._queue_shut_down:
+                raise QueueShutDown
+            return super().get(*args, **kwargs)
+
+
 IS_WINDOWS = platform.system() == 'Windows'
 """Flag indicating whether the app is running under Windows."""
 
@@ -1658,6 +1688,8 @@ class HTTPServer:
         self.reuse_port = reuse_port
         self.clear_stats()
 
+        self._unservicable_conns = QueueWithShutdown()
+
     def clear_stats(self):
         """Reset server stat counters.."""
         self._start_time = None
@@ -1866,8 +1898,39 @@ class HTTPServer:
         self.ready = True
         self._start_time = time.time()
 
+    def _serve_unservicable(self):
+        """Serve connections we can't handle a 503."""
+        while self.ready:
+            try:
+                conn = self._unservicable_conns.get()
+            except QueueShutDown:
+                return
+            request = HTTPRequest(self, conn)
+            try:
+                request.simple_response('503 Service Unavailable')
+            except (OSError, errors.FatalSSLAlert):
+                # We're sending the 503 error to be polite, it it fails that's
+                # fine.
+                continue
+            except Exception as ex:
+                # We can't just raise an exception because that will kill this
+                # thread, and prevent 503 errors from being sent to future
+                # connections.
+                self.server.error_log(
+                    repr(ex),
+                    level=logging.ERROR,
+                    traceback=True,
+                )
+            conn.linger = True
+            conn.close()
+
     def serve(self):
         """Serve requests, after invoking :func:`prepare()`."""
+        # This thread will handle unservicable connections, as added to
+        # self._unservicable_conns queue. It will run forever, until
+        # self.stop() tells it to shut down.
+        threading.Thread(target=self._serve_unservicable).start()
+
         while self.ready and not self.interrupt:
             try:
                 self._connections.run(self.expiration_interval)
@@ -2162,8 +2225,7 @@ class HTTPServer:
         try:
             self.requests.put(conn)
         except queue.Full:
-            # Just drop the conn. TODO: write 503 back?
-            conn.close()
+            self._unservicable_conns.put(conn)
 
     @property
     def interrupt(self):
@@ -2201,6 +2263,11 @@ class HTTPServer:
             return  # already stopped
 
         self.ready = False
+
+        # This tells the thread that handles unservicable connections to shut
+        # down:
+        self._unservicable_conns.shutdown(immediate=True)
+
         if self._start_time is not None:
             self._run_time += time.time() - self._start_time
         self._start_time = None
