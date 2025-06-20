@@ -273,7 +273,6 @@ class ThreadPool:
         self._threads = []
         self._queue = queue.Queue(maxsize=accepted_queue_size)
         self._queue_put_timeout = accepted_queue_timeout
-        self.get = self._queue.get
         self._pending_shutdowns = collections.deque()
 
     def start(self):
@@ -290,6 +289,24 @@ class ThreadPool:
         """Number of worker threads which are idle. Read-only."""  # noqa: D401
         idles = len([t for t in self._threads if t.conn is None])
         return max(idles - len(self._pending_shutdowns), 0)
+
+    def get(self):
+        """Get request from queue, and process SSL handshake is needed.
+
+        Return:
+            conn (:py:class:`~cheroot.server.HTTPConnection`): HTTP connection
+                 ready to be processed
+
+        """
+        conn = self._queue.get()
+        ssl_adapter = self.server.ssl_adapter
+        check_for_ssl_handshake = (
+            ssl_adapter is not None and
+            getattr(ssl_adapter, 'do_handshake', None) is not None
+        )
+        if check_for_ssl_handshake:
+            ssl_adapter.do_handshake(conn)
+        return conn
 
     def put(self, obj):
         """Put request into queue.
