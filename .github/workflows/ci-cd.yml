@@ -633,7 +633,7 @@ jobs:
           matrix.toxenv == 'linkcheck-docs'
           && 10
           || (
-            !contains(
+            contains(
               fromJSON('["pre-commit", "spellcheck-docs"]'),
               matrix.toxenv
             )
