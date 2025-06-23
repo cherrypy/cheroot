@@ -131,6 +131,7 @@ linkcheck_ignore = [
     r'^https://img\.shields\.io/matrix',  # these are rate-limited
     r'^https://matrix\.to/#',  # these render fully on front-end from anchors
     r'^https://stackoverflow\.com/',  # these generate HTTP 403 Forbidden
+    r'^https://forums\.sabnzbd\.org/',  # these generate HTTP 403 Forbidden
 ]
 linkcheck_anchors_ignore = [
     r'^!',  # default

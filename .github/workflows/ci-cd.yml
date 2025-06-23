@@ -633,7 +633,7 @@ jobs:
           matrix.toxenv == 'linkcheck-docs'
           && 10
           || (
-            !contains(
+            contains(
               fromJSON('["pre-commit", "spellcheck-docs"]'),
               matrix.toxenv
             )
@@ -684,10 +684,10 @@ jobs:
         - ubuntu-24.04-arm
         - ubuntu-24.04
         - macos-15
-        - windows-2022
+        - windows-2025
         - ubuntu-22.04
         - macos-13
-        - windows-2019
+        - windows-2022
         toxenv:
         - py
         xfail:
@@ -696,9 +696,9 @@ jobs:
         # NOTE: Windows PyPy 3.11 jobs are excluded because of UTF-8
         # NOTE: encoding bugs in tox.
         # NOTE: They should be re-added once it's fixed.
-        - runner-vm-os: windows-2022
+        - runner-vm-os: windows-2025
           python-version: pypy-3.11
-        - runner-vm-os: windows-2019
+        - runner-vm-os: windows-2022
           python-version: pypy-3.11
         # NOTE: macOS PyPy 3.11 jobs are excluded because they flakily
         # NOTE: crash `pytest-xdist` workers.
