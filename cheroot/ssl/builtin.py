@@ -276,9 +276,12 @@ class BuiltinSSLAdapter(Adapter):
         try:
             s = self.context.wrap_socket(
                 sock,
-                do_handshake_on_connect=True,
+                do_handshake_on_connect=False,  # Changed to False
                 server_side=True,
             )
+            # Perform handshake manually with timeout
+            s.settimeout(10)  # 10 second timeout for handshake
+            s.do_handshake()
         except (
             ssl.SSLEOFError,
             ssl.SSLZeroReturnError,
@@ -303,6 +306,8 @@ class BuiltinSSLAdapter(Adapter):
             raise errors.FatalSSLAlert(
                 *tcp_connection_drop_error.args,
             ) from tcp_connection_drop_error
+        finally:
+            s.settimeout(None)  # Reset timeout to blocking mode
 
         return s, self.get_environ(s)
 
