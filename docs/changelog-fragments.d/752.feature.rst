@@ -1,0 +1,2 @@
+Added optional private key password argument to SSL adapters to support password-protected private keys
+-- by :user:`jatalahd`.
