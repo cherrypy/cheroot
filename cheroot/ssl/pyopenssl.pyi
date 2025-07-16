@@ -37,8 +37,8 @@ class pyOpenSSLAdapter(Adapter):
     def wrap(self, sock): ...
     def _password_callback(
         self,
-        password_max_length: int,
-        verify_twice: bool,
+        _password_max_length: int,
+        _verify_twice: bool,
         password: bytes | str,
     ) -> bytes: ...
     def get_environ(self): ...

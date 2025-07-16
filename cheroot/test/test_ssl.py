@@ -166,7 +166,9 @@ def create_private_key_with_password(key_password):
             crypto.FILETYPE_PEM,
             key_object,
             cipher='aes256',
-            passphrase=key_password.encode('utf-8'),
+            passphrase=key_password
+            if isinstance(key_password, bytes)
+            else key_password.encode('utf-8'),
         ),
     )
 
@@ -791,6 +793,8 @@ def test_http_over_https_error(
     (
         ('builtin', 'Pw-1234'),
         ('pyopenssl', 'Pw-4567'),
+        ('builtin', b'Pw-12345'),
+        ('pyopenssl', b'Pw-45678'),
     ),
 )
 def test_ssl_adapters_with_private_key_password(
@@ -855,7 +859,7 @@ def test_openssl_adapter_with_false_key_password(
     adapter_type,
     key_password,
 ):
-    """Check that openssl ssl-adapter server init fails when wrong private key password given."""
+    """Check that server init fails when wrong private key password given."""
     key_file, cert_file = create_private_key_with_password
 
     httpserver = HTTPServer(
