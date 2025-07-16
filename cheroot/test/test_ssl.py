@@ -1,5 +1,6 @@
 """Tests for TLS support."""
 
+import contextlib
 import functools
 import http.client
 import json
@@ -16,6 +17,13 @@ import pytest
 import OpenSSL.SSL
 import requests
 import trustme
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import (
+    BestAvailableEncryption,
+    Encoding,
+    PrivateFormat,
+    load_pem_private_key,
+)
 
 from .._compat import (
     IS_ABOVE_OPENSSL10,
@@ -31,7 +39,7 @@ from .._compat import (
     ntob,
     ntou,
 )
-from ..server import HTTPServer, get_ssl_adapter_class
+from ..server import Gateway, HTTPServer, get_ssl_adapter_class
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -138,6 +146,12 @@ def make_tls_http_server(bind_addr, ssl_adapter, request):
     return httpserver
 
 
+@pytest.fixture(scope='session')
+def private_key_password():
+    """Provide hardcoded password for private key."""
+    return 'криївка'
+
+
 @pytest.fixture
 def tls_http_server(request):
     """Provision a server creator as a fixture."""
@@ -176,6 +190,34 @@ def tls_certificate_private_key_pem_path(tls_certificate):
     """Provide a certificate private key PEM file path via fixture."""
     with tls_certificate.private_key_pem.tempfile() as cert_key_pem:
         yield cert_key_pem
+
+
+@pytest.fixture
+def tls_certificate_passwd_private_key_pem_path(
+    tls_certificate,
+    private_key_password,
+    tmp_path,
+):
+    """Provide a certificate private key PEM file path via fixture."""
+    key_as_bytes = tls_certificate.private_key_pem.bytes()
+    private_key_object = load_pem_private_key(
+        key_as_bytes,
+        password=None,
+        backend=default_backend(),
+    )
+
+    encrypted_key_as_bytes = private_key_object.private_bytes(
+        encoding=Encoding.PEM,
+        format=PrivateFormat.PKCS8,
+        encryption_algorithm=BestAvailableEncryption(
+            password=private_key_password.encode('utf-8'),
+        ),
+    )
+
+    key_file = tmp_path / 'encrypted-private-key.pem'
+    key_file.write_bytes(encrypted_key_as_bytes)
+
+    return key_file
 
 
 def _thread_except_hook(exceptions, args):
@@ -757,3 +799,141 @@ def test_http_over_https_error(
         'The underlying error is {underlying_error!r}'.format(**locals())
     )
     assert expected_error_text in err_text
+
+
+@pytest.mark.parametrize('adapter_type', ('builtin', 'pyopenssl'))
+@pytest.mark.parametrize(
+    'encrypted_key',
+    (True, False),
+    ids=('encrypted-key', 'unencrypted-key'),
+)
+@pytest.mark.parametrize(
+    'password_as_bytes',
+    (True, False),
+    ids=('with-bytes-password', 'with-str-password'),
+)
+# pylint: disable-next=too-many-positional-arguments
+def test_ssl_adapters_with_private_key_password(
+    http_request_timeout,
+    private_key_password,
+    tls_http_server,
+    tls_ca_certificate_pem_path,
+    tls_certificate_chain_pem_path,
+    tls_certificate_passwd_private_key_pem_path,
+    tls_certificate_private_key_pem_path,
+    adapter_type,
+    encrypted_key,
+    password_as_bytes,
+):
+    """Check server start and response when using ssl adapter with password-protected private key."""
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+    key_file = (
+        tls_certificate_passwd_private_key_pem_path
+        if encrypted_key
+        else tls_certificate_private_key_pem_path
+    )
+    key_pass = (
+        private_key_password.encode('utf-8')
+        if password_as_bytes
+        else private_key_password
+    )
+
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        certificate=tls_certificate_chain_pem_path,
+        private_key=key_file,
+        private_key_password=key_pass,
+    )
+
+    httpserver.ssl_adapter = tls_adapter
+
+    httpserver.prepare()
+    assert httpserver.ready
+    httpserver.stop()
+
+    interface, _host, port = _get_conn_data(
+        tls_http_server(httpserver.bind_addr, tls_adapter).bind_addr,
+    )
+
+    resp = requests.get(
+        f'https://{interface!s}:{port!s}/',
+        timeout=http_request_timeout,
+        verify=tls_ca_certificate_pem_path,
+    )
+
+    assert resp.status_code == 200
+    assert resp.text == 'Hello world!'
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    ('builtin',),
+)
+def test_builtin_adapter_with_false_key_password(
+    tls_certificate_chain_pem_path,
+    tls_certificate_passwd_private_key_pem_path,
+    adapter_type,
+):
+    """Check that builtin ssl-adapter initialization fails when wrong private key password given."""
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    with pytest.raises(ssl.SSLError, match=r'^\[SSL\] PEM.+'):
+        tls_adapter_cls(
+            certificate=tls_certificate_chain_pem_path,
+            private_key=tls_certificate_passwd_private_key_pem_path,
+            private_key_password='x' * 256,
+        )
+
+
+@pytest.mark.parametrize(
+    ('adapter_type', 'false_password', 'expected_warn'),
+    (
+        (
+            'pyopenssl',
+            '837550fd-bcb9-4320-87e6-09de6456b09',
+            contextlib.nullcontext(),
+        ),
+        ('pyopenssl', 555555, contextlib.nullcontext()),
+        (
+            'pyopenssl',
+            '@' * 2048,
+            pytest.warns(
+                UserWarning,
+                match=r'^User-provided password is 2048 bytes.+',
+            ),
+        ),
+    ),
+    ids=('incorrect-password', 'integer-password', 'too-long-password'),
+)
+def test_openssl_adapter_with_false_key_password(
+    tls_certificate_chain_pem_path,
+    tls_certificate_passwd_private_key_pem_path,
+    adapter_type,
+    false_password,
+    expected_warn,
+):
+    """Check that server init fails when wrong private key password given."""
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        certificate=tls_certificate_chain_pem_path,
+        private_key=tls_certificate_passwd_private_key_pem_path,
+        private_key_password=false_password,
+    )
+
+    httpserver.ssl_adapter = tls_adapter
+
+    with expected_warn, pytest.raises(
+        OpenSSL.SSL.Error,
+        match=r'.+bad decrypt.+',
+    ):
+        httpserver.prepare()
+
+    assert not httpserver.requests._threads
+    assert not httpserver.ready
