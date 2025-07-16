@@ -13,6 +13,7 @@ class BuiltinSSLAdapter(Adapter):
         private_key,
         certificate_chain: Any | None = ...,
         ciphers: Any | None = ...,
+        private_key_password: Any | None = ...,
     ) -> None: ...
     @property
     def context(self): ...

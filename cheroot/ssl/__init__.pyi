@@ -6,6 +6,7 @@ class Adapter(ABC):
     private_key: Any
     certificate_chain: Any
     ciphers: Any
+    private_key_password: Any
     context: Any
     @abstractmethod
     def __init__(
@@ -14,6 +15,7 @@ class Adapter(ABC):
         private_key,
         certificate_chain: Any | None = ...,
         ciphers: Any | None = ...,
+        private_key_password: Any | None = ...,
     ): ...
     @abstractmethod
     def bind(self, sock): ...

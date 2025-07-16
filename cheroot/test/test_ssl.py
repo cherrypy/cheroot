@@ -1,5 +1,6 @@
 """Tests for TLS support."""
 
+import datetime
 import functools
 import http.client
 import json
@@ -7,15 +8,19 @@ import os
 import ssl
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import traceback
+import uuid
+from pathlib import Path
 
 import pytest
 
 import OpenSSL.SSL
 import requests
 import trustme
+from OpenSSL import crypto
 
 from .._compat import (
     IS_ABOVE_OPENSSL10,
@@ -29,7 +34,7 @@ from .._compat import (
     ntob,
     ntou,
 )
-from ..server import HTTPServer, get_ssl_adapter_class
+from ..server import Gateway, HTTPServer, get_ssl_adapter_class
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -116,6 +121,59 @@ def make_tls_http_server(bind_addr, ssl_adapter, request):
     request.addfinalizer(httpserver.stop)
 
     return httpserver
+
+
+def create_self_signed_certificate(key_object):
+    """Create a dummy certificate that can be only used to test server start up."""
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pem') as tf:
+        cert_file_name = Path(tf.name)
+
+    cert = crypto.X509()
+    cert.set_version(2)
+
+    subject = cert.get_subject()
+    subject.CN = 'localhost'
+    cert.set_issuer(subject)
+
+    current_time = datetime.datetime.now()  # noqa: DTZ005
+    expiration = current_time + datetime.timedelta(days=1)
+    cert.set_notBefore(current_time.strftime('%Y%m%d%H%M%SZ').encode('ascii'))
+    cert.set_notAfter(expiration.strftime('%Y%m%d%H%M%SZ').encode('ascii'))
+
+    cert.set_pubkey(key_object)
+    cert.sign(key_object, 'sha256')
+
+    Path(cert_file_name).write_bytes(
+        crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
+    )
+
+    return cert_file_name
+
+
+@pytest.fixture
+def create_private_key_with_password(key_password):
+    """Create a private key with given password."""
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pem') as tf:
+        key_file_name = Path(tf.name)
+
+    key_object = crypto.PKey()
+    key_object.generate_key(crypto.TYPE_RSA, 4096)
+
+    cert_file_name = create_self_signed_certificate(key_object)
+
+    Path(key_file_name).write_bytes(
+        crypto.dump_privatekey(
+            crypto.FILETYPE_PEM,
+            key_object,
+            cipher='aes256',
+            passphrase=key_password.encode('utf-8'),
+        ),
+    )
+
+    yield key_file_name, cert_file_name
+
+    Path.unlink(key_file_name)
+    Path.unlink(cert_file_name)
 
 
 @pytest.fixture
@@ -726,3 +784,97 @@ def test_http_over_https_error(
         'The underlying error is {underlying_error!r}'.format(**locals())
     )
     assert expected_error_text in err_text
+
+
+@pytest.mark.parametrize(
+    ('adapter_type', 'key_password'),
+    (
+        ('builtin', 'Pw-1234'),
+        ('pyopenssl', 'Pw-4567'),
+    ),
+)
+def test_ssl_adapters_with_private_key_password(
+    create_private_key_with_password,
+    adapter_type,
+    key_password,
+):
+    """Check that server starts using ssl adapter with password-protected private key."""
+    key_file, cert_file = create_private_key_with_password
+
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        certificate=cert_file,
+        private_key=key_file,
+        private_key_password=key_password,
+    )
+
+    httpserver.ssl_adapter = tls_adapter
+    httpserver.prepare()
+
+    assert httpserver.ready
+    assert httpserver.requests._threads
+    for thr in httpserver.requests._threads:
+        assert thr.ready
+
+    httpserver.stop()
+
+
+@pytest.mark.parametrize(
+    ('adapter_type', 'key_password'),
+    (('builtin', 'Pw-332244'),),
+)
+def test_builtin_adapter_with_false_key_password(
+    create_private_key_with_password,
+    adapter_type,
+    key_password,
+):
+    """Check that builtin ssl-adapter initialization fails when wrong private key password given."""
+    key_file, cert_file = create_private_key_with_password
+
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    # expecting SSL error when creating builtin ssl-adapter
+    with pytest.raises(ssl.SSLError):
+        tls_adapter_cls(
+            certificate=cert_file,
+            private_key=key_file,
+            private_key_password=str(uuid.uuid4()),
+        )
+
+
+@pytest.mark.parametrize(
+    ('adapter_type', 'key_password'),
+    (('pyopenssl', 'Pw-1234567'),),
+)
+def test_openssl_adapter_with_false_key_password(
+    create_private_key_with_password,
+    adapter_type,
+    key_password,
+):
+    """Check that openssl ssl-adapter server init fails when wrong private key password given."""
+    key_file, cert_file = create_private_key_with_password
+
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        certificate=cert_file,
+        private_key=key_file,
+        private_key_password=str(uuid.uuid4()),
+    )
+
+    httpserver.ssl_adapter = tls_adapter
+
+    # expecting SSLError when preparing server
+    with pytest.raises(OpenSSL.SSL.Error):
+        httpserver.prepare()
+
+    assert not httpserver.requests._threads
+    assert not httpserver.ready
