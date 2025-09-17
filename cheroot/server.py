@@ -79,7 +79,6 @@ import threading
 import time
 import traceback as traceback_
 import urllib.parse
-from functools import lru_cache
 
 from . import __version__, connections, errors
 from ._compat import IS_PPC, bton
@@ -1321,10 +1320,8 @@ class HTTPConnection:
         self.peercreds_enabled = self.server.peercreds_enabled
         self.peercreds_resolve_enabled = self.server.peercreds_resolve_enabled
 
-        # LRU cached methods:
-        # Ref: https://stackoverflow.com/a/14946506/595220
-        self.resolve_peer_creds = lru_cache(maxsize=1)(self.resolve_peer_creds)
-        self.get_peer_creds = lru_cache(maxsize=1)(self.get_peer_creds)
+        self._peer_creds_resolved = None
+        self._socket_peer_creds_cache = None
 
     def communicate(self):  # noqa: C901  # FIXME
         """Read each request and respond appropriately.
@@ -1434,7 +1431,7 @@ class HTTPConnection:
             # Apache does, but not today.
             pass
 
-    def get_peer_creds(self):  # LRU cached on per-instance basis, see __init__
+    def get_peer_creds(self):
         """Return the PID/UID/GID tuple of the peer socket for UNIX sockets.
 
         This function uses SO_PEERCRED to query the UNIX PID, UID, GID
@@ -1456,9 +1453,11 @@ class HTTPConnection:
             raise RuntimeError(
                 'Peer creds lookup is disabled within this server',
             )
-
+        peer_creds = self._socket_peer_creds_cache
+        if peer_creds is not None:
+            return peer_creds
         try:
-            peer_creds = self.socket.getsockopt(
+            raw_peer_creds = self.socket.getsockopt(
                 # FIXME: Use LOCAL_CREDS for BSD-like OSs
                 # Ref: https://gist.github.com/LucaFilipozzi/e4f1e118202aff27af6aadebda1b5d91  # noqa
                 socket.SOL_SOCKET,
@@ -1475,8 +1474,9 @@ class HTTPConnection:
             """
             raise RuntimeError from socket_err
         else:
-            pid, uid, gid = struct.unpack(PEERCRED_STRUCT_DEF, peer_creds)
-            return pid, uid, gid
+            pid, uid, gid = struct.unpack(PEERCRED_STRUCT_DEF, raw_peer_creds)
+            self._socket_peer_creds_cache = peer_creds = (pid, uid, gid)
+            return peer_creds
 
     @property
     def peer_pid(self):
@@ -1496,7 +1496,7 @@ class HTTPConnection:
         _, _, gid = self.get_peer_creds()
         return gid
 
-    def resolve_peer_creds(self):  # LRU cached on per-instance basis
+    def resolve_peer_creds(self):
         """Look up the username and group tuple of the ``PEERCREDS``.
 
         :returns: the username and group tuple of the ``PEERCREDS``
@@ -1514,11 +1514,15 @@ class HTTPConnection:
             raise RuntimeError(
                 'UID/GID lookup is disabled within this server',
             )
+        peer_creds = self._peer_creds_resolved
+        if peer_creds is not None:
+            return peer_creds
 
         user = pwd.getpwuid(self.peer_uid).pw_name  # [0]
         group = grp.getgrgid(self.peer_gid).gr_name  # [0]
 
-        return user, group
+        self._peer_creds_resolved = peer_creds = (user, group)
+        return peer_creds
 
     @property
     def peer_user(self):
