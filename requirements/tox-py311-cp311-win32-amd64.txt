@@ -131,7 +131,7 @@ typing-extensions==4.11.0
     # via
     #   inflect
     #   typeguard
-urllib3==1.26.18
+urllib3==2.5.0
     # via
     #   -r requirements/tox-py311-cp311-win32-amd64.in
     #   requests

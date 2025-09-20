@@ -127,7 +127,7 @@ typing-extensions==4.11.0
     # via
     #   inflect
     #   typeguard
-urllib3==1.26.18
+urllib3==2.5.0
     # via
     #   -r requirements/tox-py312-cp312-darwin-x86_64.in
     #   requests

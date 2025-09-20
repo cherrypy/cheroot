@@ -56,4 +56,4 @@ cryptography < 3.4; implementation_name == "pypy" and python_version < "3.8"
 # Refs:
 # * https://github.com/msabramo/requests-unixsocket/issues/70
 # * https://github.com/msabramo/requests-unixsocket/pull/69
-urllib3 < 2
+urllib3 < 3

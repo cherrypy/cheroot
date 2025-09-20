@@ -222,7 +222,7 @@ typing-extensions==4.10.0
     # via
     #   domdf-python-tools
     #   inflect
-urllib3==1.26.18
+urllib3==2.5.0
     # via
     #   -r requirements/tests.in
     #   requests
