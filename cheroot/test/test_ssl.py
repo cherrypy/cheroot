@@ -55,6 +55,24 @@ IS_PYOPENSSL_SSL_VERSION_1_0 = OpenSSL.SSL.SSLeay_version(
     OpenSSL.SSL.SSLEAY_VERSION,
 ).startswith(b'OpenSSL 1.0.')
 PY310_PLUS = sys.version_info[:2] >= (3, 10)
+PY38_OR_LOWER = sys.version_info[:2] <= (3, 8)
+
+if PY38_OR_LOWER:
+    # FIXME: This can be dropped together with Python 3.8.
+    # FIXME: It's coming from `trustme < 1.2.0` as newer versions
+    # FIXME: fixed the compatibility but dropped Python 3.8 support.
+    pytestmark = [
+        pytest.mark.filterwarnings(
+            r'ignore:Passing pyOpenSSL PKey objects is deprecated\. '
+            r'You should use a cryptography private key instead\.:'
+            'DeprecationWarning:OpenSSL.SSL',
+        ),
+        pytest.mark.filterwarnings(
+            r'ignore:Passing pyOpenSSL X509 objects is deprecated\. '
+            r'You should use a cryptography\.x509\.Certificate instead\.:'
+            'DeprecationWarning:OpenSSL.SSL',
+        ),
+    ]
 
 
 _stdlib_to_openssl_verify = {
