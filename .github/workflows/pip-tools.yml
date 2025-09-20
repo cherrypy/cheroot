@@ -69,7 +69,7 @@ jobs:
         - macOS-15  # arm64
         - ubuntu-22.04
         - macOS-13
-        - windows-2019
+        - windows-2022
 
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: 1
