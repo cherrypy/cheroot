@@ -97,14 +97,6 @@ jobs:
         cache-key-for-dependency-files: >-
           ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
 
-    - name: Upgrade pip with `requires_python`
-      run: >-
-        python -m
-        pip install
-        --user
-        --upgrade
-        --force-reinstall
-        pip-with-requires-python
     - name: Install pip-tools
       run: >-
         python -m
