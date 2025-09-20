@@ -1,2 +1,2 @@
-Declared Python 3.12 as supported officially
+Declared Python 3.12 and Python 3.13 as supported officially
 -- by :user:`webknjaz`.
