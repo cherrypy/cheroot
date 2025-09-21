@@ -15,7 +15,7 @@ requests[use_chardet_on_py3]
 coverage >= 6.2
 jaraco.context
 
-jaraco.text>=3.1
+jaraco.text >= 3.1
 
 portend
 
@@ -28,11 +28,11 @@ pypytools
 
 pytest-clarity
 pytest-cov
-pytest-mock>=1.11.0
+pytest-mock >= 1.11.0
 pytest-rerunfailures
-pytest-sugar>=0.9.3
-pytest-watch==4.2.0
-pytest-xdist>=1.28.0
+pytest-sugar >= 0.9.3
+pytest-watch == 4.2.0
+pytest-xdist >= 1.28.0
 
 pytest >= 7
 
@@ -41,4 +41,4 @@ requests-unixsocket
 requests_toolbelt
 
 # TLS
-trustme>=0.4.0
+trustme >= 0.4.0
