@@ -78,7 +78,7 @@ pycparser==2.23
     # via cffi
 pygments==2.19.2
     # via rich
-pyopenssl==25.3.0 ; implementation_name != "pypy"
+pyopenssl==25.3.0
     # via -r requirements/tox-py38-cp38-win32-amd64.in
 pypytools==0.6.2
     # via -r requirements/tox-py38-cp38-win32-amd64.in
@@ -136,10 +136,8 @@ typing-extensions==4.13.2
     #   cryptography
     #   exceptiongroup
     #   pyopenssl
-urllib3==1.26.20
-    # via
-    #   -r requirements/tox-py38-cp38-win32-amd64.in
-    #   requests
+urllib3==2.2.3
+    # via requests
 watchdog==4.0.2
     # via pytest-watch
 zipp==3.20.2
