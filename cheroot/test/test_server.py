@@ -3,6 +3,7 @@
 import os
 import queue
 import socket
+import sys
 import tempfile
 import threading
 import types
@@ -27,6 +28,7 @@ from ..workers.threadpool import ThreadPool
 
 
 IS_SLOW_ENV = IS_MACOS or IS_WINDOWS
+PY38_OR_LOWER = sys.version_info[:2] <= (3, 8)
 
 
 unix_only_sock_test = pytest.mark.skipif(
@@ -44,6 +46,11 @@ non_macos_sock_test = pytest.mark.skipif(
 @pytest.fixture(params=('abstract', 'file'))
 def unix_sock_file(request):
     """Check that bound UNIX socket address is stored in server."""
+    if PY38_OR_LOWER:
+        # FIXME: This can be dropped together with Python 3.8.
+        # FIXME: It's coming from `trustme < 1.2.0` as newer versions
+        # FIXME: fixed the compatibility but dropped Python 3.8 support.
+        pytest.skip('`requests-unixsocket` is defunct under Python 3.8')
     name = 'unix_{request.param}_sock'.format(**locals())
     return request.getfixturevalue(name)
 
