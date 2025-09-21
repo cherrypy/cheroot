@@ -1,4 +1,0 @@
-When load is too high, Cheroot now responds with a 503 Service Unavailable HTTP error.
-Previously it silently closed the connection.
-
--- by :user:`itamarst`
