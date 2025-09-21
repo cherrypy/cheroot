@@ -76,7 +76,7 @@ pygments==2.19.2
     # via
     #   pytest
     #   rich
-pyopenssl==25.3.0 ; implementation_name != "pypy"
+pyopenssl==25.3.0
     # via -r requirements/tox-py311-cp311-linux-aarch64.in
 pypytools==0.6.2
     # via -r requirements/tox-py311-cp311-linux-aarch64.in
@@ -127,9 +127,7 @@ trustme==1.2.1
     # via -r requirements/tox-py311-cp311-linux-aarch64.in
 typing-extensions==4.15.0
     # via pyopenssl
-urllib3==1.26.20
-    # via
-    #   -r requirements/tox-py311-cp311-linux-aarch64.in
-    #   requests
+urllib3==2.5.0
+    # via requests
 watchdog==6.0.0
     # via pytest-watch
