@@ -4,6 +4,7 @@
 import _pyio as io
 import socket
 import time
+
 from OpenSSL import SSL
 
 
@@ -34,8 +35,12 @@ class BufferedWriter(io.BufferedWriter):
                 n = self.raw.write(bytes(self._write_buf))
             except io.BlockingIOError as e:
                 n = e.characters_writteni
-            except (SSL.WantReadError,SSL.WantWriteError, SSL.WantX509LookupError) as e:
-                # these errors require retries with the same data 
+            except (
+                SSL.WantReadError,
+                SSL.WantWriteError,
+                SSL.WantX509LookupError,
+            ):
+                # these errors require retries with the same data
                 # if some data has already been written
                 n = 0
             del self._write_buf[:n]
