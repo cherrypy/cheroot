@@ -17,6 +17,8 @@ import OpenSSL.SSL
 import requests
 import trustme
 
+from cheroot.makefile import BufferedWriter
+
 from .._compat import (
     IS_ABOVE_OPENSSL10,
     IS_ABOVE_OPENSSL31,
@@ -38,6 +40,7 @@ from ..testing import (
     _get_conn_data,
     _probe_ipv6_sock,
 )
+from unittest import mock
 from ..wsgi import Gateway_10
 
 
@@ -624,6 +627,37 @@ def test_ssl_env(  # noqa: C901  # FIXME
         ),
     )
 
+class TestBufferedWriterSSLWantErrors:
+    
+    def setup_method(self):
+        self.mock_raw = mock.Mock()
+        self.mock_raw.closed = False
+        self.writer = BufferedWriter(self.mock_raw)
+
+    def test_want_write_error_retry(self):
+        """Test that WantWriteError causes retry with same data."""
+        test_data = b"hello world"
+        
+        self.mock_raw.write.side_effect = [
+            OpenSSL.SSL.WantWriteError(),
+            len(test_data)
+        ]
+        
+        result = self.writer.write(test_data)
+        assert result == len(test_data)
+        assert self.mock_raw.write.call_count == 2
+
+    def test_want_read_error_retry(self):
+        """Test that WantReadError causes retry with same data."""
+        test_data = b"test data"
+        
+        self.mock_raw.write.side_effect = [
+            OpenSSL.SSL.WantReadError(), 
+            len(test_data)
+        ]
+        
+        result = self.writer.write(test_data)
+        assert result == len(test_data)
 
 @pytest.mark.parametrize(
     'ip_addr',
