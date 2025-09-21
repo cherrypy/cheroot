@@ -19,13 +19,7 @@ jaraco.text>=3.1
 
 portend
 
-# cryptography >= 3.4 started using Rust but it's unstable w/ old PyPy
-# and pyopenssl == 22 started requiring cryptography 35+
-# which is why we need these restrictions for the dependency resolution
-# to succeed.
-pyopenssl; implementation_name != "pypy"
-pyopenssl >= 22.0.0; implementation_name == "pypy" and python_version >= "3.8"
-pyopenssl < 22.0.0; implementation_name == "pypy" and python_version < "3.8"
+pyopenssl
 
 # The pypytools library provides a cross-implementation context
 # manager for disabling garbage collection in specific blocks
@@ -48,12 +42,3 @@ requests_toolbelt
 
 # TLS
 trustme>=0.4.0
-
-# cryptography >= 3.4 started using Rust but it's unstable w/ old PyPy
-cryptography < 3.4; implementation_name == "pypy" and python_version < "3.8"
-
-# requests-unixsocket is currently incompatible with urllib3 v2
-# Refs:
-# * https://github.com/msabramo/requests-unixsocket/issues/70
-# * https://github.com/msabramo/requests-unixsocket/pull/69
-urllib3 < 2
