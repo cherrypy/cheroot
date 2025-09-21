@@ -14,6 +14,111 @@ Changelog
 
 .. towncrier release notes start
 
+v11.0.0rc1
+==========
+
+*(2025-09-21)*
+
+
+Features
+--------
+
+- When load is too high, Cheroot now responds with a 503 Service Unavailable HTTP error.
+  Previously it silently closed the connection.
+
+  -- by :user:`itamarst`
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`745`.
+
+
+Removals and backward incompatible breaking changes
+---------------------------------------------------
+
+- Cheroot dropped support for Python 3.6 and 3.7.
+  It now requires Python 3.8 or later.
+
+  -- by :user:`jaraco`
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`565`, :issue:`633`.
+
+  *Related commits on GitHub:*
+  :commit:`437863ee`.
+
+
+Packaging updates and notes for downstreams
+-------------------------------------------
+
+- Declared Python 3.12 and Python 3.13 as supported officially
+  -- by :user:`webknjaz`.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`696`.
+
+  *Related commits on GitHub:*
+  :commit:`5db4f634`.
+
+- The minimum version of the ``setuptools-scm`` build dependency
+  has been set to 7. The Git archives are now produced by it
+  natively, instead of relying on a third party plugin which is
+  no longer being used.
+
+  -- by :user:`serhii73`
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`628`.
+
+- The packaging metadata has been migrated to the
+  :file:`pyproject.toml`-based :pep:`621` declaration
+  -- by :user:`jaraco` and :user:`webknjaz`.
+
+  As a part of this update, the minimum version of the
+  ``setuptools`` build backend was bumped to 61.2.
+  Moreover, any compatibility shims that existed in
+  :file:`setup.cfg` and :file:`setup.py` have been
+  removed for good.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`690`.
+
+
+Contributor-facing changes
+--------------------------
+
+- The test infrastructure has been updated to stop using
+  the ``pytest-forked`` plugin
+  -- by :user:`jaraco` and :user:`webknjaz`.
+
+  This plugin was causing problems with upgrading to modern
+  versions of Pytest and it is not going to be fixed anytime
+  soon.
+
+  It was used in a test that interacts with the system
+  resource limits under \*NIX environments in hopes to isolate
+  the side effects caused by the preparatory code.
+
+  It is possible that this will have an effect on the test
+  sessions and we may have to look for alternative solutions
+  for test process isolation.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`502`, :issue:`511`, :issue:`680`, :issue:`681`, :issue:`703`.
+
+- The test infrastructure has been updated to start using
+  the upstream reusable workflow :file:`reusable-tox.yml`
+  from :gh:`tox-dev/workflow` -- by :user:`webknjaz`.
+
+  This chance allows us to de-duplicate the commonly used
+  CI shape.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`743`.
+
+
+----
+
+
 v10.0.1
 =======
 

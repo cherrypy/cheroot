@@ -1,6 +1,0 @@
-The minimum version of the ``setuptools-scm`` build dependency
-has been set to 7. The Git archives are now produced by it
-natively, instead of relying on a third party plugin which is
-no longer being used.
-
--- by :user:`serhii73`
