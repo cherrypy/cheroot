@@ -1,0 +1,4 @@
+Fixed socket teardown errors that were being thrown during
+connection cleanup. Also resolved multiple stub file issues
+including missing __all__ declarations and
+incorrect type definitions that were causing stubtest failures.
