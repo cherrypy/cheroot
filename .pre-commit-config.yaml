@@ -287,6 +287,9 @@ repos:
     - pyOpenSSL  # needed by pylint-pytest since it picks up pytest's args
     - pypytools
     - pytest-cov  # needed by pylint-pytest since it picks up pytest's args
+    - pytest-mock  # needed by pylint-pytest since it picks up pytest's args
+    - >-  # needed by pylint-pytest since it picks up pytest's args
+      pytest-rerunfailures
     - pytest-xdist  # needed by pylint-pytest since it picks up pytest's args
     - requests_toolbelt
     - requests_unixsocket
