@@ -16,7 +16,7 @@ charset-normalizer==3.4.3
     # via requests
 colorama==0.4.6
     # via pytest-watch
-coverage==7.10.6
+coverage==7.10.7
     # via
     #   -r requirements/tox-py313-cp313-linux-aarch64.in
     #   pytest-cov
