@@ -21,7 +21,7 @@ if sys.platform == 'win32':
         _not_a_socket_err = 10038
 else:
     # On other platforms, the relevant error is EBADF (Bad file descriptor),
-    # which is already in your list of handled errors.
+    # which is already in the list of handled errors.
     pass
 
 # Expose the error constant for use in the module's public API if needed.
