@@ -17,6 +17,8 @@ import OpenSSL.SSL
 import requests
 import trustme
 
+from cheroot.makefile import BufferedWriter
+
 from .._compat import (
     IS_ABOVE_OPENSSL10,
     IS_ABOVE_OPENSSL31,
@@ -623,6 +625,47 @@ def test_ssl_env(  # noqa: C901  # FIXME
             thread_exceptions[0][1],
         ),
     )
+
+
+@pytest.fixture
+def ssl_writer(mocker):
+    """Return a BufferedWriter instance with a mocked raw socket."""
+    mock_raw = mocker.Mock()
+    mock_raw.closed = False
+    writer = BufferedWriter(mock_raw)
+
+    writer.mock_raw = mock_raw
+
+    return writer
+
+
+def test_want_write_error_retry(ssl_writer):
+    """Test that WantWriteError causes retry with same data."""
+    test_data = b'hello world'
+
+    # Access the mock object via the attribute we attached in the fixture
+    ssl_writer.mock_raw.write.side_effect = [
+        OpenSSL.SSL.WantWriteError(),
+        len(test_data),
+    ]
+
+    bytes_written = ssl_writer.write(test_data)
+    assert bytes_written == len(test_data)
+    assert ssl_writer.mock_raw.write.call_count == 2
+
+
+def test_want_read_error_retry(ssl_writer):
+    """Test that WantReadError causes retry with same data."""
+    test_data = b'test data'
+
+    # Access the mock object via the attribute we attached in the fixture
+    ssl_writer.mock_raw.write.side_effect = [
+        OpenSSL.SSL.WantReadError(),
+        len(test_data),
+    ]
+
+    bytes_written = ssl_writer.write(test_data)
+    assert bytes_written == len(test_data)
 
 
 @pytest.mark.parametrize(
