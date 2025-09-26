@@ -13,7 +13,10 @@ chunked
 dev
 docstrings
 downstreams
+EBADF
+ENOTCONN
 environ
+errno
 errored
 Faux
 fd
@@ -57,12 +60,14 @@ signalling
 Sigstore
 ssl
 stdout
+stubtest
 subclasses
 submodules
 subpackages
 symlinked
 syscall
 systemd
+teardown
 threadpool
 Tidelift
 TLS
