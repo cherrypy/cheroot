@@ -32,6 +32,7 @@ makefile
 memoryview
 metaclass
 mixin
+mypy
 multi
 namespace
 natively
@@ -57,6 +58,7 @@ signalling
 Sigstore
 ssl
 stdout
+stubtest
 subclasses
 submodules
 subpackages
