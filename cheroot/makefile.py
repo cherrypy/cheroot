@@ -3,6 +3,9 @@
 # prefer slower Python-based io module
 import _pyio as io
 import socket
+import time
+
+from OpenSSL import SSL
 
 
 # Write only 16K at a time to sockets
@@ -31,7 +34,24 @@ class BufferedWriter(io.BufferedWriter):
                 # so perhaps we should conditionally wrap this for perf?
                 n = self.raw.write(bytes(self._write_buf))
             except io.BlockingIOError as e:
+                # some data may have been written
+                # we need to remove that from the buffer before retryings
                 n = e.characters_written
+            except (
+                SSL.WantReadError,
+                SSL.WantWriteError,
+                SSL.WantX509LookupError,
+            ):
+                # these errors require retries with the same data
+                # regardless of whether data has already been written
+                continue
+            except OSError:
+                # This catches errors like EBADF (Bad File Descriptor)
+                # or EPIPE (Broken pipe), which indicate the underlying
+                # socket is already closed or invalid.
+                # Since this happens in __del__, we silently stop flushing.
+                self._write_buf.clear()
+                return  # Exit the function
             del self._write_buf[:n]
 
 
@@ -45,9 +65,22 @@ class StreamReader(io.BufferedReader):
 
     def read(self, *args, **kwargs):
         """Capture bytes read."""
-        val = super().read(*args, **kwargs)
-        self.bytes_read += len(val)
-        return val
+        MAX_ATTEMPTS = 10
+        last_error = None
+        for _ in range(MAX_ATTEMPTS):
+            try:
+                val = super().read(*args, **kwargs)
+            except (SSL.WantReadError, SSL.WantWriteError) as ssl_want_error:
+                last_error = ssl_want_error
+                time.sleep(0.1)
+            else:
+                self.bytes_read += len(val)
+                return val
+
+        # If we get here, all attempts failed
+        raise TimeoutError(
+            'Max retries exceeded while waiting for data.',
+        ) from last_error
 
     def has_data(self):
         """Return true if there is buffered data to read."""
