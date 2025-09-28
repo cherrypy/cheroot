@@ -1,0 +1,6 @@
+Resolved various issues that were causing mypy stubtest errors:
+1. Added missing __all__ declarations in server.pyi and threadpool.pyi 
+   to match their corresponding Python modules.
+2. Removed cheroot.connections.IS_WINDOWS from stubtest_allowlist.txt
+   and added IS_WINDOWS as a bool to connections.pyi instead.
+
