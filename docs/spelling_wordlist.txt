@@ -32,6 +32,7 @@ makefile
 memoryview
 metaclass
 mixin
+mypy
 multi
 namespace
 natively
