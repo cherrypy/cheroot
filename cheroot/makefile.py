@@ -3,6 +3,9 @@
 # prefer slower Python-based io module
 import _pyio as io
 import socket
+import time
+
+from OpenSSL import SSL
 
 
 # Write only 16K at a time to sockets
@@ -32,6 +35,14 @@ class BufferedWriter(io.BufferedWriter):
                 n = self.raw.write(bytes(self._write_buf))
             except io.BlockingIOError as e:
                 n = e.characters_written
+            except (
+                SSL.WantReadError,
+                SSL.WantWriteError,
+                SSL.WantX509LookupError,
+            ):
+                # these errors require retries with the same data
+                # if some data has already been written
+                n = 0
             del self._write_buf[:n]
 
 
@@ -45,9 +56,22 @@ class StreamReader(io.BufferedReader):
 
     def read(self, *args, **kwargs):
         """Capture bytes read."""
-        val = super().read(*args, **kwargs)
-        self.bytes_read += len(val)
-        return val
+        MAX_ATTEMPTS = 10
+        attempts = 0
+        while True:
+            try:
+                val = super().read(*args, **kwargs)
+            except (SSL.WantReadError, SSL.WantWriteError):
+                attempts += 1
+                if attempts >= MAX_ATTEMPTS:
+                    # Raise an error if max retries reached
+                    raise TimeoutError(
+                        'Max retries exceeded while waiting for data.',
+                    )
+                time.sleep(0.1)
+            else:
+                self.bytes_read += len(val)
+                return val
 
     def has_data(self):
         """Return true if there is buffered data to read."""

@@ -72,6 +72,9 @@ file = "README.rst"
 content-type = "text/x-rst"
 
 [project.optional-dependencies]
+ssl = [
+  "pyOpenSSL >= 25.2.0",
+]
 docs = [
   # upstream
   "sphinx >= 1.8.2",

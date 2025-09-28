@@ -17,6 +17,8 @@ import OpenSSL.SSL
 import requests
 import trustme
 
+from cheroot.makefile import BufferedWriter
+
 from .._compat import (
     IS_ABOVE_OPENSSL10,
     IS_ABOVE_OPENSSL31,
@@ -623,6 +625,145 @@ def test_ssl_env(  # noqa: C901  # FIXME
             thread_exceptions[0][1],
         ),
     )
+
+
+@pytest.fixture
+def mock_raw_open(mocker):
+    """Return a mocked raw socket prepared for writing (closed=False)."""
+    # This fixture sets the state on the injected object
+    mock_raw = mocker.Mock()
+    mock_raw.closed = False
+    return mock_raw
+
+
+@pytest.fixture
+def ssl_writer(mock_raw_open):
+    """Return a BufferedWriter instance with a mocked raw socket."""
+    return BufferedWriter(mock_raw_open)
+
+
+def test_want_write_error_retry(ssl_writer, mock_raw_open):
+    """Test that WantWriteError causes retry with same data."""
+    test_data = b'hello world'
+
+    # set up mock socket so that when its write() method is called,
+    # we get WantWriteError first, then success on the second call
+    # indicated by returning the number of bytes written
+    mock_raw_open.write.side_effect = [
+        OpenSSL.SSL.WantWriteError(),
+        len(test_data),
+    ]
+
+    bytes_written = ssl_writer.write(test_data)
+    assert bytes_written == len(test_data)
+
+    # Assert against the injected mock object
+    assert mock_raw_open.write.call_count == 2
+
+
+def test_want_read_error_retry(ssl_writer, mock_raw_open):
+    """Test that WantReadError causes retry with same data."""
+    test_data = b'test data'
+
+    # set up mock socket so that when its write() method is called,
+    # we get WantReadError first, then success on the second call
+    # indicated by returning the number of bytes written
+    mock_raw_open.write.side_effect = [
+        OpenSSL.SSL.WantReadError(),
+        len(test_data),
+    ]
+
+    bytes_written = ssl_writer.write(test_data)
+    assert bytes_written == len(test_data)
+
+
+@pytest.fixture(
+    params=['builtin', 'pyopenssl'],
+)
+def adapter_type(request):
+    """Fixture that yields the name of the SSL adapter."""
+    return request.param
+
+
+@pytest.fixture
+def ssl_writer_integration(
+    mocker,
+    adapter_type,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+):
+    """
+    Set up mock SSL writer for integration test.
+
+    Mocks the lowest-level write/send method to simulate a
+    transient WantWriteError.
+    """
+    # Set up SSL adapter
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path,
+        tls_certificate_private_key_pem_path,
+    )
+
+    # Ensure context is initialized if needed
+    if adapter_type == 'pyopenssl':
+        # --- PYOPENSSL SETUP
+        tls_adapter.context = tls_adapter.get_context()
+        mock_raw_socket = mocker.Mock(name='mock_raw_socket')
+        mock_raw_socket.fileno.return_value = 1  # need to mock a dummy fd
+
+        # Create the real OpenSSL.SSL.Connection object
+        ssl_conn = OpenSSL.SSL.Connection(tls_adapter.context, mock_raw_socket)
+        ssl_conn.set_connect_state()
+        ssl_conn.closed = False
+
+        # Return the BufferedWriter and the specific mock for assertions
+        raw_io_object = ssl_conn
+        raw_io_object.write = mocker.Mock(name='ssl_conn_write_mock')
+    else:
+        # adapter_type == 'builtin'
+        # --- BUILTIN ADAPTER SETUP (Requires different mocking) ---
+        # Mock the adapter's own low-level write method
+        raw_io_object = tls_adapter
+        raw_io_object.write = mocker.Mock(
+            name='builtin_adapter_write',
+            autospec=True,
+        )
+        raw_io_object.closed = False
+        raw_io_object.writable = mocker.Mock(return_value=True)
+
+    # Return both the writer and the specific mock assertion target
+    return BufferedWriter(raw_io_object), raw_io_object.write
+
+
+def test_want_write_error_integration(ssl_writer_integration):
+    """Integration test for SSL writer handling of WantWriteError."""
+    writer, mock_write = ssl_writer_integration
+    test_data = b'integration test data'
+    successful_write_length = len(test_data)
+
+    # Determine the failure mechanism
+    if adapter_type == 'pyopenssl':
+        # Linter is perfectly happy with this explicit assignment
+        failure_error = OpenSSL.SSL.WantWriteError()
+    else:
+        failure_error = 0
+
+    # Configure the mock's side effect with the first error
+    # and then the calculated buffer length for success
+    mock_write.side_effect = [
+        failure_error,
+        successful_write_length,
+    ]
+
+    # write data and then flush
+    # with the way the mock_write is set up this should fail once,
+    # and then succeed on the retry.
+    bytes_written = writer.write(test_data)
+    writer.flush()
+
+    assert bytes_written == successful_write_length
+    assert mock_write.call_count == 2
 
 
 @pytest.mark.parametrize(
