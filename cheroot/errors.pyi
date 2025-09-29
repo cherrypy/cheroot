@@ -1,5 +1,7 @@
 from typing import List, Set, Tuple, Type
 
+from cheroot._compat import IS_WINDOWS as IS_WINDOWS
+
 class MaxSizeExceeded(Exception): ...
 class NoSSLError(Exception): ...
 class FatalSSLAlert(Exception): ...
@@ -11,3 +13,5 @@ socket_errors_to_ignore: List[int]
 socket_errors_nonblocking: List[int]
 acceptable_sock_shutdown_error_codes: Set[int]
 acceptable_sock_shutdown_exceptions: Tuple[Type[Exception], ...]
+sock_shutdown_errs: Tuple[Type[Exception], ...]
+write_shutdown_errs: Tuple[Type[Exception], ...]

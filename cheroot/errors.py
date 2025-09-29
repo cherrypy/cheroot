@@ -3,6 +3,14 @@
 import errno
 import sys
 
+from cheroot._compat import IS_WINDOWS
+
+
+try:
+    from OpenSSL.SSL import SysCallError as _OpenSSL_SysCallError
+except ImportError:
+    _OpenSSL_SysCallError = None
+
 
 class MaxSizeExceeded(Exception):
     """Exception raised when a client sends more data then allowed under limit.
@@ -64,15 +72,38 @@ if sys.platform == 'darwin':
     socket_errors_to_ignore.extend(plat_specific_errors('EPROTOTYPE'))
     socket_errors_nonblocking.extend(plat_specific_errors('EPROTOTYPE'))
 
-
 acceptable_sock_shutdown_error_codes = {
+    errno.EBADF,
     errno.ENOTCONN,
     errno.EPIPE,
     errno.ESHUTDOWN,  # corresponds to BrokenPipeError in Python 3
     errno.ECONNRESET,  # corresponds to ConnectionResetError in Python 3
 }
-"""Errors that may happen during the connection close sequence.
 
+if IS_WINDOWS:
+    # Define Windows socket error code constant
+    # WSAENOTSOCK: Socket operation on non-socket
+    # Should be available from errno, but provide
+    # a value as backup
+    WSAENOTSOCK = 10038
+    acceptable_sock_shutdown_error_codes.add(
+        getattr(errno, 'WSAENOTSOCK', WSAENOTSOCK),
+    )
+
+acceptable_sock_shutdown_exceptions = (
+    BrokenPipeError,
+    ConnectionResetError,
+    # conditionally add _OpenSSL_SysCallError to the list
+    *(() if _OpenSSL_SysCallError is None else (_OpenSSL_SysCallError,)),
+)
+
+sock_shutdown_errs = (OSError, _OpenSSL_SysCallError)
+
+write_shutdown_errs = (OSError, _OpenSSL_SysCallError, ConnectionError)
+
+
+"""Errors that may happen during the connection close sequence.
+* EBADF - Bad file descriptor
 * ENOTCONN — client is no longer connected
 * EPIPE — write on a pipe while the other end has been closed
 * ESHUTDOWN — write on a socket which has been shutdown for writing
@@ -87,4 +118,19 @@ Refs:
 * https://docs.microsoft.com/windows/win32/api/winsock/nf-winsock-shutdown
 """
 
-acceptable_sock_shutdown_exceptions = (BrokenPipeError, ConnectionResetError)
+
+def _is_acceptable_socket_shutdown_error(sock_err):
+    """Check if the exception is an expected socket teardown error."""
+    # Check for direct exception types (like BrokenPipeError/ConnectionResetError)
+    if isinstance(sock_err, acceptable_sock_shutdown_exceptions):
+        return True
+
+    # Check for generic OSError/SysCallError with expected errno codes
+    error_code = None
+    if isinstance(sock_err, OSError):
+        error_code = sock_err.errno
+    # Assuming SysCallError has the code at index 0
+    elif isinstance(sock_err, _OpenSSL_SysCallError):
+        error_code = sock_err.args[0]
+
+    return error_code in acceptable_sock_shutdown_error_codes
