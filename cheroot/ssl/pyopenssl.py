@@ -50,6 +50,8 @@ will be read, and the context will be automatically created from them.
    pyopenssl
 """
 
+import errno
+import os
 import socket
 import sys
 import threading
@@ -268,6 +270,54 @@ class SSLConnection(metaclass=SSLConnectionProxyMeta):
         """Initialize SSLConnection instance."""
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
+
+    def close(self):
+        """Close the connection, translating OpenSSL errors for shutdown."""
+        self._lock.acquire()
+        try:
+            return self._safe_close_call('close')
+        finally:
+            self._lock.release()
+
+    def shutdown(self):
+        """Shutdown the connection, translating OpenSSL errors."""
+        self._lock.acquire()
+        try:
+            return self._safe_close_call('shutdown')
+        finally:
+            self._lock.release()
+
+    def _safe_close_call(self, method_name):
+        """Handle SysCallError during close/shutdown."""
+        try:
+            # Call the proxied method (e.g., self._ssl_conn.close())
+            return getattr(self._ssl_conn, method_name)()
+        except SSL.SysCallError as ssl_syscall_err:
+            connection_error_map = {
+                errno.EBADF: ConnectionError,  # socket is gone?
+                errno.ECONNABORTED: ConnectionAbortedError,
+                errno.ECONNREFUSED: ConnectionRefusedError,
+                errno.ECONNRESET: ConnectionResetError,
+                errno.ENOTCONN: ConnectionError,
+                errno.EPIPE: BrokenPipeError,
+                errno.ESHUTDOWN: BrokenPipeError,
+            }
+            error_code = (
+                ssl_syscall_err.args[0] if ssl_syscall_err.args else None
+            )
+            error_msg = (
+                os.strerror(error_code)
+                if error_code is not None
+                else repr(ssl_syscall_err)
+            )
+            conn_err_cls = connection_error_map.get(
+                error_code,
+                errors.CherootConnectionError,
+            )
+            raise conn_err_cls(
+                error_code,
+                f'Faied to {method_name!s} the PyOpenSSL connection: {error_msg!s}',
+            ) from ssl_syscall_err
 
 
 class pyOpenSSLAdapter(Adapter):

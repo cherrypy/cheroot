@@ -1192,9 +1192,12 @@ class HTTPRequest:
         if self.chunked_write and chunk:
             chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
             buf = [chunk_size_hex, CRLF, chunk, CRLF]
-            self.conn.wfile.write(EMPTY.join(buf))
+            data = EMPTY.join(buf)
         else:
-            self.conn.wfile.write(chunk)
+            data = chunk
+
+        with contextlib.suppress(ConnectionError):
+            self.conn.wfile.write(data)
 
     def send_headers(self):  # noqa: C901  # FIXME
         """Assert, process, and send the HTTP response message-headers.
@@ -1288,7 +1291,13 @@ class HTTPRequest:
         for k, v in self.outheaders:
             buf.append(k + COLON + SPACE + v + CRLF)
         buf.append(CRLF)
-        self.conn.wfile.write(EMPTY.join(buf))
+        try:
+            self.conn.wfile.write(EMPTY.join(buf))
+        except ConnectionError:
+            # Ignore errors indicating the client already closed the connection,
+            # which is expected during a race condition.
+            self.close_connection = True  # The socket is already closed
+            self.conn.close()
 
 
 class HTTPConnection:
