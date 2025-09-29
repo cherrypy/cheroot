@@ -4,6 +4,8 @@
 import _pyio as io
 import socket
 
+from . import errors as _errors
+
 
 # Write only 16K at a time to sockets
 SOCK_WRITE_BLOCKSIZE = 16384
@@ -32,7 +34,41 @@ class BufferedWriter(io.BufferedWriter):
                 n = self.raw.write(bytes(self._write_buf))
             except io.BlockingIOError as e:
                 n = e.characters_written
+
+            if n == 0:
+                # If nothing was written we need to break
+                # to avoid infinte loops
+                break
+
             del self._write_buf[:n]
+
+    def close(self):
+        """
+        Close the stream and its underlying file object.
+
+        This method is designed to be idempotent (it can be called multiple
+        times without side effects). It gracefully handles a race condition
+        where the underlying socket may have already been closed by the remote
+        client or another thread.
+
+        A :exc:`ConnectionError` or :exc:`OSError` with
+        :data:`~errno.EBADF` or :data:`~errno.ENOTCONN` is caught
+        and ignored, as these indicate a normal, expected connection teardown.
+        Other exceptions are re-raised.
+        """
+        # pylint incorrectly flags inherited self.closed property as constant
+        if self.closed:  # pylint: disable=using-constant-test
+            return
+
+        try:
+            super().close()
+        except ConnectionError:
+            return
+        except OSError as err:
+            # Handle EBADF and other acceptable socket shutdown errors
+            if err.errno in _errors.acceptable_sock_shutdown_error_codes:
+                return
+            raise
 
 
 class StreamReader(io.BufferedReader):
