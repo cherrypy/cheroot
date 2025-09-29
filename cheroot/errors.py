@@ -3,6 +3,14 @@
 import errno
 import sys
 
+from cheroot._compat import IS_WINDOWS
+
+
+try:
+    from OpenSSL.SSL import SysCallError as _OpenSSL_SysCallError
+except ImportError:
+    _OpenSSL_SysCallError = None
+
 
 class MaxSizeExceeded(Exception):
     """Exception raised when a client sends more data then allowed under limit.
@@ -64,13 +72,31 @@ if sys.platform == 'darwin':
     socket_errors_to_ignore.extend(plat_specific_errors('EPROTOTYPE'))
     socket_errors_nonblocking.extend(plat_specific_errors('EPROTOTYPE'))
 
-
 acceptable_sock_shutdown_error_codes = {
+    errno.EBADF,
     errno.ENOTCONN,
     errno.EPIPE,
     errno.ESHUTDOWN,  # corresponds to BrokenPipeError in Python 3
     errno.ECONNRESET,  # corresponds to ConnectionResetError in Python 3
 }
+
+if IS_WINDOWS:
+    # Define Windows socket error code constant
+    # WSAENOTSOCK: Socket operation on non-socket
+    # Should be available from errno, but provide
+    # a value as backup
+    WSAENOTSOCK = 10038
+    acceptable_sock_shutdown_error_codes.add(
+        getattr(errno, 'WSAENOTSOCK', WSAENOTSOCK),
+    )
+
+acceptable_sock_shutdown_exceptions = (
+    BrokenPipeError,
+    ConnectionResetError,
+    # conditionally add _OpenSSL_SysCallError to the list
+    *(() if _OpenSSL_SysCallError is None else (_OpenSSL_SysCallError,)),
+)
+
 """Errors that may happen during the connection close sequence.
 
 * ENOTCONN — client is no longer connected
@@ -86,5 +112,3 @@ Refs:
 * https://github.com/python/cpython/blob/c39b52f/Lib/poplib.py#L297-L302
 * https://docs.microsoft.com/windows/win32/api/winsock/nf-winsock-shutdown
 """
-
-acceptable_sock_shutdown_exceptions = (BrokenPipeError, ConnectionResetError)
