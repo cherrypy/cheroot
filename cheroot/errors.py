@@ -3,6 +3,12 @@
 import errno
 import sys
 
+from . import _compat
+
+
+class ConnectionError(Exception):
+    """Exception raised when a connection closure occurs."""
+
 
 class MaxSizeExceeded(Exception):
     """Exception raised when a client sends more data then allowed under limit.
@@ -66,19 +72,23 @@ if sys.platform == 'darwin':
 
 
 acceptable_sock_shutdown_error_codes = {
+    errno.EBADF,
     errno.ENOTCONN,
     errno.EPIPE,
     errno.ESHUTDOWN,  # corresponds to BrokenPipeError in Python 3
     errno.ECONNRESET,  # corresponds to ConnectionResetError in Python 3
+    *((errno.WSAENOTSOCK,) if _compat.IS_WINDOWS else ()),
 }
 """Errors that may happen during the connection close sequence.
 
+* EBADF - Bad file descriptor
 * ENOTCONN — client is no longer connected
 * EPIPE — write on a pipe while the other end has been closed
 * ESHUTDOWN — write on a socket which has been shutdown for writing
 * ECONNRESET — connection is reset by the peer, we received a TCP RST packet
 
 Refs:
+
 * https://github.com/cherrypy/cheroot/issues/341#issuecomment-735884889
 * https://bugs.python.org/issue30319
 * https://bugs.python.org/issue30329
@@ -87,4 +97,23 @@ Refs:
 * https://docs.microsoft.com/windows/win32/api/winsock/nf-winsock-shutdown
 """
 
-acceptable_sock_shutdown_exceptions = (BrokenPipeError, ConnectionResetError)
+
+def _is_acceptable_socket_shutdown_error(sock_err):
+    """Check if the exception is an expected socket teardown error."""
+    # Check for direct exception types
+    # BrokenPipeError/ConnectionResetError
+    if isinstance(sock_err, acceptable_sock_shutdown_exceptions):
+        return True
+
+    # Check for generic OSError/SysCallError with expected errno codes
+    error_code = None
+    if isinstance(sock_err, OSError):
+        error_code = sock_err.errno
+
+    return error_code in acceptable_sock_shutdown_error_codes
+
+
+acceptable_sock_shutdown_exceptions = (
+    BrokenPipeError,  # Covers EPIPE and ESHUTDOWN
+    ConnectionResetError,  # Covers ECONNRESET
+)

@@ -50,6 +50,8 @@ will be read, and the context will be automatically created from them.
    pyopenssl
 """
 
+import errno
+import os
 import socket
 import sys
 import threading
@@ -268,6 +270,41 @@ class SSLConnection(metaclass=SSLConnectionProxyMeta):
         """Initialize SSLConnection instance."""
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
+
+    def close(self):
+        """Close the connection, translating OpenSSL errors for shutdown."""
+        self._lock.acquire()
+        try:
+            return self._safe_close_call('close')
+        finally:
+            self._lock.release()
+
+    def shutdown(self):
+        """Shutdown the connection, translating OpenSSL errors."""
+        self._lock.acquire()
+        try:
+            return self._safe_close_call('shutdown')
+        finally:
+            self._lock.release()
+
+    def _safe_close_call(self, method_name):
+        """Handle SysCallError during close/shutdown."""
+        try:
+            # Call the proxied method (e.g., self._ssl_conn.close())
+            return getattr(self._ssl_conn, method_name)()
+        except SSL.SysCallError as err:
+            error_code = err.args[0] if err.args else None
+
+            # These are error codes that makefile.py and server.py might expect
+            if error_code in {errno.EBADF, errno.ENOTCONN, errno.ESHUTDOWN}:
+                # Translate the OpenSSL error to a cheroot error
+                raise errors.ConnectionError(
+                    error_code,
+                    os.strerror(error_code),
+                ) from err
+
+            # If it's another SysCallError, let it propagate
+            raise
 
 
 class pyOpenSSLAdapter(Adapter):
