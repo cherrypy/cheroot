@@ -4,6 +4,12 @@ import errno
 import sys
 
 
+try:
+    from OpenSSL.SSL import SysCallError as _OpenSSL_SysCallError
+except ImportError:
+    _OpenSSL_SysCallError = None
+
+
 class MaxSizeExceeded(Exception):
     """Exception raised when a client sends more data then allowed under limit.
 
@@ -66,6 +72,7 @@ if sys.platform == 'darwin':
 
 
 acceptable_sock_shutdown_error_codes = {
+    errno.EBADF,
     errno.ENOTCONN,
     errno.EPIPE,
     errno.ESHUTDOWN,  # corresponds to BrokenPipeError in Python 3
@@ -87,4 +94,8 @@ Refs:
 * https://docs.microsoft.com/windows/win32/api/winsock/nf-winsock-shutdown
 """
 
-acceptable_sock_shutdown_exceptions = (BrokenPipeError, ConnectionResetError)
+acceptable_sock_shutdown_exceptions = (
+    BrokenPipeError,
+    ConnectionResetError,
+    _OpenSSL_SysCallError,
+)

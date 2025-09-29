@@ -17,6 +17,7 @@ from jaraco.text import trim, unwrap
 
 import cheroot.server
 from cheroot._compat import IS_CI, IS_MACOS, IS_PYPY, IS_WINDOWS
+from cheroot.makefile import BufferedWriter
 from cheroot.test import helper, webtest
 
 
@@ -1637,3 +1638,33 @@ def test_invalid_selected_connection(test_client, monkeypatch):
     time.sleep(test_client.server_instance.expiration_interval * 2)
     assert faux_select.os_error_triggered
     assert faux_get_map.conn_closed
+
+
+class TestBufferedWriter:
+    """Test cases for BufferedWriter close() method race condition handling."""
+
+    def test_close_is_idempotent(self):
+        """Test that close() can be called multiple times safely."""
+        import io
+
+        raw_buffer = io.BytesIO()
+        buffered_writer = BufferedWriter(raw_buffer)
+
+        # Should not raise any exceptions
+        buffered_writer.close()
+        buffered_writer.close()  # Second call should be safe
+
+        assert buffered_writer.closed
+
+    def test_close_handles_already_closed_buffer(self):
+        """Test that close() handles already closed underlying buffer."""
+        import io
+
+        raw_buffer = io.BytesIO()
+        buffered_writer = BufferedWriter(raw_buffer)
+
+        # Close the underlying buffer first
+        raw_buffer.close()
+
+        # This should not raise an exception
+        buffered_writer.close()
