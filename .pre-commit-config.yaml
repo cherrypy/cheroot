@@ -180,7 +180,6 @@ repos:
   hooks:
   - id: flake8
     additional_dependencies:
-    - darglint ~= 1.8.1
     - flake8-2020 ~= 1.8.1
     - flake8-annotations ~= 3.2.0
     - flake8-length ~= 0.3.1
@@ -294,7 +293,7 @@ repos:
     - pyOpenSSL
     # FIXME: Python 3.13+ causes a lot of
     # FIXME: __firstlineno__/__static_attributes__ is not present in stub
-    language_version: python3.12
+    language_version: python3.11
     entry: python -m mypy.stubtest
     args:
     - cheroot
