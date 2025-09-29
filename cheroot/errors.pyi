@@ -9,5 +9,9 @@ def plat_specific_errors(*errnames: str) -> List[int]: ...
 socket_error_eintr: List[int]
 socket_errors_to_ignore: List[int]
 socket_errors_nonblocking: List[int]
+windows_sock_errors: Tuple[int, ...]
 acceptable_sock_shutdown_error_codes: Set[int]
-acceptable_sock_shutdown_exceptions: Tuple[Type[Exception], ...]
+acceptable_sock_shutdown_exceptions: Tuple[
+    Type[BrokenPipeError],
+    Type[ConnectionResetError],
+]

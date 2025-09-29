@@ -1192,9 +1192,21 @@ class HTTPRequest:
         if self.chunked_write and chunk:
             chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
             buf = [chunk_size_hex, CRLF, chunk, CRLF]
-            self.conn.wfile.write(EMPTY.join(buf))
+            data = EMPTY.join(buf)
         else:
-            self.conn.wfile.write(chunk)
+            data = chunk
+
+        try:
+            self.conn.wfile.write(data)
+        except errors.acceptable_sock_shutdown_exceptions as write_error:
+            if isinstance(write_error, OSError):
+                error_code = write_error.errno
+            else:
+                error_code = write_error.args[0]
+            if error_code in errors.acceptable_sock_shutdown_error_codes:
+                # The socket is gone, so just ignore this error.
+                return
+            raise
 
     def send_headers(self):  # noqa: C901  # FIXME
         """Assert, process, and send the HTTP response message-headers.
@@ -1288,7 +1300,18 @@ class HTTPRequest:
         for k, v in self.outheaders:
             buf.append(k + COLON + SPACE + v + CRLF)
         buf.append(CRLF)
-        self.conn.wfile.write(EMPTY.join(buf))
+        try:
+            self.conn.wfile.write(EMPTY.join(buf))
+        except errors.GENERIC_SOCK_EXC_CLASSES as sock_err:
+            # Ignore errors indicating the client already closed the connection,
+            # which is expected during a race condition.
+            if errors._is_acceptable_socket_shutdown_error(sock_err):
+                # The socket is already closed, which is expected during
+                # a race condition.
+                self.close_connection = True
+                self.conn.close()
+                return
+            raise
 
 
 class HTTPConnection:
