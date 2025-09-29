@@ -50,6 +50,8 @@ will be read, and the context will be automatically created from them.
    pyopenssl
 """
 
+import errno
+import os
 import socket
 import sys
 import threading
@@ -75,6 +77,45 @@ from .. import (
 )
 from ..makefile import StreamReader, StreamWriter
 from . import Adapter
+
+
+@contextlib.contextmanager
+def _morph_syscall_to_connection_error(method_name, /):
+    """
+    Handle :exc:`OpenSSL.SSL.SysCallError` in a wrapped method.
+
+    This context manager catches and re-raises SSL system call errors
+    with appropriate exception types.
+
+    Yields:
+        None: Execution continues within the context block.
+    """  # noqa: DAR301
+    try:
+        yield
+    except SSL.SysCallError as ssl_syscall_err:
+        connection_error_map = {
+            errno.EBADF: ConnectionError,  # socket is gone?
+            errno.ECONNABORTED: ConnectionAbortedError,
+            errno.ECONNREFUSED: ConnectionRefusedError,
+            errno.ECONNRESET: ConnectionResetError,
+            errno.ENOTCONN: ConnectionError,
+            errno.EPIPE: BrokenPipeError,
+            errno.ESHUTDOWN: BrokenPipeError,
+        }
+        error_code = ssl_syscall_err.args[0] if ssl_syscall_err.args else None
+        error_msg = (
+            os.strerror(error_code)
+            if error_code is not None
+            else repr(ssl_syscall_err)
+        )
+        conn_err_cls = connection_error_map.get(
+            error_code,
+            ConnectionError,
+        )
+        raise conn_err_cls(
+            error_code,
+            f'Faied to {method_name!s} the PyOpenSSL connection: {error_msg!s}',
+        ) from ssl_syscall_err
 
 
 class SSLFileobjectMixin:
@@ -268,6 +309,18 @@ class SSLConnection(metaclass=SSLConnectionProxyMeta):
         """Initialize SSLConnection instance."""
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
+
+    @_morph_syscall_to_connection_error('close')
+    def close(self):
+        """Close the connection, translating OpenSSL errors for shutdown."""
+        with self._lock:
+            return self._ssl_conn.close()
+
+    @_morph_syscall_to_connection_error('shutdown')
+    def shutdown(self):
+        """Shutdown the connection, translating OpenSSL errors."""
+        with self._lock:
+            return self._ssl_conn.shutdown()
 
 
 class pyOpenSSLAdapter(Adapter):
