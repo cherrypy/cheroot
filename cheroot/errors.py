@@ -1,7 +1,16 @@
 """Collection of exceptions raised and/or processed by Cheroot."""
 
 import errno
+import socket
 import sys
+
+from cheroot._compat import IS_WINDOWS
+
+
+try:
+    from OpenSSL.SSL import SysCallError as _OpenSSL_SysCallError
+except ImportError:
+    _OpenSSL_SysCallError = None
 
 
 class MaxSizeExceeded(Exception):
@@ -64,13 +73,36 @@ if sys.platform == 'darwin':
     socket_errors_to_ignore.extend(plat_specific_errors('EPROTOTYPE'))
     socket_errors_nonblocking.extend(plat_specific_errors('EPROTOTYPE'))
 
+if IS_WINDOWS:
+    # On Windows, try to get the named constant from the socket module.
+    # If that fails, fall back to the known numeric value.
+    try:
+        _not_a_socket_err = socket.WSAENOTSOCK
+    except AttributeError:
+        _not_a_socket_err = 10038
+else:
+    """On other platforms, the relevant error is EBADF (Bad file descriptor)
+       EBADF is already incuded in acceptable_sock_shutdown_error_codes
+    """
 
 acceptable_sock_shutdown_error_codes = {
+    errno.EBADF,
     errno.ENOTCONN,
     errno.EPIPE,
     errno.ESHUTDOWN,  # corresponds to BrokenPipeError in Python 3
     errno.ECONNRESET,  # corresponds to ConnectionResetError in Python 3
 }
+
+if IS_WINDOWS:
+    acceptable_sock_shutdown_error_codes.add(socket.WSAENOTSOCK)
+
+acceptable_sock_shutdown_exceptions = (
+    BrokenPipeError,
+    ConnectionResetError,
+    # conditionally add _OpenSSL_SysCallError to the list
+    *(() if _OpenSSL_SysCallError is None else (_OpenSSL_SysCallError,)),
+)
+
 """Errors that may happen during the connection close sequence.
 
 * ENOTCONN — client is no longer connected
@@ -86,5 +118,3 @@ Refs:
 * https://github.com/python/cpython/blob/c39b52f/Lib/poplib.py#L297-L302
 * https://docs.microsoft.com/windows/win32/api/winsock/nf-winsock-shutdown
 """
-
-acceptable_sock_shutdown_exceptions = (BrokenPipeError, ConnectionResetError)

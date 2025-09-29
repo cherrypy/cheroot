@@ -67,6 +67,7 @@ True
 
 import contextlib
 import email.utils
+import errno
 import io
 import logging
 import os
@@ -80,6 +81,13 @@ import time
 import traceback as traceback_
 import urllib.parse
 from functools import lru_cache
+
+from OpenSSL.SSL import SysCallError
+
+from cheroot.errors import (
+    acceptable_sock_shutdown_error_codes,
+    acceptable_sock_shutdown_exceptions,
+)
 
 from . import __version__, connections, errors
 from ._compat import IS_PPC, bton
@@ -1189,9 +1197,21 @@ class HTTPRequest:
         if self.chunked_write and chunk:
             chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
             buf = [chunk_size_hex, CRLF, chunk, CRLF]
-            self.conn.wfile.write(EMPTY.join(buf))
+            data = EMPTY.join(buf)
         else:
-            self.conn.wfile.write(chunk)
+            data = chunk
+
+        try:
+            self.conn.wfile.write(data)
+        except (SysCallError, ConnectionError, OSError) as write_error:
+            if isinstance(write_error, OSError):
+                error_code = write_error.errno
+            else:
+                error_code = write_error.args[0]
+            if error_code in acceptable_sock_shutdown_error_codes:
+                # The socket is gone, so just ignore this error.
+                return
+            raise
 
     def send_headers(self):  # noqa: C901  # FIXME
         """Assert, process, and send the HTTP response message-headers.
@@ -1285,7 +1305,27 @@ class HTTPRequest:
         for k, v in self.outheaders:
             buf.append(k + COLON + SPACE + v + CRLF)
         buf.append(CRLF)
-        self.conn.wfile.write(EMPTY.join(buf))
+        try:
+            self.conn.wfile.write(EMPTY.join(buf))
+        except (SysCallError, ConnectionError, OSError) as e:
+            # We explicitly ignore these errors because they indicate the
+            # client has already closed the connection, which is a normal
+            # occurrence during a race condition.
+
+            # The .errno attribute is only available on OSError
+            # The .args[0] attribute is available on SysCallError
+            # Check for both cases to handle different exception types
+            error_code = e.errno if isinstance(e, OSError) else e.args[0]
+            if error_code in {
+                errno.ECONNRESET,
+                errno.EPIPE,
+                errno.ENOTCONN,
+                errno.EBADF,
+            }:
+                self.close_connection = True
+                self.conn.close()
+                return
+            raise
 
 
 class HTTPConnection:
@@ -1543,10 +1583,10 @@ class HTTPConnection:
 
         try:
             shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN
-        except errors.acceptable_sock_shutdown_exceptions:
+        except acceptable_sock_shutdown_exceptions:  # pylint: disable=E0712
             pass
         except socket.error as e:
-            if e.errno not in errors.acceptable_sock_shutdown_error_codes:
+            if e.errno not in acceptable_sock_shutdown_error_codes:
                 raise
 
 

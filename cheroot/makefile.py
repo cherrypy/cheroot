@@ -4,6 +4,10 @@
 import _pyio as io
 import socket
 
+from OpenSSL.SSL import SysCallError
+
+from cheroot.errors import acceptable_sock_shutdown_error_codes
+
 
 # Write only 16K at a time to sockets
 SOCK_WRITE_BLOCKSIZE = 16384
@@ -32,7 +36,52 @@ class BufferedWriter(io.BufferedWriter):
                 n = self.raw.write(bytes(self._write_buf))
             except io.BlockingIOError as e:
                 n = e.characters_written
+            except OSError as e:
+                error_code = e.errno
+                if error_code in acceptable_sock_shutdown_error_codes:
+                    # The socket is gone, so just ignore this error.
+                    return
+                raise
+            except SysCallError as e:
+                error_code = e.args[0]
+                if error_code in acceptable_sock_shutdown_error_codes:
+                    # The socket is gone, so just ignore this error.
+                    return
+                raise
+            else:
+                # The 'try' block completed without an exception
+                if n is None:
+                    # This could happen with non-blocking write
+                    # when nothing was written
+                    break
+
             del self._write_buf[:n]
+
+    def close(self):
+        """
+        Close the stream and its underlying file object.
+
+        This method is designed to be idempotent (it can be called multiple
+        times without side effects). It gracefully handles a race condition
+        where the underlying socket may have already been closed by the remote
+        client or another thread.
+
+        A SysCallError or OSError with errno.EBADF or errno.ENOTCONN is caught
+        and ignored, as these indicate a normal, expected connection teardown.
+        Other exceptions are re-raised.
+        """
+        if self.closed:  # pylint: disable=W0125
+            return
+
+        try:
+            super().close()
+        except (OSError, SysCallError) as e:
+            error_code = e.errno if isinstance(e, OSError) else e.args[0]
+            if error_code in acceptable_sock_shutdown_error_codes:
+                # The socket is already closed, which is expected during
+                # a race condition.
+                return
+            raise
 
 
 class StreamReader(io.BufferedReader):

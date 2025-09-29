@@ -57,6 +57,7 @@ signalling
 Sigstore
 ssl
 stdout
+stubtest
 subclasses
 submodules
 subpackages
