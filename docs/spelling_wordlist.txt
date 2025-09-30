@@ -56,6 +56,7 @@ Sep
 sep
 signalling
 Sigstore
+Solaris
 ssl
 stdout
 subclasses
