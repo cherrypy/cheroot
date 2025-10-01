@@ -1,0 +1,8 @@
+The changes in timeout values address two issues:
+1. The test_keepalive_conn_management test was intermittently
+failing in CI with http.client.NotConnected.
+This was due to the combined execution time of test logic and
+the explicit time.sleep() exceeding the server timeout (2.0s).
+
+2. The http_request_timeout was also too short and causing
+failures in test_http_over_https_error().

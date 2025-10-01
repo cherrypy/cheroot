@@ -20,8 +20,11 @@ fd
 Fortran
 hardcoded
 hostname
+http
+https
 inclusivity
 iterable
+keepalive
 linter
 linters
 linux
@@ -37,6 +40,7 @@ namespace
 natively
 netloc
 noqa
+NotConnected
 PIL
 pipelining
 positionally
