@@ -1929,7 +1929,7 @@ class HTTPServer:
         # This thread will handle unservicable connections, as added to
         # self._unservicable_conns queue. It will run forever, until
         # self.stop() tells it to shut down.
-        threading.Thread(target=self._serve_unservicable).start()
+        threading.Thread(target=self._serve_unservicable, daemon=True).start()
 
         while self.ready and not self.interrupt:
             try:
