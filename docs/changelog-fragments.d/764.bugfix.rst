@@ -1,0 +1,5 @@
+Added handling for WantWriteError and WantReadError in BufferedWriter
+and StreamReader to enable retries. This addresses long standing issues
+discussed in #245. The reliability of the fix relies on using pyOpenSSL
+v25.2.0 or greater, as earlier versions have known bugs that affect
+the retry logic.
