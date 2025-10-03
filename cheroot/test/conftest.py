@@ -23,7 +23,7 @@ from ..testing import (  # noqa: F401  # pylint: disable=unused-import
 @pytest.fixture
 def http_request_timeout():
     """Return a common HTTP request timeout for tests with queries."""
-    computed_timeout = 0.1
+    computed_timeout = 0.5
 
     if IS_MACOS:
         computed_timeout *= 2

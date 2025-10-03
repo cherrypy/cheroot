@@ -286,11 +286,19 @@ class BuiltinSSLAdapter(Adapter):
             raise errors.FatalSSLAlert(
                 *tls_connection_drop_error.args,
             ) from tls_connection_drop_error
-        except ssl.SSLError as generic_tls_error:
-            peer_speaks_plain_http_over_https = (
-                generic_tls_error.errno == ssl.SSL_ERROR_SSL
-                and _assert_ssl_exc_contains(generic_tls_error, 'http request')
-            )
+        except (
+            ssl.SSLError,
+            OSError,
+        ) as generic_tls_error:
+            # When the client speaks plain HTTP into a TLS-only connection,
+            # Python's builtin ssl raises an SSLError with `http request`
+            # in its message. Sometimes, due to a race condition, the socket
+            # is closed by the time we try to handle the error, resulting in an
+            # OSError: [Errno 9] Bad file descriptor.
+            peer_speaks_plain_http_over_https = isinstance(
+                generic_tls_error,
+                ssl.SSLError,
+            ) and _assert_ssl_exc_contains(generic_tls_error, 'http request')
             if peer_speaks_plain_http_over_https:
                 reraised_connection_drop_exc_cls = errors.NoSSLError
             else:
@@ -299,10 +307,6 @@ class BuiltinSSLAdapter(Adapter):
             raise reraised_connection_drop_exc_cls(
                 *generic_tls_error.args,
             ) from generic_tls_error
-        except OSError as tcp_connection_drop_error:
-            raise errors.FatalSSLAlert(
-                *tcp_connection_drop_error.args,
-            ) from tcp_connection_drop_error
 
         return s, self.get_environ(s)
 

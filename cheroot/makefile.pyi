@@ -1,6 +1,13 @@
 import io
+import sys
+from typing import Optional
+
+WSAENOTSOCK: Optional[int]
 
 SOCK_WRITE_BLOCKSIZE: int
+
+if sys.platform == 'win32':
+    WIN_SOCKET_NOT_OPEN: Optional[int]
 
 class BufferedWriter(io.BufferedWriter):
     def write(self, b): ...
