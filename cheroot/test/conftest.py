@@ -29,11 +29,11 @@ from ..testing import (  # noqa: F401  # pylint: disable=unused-import
 if sys.version_info >= (3, 14):
     try:
         import multiprocessing
-        # Only set if not already set (avoid RuntimeError)
-        if multiprocessing.get_start_method(allow_none=True) is None:
-            multiprocessing.set_start_method('fork', force=True)
+
+        # Force fork method even if already set to forkserver
+        multiprocessing.set_start_method('fork', force=True)
     except (ImportError, RuntimeError):
-        # multiprocessing not available or start method already set
+        # multiprocessing not available or already set and force failed
         pass
 
 
