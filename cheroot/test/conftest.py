@@ -21,12 +21,13 @@ from ..testing import (  # noqa: F401  # pylint: disable=unused-import
 )
 
 
-# Python 3.14 compatibility: Force 'fork' multiprocessing start method
-# Python 3.14 changed the default from 'fork' to 'forkserver' on Unix,
+# Python 3.14 compatibility: Force 'fork' multiprocessing start method on Unix
+# Python 3.14 changed the default from 'fork' to 'forkserver' on Unix platforms,
 # which can cause issues with pytest-xdist's parallel test execution.
 # This ensures compatibility with existing test fixtures and shared state.
+# Note: Windows doesn't support 'fork', so we skip this on Windows.
 # Ref: https://github.com/cherrypy/cheroot/issues/767
-if sys.version_info >= (3, 14):
+if sys.version_info >= (3, 14) and not IS_WINDOWS:
     try:
         import multiprocessing
 
