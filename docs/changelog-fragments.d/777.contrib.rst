@@ -1,0 +1,2 @@
+Increased timeout values ``test_client.server_instance.timeout`` and ``http_request_timeout``
+to make related tests more stable.
