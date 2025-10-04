@@ -4,13 +4,14 @@ Contains fixtures, which are tightly bound to the Cheroot framework
 itself, useless for end-users' app testing.
 """
 
+import contextlib
 import sys
 import threading
 import time
 
 import pytest
 
-from .._compat import IS_MACOS, IS_WINDOWS  # noqa: WPS436
+from .._compat import IS_MACOS, IS_WINDOWS
 from ..server import Gateway, HTTPServer
 from ..testing import (  # noqa: F401  # pylint: disable=unused-import
     get_server_client,
@@ -21,21 +22,19 @@ from ..testing import (  # noqa: F401  # pylint: disable=unused-import
 )
 
 
-# Python 3.14 compatibility: Force 'fork' multiprocessing start method on Unix
-# Python 3.14 changed the default from 'fork' to 'forkserver' on Unix platforms,
+# Python 3.14 compatibility: Force 'fork' multiprocessing on Unix
+# Python 3.14 changed default from 'fork' to 'forkserver' on Unix,
 # which can cause issues with pytest-xdist's parallel test execution.
 # This ensures compatibility with existing test fixtures and shared state.
 # Note: Windows doesn't support 'fork', so we skip this on Windows.
 # Ref: https://github.com/cherrypy/cheroot/issues/767
 if sys.version_info >= (3, 14) and not IS_WINDOWS:
-    try:
+    with contextlib.suppress(ImportError):
         import multiprocessing
 
-        # Force fork method even if already set to forkserver
-        multiprocessing.set_start_method('fork', force=True)
-    except (ImportError, RuntimeError):
-        # multiprocessing not available or already set and force failed
-        pass
+        with contextlib.suppress(RuntimeError):
+            # Force fork method even if already set to forkserver
+            multiprocessing.set_start_method('fork', force=True)
 
 
 @pytest.fixture
