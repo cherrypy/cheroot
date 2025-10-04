@@ -22,7 +22,7 @@ coverage==7.10.7
     # via
     #   -r requirements/tox-py39-cp39-darwin-x86_64.in
     #   pytest-cov
-cryptography==46.0.1
+cryptography==46.0.2
     # via
     #   pyopenssl
     #   trustme
