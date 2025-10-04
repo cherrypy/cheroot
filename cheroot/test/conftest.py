@@ -4,6 +4,7 @@ Contains fixtures, which are tightly bound to the Cheroot framework
 itself, useless for end-users' app testing.
 """
 
+import sys
 import threading
 import time
 
@@ -18,6 +19,22 @@ from ..testing import (  # noqa: F401  # pylint: disable=unused-import
     thread_and_wsgi_server,
     wsgi_server,
 )
+
+
+# Python 3.14 compatibility: Force 'fork' multiprocessing start method
+# Python 3.14 changed the default from 'fork' to 'forkserver' on Unix,
+# which can cause issues with pytest-xdist's parallel test execution.
+# This ensures compatibility with existing test fixtures and shared state.
+# Ref: https://github.com/cherrypy/cheroot/issues/767
+if sys.version_info >= (3, 14):
+    try:
+        import multiprocessing
+        # Only set if not already set (avoid RuntimeError)
+        if multiprocessing.get_start_method(allow_none=True) is None:
+            multiprocessing.set_start_method('fork', force=True)
+    except (ImportError, RuntimeError):
+        # multiprocessing not available or start method already set
+        pass
 
 
 @pytest.fixture
