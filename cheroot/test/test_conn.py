@@ -504,7 +504,7 @@ def test_keepalive(test_client, http_server_protocol):
 
 def test_keepalive_conn_management(test_client):
     """Test management of Keep-Alive connections."""
-    test_client.server_instance.timeout = 2
+    test_client.server_instance.timeout = 3
 
     def connection():
         # Initialize a persistent HTTP connection
