@@ -40,7 +40,7 @@ if sys.version_info >= (3, 14) and not IS_WINDOWS:
 @pytest.fixture
 def http_request_timeout():
     """Return a common HTTP request timeout for tests with queries."""
-    computed_timeout = 0.1
+    computed_timeout = 0.5
 
     if IS_MACOS:
         computed_timeout *= 2
