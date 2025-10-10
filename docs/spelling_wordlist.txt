@@ -43,6 +43,7 @@ positionally
 pre
 preconfigure
 py
+pyOpenSSL
 pytest
 pythonic
 readonly
