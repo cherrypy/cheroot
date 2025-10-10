@@ -2,6 +2,7 @@
 
 import errno
 import http.client
+import io
 import logging
 import socket
 import time
@@ -14,9 +15,11 @@ from re import match as _matches_pattern
 import pytest
 
 from jaraco.text import trim, unwrap
+from OpenSSL.SSL import SysCallError
 
 import cheroot.server
 from cheroot._compat import IS_CI, IS_MACOS, IS_PYPY, IS_WINDOWS
+from cheroot.makefile import BufferedWriter
 from cheroot.test import helper, webtest
 
 
@@ -1637,3 +1640,72 @@ def test_invalid_selected_connection(test_client, monkeypatch):
     time.sleep(test_client.server_instance.expiration_interval * 2)
     assert faux_select.os_error_triggered
     assert faux_get_map.conn_closed
+
+
+class TestBufferedWriter:
+    """Test cases for BufferedWriter close() method race condition handling."""
+
+    def test_close_is_idempotent(self):
+        """Test that close() can be called multiple times safely."""
+        raw_buffer = io.BytesIO()
+        buffered_writer = BufferedWriter(raw_buffer)
+
+        # Should not raise any exceptions
+        buffered_writer.close()
+        buffered_writer.close()  # Second call should be safe
+
+        assert buffered_writer.closed
+
+    def test_close_handles_already_closed_buffer(self):
+        """Test that close() handles already closed underlying buffer."""
+        raw_buffer = io.BytesIO()
+        buffered_writer = BufferedWriter(raw_buffer)
+
+        # Close the underlying buffer first
+        raw_buffer.close()
+
+        # This should not raise an exception
+        buffered_writer.close()
+
+    def test_close_handles_os_error_ebadf(self, mocker):
+        """Test that close() handles OSError with EBADF errno gracefully."""
+        raw_buffer = io.BytesIO()
+        buffered_writer = BufferedWriter(raw_buffer)
+
+        # Mock super().close() to raise OSError with EBADF
+        mock_super = mocker.patch('cheroot.makefile.super')
+        mock_super.return_value.close.side_effect = OSError(
+            errno.EBADF,
+            'Bad file descriptor',
+        )
+
+        # Should handle EBADF gracefully (no exception raised)
+        buffered_writer.close()
+
+    def test_close_handles_os_error_enotconn(self, mocker):
+        """Test that close() handles OSError with ENOTCONN errno gracefully."""
+        raw_buffer = io.BytesIO()
+        buffered_writer = BufferedWriter(raw_buffer)
+
+        # Mock super().close() to raise OSError with ENOTCONN
+        mock_super = mocker.patch('cheroot.makefile.super')
+        mock_super.return_value.close.side_effect = OSError(
+            errno.ENOTCONN,
+            'Socket is not connected',
+        )
+
+        # Should handle ENOTCONN gracefully (no exception raised)
+        buffered_writer.close()
+
+    def test_close_handles_syscall_error(self, mocker):
+        """Test that close() handles SysCallError with expected errno codes."""
+        raw_buffer = io.BytesIO()
+        buffered_writer = BufferedWriter(raw_buffer)
+
+        mock_super = mocker.patch('cheroot.makefile.super')
+        mock_super.return_value.close.side_effect = SysCallError(
+            errno.EBADF,
+        )  # args[0] will be errno.EBADF
+
+        # Should handle gracefully
+        buffered_writer.close()

@@ -2,8 +2,30 @@
 
 # prefer slower Python-based io module
 import _pyio as io
+import errno
 import socket
+import sys
 
+from OpenSSL.SSL import SysCallError
+
+
+# Define a variable to hold the platform-specific "not a socket" error.
+_not_a_socket_err = None
+
+if sys.platform == 'win32':
+    # On Windows, try to get the named constant from the socket module.
+    # If that fails, fall back to the known numeric value.
+    try:
+        _not_a_socket_err = socket.WSAENOTSOCK
+    except AttributeError:
+        _not_a_socket_err = 10038
+else:
+    # On other platforms, the relevant error is EBADF (Bad file descriptor),
+    # which is already in the list of handled errors.
+    pass
+
+# Expose the error constant for use in the module's public API if needed.
+WSAENOTSOCK = _not_a_socket_err
 
 # Write only 16K at a time to sockets
 SOCK_WRITE_BLOCKSIZE = 16384
@@ -30,9 +52,58 @@ class BufferedWriter(io.BufferedWriter):
                 # ssl sockets only except 'bytes', not bytearrays
                 # so perhaps we should conditionally wrap this for perf?
                 n = self.raw.write(bytes(self._write_buf))
-            except io.BlockingIOError as e:
-                n = e.characters_written
+            except (io.BlockingIOError, OSError, SysCallError) as e:
+                # Check for a different error attribute depending
+                # on the exception type
+                if isinstance(e, io.BlockingIOError):
+                    n = e.characters_written
+                else:
+                    error_code = (
+                        e.errno if isinstance(e, OSError) else e.args[0]
+                    )
+                    if error_code in {
+                        errno.EBADF,
+                        errno.ENOTCONN,
+                        errno.EPIPE,
+                        WSAENOTSOCK,  # Windows-specific error
+                    }:
+                        # The socket is gone, so just ignore this error.
+                        return
+                    raise
+            else:
+                # The 'try' block completed without an exception
+                if n is None:
+                    # This could happen with non-blocking write
+                    # when nothing was written
+                    break
+
             del self._write_buf[:n]
+
+    def close(self):
+        """
+        Close the stream and its underlying file object.
+
+        This method is designed to be idempotent (it can be called multiple
+        times without side effects). It gracefully handles a race condition
+        where the underlying socket may have already been closed by the remote
+        client or another thread.
+
+        A SysCallError or OSError with errno.EBADF or errno.ENOTCONN is caught
+        and ignored, as these indicate a normal, expected connection teardown.
+        Other exceptions are re-raised.
+        """
+        if self.closed:  # pylint: disable=W0125
+            return
+
+        try:
+            super().close()
+        except (OSError, SysCallError) as e:
+            error_code = e.errno if isinstance(e, OSError) else e.args[0]
+            if error_code in {errno.EBADF, errno.ENOTCONN}:
+                # The socket is already closed, which is expected during
+                # a race condition.
+                return
+            raise
 
 
 class StreamReader(io.BufferedReader):
