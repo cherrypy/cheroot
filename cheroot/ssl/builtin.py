@@ -276,7 +276,7 @@ class BuiltinSSLAdapter(Adapter):
         try:
             s = self.context.wrap_socket(
                 sock,
-                do_handshake_on_connect=True,
+                do_handshake_on_connect=False,
                 server_side=True,
             )
         except (
@@ -305,6 +305,97 @@ class BuiltinSSLAdapter(Adapter):
             ) from tcp_connection_drop_error
 
         return s, self.get_environ(s)
+
+    def _handle_plain_http_error(self, wfile, buf):
+        try:
+            wfile.write(buf)
+        except OSError as ex:
+            if ex.args[0] not in errors.socket_errors_to_ignore:
+                raise
+
+    def _handle_handshake_failure(self, conn):
+        try:
+            conn.socket.shutdown(socket.SHUT_RDWR)
+        except Exception:
+            # pass
+            return
+
+    def do_handshake(self, conn):
+        """Process SSL handshake on connection if needed.
+
+        Args:
+            conn (:py:class:`~cheroot.server.HTTPConnection`): HTTP connection
+        """
+        ssl_handshake_must_be_done = (
+            conn
+            and getattr(conn, 'socket', None)
+            and getattr(conn.socket, 'do_handshake', None)
+            and not getattr(conn.socket, 'cheroot_handshake_done', False)
+        )
+        if ssl_handshake_must_be_done:
+            conn.socket.cheroot_handshake_done = True
+            do_shutdown = False
+            try:
+                conn.socket.do_handshake()
+            except ssl.SSLError as generic_tls_error:
+                do_shutdown = True
+
+                # Try to send HTTP 400 status for plain text queries
+                peer_speaks_plain_http_over_https = (
+                    generic_tls_error.errno == ssl.SSL_ERROR_SSL
+                    and _assert_ssl_exc_contains(
+                        generic_tls_error,
+                        'http request',
+                    )
+                )
+                if peer_speaks_plain_http_over_https:
+                    msg = (
+                        'The client %s:%s sent a plain HTTP request, but '
+                        'this server only speaks HTTPS on this port.'
+                    )
+                    msg = msg % (conn.remote_addr, conn.remote_port)
+                    buf = [
+                        '%s 400 Bad Request\r\n' % conn.server.protocol,
+                        'Content-Length: %s\r\n' % len(msg),
+                        'Content-Type: text/plain\r\n\r\n',
+                        msg,
+                    ]
+                    conn.server.error_log(msg)
+
+                    # - writing directly on conn.socket attempt to use
+                    #   non-initialized SSL layer and raises exception:
+                    #   EOF occurred in violation of protocol (_ssl.c:2427)
+                    # - conn.socket.unwrap fails raising exception:
+                    #   [SSL: SHUTDOWN_WHILE_IN_INIT] shutdown while in
+                    #   init (_ssl.c:2706)
+                    # - we create a non SSL socket to send plain text reply
+                    conn.socket = socket.socket(fileno=conn.socket.detach())
+                    wfile = StreamWriter(
+                        conn.socket,
+                        'wb',
+                        DEFAULT_BUFFER_SIZE,
+                    )
+                    buf = ''.join(buf).encode('ISO-8859-1')
+                    self._handle_plain_http_error(wfile, buf)
+                else:
+                    msg = 'SSL handshake for %s:%s failed with SSL error:%s'
+                    msg = msg % (
+                        conn.remote_addr,
+                        conn.remote_port,
+                        generic_tls_error,
+                    )
+                    conn.server.error_log(msg)
+
+            except Exception as generic_error:
+                do_shutdown = True
+
+                msg = 'SSL handshake for %s:%s failed with error:%s'
+                msg = msg % (conn.remote_addr, conn.remote_port, generic_error)
+                conn.server.error_log(msg)
+
+            finally:
+                if do_shutdown:
+                    self._handle_handshake_failure(conn)
 
     def get_environ(self, sock):
         """Create WSGI environ entries to be merged into each request."""
