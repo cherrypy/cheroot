@@ -8,7 +8,7 @@ autocommand==2.2.2
     # via jaraco-text
 backports-tarfile==1.2.0
     # via jaraco-context
-certifi==2025.8.3
+certifi==2025.10.5
     # via requests
 cffi==1.17.1
     # via cryptography
@@ -22,7 +22,7 @@ coverage==7.6.1
     # via
     #   -r requirements/tox-py38-cp38-darwin-x86_64.in
     #   pytest-cov
-cryptography==46.0.1
+cryptography==46.0.2
     # via
     #   pyopenssl
     #   trustme
@@ -115,7 +115,7 @@ requests-toolbelt==1.0.0
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
 requests-unixsocket==0.3.0
     # via -r requirements/tox-py38-cp38-darwin-x86_64.in
-rich==14.1.0
+rich==14.2.0
     # via pytest-clarity
 six==1.17.0
     # via python-dateutil
@@ -123,7 +123,7 @@ tempora==5.7.1
     # via portend
 termcolor==2.4.0
     # via pytest-sugar
-tomli==2.2.1
+tomli==2.3.0
     # via
     #   coverage
     #   pytest
