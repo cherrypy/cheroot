@@ -1,5 +1,7 @@
 """Tests for :py:mod:`cheroot.makefile`."""
 
+import io
+
 from cheroot import makefile
 
 
@@ -51,3 +53,27 @@ def test_bytes_written():
     wfile = makefile.MakeFile(sock, 'w')
     wfile.write(b'bar')
     assert wfile.bytes_written == 3
+
+
+def test_close_is_idempotent():
+    """Test that close() can be called multiple times safely."""
+    raw_buffer = io.BytesIO()
+    buffered_writer = makefile.BufferedWriter(raw_buffer)
+
+    # Should not raise any exceptions
+    buffered_writer.close()
+    buffered_writer.close()  # Second call should be safe
+
+    assert buffered_writer.closed
+
+
+def test_close_handles_already_closed_buffer():
+    """Test that close() handles already closed underlying buffer."""
+    raw_buffer = io.BytesIO()
+    buffered_writer = makefile.BufferedWriter(raw_buffer)
+
+    # Close the underlying buffer first
+    raw_buffer.close()
+
+    # This should not raise an exception
+    buffered_writer.close()

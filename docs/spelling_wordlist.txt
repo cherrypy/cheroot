@@ -63,6 +63,7 @@ subpackages
 symlinked
 syscall
 systemd
+teardown
 threadpool
 Tidelift
 TLS
