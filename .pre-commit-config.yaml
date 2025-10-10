@@ -62,7 +62,7 @@ repos:
   - id: no_optional
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.11.7
+  rev: v0.13.3
   hooks:
   - id: ruff
     args:
@@ -70,31 +70,31 @@ repos:
     - --fix  # NOTE: When `--fix` is used, linting should be before ruff-format
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.11.7
+  rev: v0.13.3
   hooks:
   - id: ruff-format
     alias: ruff-format-first-pass
     name: ruff-format (first pass)
 
 - repo: https://github.com/asottile/add-trailing-comma.git
-  rev: v3.1.0
+  rev: v3.2.0
   hooks:
   - id: add-trailing-comma
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.11.7
+  rev: v0.13.3
   hooks:
   - id: ruff-format
     alias: ruff-format-second-pass
     name: ruff-format (second pass)
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  rev: v1.5.1
+  rev: v1.5.5
   hooks:
   - id: remove-tabs
 
 - repo: https://github.com/python-jsonschema/check-jsonschema.git
-  rev: 0.28.6
+  rev: 0.34.0
   hooks:
   - id: check-github-workflows
     files: ^\.github/workflows/[^/]+$
@@ -125,7 +125,7 @@ repos:
       ^.*\.rst$
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v4.6.0
+  rev: v6.0.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
@@ -168,7 +168,7 @@ repos:
   - id: debug-statements
 
 - repo: https://github.com/adrienverge/yamllint.git
-  rev: v1.32.0
+  rev: v1.37.1
   hooks:
   - id: yamllint
     types:
@@ -178,7 +178,7 @@ repos:
     - --strict
 
 - repo: https://github.com/PyCQA/flake8.git
-  rev: 7.1.1
+  rev: 7.3.0
   hooks:
   - id: flake8
     additional_dependencies:
@@ -199,7 +199,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
-  rev: v1.4.1
+  rev: v1.18.2
   hooks:
   - id: mypy
     alias: mypy-py38
@@ -274,7 +274,7 @@ repos:
       $
 
 - repo: https://github.com/PyCQA/pylint.git
-  rev: v3.1.0
+  rev: v3.3.9
   hooks:
   - id: pylint
     additional_dependencies:
