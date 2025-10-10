@@ -293,12 +293,16 @@ class pyOpenSSLAdapter(Adapter):
     ciphers = None
     """The ciphers list of TLS."""
 
+    private_key_password = None
+    """Optional passphrase for password protected private key."""
+
     def __init__(
         self,
         certificate,
         private_key,
         certificate_chain=None,
         ciphers=None,
+        private_key_password=None,
     ):
         """Initialize OpenSSL Adapter instance."""
         if SSL is None:
@@ -309,6 +313,7 @@ class pyOpenSSLAdapter(Adapter):
             private_key,
             certificate_chain,
             ciphers,
+            private_key_password,
         )
 
         self._environ = None
@@ -328,6 +333,19 @@ class pyOpenSSLAdapter(Adapter):
         # closing so we can't reliably access protocol/client cert for the env
         return sock, self._environ.copy()
 
+    def _password_callback(
+        self,
+        _password_max_length,
+        _verify_twice,
+        password,
+    ):
+        """Pass a passphrase to password protected private key."""
+        if not password:
+            return b''
+        if not isinstance(password, bytes):
+            return password.encode('utf-8')
+        return password
+
     def get_context(self):
         """Return an ``SSL.Context`` from self attributes.
 
@@ -335,6 +353,8 @@ class pyOpenSSLAdapter(Adapter):
         """
         # See https://code.activestate.com/recipes/442473/
         c = SSL.Context(SSL.SSLv23_METHOD)
+        if self.private_key_password is not None:
+            c.set_passwd_cb(self._password_callback, self.private_key_password)
         c.use_privatekey_file(self.private_key)
         if self.certificate_chain:
             c.load_verify_locations(self.certificate_chain)
