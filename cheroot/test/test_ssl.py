@@ -24,6 +24,7 @@ from .._compat import (
     IS_LINUX,
     IS_MACOS,
     IS_PYPY,
+    IS_SOLARIS,
     IS_WINDOWS,
     bton,
     ntob,
@@ -731,6 +732,11 @@ def test_http_over_https_error(
         expected_error_code, expected_error_text = (
             54,
             'Connection reset by peer',
+        )
+    if IS_SOLARIS:
+        expected_error_code, expected_error_text = (
+            None,
+            'Remote end closed connection without response',
         )
     if IS_WINDOWS:
         expected_error_code, expected_error_text = (
