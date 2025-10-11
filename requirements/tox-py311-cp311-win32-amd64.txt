@@ -98,7 +98,7 @@ pytest-cov==7.0.0
     # via -r requirements/tox-py311-cp311-win32-amd64.in
 pytest-mock==3.15.1
     # via -r requirements/tox-py311-cp311-win32-amd64.in
-pytest-rerunfailures==16.0.1
+pytest-rerunfailures==16.1
     # via -r requirements/tox-py311-cp311-win32-amd64.in
 pytest-sugar==1.1.1
     # via -r requirements/tox-py311-cp311-win32-amd64.in
