@@ -88,4 +88,7 @@ docs = [
 [project.scripts]
 cheroot = "cheroot.cli:main"
 
+[tool.setuptools.packages.find]
+exclude = ['dependencies']
+
 [tool.setuptools_scm]
