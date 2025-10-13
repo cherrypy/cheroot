@@ -2,8 +2,6 @@
 
 ci:
   autoupdate_schedule: quarterly
-  skip:
-  - stubtest
 
 repos:
 - repo: local
@@ -256,12 +254,20 @@ repos:
     - cheroot/
     pass_filenames: false
 
-- repo: local
+- repo: https://github.com/pre-commit/mirrors-mypy.git
+  rev: v1.4.1
   hooks:
-  - id: stubtest
+  - id: mypy
+    alias: mypy-stubtest
     name: MyPy stubtest
-    language: system
-    entry: stubtest
+    additional_dependencies:
+    - .
+    - jaraco.functools
+    - pyOpenSSL
+    # FIXME: Python 3.13+ causes a lot of
+    # FIXME: __firstlineno__/__static_attributes__ is not present in stub
+    language_version: python3.12
+    entry: python -m mypy.stubtest
     args:
     - cheroot
     - --mypy-config-file=mypy.ini
