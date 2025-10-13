@@ -135,12 +135,12 @@ repos:
   #   exclude: >-
   #     (?x)
   #     ^
-  #       requirements/[^/]+.txt
+  #       dependencies/[^/]+.txt
   #     $
   #   files: >-
   #     (?x)
   #     ^
-  #       requirements/[^/]+.in
+  #       dependencies/[^/]+.in
   #     $
 
   # Non-modifying checks:

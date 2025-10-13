@@ -132,7 +132,7 @@ jobs:
         )
 
 
-        (cd requirements/;
+        (cd dependencies/;
         ${{
         runner.os != 'Windows'
         && 'ln -svf tests.in "${BASE_NAME}.in"; git add "${BASE_NAME}.in"'
@@ -148,7 +148,7 @@ jobs:
         then
         git update-index --add --cacheinfo
         "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" "${SYMLINK_TARGET_HASH}"
-        "requirements/${BASE_NAME}.in" &&
+        "dependencies/${BASE_NAME}.in" &&
         git status &&
         git restore -- "${BASE_NAME}.in";
         fi'
@@ -168,12 +168,12 @@ jobs:
         )
         || '--upgrade'
         }}
-        --output-file="requirements/${BASE_NAME}.txt"
-        "requirements/${BASE_NAME}.in"
+        --output-file="dependencies/${BASE_NAME}.txt"
+        "dependencies/${BASE_NAME}.in"
         pyproject.toml
 
 
-        git add "requirements/${BASE_NAME}.txt"
+        git add "dependencies/${BASE_NAME}.txt"
 
 
         git commit -m "Update ${BASE_NAME} constraints${{
@@ -183,7 +183,7 @@ jobs:
         )
         && format(' for {0}', github.event.inputs.package-distribuition)
         || ''
-        }}" requirements/
+        }}" dependencies/
         && {
         echo
         "patch=0001-Update-${BASE_NAME}-constraints.patch"
