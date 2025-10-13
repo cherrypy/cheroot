@@ -60,6 +60,8 @@ extend-ignore =
   # attribute docstrings. Ref:
   # https://github.com/wemake-services/wemake-python-styleguide/issues/3056
   WPS462,
+  # WPS478: "Found non strict slice operation" -- needs investigation
+  WPS478,
 
   # FIXME: These `flake8-annotations` errors need fixing and removal
   # ANN001: Missing type annotation for function argument 'argv'

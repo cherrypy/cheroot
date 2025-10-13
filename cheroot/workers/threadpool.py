@@ -161,7 +161,7 @@ class WorkerThread(threading.Thread):
             if is_stats_enabled:
                 self.start_time = time.time()
             keep_conn_open = False
-            try:
+            try:  # noqa: WPS243 check "Found too long `finally` block: 3 > 2"
                 keep_conn_open = conn.communicate()
             except ConnectionError as connection_error:
                 keep_conn_open = False  # Drop the connection cleanly
