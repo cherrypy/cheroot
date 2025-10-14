@@ -218,7 +218,7 @@ repos:
     - types-requests
     args:
     - --python-version=3.8
-    - --txt-report=.tox/.tmp/.mypy/python-3.8
+    - --txt-report=.tox/.tmp/.test-results/mypy--py-3.8
     - cheroot/
     pass_filenames: false
   - id: mypy
@@ -231,7 +231,7 @@ repos:
     - types-requests
     args:
     - --python-version=3.10
-    - --txt-report=.tox/.tmp/.mypy/python-3.10
+    - --txt-report=.tox/.tmp/.test-results/mypy--py-3.10
     - cheroot/
     pass_filenames: false
   - id: mypy
@@ -244,7 +244,7 @@ repos:
     - types-requests
     args:
     - --python-version=3.12
-    - --txt-report=.tox/.tmp/.mypy/python-3.12
+    - --txt-report=.tox/.tmp/.test-results/mypy--py-3.12
     - cheroot/
     pass_filenames: false
 
