@@ -596,6 +596,7 @@ jobs:
         python-version:
         - |-
           3.11
+          3.12
           3.14
         toxenv:
         - pre-commit
