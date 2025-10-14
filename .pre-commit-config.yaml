@@ -212,12 +212,18 @@ repos:
     alias: mypy-py38
     name: MyPy, for Python 3.8
     additional_dependencies:
-    - lxml
+    - lxml  # dep of `--txt-report`, `--cobertura-xml-report` & `--html-report`
     - types-backports
     - types-pyOpenSSL
     - types-requests
     args:
     - --python-version=3.8
+    - --any-exprs-report=.tox/.tmp/.test-results/mypy--py-3.8
+    - --cobertura-xml-report=.tox/.tmp/.test-results/mypy--py-3.8
+    - --html-report=.tox/.tmp/.test-results/mypy--py-3.8
+    - --linecount-report=.tox/.tmp/.test-results/mypy--py-3.8
+    - --linecoverage-report=.tox/.tmp/.test-results/mypy--py-3.8
+    - --lineprecision-report=.tox/.tmp/.test-results/mypy--py-3.8
     - --txt-report=.tox/.tmp/.test-results/mypy--py-3.8
     - cheroot/
     pass_filenames: false
@@ -225,12 +231,18 @@ repos:
     alias: mypy-py310
     name: MyPy, for Python 3.10
     additional_dependencies:
-    - lxml
+    - lxml  # dep of `--txt-report`, `--cobertura-xml-report` & `--html-report`
     - types-backports
     - types-pyOpenSSL
     - types-requests
     args:
     - --python-version=3.10
+    - --any-exprs-report=.tox/.tmp/.test-results/mypy--py-3.10
+    - --cobertura-xml-report=.tox/.tmp/.test-results/mypy--py-3.10
+    - --html-report=.tox/.tmp/.test-results/mypy--py-3.10
+    - --linecount-report=.tox/.tmp/.test-results/mypy--py-3.10
+    - --linecoverage-report=.tox/.tmp/.test-results/mypy--py-3.10
+    - --lineprecision-report=.tox/.tmp/.test-results/mypy--py-3.10
     - --txt-report=.tox/.tmp/.test-results/mypy--py-3.10
     - cheroot/
     pass_filenames: false
@@ -238,12 +250,18 @@ repos:
     alias: mypy-py312
     name: MyPy, for Python 3.12
     additional_dependencies:
-    - lxml
+    - lxml  # dep of `--txt-report`, `--cobertura-xml-report` & `--html-report`
     - types-backports
     - types-pyOpenSSL
     - types-requests
     args:
     - --python-version=3.12
+    - --any-exprs-report=.tox/.tmp/.test-results/mypy--py-3.12
+    - --cobertura-xml-report=.tox/.tmp/.test-results/mypy--py-3.12
+    - --html-report=.tox/.tmp/.test-results/mypy--py-3.12
+    - --linecount-report=.tox/.tmp/.test-results/mypy--py-3.12
+    - --linecoverage-report=.tox/.tmp/.test-results/mypy--py-3.12
+    - --lineprecision-report=.tox/.tmp/.test-results/mypy--py-3.12
     - --txt-report=.tox/.tmp/.test-results/mypy--py-3.12
     - cheroot/
     pass_filenames: false
