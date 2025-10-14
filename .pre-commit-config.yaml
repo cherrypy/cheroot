@@ -217,8 +217,6 @@ repos:
     - types-pyOpenSSL
     - types-requests
     args:
-    - --install-types
-    - --non-interactive
     - --python-version=3.8
     - --txt-report=.tox/.tmp/.mypy/python-3.8
     - cheroot/
@@ -232,8 +230,6 @@ repos:
     - types-pyOpenSSL
     - types-requests
     args:
-    - --install-types
-    - --non-interactive
     - --python-version=3.10
     - --txt-report=.tox/.tmp/.mypy/python-3.10
     - cheroot/
@@ -247,8 +243,6 @@ repos:
     - types-pyOpenSSL
     - types-requests
     args:
-    - --install-types
-    - --non-interactive
     - --python-version=3.12
     - --txt-report=.tox/.tmp/.mypy/python-3.12
     - cheroot/
