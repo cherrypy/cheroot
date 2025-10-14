@@ -123,13 +123,14 @@ repos:
       ^.*\.rst$
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v4.6.0
+  rev: v6.0.0
   hooks:
   # Side-effects:
   - id: trailing-whitespace
   - id: check-merge-conflict
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
+  - id: fix-byte-order-marker
   # disabled because it doesn't make sense to change pip-tools-managed files
   # - id: requirements-txt-fixer
   #   exclude: >-
@@ -150,7 +151,6 @@ repos:
     exclude: cheroot/test/(helper|webtest|_pytest_plugin).py
     files: cheroot/test/.+\.py$
   - id: check-added-large-files
-  - id: check-byte-order-marker
   - id: check-case-conflict
   # disabled due to pre-commit/pre-commit-hooks#159
   # - id: check-docstring-first
