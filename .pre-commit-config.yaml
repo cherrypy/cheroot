@@ -225,7 +225,6 @@ repos:
     - --linecoverage-report=.tox/.tmp/.test-results/mypy--py-3.12
     - --lineprecision-report=.tox/.tmp/.test-results/mypy--py-3.12
     - --txt-report=.tox/.tmp/.test-results/mypy--py-3.12
-    - cheroot/
     pass_filenames: false
   - id: mypy
     alias: mypy-py310
@@ -244,7 +243,6 @@ repos:
     - --linecoverage-report=.tox/.tmp/.test-results/mypy--py-3.10
     - --lineprecision-report=.tox/.tmp/.test-results/mypy--py-3.10
     - --txt-report=.tox/.tmp/.test-results/mypy--py-3.10
-    - cheroot/
     pass_filenames: false
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
