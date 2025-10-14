@@ -30,7 +30,7 @@ nodeenv==1.7.0
     # via pre-commit
 platformdirs==2.5.4
     # via virtualenv
-pre-commit==2.20.0
+pre-commit==4.3.0
     # via -r dependencies/tox-pre-commit-cp311-linux-x86_64.in
 pycparser==2.21
     # via cffi
