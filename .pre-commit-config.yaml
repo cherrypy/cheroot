@@ -209,6 +209,21 @@ repos:
   rev: v1.18.2
   hooks:
   - id: mypy
+    alias: mypy-py314
+    name: MyPy, for Python 3.14
+    additional_dependencies:
+    - lxml  # dep of `--txt-report`, `--cobertura-xml-report` & `--html-report`
+    args:
+    - --python-version=3.14
+    - --any-exprs-report=.tox/.tmp/.test-results/mypy--py-3.14
+    - --cobertura-xml-report=.tox/.tmp/.test-results/mypy--py-3.14
+    - --html-report=.tox/.tmp/.test-results/mypy--py-3.14
+    - --linecount-report=.tox/.tmp/.test-results/mypy--py-3.14
+    - --linecoverage-report=.tox/.tmp/.test-results/mypy--py-3.14
+    - --lineprecision-report=.tox/.tmp/.test-results/mypy--py-3.14
+    - --txt-report=.tox/.tmp/.test-results/mypy--py-3.14
+    pass_filenames: false
+  - id: mypy
     alias: mypy-py312
     name: MyPy, for Python 3.12
     additional_dependencies:
