@@ -56,7 +56,7 @@ types-urllib3==1.26.25.4
     # via types-requests
 typing-extensions==4.4.0
     # via mypy
-virtualenv==20.16.7
+virtualenv==20.35.3
     # via pre-commit
 
 # The following packages are considered to be unsafe in a requirements file:
