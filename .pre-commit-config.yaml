@@ -206,7 +206,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
-  rev: v1.4.1
+  rev: v1.18.2
   hooks:
   - id: mypy
     alias: mypy-py312
@@ -246,9 +246,13 @@ repos:
     - --txt-report=.tox/.tmp/.test-results/mypy--py-3.10
     - cheroot/
     pass_filenames: false
+
+- repo: https://github.com/pre-commit/mirrors-mypy.git
+  rev: v1.14.1  # the last MyPy version to support Python 3.8
+  hooks:
   - id: mypy
     alias: mypy-py38
-    name: MyPy, for Python 3.8
+    name: MyPy 1.14.1, for Python 3.8
     additional_dependencies:
     - lxml  # dep of `--txt-report`, `--cobertura-xml-report` & `--html-report`
     - types-backports
@@ -267,7 +271,7 @@ repos:
     pass_filenames: false
 
 - repo: https://github.com/pre-commit/mirrors-mypy.git
-  rev: v1.4.1
+  rev: v1.18.2
   hooks:
   - id: mypy
     alias: mypy-stubtest
