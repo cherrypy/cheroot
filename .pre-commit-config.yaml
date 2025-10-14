@@ -213,7 +213,6 @@ repos:
     name: MyPy, for Python 3.8
     additional_dependencies:
     - lxml
-    - typed-ast
     - types-backports
     - types-pyOpenSSL
     - types-requests
@@ -229,7 +228,6 @@ repos:
     name: MyPy, for Python 3.10
     additional_dependencies:
     - lxml
-    - typed-ast
     - types-backports
     - types-pyOpenSSL
     - types-requests
@@ -245,7 +243,6 @@ repos:
     name: MyPy, for Python 3.12
     additional_dependencies:
     - lxml
-    - typed-ast
     - types-backports
     - types-pyOpenSSL
     - types-requests
