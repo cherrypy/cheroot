@@ -28,7 +28,7 @@ mypy-extensions==0.4.3
     # via mypy
 nodeenv==1.7.0
     # via pre-commit
-platformdirs==2.5.4
+platformdirs==4.4.0
     # via virtualenv
 pre-commit==4.3.0
     # via -r dependencies/tox-pre-commit-cp310-linux-x86_64.in
