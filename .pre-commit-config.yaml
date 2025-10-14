@@ -284,7 +284,7 @@ repos:
     entry: python -m mypy.stubtest
     args:
     - cheroot
-    - --mypy-config-file=mypy.ini
+    - --mypy-config-file=.mypy.ini
     - --allowlist=stubtest_allowlist.txt
     pass_filenames: false
     types_or:
