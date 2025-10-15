@@ -94,7 +94,7 @@ extend-ignore =
   SC200,
 
 # https://wemake-python-stylegui.de/en/latest/pages/usage/formatter.html
-#format = wemake
+format = wemake
 
 # Let's not overcomplicate the code:
 max-complexity = 10
