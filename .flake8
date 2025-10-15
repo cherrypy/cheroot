@@ -42,8 +42,6 @@ extend-ignore =
   E501,
   # W505: "doc line too long", its function is replaced by `flake8-length`
   W505,
-  # I: flake8-isort is drunk + we have isort integrated into pre-commit
-  I,
   # WPS300: "Found local folder import" -- nothing bad about this
   WPS300,
   # WPS305: "Found f string" -- nothing bad about this
@@ -168,10 +166,6 @@ statistics = true
 
 # ## Plugin-provided settings: ##
 
-# flake8-eradicate
-# E800:
-eradicate-whitelist-extend = isort:\s+\w+
-
 # flake8-pytest-style
 # PT001:
 pytest-fixture-no-parentheses = true
@@ -182,26 +176,6 @@ pytest-parametrize-values-type = tuple
 pytest-parametrize-values-row-type = tuple
 # PT023:
 pytest-mark-no-parentheses = true
-
-# flake8-rst-docstrings
-rst-directives =
-  spelling
-rst-roles =
-  # Built-in Sphinx roles:
-  class,
-  data,
-  file,
-  exc,
-  meth,
-  mod,
-  term,
-  py:class,
-  py:data,
-  py:exc,
-  py:meth,
-  py:term,
-  # Sphinx's internal role:
-  event,
 
 # wemake-python-styleguide
 show-source = true
