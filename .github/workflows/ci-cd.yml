@@ -667,7 +667,7 @@ jobs:
       timeout-minutes: >-
         ${{
           matrix.toxenv == 'linkcheck-docs'
-          && 10
+          && 15
           || (
             contains(
               fromJSON('["pre-commit", "spellcheck-docs"]'),
