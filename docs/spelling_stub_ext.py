@@ -16,7 +16,7 @@ try:
         Filter as _EnchantTokenizeFilterBase,
     )
 except ImportError:
-    _EnchantTokenizeFilterBase = object  # noqa: WPS440
+    _EnchantTokenizeFilterBase = object
 
 
 logger = logging.getLogger(__name__)
