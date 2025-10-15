@@ -10,6 +10,9 @@ namespace-packages = [
 quote-style = "single"
 
 [lint]
+external = [
+  "WPS",  # Do not remove noqa for wemake-python-style (WPS) checks
+]
 ignore = [
   "CPY001",  # Skip copyright notice requirement at top of files
 
