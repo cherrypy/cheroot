@@ -161,6 +161,8 @@ if IS_UID_GID_RESOLVABLE:
         IS_UID_GID_RESOLVABLE = False
         grp, pwd = None, None
     import struct
+else:
+    grp, pwd, struct = None, None, None
 
 
 if IS_WINDOWS and hasattr(socket, 'AF_INET6'):
@@ -249,6 +251,7 @@ class HeaderReader:
         if hdict is None:
             hdict = {}
 
+        hname = None
         while True:
             line = rfile.readline()
             if not line:

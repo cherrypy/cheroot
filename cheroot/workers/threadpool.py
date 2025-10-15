@@ -367,6 +367,8 @@ class ThreadPool:
 
         if timeout is not None:
             endtime = time.time() + timeout
+        else:
+            endtime = float('inf')
 
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.

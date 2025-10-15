@@ -730,16 +730,18 @@ def test_http_over_https_error(
             104,
             'Connection reset by peer',
         )
-    if IS_MACOS:
+    elif IS_MACOS:
         expected_error_code, expected_error_text = (
             54,
             'Connection reset by peer',
         )
-    if IS_WINDOWS:
+    elif IS_WINDOWS:
         expected_error_code, expected_error_text = (
             10054,
             'An existing connection was forcibly closed by the remote host',
         )
+    else:
+        assert False  # pragma: no cover
 
     underlying_error = ssl_err.value.args[0].args[-1]
     err_text = str(underlying_error)
