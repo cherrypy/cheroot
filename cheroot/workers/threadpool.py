@@ -365,10 +365,10 @@ class ThreadPool:
                 stacklevel=2,
             )
 
-        if timeout is not None:
-            endtime = time.time() + timeout
-        else:
+        if timeout is None:
             endtime = float('inf')
+        else:
+            endtime = time.time() + timeout
 
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
