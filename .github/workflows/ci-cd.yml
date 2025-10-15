@@ -661,7 +661,8 @@ jobs:
           && needs.pre-setup.outputs.sdist-artifact-name
           || ''
         }}
-      # NOTE: `pre-commit` and `sphinxcontrib-spellcheck` both depend on Git.
+      # NOTE: `pre-commit` and `sphinxcontrib-spellcheck` both depend on
+      # NOTE: Git and pip cache population can take longer.
       # NOTE: `linkcheck` does many network queries.
       # NOTE: They may get slower due to network I/O, hence bigger timeout.
       timeout-minutes: >-
@@ -673,7 +674,7 @@ jobs:
               fromJSON('["pre-commit", "spellcheck-docs"]'),
               matrix.toxenv
             )
-            && 4
+            && 5
             || 2
           )
         }}
