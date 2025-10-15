@@ -9,7 +9,7 @@ import time
 
 import pytest
 
-from .._compat import IS_MACOS, IS_WINDOWS  # noqa: WPS436
+from .._compat import IS_MACOS, IS_WINDOWS
 from ..server import Gateway, HTTPServer
 from ..testing import (  # noqa: F401  # pylint: disable=unused-import
     get_server_client,

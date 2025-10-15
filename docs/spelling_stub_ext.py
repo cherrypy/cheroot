@@ -12,7 +12,7 @@ from cheroot import __version__
 
 
 try:
-    from enchant.tokenize import (  # noqa: WPS433
+    from enchant.tokenize import (
         Filter as _EnchantTokenizeFilterBase,
     )
 except ImportError:
