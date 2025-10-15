@@ -205,3 +205,4 @@ rst-roles =
 
 # wemake-python-styleguide
 show-source = true
+show-violation-links = true
