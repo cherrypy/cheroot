@@ -39,11 +39,11 @@ def _configure_spelling_ext(app: Sphinx, config: _SphinxConfig) -> None:
                 return False
 
             logger.debug(
-                'Known version words: %r',  # noqa: WPS323
+                'Known version words: %r',
                 known_version_words,
             )
             logger.debug(
-                'Ignoring %r because it is a known version',  # noqa: WPS323
+                'Ignoring %r because it is a known version',
                 word,
             )
 

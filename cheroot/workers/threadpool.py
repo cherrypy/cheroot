@@ -123,7 +123,7 @@ class WorkerThread(threading.Thread):
                 level=logging.DEBUG,
             )
             self.server.interrupt = interrupt_cause
-        except BaseException as underlying_exc:  # noqa: WPS424
+        except BaseException as underlying_exc:
             # NOTE: This is the last resort logging with the last dying breath
             # NOTE: of the worker. It is only reachable when exceptions happen
             # NOTE: in the `finally` branch of the internal try/except block.
@@ -184,7 +184,7 @@ class WorkerThread(threading.Thread):
                 raise SystemExit(
                     str(shutdown_request),
                 ) from shutdown_request
-            except BaseException as unhandled_error:  # noqa: B036, WPS424
+            except BaseException as unhandled_error:  # noqa: B036
                 # NOTE: Only a shutdown request should bubble up to the
                 # NOTE: external cleanup code. Otherwise, this thread dies.
                 # NOTE: If this were to happen, the threadpool would still
