@@ -116,7 +116,7 @@ class _TestClient:
         )
         return conn_cls(name)
 
-    def request(
+    def request(  # pylint: disable=too-many-positional-arguments
         self,
         uri,
         method='GET',

@@ -168,7 +168,7 @@ class WebCase(unittest.TestCase):
         """
         return interface(self.HOST)
 
-    def getPage(
+    def getPage(  # pylint: disable=too-many-positional-arguments
         self,
         url,
         headers=None,
@@ -495,7 +495,7 @@ def openURL(*args, raise_subcls=(), **kwargs):
     )
 
 
-def _open_url_once(
+def _open_url_once(  # pylint: disable=too-many-positional-arguments
     url,
     headers=None,
     method='GET',

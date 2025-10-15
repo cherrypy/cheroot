@@ -671,6 +671,7 @@ def test_keepalive_conn_management(test_client):
         ),
     ),
 )
+# pylint: disable-next=too-many-positional-arguments
 def test_broken_connection_during_tcp_fin(
     error_number,
     exception_leaks,

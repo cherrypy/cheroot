@@ -1646,7 +1646,7 @@ class HTTPServer:
 
     Default is 10. Set to None to have unlimited connections."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         bind_addr,
         gateway,
@@ -2134,7 +2134,7 @@ class HTTPServer:
             )
 
     @classmethod
-    def prepare_socket(
+    def prepare_socket(  # pylint: disable=too-many-positional-arguments
         cls,
         bind_addr,
         family,

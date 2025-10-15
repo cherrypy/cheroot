@@ -225,7 +225,7 @@ def thread_exceptions():
         'pyopenssl',
     ),
 )
-def test_ssl_adapters(
+def test_ssl_adapters(  # pylint: disable=too-many-positional-arguments
     http_request_timeout,
     tls_http_server,
     adapter_type,
@@ -295,6 +295,7 @@ def test_ssl_adapters(
     reason='Fails under PyPy in CI for unknown reason',
     strict=False,
 )
+# pylint: disable-next=too-many-positional-arguments
 def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
     # FIXME: remove twisted logic, separate tests
     http_request_timeout,
@@ -499,6 +500,7 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
         (ssl.CERT_REQUIRED, True),
     ),
 )
+# pylint: disable-next=too-many-positional-arguments
 def test_ssl_env(  # noqa: C901  # FIXME
     thread_exceptions,
     recwarn,
@@ -665,6 +667,7 @@ def test_https_over_http_error(http_server, ip_addr):
     ),
 )
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
+# pylint: disable-next=too-many-positional-arguments
 def test_http_over_https_error(
     http_request_timeout,
     tls_http_server,

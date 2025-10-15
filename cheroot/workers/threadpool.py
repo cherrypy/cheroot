@@ -229,7 +229,7 @@ class ThreadPool:
     and stop(timeout) attributes.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         server,
         min=10,
