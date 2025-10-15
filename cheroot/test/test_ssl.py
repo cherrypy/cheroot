@@ -702,6 +702,7 @@ def test_http_over_https_error(
             'An existing connection was forcibly closed by the remote host',
         )
     else:
+        expected_error_code, expected_error_text = None, None
         pytest.skip(f'{SYS_PLATFORM} is unsupported')  # pragma: no cover
 
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
