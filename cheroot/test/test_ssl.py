@@ -25,6 +25,7 @@ from .._compat import (
     IS_MACOS,
     IS_PYPY,
     IS_WINDOWS,
+    SYS_PLATFORM,
     bton,
     ntob,
     ntou,
@@ -685,6 +686,24 @@ def test_http_over_https_error(
     if issue_225:
         pytest.xfail('Test fails in Travis-CI')
 
+    if IS_LINUX:
+        expected_error_code, expected_error_text = (
+            104,
+            'Connection reset by peer',
+        )
+    elif IS_MACOS:
+        expected_error_code, expected_error_text = (
+            54,
+            'Connection reset by peer',
+        )
+    elif IS_WINDOWS:
+        expected_error_code, expected_error_text = (
+            10054,
+            'An existing connection was forcibly closed by the remote host',
+        )
+    else:
+        pytest.skip(f'{SYS_PLATFORM} is unsupported')  # pragma: no cover
+
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
     tls_adapter = tls_adapter_cls(
         tls_certificate_chain_pem_path,
@@ -724,24 +743,6 @@ def test_http_over_https_error(
             f'http://{fqdn!s}:{port!s}/',
             timeout=http_request_timeout,
         )
-
-    if IS_LINUX:
-        expected_error_code, expected_error_text = (
-            104,
-            'Connection reset by peer',
-        )
-    elif IS_MACOS:
-        expected_error_code, expected_error_text = (
-            54,
-            'Connection reset by peer',
-        )
-    elif IS_WINDOWS:
-        expected_error_code, expected_error_text = (
-            10054,
-            'An existing connection was forcibly closed by the remote host',
-        )
-    else:
-        assert False  # pragma: no cover
 
     underlying_error = ssl_err.value.args[0].args[-1]
     err_text = str(underlying_error)
