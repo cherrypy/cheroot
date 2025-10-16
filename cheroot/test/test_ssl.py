@@ -697,7 +697,7 @@ def test_http_over_https_error(
             54,
             'Connection reset by peer',
         )
-    if IS_SOLARIS:
+    elif IS_SOLARIS:
         expected_error_code, expected_error_text = (
             None,
             'Remote end closed connection without response',
