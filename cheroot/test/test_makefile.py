@@ -1,10 +1,12 @@
 """Tests for :py:mod:`cheroot.makefile`."""
 
+import io
+
 from cheroot import makefile
 
 
 class MockSocket:
-    """A mock socket."""
+    """A mock socket for emulating buffered I/O."""
 
     def __init__(self):
         """Initialize :py:class:`MockSocket`."""
@@ -51,3 +53,29 @@ def test_bytes_written():
     wfile = makefile.MakeFile(sock, 'w')
     wfile.write(b'bar')
     assert wfile.bytes_written == 3
+
+
+def test_close_is_idempotent():
+    """Test that double ``close()`` does not error out."""
+    raw_buffer = io.BytesIO()
+    buffered_writer = makefile.BufferedWriter(raw_buffer)
+
+    # Should not raise any exceptions
+    buffered_writer.close()
+    assert buffered_writer.closed
+
+    buffered_writer.close()  # Second call should be safe
+    assert buffered_writer.closed
+
+
+def test_close_handles_already_closed_buffer():
+    """Test that ``close()`` handles already closed underlying buffer."""
+    raw_buffer = io.BytesIO()
+    buffered_writer = makefile.BufferedWriter(raw_buffer)
+
+    # Close the underlying buffer first
+    raw_buffer.close()
+
+    # This should not raise an exception
+    assert raw_buffer.closed
+    assert buffered_writer.closed
