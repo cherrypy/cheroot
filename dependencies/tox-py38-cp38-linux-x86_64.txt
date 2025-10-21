@@ -14,7 +14,7 @@ cffi==1.17.1
     # via cryptography
 chardet==5.2.0
     # via requests
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 colorama==0.4.6
     # via pytest-watch
@@ -22,7 +22,7 @@ coverage==7.6.1
     # via
     #   -r dependencies/tox-py38-cp38-linux-x86_64.in
     #   pytest-cov
-cryptography==46.0.2
+cryptography==46.0.3
     # via
     #   pyopenssl
     #   trustme
