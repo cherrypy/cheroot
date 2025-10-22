@@ -1192,9 +1192,11 @@ class HTTPRequest:
         if self.chunked_write and chunk:
             chunk_size_hex = hex(len(chunk))[2:].encode('ascii')
             buf = [chunk_size_hex, CRLF, chunk, CRLF]
-            self.conn.wfile.write(EMPTY.join(buf))
+            data = EMPTY.join(buf)
         else:
-            self.conn.wfile.write(chunk)
+            data = chunk
+
+        self.conn.wfile.write(data)
 
     def send_headers(self):  # noqa: C901  # FIXME
         """Assert, process, and send the HTTP response message-headers.
