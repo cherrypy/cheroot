@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any, Optional, Type
 
 from OpenSSL import SSL
 
@@ -18,11 +18,14 @@ class SSLFileobjectMixin:
 class SSLFileobjectStreamReader(SSLFileobjectMixin, StreamReader): ...  # type:ignore[misc]
 class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter): ...  # type:ignore[misc]
 
-class SSLConnectionProxyMeta:
-    def __new__(mcl, name, bases, nmspc): ...
-
 class SSLConnection:
+    proxy_methods: tuple[str, ...]
+    proxy_methods_no_args: tuple[str, ...]
+    proxy_props: tuple[str, ...]
+
     def __init__(self, *args) -> None: ...
+    def __getattr__(self, name: str) -> Any: ...
+    def shutdown(self, how: Optional[int] = None) -> None: ...
 
 class pyOpenSSLAdapter(Adapter):
     def __init__(

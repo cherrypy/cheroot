@@ -50,6 +50,8 @@ will be read, and the context will be automatically created from them.
    pyopenssl
 """
 
+import errno
+import os
 import socket
 import sys
 import threading
@@ -68,6 +70,7 @@ except ImportError:
     SSL = None
 
 import contextlib
+from typing import NoReturn
 
 from .. import (
     errors,
@@ -175,99 +178,77 @@ class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
     """SSL file object attached to a socket object."""
 
 
-class SSLConnectionProxyMeta:
-    """Metaclass for generating a bunch of proxy methods."""
-
-    def __new__(mcl, name, bases, nmspc):
-        """Attach a list of proxy methods to a new class."""
-        proxy_methods = (
-            'get_context',
-            'pending',
-            'send',
-            'write',
-            'recv',
-            'read',
-            'renegotiate',
-            'bind',
-            'listen',
-            'connect',
-            'accept',
-            'setblocking',
-            'fileno',
-            'close',
-            'get_cipher_list',
-            'getpeername',
-            'getsockname',
-            'getsockopt',
-            'setsockopt',
-            'makefile',
-            'get_app_data',
-            'set_app_data',
-            'state_string',
-            'sock_shutdown',
-            'get_peer_certificate',
-            'want_read',
-            'want_write',
-            'set_connect_state',
-            'set_accept_state',
-            'connect_ex',
-            'sendall',
-            'settimeout',
-            'gettimeout',
-            'shutdown',
-        )
-        proxy_methods_no_args = ('shutdown',)
-
-        proxy_props = ('family',)
-
-        def lock_decorator(method):
-            """Create a proxy method for a new class."""
-
-            def proxy_wrapper(self, *args):
-                self._lock.acquire()
-                try:
-                    new_args = (
-                        args[:] if method not in proxy_methods_no_args else []
-                    )
-                    return getattr(self._ssl_conn, method)(*new_args)
-                finally:
-                    self._lock.release()
-
-            return proxy_wrapper
-
-        for m in proxy_methods:
-            nmspc[m] = lock_decorator(m)
-            nmspc[m].__name__ = m
-
-        def make_property(property_):
-            """Create a proxy method for a new class."""
-
-            def proxy_prop_wrapper(self):
-                return getattr(self._ssl_conn, property_)
-
-            proxy_prop_wrapper.__name__ = property_
-            return property(proxy_prop_wrapper)
-
-        for p in proxy_props:
-            nmspc[p] = make_property(p)
-
-        # Doesn't work via super() for some reason.
-        # Falling back to type() instead:
-        return type(name, bases, nmspc)
-
-
-class SSLConnection(metaclass=SSLConnectionProxyMeta):
-    r"""A thread-safe wrapper for an ``SSL.Connection``.
-
-    :param tuple args: the arguments to create the wrapped \
-                        :py:class:`SSL.Connection(*args) \
-                        <pyopenssl:OpenSSL.SSL.Connection>`
-    """
+class SSLConnection:
+    """A thread-safe wrapper around :py:class:`cheroot.ssl.pyopenssl.SSLConnection`."""
 
     def __init__(self, *args):
-        """Initialize SSLConnection instance."""
+        """Initialize the SSLConnection."""
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
+
+    def _handle_syscall_error(self, ssl_syscall_err, method_name) -> NoReturn:
+        """
+        Convert ``SysCallError`` to appropriate ``ConnectionError``.
+
+        This intercepts the low-level ``SysCallError`` and
+        translates it into a standard Python exception
+        (:exc:`ConnectionRefusedError`, :exc:`BrokenPipeError`,
+        :exc:`ConnectionResetError`, etc.) based on the
+        error number (errno). This ensures that Cheroot handles errors
+        consistently across both native Python sockets and
+        pyOpenSSL objects.
+        """
+        connection_error_map = {
+            errno.EBADF: ConnectionError,
+            errno.ECONNABORTED: ConnectionAbortedError,
+            errno.ECONNREFUSED: ConnectionRefusedError,
+            errno.ECONNRESET: ConnectionResetError,
+            errno.ENOTCONN: ConnectionError,
+            errno.EPIPE: BrokenPipeError,
+            errno.ESHUTDOWN: BrokenPipeError,
+        }
+        error_code = ssl_syscall_err.args[0] if ssl_syscall_err.args else None
+        error_msg = (
+            os.strerror(error_code)
+            if error_code is not None
+            else repr(ssl_syscall_err)
+        )
+        conn_err_cls = connection_error_map.get(error_code, ConnectionError)
+        raise conn_err_cls(
+            error_code,
+            f'Error in calling {method_name} on PyOpenSSL connection: {error_msg}',
+        ) from ssl_syscall_err
+
+    def __getattr__(self, name):
+        """Proxy attribute access to the underlying ``SSL.Connection``."""
+        original_attr = getattr(self._ssl_conn, name)
+
+        if callable(original_attr):
+
+            def locked_proxy(*args, **kwargs):
+                with self._lock:
+                    try:
+                        return original_attr(*args, **kwargs)
+                    except SSL.SysCallError as e:
+                        self._handle_syscall_error(e, name)
+
+            return locked_proxy
+
+        return original_attr
+
+    def shutdown(self, how=None):
+        """Shutdown the SSL connection.
+
+        how: Ignored.
+        PyOpenSSL's shutdown() method does not accept any arguments.
+        Present here for interface compatibility with Python
+        socket.shutdown(how).
+        """
+        with self._lock:
+            try:
+                return self._ssl_conn.shutdown()
+            except SSL.SysCallError as e:
+                self._handle_syscall_error(e, 'shutdown')
 
 
 class pyOpenSSLAdapter(Adapter):
