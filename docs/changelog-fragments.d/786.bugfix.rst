@@ -1,0 +1,3 @@
+OpenSSL system call errors are now intercepted and reraised as standard Python ConnectionErrors.
+
+-- by :user:`julianz-`
