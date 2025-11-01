@@ -1,0 +1,9 @@
+{
+    "python.defaultInterpreterPath": "/Users/julian/Documents/GitHub/cheroot/.venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestPath": "/Users/julian/Documents/GitHub/cheroot/.venv/bin/pytest",
+    "python.testing.pytestArgs": [
+        "--rootdir=.", 
+        "--import-mode=importlib" // Optional: A modern import mode that may help
+    ]
+}

@@ -216,92 +216,89 @@ class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
     """SSL file object attached to a socket object."""
 
 
-class SSLConnectionProxyMeta:
-    """Metaclass for generating a bunch of proxy methods."""
+# Wrapper function to dynamically add thread-safe methods and properties
+def _wrap_ssl_connection_methods(cls):
+    """Dynamically attaches proxied methods and properties to the class."""
+    # 1. Attach Methods
+    for method in cls.proxy_methods:
+        wrapped_func = cls._lock_decorator(method)
+        setattr(cls, method, wrapped_func)
 
-    def __new__(mcl, name, bases, nmspc):
-        """Attach a list of proxy methods to a new class."""
-        proxy_methods = (
-            'get_context',
-            'pending',
-            'send',
-            'write',
-            'recv',
-            'read',
-            'renegotiate',
-            'bind',
-            'listen',
-            'connect',
-            'accept',
-            'setblocking',
-            'fileno',
-            'close',
-            'get_cipher_list',
-            'getpeername',
-            'getsockname',
-            'getsockopt',
-            'setsockopt',
-            'makefile',
-            'get_app_data',
-            'set_app_data',
-            'state_string',
-            'sock_shutdown',
-            'get_peer_certificate',
-            'want_read',
-            'want_write',
-            'set_connect_state',
-            'set_accept_state',
-            'connect_ex',
-            'sendall',
-            'settimeout',
-            'gettimeout',
-            'shutdown',
-        )
-        proxy_methods_no_args = ('shutdown',)
+    # 2. Attach Properties
+    for prop in cls.proxy_props:
+        setattr(cls, prop, cls._make_property(prop))
 
-        proxy_props = ('family',)
-
-        def lock_decorator(method):
-            """Create a proxy method for a new class."""
-
-            def proxy_wrapper(self, *args):
-                new_args = (
-                    args[:] if method not in proxy_methods_no_args else []
-                )
-                # translate any SysCallError to ConnectionError
-                with _morph_syscall_to_connection_error(method), self._lock:
-                    return getattr(self._ssl_conn, method)(*new_args)
-
-            return proxy_wrapper
-
-        for m in proxy_methods:
-            nmspc[m] = lock_decorator(m)
-            nmspc[m].__name__ = m
-
-        def make_property(property_):
-            """Create a proxy method for a new class."""
-
-            def proxy_prop_wrapper(self):
-                return getattr(self._ssl_conn, property_)
-
-            proxy_prop_wrapper.__name__ = property_
-            return property(proxy_prop_wrapper)
-
-        for p in proxy_props:
-            nmspc[p] = make_property(p)
-
-        # Doesn't work via super() for some reason.
-        # Falling back to type() instead:
-        return type(name, bases, nmspc)
+    return cls
 
 
-class SSLConnection(metaclass=SSLConnectionProxyMeta):
-    r"""A thread-safe wrapper for an ``SSL.Connection``.
+@_wrap_ssl_connection_methods
+class SSLConnection:
+    """A thread-safe wrapper around :py:class:`SSL.Connection <pyopenssl:OpenSSL.SSL.Connection>`."""
 
-    :param tuple args: the arguments to create the wrapped \
-                        :py:class:`SSL.Connection(*args) \
-                        <pyopenssl:OpenSSL.SSL.Connection>`
-    """
+    proxy_methods = (
+        'get_context',
+        'pending',
+        'send',
+        'write',
+        'recv',
+        'read',
+        'renegotiate',
+        'bind',
+        'listen',
+        'connect',
+        'accept',
+        'setblocking',
+        'fileno',
+        'close',
+        'get_cipher_list',
+        'getpeername',
+        'getsockname',
+        'getsockopt',
+        'setsockopt',
+        'makefile',
+        'get_app_data',
+        'set_app_data',
+        'state_string',
+        'sock_shutdown',
+        'get_peer_certificate',
+        'want_read',
+        'want_write',
+        'set_connect_state',
+        'set_accept_state',
+        'connect_ex',
+        'sendall',
+        'settimeout',
+        'gettimeout',
+        'shutdown',
+    )
+    proxy_methods_no_args = ('shutdown',)
+    proxy_props = ('family',)
+
+    @staticmethod
+    def _lock_decorator(method):
+        """Create the thread-safe, error-translating proxy method."""
+
+        def proxy_wrapper(self, *args):
+            new_args = (
+                args[:]
+                if method not in SSLConnection.proxy_methods_no_args
+                else []
+            )
+            with self._lock, _morph_syscall_to_connection_error(method):
+                return getattr(self._ssl_conn, method)(*new_args)
+
+        proxy_wrapper.__name__ = method
+        return proxy_wrapper
+
+    @staticmethod
+    def _make_property(property_):
+        """Create the property proxy."""
+
+        def proxy_prop_wrapper(self):
+            return getattr(self._ssl_conn, property_)
+
+        proxy_prop_wrapper.__name__ = property_
+        return property(proxy_prop_wrapper)
 
     def __init__(self, *args):
         """Initialize SSLConnection instance."""

@@ -18,10 +18,11 @@ class SSLFileobjectMixin:
 class SSLFileobjectStreamReader(SSLFileobjectMixin, StreamReader): ...  # type:ignore[misc]
 class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter): ...  # type:ignore[misc]
 
-class SSLConnectionProxyMeta:
-    def __new__(mcl, name, bases, nmspc): ...
-
 class SSLConnection:
+    proxy_methods: tuple[str, ...]
+    proxy_methods_no_args: tuple[str, ...]
+    proxy_props: tuple[str, ...]
+
     def __init__(self, *args) -> None: ...
 
 class pyOpenSSLAdapter(Adapter):
