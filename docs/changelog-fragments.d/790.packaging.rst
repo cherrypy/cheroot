@@ -1,0 +1,5 @@
+The packaging configuration has been fixed to ensure
+that only :file:`cheroot` package will be installed
+into :file:`site-packages/` -- by :user:`webknjaz`.
+
+This fixes a regression introduced in version 11.1.0.
