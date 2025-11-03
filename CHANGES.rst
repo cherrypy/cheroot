@@ -14,6 +14,31 @@ Changelog
 
 .. towncrier release notes start
 
+v11.1.1
+=======
+
+*(2025-11-03)*
+
+
+Packaging updates and notes for downstreams
+-------------------------------------------
+
+- The packaging configuration has been fixed to ensure
+  that only :file:`cheroot` package will be installed
+  into :file:`site-packages/` -- by :user:`webknjaz`.
+
+  This fixes a regression introduced in version 11.1.0.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`790`.
+
+  *Related commits on GitHub:*
+  :commit:`d286d1a10718e871366743f3f496c760113cee15`.
+
+
+----
+
+
 v11.1.0
 =======
 
