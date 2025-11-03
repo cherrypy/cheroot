@@ -924,7 +924,10 @@ def test_openssl_adapter_with_false_key_password(
 
     with expected_warn, pytest.raises(
         OpenSSL.SSL.Error,
-        match=r'.+bad decrypt.+',
+        # Decode error has happened very rarely with Python 3.9 in MacOS.
+        # Might be caused by a random issue in file handling leading
+        # to interpretation of garbage characters in certificates.
+        match=r'.+\'(bad decrypt|decode error)\'.+',
     ):
         httpserver.prepare()
 
