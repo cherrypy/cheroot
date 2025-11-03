@@ -1,1 +1,0 @@
-Made ``test_http_over_https_error`` compatible with Solaris -- by :user:`mtelka`.

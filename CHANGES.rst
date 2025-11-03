@@ -14,6 +14,47 @@ Changelog
 
 .. towncrier release notes start
 
+v11.1.0
+=======
+
+*(2025-11-03)*
+
+
+Features
+--------
+
+- Added optional private key password argument to SSL adapters to support password-protected private keys
+  -- by :user:`jatalahd`.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`752`.
+
+
+Contributor-facing changes
+--------------------------
+
+- Added missing ``__all__`` and ``IS_WINDOWS`` definitions to ``.pyi`` stub files for mypy.
+
+  -- by :user:`julianz-`
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`774`.
+
+- Made ``test_http_over_https_error`` compatible with Solaris -- by :user:`mtelka`.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`776`.
+
+- Increased timeout values ``test_client.server_instance.timeout`` and ``http_request_timeout``
+  to make related tests more stable.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`777`.
+
+
+----
+
+
 v11.0.0
 =======
 

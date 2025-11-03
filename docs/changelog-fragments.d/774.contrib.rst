@@ -1,3 +1,0 @@
-Added missing ``__all__`` and ``IS_WINDOWS`` definitions to ``.pyi`` stub files for mypy.
-
--- by :user:`julianz-`
