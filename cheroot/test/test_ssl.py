@@ -924,7 +924,7 @@ def test_openssl_adapter_with_false_key_password(
 
     with expected_warn, pytest.raises(
         OpenSSL.SSL.Error,
-        match=r'.+bad decrypt.+',
+        match=r'.+\'bad decrypt\'.+|.+\'decode error\'.+',
     ):
         httpserver.prepare()
 
