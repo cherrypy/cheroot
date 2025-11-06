@@ -1,8 +1,10 @@
 """Tests for the HTTP server."""
 
 import os
+import pathlib
 import queue
 import socket
+import subprocess
 import sys
 import tempfile
 import threading
@@ -23,6 +25,7 @@ from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
     EPHEMERAL_PORT,
+    SUCCESSFUL_SUBPROCESS_EXIT,
 )
 from ..workers.threadpool import ThreadPool
 
@@ -611,3 +614,15 @@ def test_overload_results_in_suitable_http_error(request):
 
     response = requests.get(f'http://{localhost}:{port}', timeout=20)
     assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
+
+
+def test_overload_thread_does_not_leak():
+    """On shutdown the overload thread exits.
+
+    This is a test for issue #769.
+    """
+    path = pathlib.Path(__file__).parent / 'threadleakcheck.py'
+    process = subprocess.run([sys.executable, path], check=False)
+    # We use special exit code to indicate success, rather than normal zero, so
+    # the test doesn't acidentally pass:
+    assert process.returncode == SUCCESSFUL_SUBPROCESS_EXIT
