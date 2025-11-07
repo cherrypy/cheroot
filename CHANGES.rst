@@ -14,6 +14,30 @@ Changelog
 
 .. towncrier release notes start
 
+v11.1.2
+=======
+
+*(2025-11-07)*
+
+
+Bug fixes
+---------
+
+- The "service unavailable" thread is now turn down properly when
+  the server is shut down -- by :user:`itamarst`.
+
+  This fixes a regression in Cheroot originally introduced in v11.0.0
+  that would manifest itself under Python 3.12 and older. In certain
+  conditions like under CherryPy, it would also lead to hangs on
+  tear-down.
+
+  *Related issues and pull requests on GitHub:*
+  :issue:`769`, :issue:`794`.
+
+
+----
+
+
 v11.1.1
 =======
 
