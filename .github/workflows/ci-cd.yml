@@ -296,7 +296,11 @@ jobs:
         FILE_APPEND_MODE = 'a'
 
         whl_file_prj_base_name = '${{ env.PROJECT_NAME }}'.replace('-', '_')
-        sdist_file_prj_base_name = whl_file_prj_base_name.replace('.', '_')
+        sdist_file_prj_base_name = (
+            whl_file_prj_base_name.
+            replace('.', '_')
+            .lower()
+        )
 
         with Path(environ['GITHUB_OUTPUT']).open(
                 mode=FILE_APPEND_MODE,
