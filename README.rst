@@ -19,7 +19,7 @@
 .. image:: https://img.shields.io/pypi/pyversions/cheroot.svg
    :target: https://pypi.org/project/cheroot
 
-.. image:: https://codecov.io/gh/cherrypy/cheroot/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/cherrypy/cheroot/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/cherrypy/cheroot
    :alt: codecov
 
@@ -86,7 +86,7 @@ Contribute Cheroot
 ==================
 **Want to add something to upstream?** Feel free to submit a PR or file an issue
 if unsure. Please follow `CherryPy's common contribution guidelines
-<https://github.com/cherrypy/cherrypy/blob/master/.github/CONTRIBUTING.rst>`_.
+<https://github.com/cherrypy/cherrypy/blob/main/.github/CONTRIBUTING.rst>`_.
 Note that PR is more likely to be accepted if it includes tests and detailed
 description helping maintainers to understand it better 🎉
 
