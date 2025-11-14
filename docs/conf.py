@@ -134,6 +134,7 @@ linkcheck_ignore = [
     r'^https://matrix\.to/#',  # these render fully on front-end from anchors
     r'^https://stackoverflow\.com/',  # these generate HTTP 403 Forbidden
     r'^https://forums\.sabnzbd\.org/',  # these generate HTTP 403 Forbidden
+    r'^https://web\.archive\.org/web/',  # these timeout
 ]
 linkcheck_anchors_ignore = [
     r'^!',  # default
