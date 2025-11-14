@@ -119,9 +119,11 @@ linkcheck_ignore = [
     r'https://github\.com/cherrypy/cheroot/commit',
     r'https://github\.com/cherrypy/cheroot/issues',
     r'https://github\.com/cherrypy/cheroot/pull',
+    r'https://github\.com/cherrypy/cheroot/tree',
     r'https://github\.com/cherrypy/cherrypy/commit',
     r'https://github\.com/cherrypy/cherrypy/issues',
     r'https://github\.com/cherrypy/cherrypy/pull',
+    r'https://github\.com/cherrypy/cherrypy/tree',
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
     # line anchors.
     r'https://github\.com'
