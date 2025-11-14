@@ -1506,12 +1506,7 @@ class HTTPConnection:
 
     def _close_kernel_socket(self):
         """Terminate the connection at the transport level."""
-        # Honor ``sock_shutdown`` for PyOpenSSL connections.
-        shutdown = getattr(
-            self.socket,
-            'sock_shutdown',
-            self.socket.shutdown,
-        )
+        shutdown = self.socket.sock_shutdown
 
         try:
             shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN

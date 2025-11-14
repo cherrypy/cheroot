@@ -1,0 +1,5 @@
+Removed thread-safety locking logic from
+:py:class:`cheroot.ssl.pyopenssl.SSLConnection` as
+this wrapper did not need to be thread-safe.
+
+-- by :user:`julianz-`

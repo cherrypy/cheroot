@@ -44,6 +44,7 @@ positionally
 pre
 preconfigure
 py
+pyOpenSSL
 pytest
 pythonic
 readonly
@@ -75,6 +76,7 @@ tuples
 unbuffered
 unclosed
 unfilterable
+unhandled
 unregister
 unregisters
 uptime
