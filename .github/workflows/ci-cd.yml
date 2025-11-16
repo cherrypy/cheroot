@@ -580,7 +580,7 @@ jobs:
     - build-changelog
     - pre-setup  # transitive, for accessing settings
 
-    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@ab43dd192297b935ebca18d3d870a939d10c176e  # yamllint disable-line rule:line-length
+    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@0b1e32642419392b5012b1efb66331a6babe6f79  # yamllint disable-line rule:line-length
     with:
       cache-key-for-dependency-files: >-
         ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
@@ -629,7 +629,7 @@ jobs:
         - false
       fail-fast: false
 
-    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@ab43dd192297b935ebca18d3d870a939d10c176e  # yamllint disable-line rule:line-length
+    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@0b1e32642419392b5012b1efb66331a6babe6f79  # yamllint disable-line rule:line-length
     with:
       built-wheel-names: >-
         ${{
@@ -765,7 +765,7 @@ jobs:
         - runner-vm-os: macos-13
           python-version: pypy-3.11
 
-    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@ab43dd192297b935ebca18d3d870a939d10c176e  # yamllint disable-line rule:line-length
+    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@0b1e32642419392b5012b1efb66331a6babe6f79  # yamllint disable-line rule:line-length
     with:
       built-wheel-names: >-
         ${{ needs.pre-setup.outputs.wheel-artifact-name }}
