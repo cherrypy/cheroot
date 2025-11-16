@@ -1,0 +1,7 @@
+Fixed prompting for the encrypted private key password interactively,
+when the password in not set in the :py:attr:`private_key_password attribute
+<cheroot.ssl.pyopenssl.pyOpenSSLAdapter.private_key_password>` in the
+:py:class:`pyOpenSSL TLS adapter <cheroot.ssl.pyopenssl.pyOpenSSLAdapter>`.
+Also improved the private key password to accept the :py:class:`~collections.abc.Callable` type.
+
+-- by :user:`jatalahd`

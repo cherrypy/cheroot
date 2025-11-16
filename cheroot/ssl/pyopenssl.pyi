@@ -1,3 +1,4 @@
+import collections.abc as _c
 import typing as _t
 
 from OpenSSL import SSL
@@ -32,14 +33,20 @@ class pyOpenSSLAdapter(Adapter):
         certificate_chain: _t.Any | None = ...,
         ciphers: _t.Any | None = ...,
         *,
-        private_key_password: str | bytes | None = ...,
+        private_key_password: _c.Callable[[], bytes | str]
+        | bytes
+        | str
+        | None = ...,
     ) -> None: ...
     def wrap(self, sock): ...
     def _password_callback(
         self,
         password_max_length: int,
-        _verify_twice: bool,
-        password: bytes | str | None,
+        verify_twice: bool,
+        password_or_callback: _c.Callable[[], bytes | str]
+        | bytes
+        | str
+        | None,
         /,
     ) -> bytes: ...
     def get_environ(self): ...

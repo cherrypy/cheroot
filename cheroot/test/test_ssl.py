@@ -149,10 +149,18 @@ def make_tls_http_server(bind_addr, ssl_adapter, request):
     return httpserver
 
 
+def get_key_password():
+    """Return a predefined password string.
+
+    It is to be used for decrypting private keys.
+    """
+    return 'криївка'
+
+
 @pytest.fixture(scope='session')
 def private_key_password():
     """Provide hardcoded password for private key."""
-    return 'криївка'
+    return get_key_password()
 
 
 @pytest.fixture
@@ -900,9 +908,17 @@ def test_http_over_https_ssl_handshake(
     ids=('encrypted-key', 'unencrypted-key'),
 )
 @pytest.mark.parametrize(
-    'password_as_bytes',
-    (True, False),
-    ids=('with-bytes-password', 'with-str-password'),
+    'transform_password_arg',
+    (
+        lambda pass_factory: pass_factory().encode('utf-8'),
+        lambda pass_factory: pass_factory(),
+        lambda pass_factory: pass_factory,
+    ),
+    ids=(
+        'with-bytes-password',
+        'with-str-password',
+        'with-callable-password-provider',
+    ),
 )
 # pylint: disable-next=too-many-positional-arguments
 def test_ssl_adapters_with_private_key_password(
@@ -915,7 +931,7 @@ def test_ssl_adapters_with_private_key_password(
     tls_certificate_private_key_pem_path,
     adapter_type,
     encrypted_key,
-    password_as_bytes,
+    transform_password_arg,
 ):
     """Check server decrypts private TLS keys with password as bytes or str."""
     key_file = (
@@ -923,17 +939,13 @@ def test_ssl_adapters_with_private_key_password(
         if encrypted_key
         else tls_certificate_private_key_pem_path
     )
-    key_pass = (
-        private_key_password.encode('utf-8')
-        if password_as_bytes
-        else private_key_password
-    )
+    private_key_password = transform_password_arg(get_key_password)
 
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
     tls_adapter = tls_adapter_cls(
         certificate=tls_certificate_chain_pem_path,
         private_key=key_file,
-        private_key_password=key_pass,
+        private_key_password=private_key_password,
     )
 
     interface, _host, port = _get_conn_data(
@@ -1012,6 +1024,76 @@ def test_openssl_adapter_with_false_key_password(
             certificate=tls_certificate_chain_pem_path,
             private_key=tls_certificate_passwd_private_key_pem_path,
             private_key_password=false_password,
+        )
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    ('pyopenssl', 'builtin'),
+)
+def test_ssl_adapter_with_none_key_password(
+    tls_certificate_chain_pem_path,
+    tls_certificate_passwd_private_key_pem_path,
+    private_key_password,
+    adapter_type,
+    mocker,
+):
+    """Check that TLS-adapters prompt for password when set as ``None``."""
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    mocker.patch(
+        'cheroot.ssl._ask_for_password_interactively',
+        return_value=private_key_password,
+    )
+    tls_adapter = tls_adapter_cls(
+        certificate=tls_certificate_chain_pem_path,
+        private_key=tls_certificate_passwd_private_key_pem_path,
+    )
+
+    assert tls_adapter.context is not None
+
+
+class PasswordCallbackHelper:
+    """Collects helper methods for mocking password callback."""
+
+    def __init__(self, adapter: Adapter):
+        """Initialize helper variables."""
+        self.counter = 0
+        self.callback = adapter._password_callback
+
+    def get_password(self):
+        """Provide correct password on first call, wrong on other calls."""
+        self.counter += 1
+        return get_key_password() * self.counter
+
+    def verify_twice_callback(self, max_length, _verify_twice, userdata):
+        """Establish a mock callback for testing two-factor password prompt."""
+        return self.callback(self, max_length, True, userdata)
+
+
+@pytest.mark.parametrize('adapter_type', ('pyopenssl',))
+def test_openssl_adapter_verify_twice_callback(
+    tls_certificate_chain_pem_path,
+    tls_certificate_passwd_private_key_pem_path,
+    adapter_type,
+    mocker,
+):
+    """Check that two-time password verification fails with correct error."""
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    helper = PasswordCallbackHelper(tls_adapter_cls)
+
+    mocker.patch(
+        'cheroot.ssl.pyopenssl.pyOpenSSLAdapter._password_callback',
+        side_effect=helper.verify_twice_callback,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match='Verification failed: entered passwords do not match',
+    ):
+        tls_adapter_cls(
+            certificate=tls_certificate_chain_pem_path,
+            private_key=tls_certificate_passwd_private_key_pem_path,
+            private_key_password=helper.get_password,
         )
 
 
