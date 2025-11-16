@@ -367,7 +367,8 @@ class pyOpenSSLAdapter(Adapter):
         """
         # See https://code.activestate.com/recipes/442473/
         c = SSL.Context(SSL.SSLv23_METHOD)
-        c.set_passwd_cb(self._password_callback, self.private_key_password)
+        if self.private_key_password is not None:
+            c.set_passwd_cb(self._password_callback, self.private_key_password)
         c.use_privatekey_file(self.private_key)
         if self.certificate_chain:
             c.load_verify_locations(self.certificate_chain)
