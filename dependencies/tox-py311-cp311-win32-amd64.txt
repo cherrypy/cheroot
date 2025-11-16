@@ -8,7 +8,7 @@ autocommand==2.2.2
     # via jaraco-text
 backports-tarfile==1.2.0
     # via jaraco-context
-certifi==2025.10.5
+certifi==2025.11.12
     # via requests
 cffi==2.0.0
     # via cryptography
@@ -20,7 +20,7 @@ colorama==0.4.6
     # via
     #   pytest
     #   pytest-watch
-coverage==7.11.0
+coverage==7.11.3
     # via
     #   -r dependencies/tox-py311-cp311-win32-amd64.in
     #   pytest-cov
@@ -30,7 +30,7 @@ cryptography==46.0.3
     #   trustme
 docopt==0.6.2
     # via pytest-watch
-execnet==2.1.1
+execnet==2.1.2
     # via pytest-xdist
 idna==3.11
     # via
@@ -82,7 +82,7 @@ pyopenssl==25.3.0
     # via -r dependencies/tox-py311-cp311-win32-amd64.in
 pypytools==0.6.2
     # via -r dependencies/tox-py311-cp311-win32-amd64.in
-pytest==8.4.2
+pytest==9.0.1
     # via
     #   -r dependencies/tox-py311-cp311-win32-amd64.in
     #   pytest-clarity
@@ -123,7 +123,7 @@ six==1.17.0
     # via python-dateutil
 tempora==5.8.1
     # via portend
-termcolor==3.1.0
+termcolor==3.2.0
     # via pytest-sugar
 trustme==1.2.1
     # via -r dependencies/tox-py311-cp311-win32-amd64.in
