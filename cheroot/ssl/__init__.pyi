@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Callable
 
 class Adapter(ABC):
     certificate: Any
     private_key: Any
     certificate_chain: Any
     ciphers: Any
-    private_key_password: str | bytes | None
+    private_key_password: str | bytes | Callable | None
     context: Any
     @abstractmethod
     def __init__(
