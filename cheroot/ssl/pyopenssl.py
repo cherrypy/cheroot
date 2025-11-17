@@ -52,7 +52,6 @@ will be read, and the context will be automatically created from them.
 
 import socket
 import sys
-import threading
 import time
 from warnings import warn as _warn
 
@@ -176,99 +175,36 @@ class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
     """SSL file object attached to a socket object."""
 
 
-class SSLConnectionProxyMeta:
-    """Metaclass for generating a bunch of proxy methods."""
+class SSLConnection(SSL.Connection):
+    """
+    A compatibility wrapper around :py:class:`OpenSSL.SSL.Connection`.
 
-    def __new__(mcl, name, bases, nmspc):
-        """Attach a list of proxy methods to a new class."""
-        proxy_methods = (
-            'get_context',
-            'pending',
-            'send',
-            'write',
-            'recv',
-            'read',
-            'renegotiate',
-            'bind',
-            'listen',
-            'connect',
-            'accept',
-            'setblocking',
-            'fileno',
-            'close',
-            'get_cipher_list',
-            'getpeername',
-            'getsockname',
-            'getsockopt',
-            'setsockopt',
-            'makefile',
-            'get_app_data',
-            'set_app_data',
-            'state_string',
-            'sock_shutdown',
-            'get_peer_certificate',
-            'want_read',
-            'want_write',
-            'set_connect_state',
-            'set_accept_state',
-            'connect_ex',
-            'sendall',
-            'settimeout',
-            'gettimeout',
-            'shutdown',
-        )
-        proxy_methods_no_args = ('shutdown',)
-
-        proxy_props = ('family',)
-
-        def lock_decorator(method):
-            """Create a proxy method for a new class."""
-
-            def proxy_wrapper(self, *args):
-                self._lock.acquire()
-                try:
-                    new_args = (
-                        args[:] if method not in proxy_methods_no_args else []
-                    )
-                    return getattr(self._ssl_conn, method)(*new_args)
-                finally:
-                    self._lock.release()
-
-            return proxy_wrapper
-
-        for m in proxy_methods:
-            nmspc[m] = lock_decorator(m)
-            nmspc[m].__name__ = m
-
-        def make_property(property_):
-            """Create a proxy method for a new class."""
-
-            def proxy_prop_wrapper(self):
-                return getattr(self._ssl_conn, property_)
-
-            proxy_prop_wrapper.__name__ = property_
-            return property(proxy_prop_wrapper)
-
-        for p in proxy_props:
-            nmspc[p] = make_property(p)
-
-        # Doesn't work via super() for some reason.
-        # Falling back to type() instead:
-        return type(name, bases, nmspc)
-
-
-class SSLConnection(metaclass=SSLConnectionProxyMeta):
-    r"""A thread-safe wrapper for an ``SSL.Connection``.
-
-    :param tuple args: the arguments to create the wrapped \
-                        :py:class:`SSL.Connection(*args) \
-                        <pyopenssl:OpenSSL.SSL.Connection>`
+    This class exists primarily to ensure the standard Python socket method
+    :py:meth:`.shutdown()` is available for interface compatibility.
     """
 
-    def __init__(self, *args):
-        """Initialize SSLConnection instance."""
-        self._ssl_conn = SSL.Connection(*args)
-        self._lock = threading.RLock()
+    def shutdown(self, how=None):
+        """Shutdown the SSL connection.
+
+        :param how: Ignored. PyOpenSSL's
+                    :py:meth:`~OpenSSL.SSL.Connection.shutdown`
+                    method does not accept any arguments.
+                    Present here for interface compatibility with Python
+                    :py:meth:`~socket.socket.shutdown` that
+                    :py:class:`ssl.SSLSocket` wrapper exposes.
+        :type how: object
+        """
+        return super().shutdown()
+
+    def sock_shutdown(self, how=None):
+        """Shutdown the SSL connection.
+
+        This method is provided for interface compatibility and delegates
+        directly to the standard shutdown() method.
+        """
+        # We call self.shutdown(how) to use the method where we added
+        # the compatibility logic (handling 'how=None' for the parent).
+        return self.shutdown(how)
 
 
 class pyOpenSSLAdapter(Adapter):
