@@ -1370,6 +1370,7 @@ class HTTPConnection:
             'this server only speaks HTTPS on this port.'
         )
         req.simple_response('400 Bad Request', msg)
+        self.wfile.flush()
         self.linger = True
 
     def _conditional_error(self, req, response):
