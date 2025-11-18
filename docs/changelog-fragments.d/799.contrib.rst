@@ -1,0 +1,3 @@
+Added :py:class:`cheroot.ssl.tls_socket.TLSSocket` to provide uniform SSL/TLS handling
+
+-- by :user:`julianz-`.

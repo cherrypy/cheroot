@@ -2,6 +2,7 @@
 
 # prefer slower Python-based io module
 import _pyio as io
+import io as stdlib_io
 import socket
 
 
@@ -38,9 +39,16 @@ class BufferedWriter(io.BufferedWriter):
 class StreamReader(io.BufferedReader):
     """Socket stream reader."""
 
-    def __init__(self, sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
-        """Initialize socket stream reader."""
-        super().__init__(socket.SocketIO(sock, mode), bufsize)
+    def __init__(self, sock, bufsize=io.DEFAULT_BUFFER_SIZE):
+        """Initialize with socket or raw IO object."""
+        # If already a RawIOBase (like TLSSocket), use directly
+        if isinstance(sock, (io.RawIOBase, stdlib_io.RawIOBase)):
+            raw_io = sock
+        else:
+            # Wrap raw socket with SocketIO
+            raw_io = socket.SocketIO(sock, 'rb')
+
+        super().__init__(raw_io, bufsize)
         self.bytes_read = 0
 
     def read(self, *args, **kwargs):
@@ -57,9 +65,16 @@ class StreamReader(io.BufferedReader):
 class StreamWriter(BufferedWriter):
     """Socket stream writer."""
 
-    def __init__(self, sock, mode='w', bufsize=io.DEFAULT_BUFFER_SIZE):
-        """Initialize socket stream writer."""
-        super().__init__(socket.SocketIO(sock, mode), bufsize)
+    def __init__(self, sock, bufsize=io.DEFAULT_BUFFER_SIZE):
+        """Initialize with socket or raw IO object."""
+        # If already a RawIOBase (like TLSSocket), use directly
+        if isinstance(sock, (io.RawIOBase, stdlib_io.RawIOBase)):
+            raw_io = sock
+        else:
+            # Wrap raw socket with SocketIO
+            raw_io = socket.SocketIO(sock, 'wb')
+
+        super().__init__(raw_io, bufsize)
         self.bytes_written = 0
 
     def write(self, val, *args, **kwargs):
@@ -67,9 +82,3 @@ class StreamWriter(BufferedWriter):
         res = super().write(val, *args, **kwargs)
         self.bytes_written += len(val)
         return res
-
-
-def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
-    """File object attached to a socket object."""
-    cls = StreamReader if 'r' in mode else StreamWriter
-    return cls(sock, mode, bufsize)

@@ -2,6 +2,7 @@ AppVeyor
 Args
 backend
 backports
+bufsize
 bugfixes
 builtin
 b'xb
@@ -46,12 +47,14 @@ preconfigure
 py
 pytest
 pythonic
+pyOpenSSL
 readonly
 rebase
 Refactor
 Refactored
 refactoring
 refactorings
+seekable
 Sep
 sep
 signalling
@@ -75,6 +78,7 @@ tuples
 unbuffered
 unclosed
 unfilterable
+unhandled
 unregister
 unregisters
 uptime
