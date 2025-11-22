@@ -1,0 +1,7 @@
+The :py:mod:`cheroot.ssl.builtin` SSL adapter now responds with a
+``400 Bad Request`` error to plaintext HTTP requests on HTTPS ports by detecting
+them before the SSL handshake, matching the behavior of
+:py:mod:`cheroot.ssl.pyopenssl`. Previously, such requests would fail during
+the SSL handshake without sending an HTTP response.
+
+-- by :user:`julianz-`

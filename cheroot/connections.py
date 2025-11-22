@@ -1,12 +1,13 @@
 """Utilities to manage open connections."""
 
-import io
+import contextlib as _cm
 import os
 import selectors
 import socket
 import threading
 import time
-from contextlib import suppress
+from http import HTTPStatus as _HTTPStatus
+from http.client import responses as _http_responses
 
 from . import errors
 from ._compat import IS_WINDOWS
@@ -110,6 +111,16 @@ class _ThreadsafeSelector:
         """Close the selector."""
         with self._lock:
             self._selector.close()
+
+
+@_cm.contextmanager
+def _suppress_socket_io_errors(socket, /):
+    """Suppress known socket I/O errors."""
+    try:
+        yield
+    except OSError as ex:
+        if ex.args[0] not in errors.socket_errors_to_ignore:
+            raise
 
 
 class ConnectionManager:
@@ -281,7 +292,7 @@ class ConnectionManager:
             # One of the reason on why a socket could cause an error
             # is that the socket is already closed, ignore the
             # socket error if we try to close it at this point.
-            with suppress(OSError):
+            with _cm.suppress(OSError):
                 conn.close()
 
     def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
@@ -297,7 +308,8 @@ class ConnectionManager:
             ssl_env = {}
             # if ssl cert and key are set, we try to be a secure HTTP server
             if self.server.ssl_adapter is not None:
-                try:
+                # FIXME: WPS505 -- too many nested blocks
+                try:  # noqa: WPS505
                     s, ssl_env = self.server.ssl_adapter.wrap(s)
                 except errors.FatalSSLAlert as tls_connection_drop_error:
                     self.server.error_log(
@@ -313,23 +325,7 @@ class ConnectionManager:
                         'trying to send back a plain HTTP error response: '
                         f'{http_over_https_err!s}',
                     )
-                    msg = (
-                        'The client sent a plain HTTP request, but '
-                        'this server only speaks HTTPS on this port.'
-                    )
-                    buf = [
-                        '%s 400 Bad Request\r\n' % self.server.protocol,
-                        'Content-Length: %s\r\n' % len(msg),
-                        'Content-Type: text/plain\r\n\r\n',
-                        msg,
-                    ]
-
-                    wfile = mf(s, 'wb', io.DEFAULT_BUFFER_SIZE)
-                    try:
-                        wfile.write(''.join(buf).encode('ISO-8859-1'))
-                    except OSError as ex:
-                        if ex.args[0] not in errors.socket_errors_to_ignore:
-                            raise
+                    self._send_bad_request_plain_http_error(s)
                     return None
                 mf = self.server.ssl_adapter.makefile
                 # Re-apply our timeout since we may have a new socket object
@@ -403,3 +399,31 @@ class ConnectionManager:
         """Flag whether it is allowed to add a new keep-alive connection."""
         ka_limit = self.server.keep_alive_conn_limit
         return ka_limit is None or self._num_connections < ka_limit
+
+    def _send_bad_request_plain_http_error(self, raw_sock, /):
+        """Send Bad Request 400 response, and close the socket."""
+        msg = (
+            'The client sent a plain HTTP request, but this server '
+            'only speaks HTTPS on this port.'
+        )
+
+        http_response_status_line = ' '.join(
+            (
+                self.server.protocol,
+                str(_HTTPStatus.BAD_REQUEST.value),
+                _http_responses[_HTTPStatus.BAD_REQUEST],
+            ),
+        )
+        response_parts = [
+            f'{http_response_status_line}\r\n',
+            'Content-Type: text/plain\r\n',
+            f'Content-Length: {len(msg)}\r\n',
+            'Connection: close\r\n',
+            '\r\n',
+            msg,
+        ]
+        response_bytes = ''.join(response_parts).encode('ISO-8859-1')
+
+        with _suppress_socket_io_errors(raw_sock), _cm.closing(raw_sock):
+            raw_sock.sendall(response_bytes)
+            raw_sock.shutdown(socket.SHUT_WR)
