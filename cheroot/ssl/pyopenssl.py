@@ -333,6 +333,15 @@ class pyOpenSSLAdapter(Adapter):
         # pyOpenSSL doesn't perform the handshake until the first read/write
         # forcing the handshake to complete tends to result in the connection
         # closing so we can't reliably access protocol/client cert for the env
+
+        # Get raw socket for plain HTTP check
+        if isinstance(sock, ssl_conn_type):
+            raw_sock = sock._socket
+        else:
+            raw_sock = sock
+
+        if self._check_for_plain_http(raw_sock):
+            raise errors.NoSSLError
         return sock, self._environ.copy()
 
     def _password_callback(

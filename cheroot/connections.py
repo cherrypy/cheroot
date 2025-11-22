@@ -1,6 +1,5 @@
 """Utilities to manage open connections."""
 
-import io
 import os
 import selectors
 import socket
@@ -306,31 +305,9 @@ class ConnectionManager:
                         f'{tls_connection_drop_error!s}',
                     )
                     return None
-                except errors.NoSSLError as http_over_https_err:
-                    self.server.error_log(
-                        f'Client {addr!s} attempted to speak plain HTTP into '
-                        'a TCP connection configured for TLS-only traffic — '
-                        'trying to send back a plain HTTP error response: '
-                        f'{http_over_https_err!s}',
-                    )
-                    msg = (
-                        'The client sent a plain HTTP request, but '
-                        'this server only speaks HTTPS on this port.'
-                    )
-                    buf = [
-                        '%s 400 Bad Request\r\n' % self.server.protocol,
-                        'Content-Length: %s\r\n' % len(msg),
-                        'Content-Type: text/plain\r\n\r\n',
-                        msg,
-                    ]
+                except errors.NoSSLError:
+                    return self._send_bad_request_plain_http_error(s, addr)
 
-                    wfile = mf(s, 'wb', io.DEFAULT_BUFFER_SIZE)
-                    try:
-                        wfile.write(''.join(buf).encode('ISO-8859-1'))
-                    except OSError as ex:
-                        if ex.args[0] not in errors.socket_errors_to_ignore:
-                            raise
-                    return None
                 mf = self.server.ssl_adapter.makefile
                 # Re-apply our timeout since we may have a new socket object
                 if hasattr(s, 'settimeout'):
@@ -403,3 +380,50 @@ class ConnectionManager:
         """Flag whether it is allowed to add a new keep-alive connection."""
         ka_limit = self.server.keep_alive_conn_limit
         return ka_limit is None or self._num_connections < ka_limit
+
+    def _send_bad_request_plain_http_error(self, sock, addr):
+        """Send Bad Request 400 response, and close the socket."""
+        self.server.error_log(
+            f'Client {addr!s} attempted to speak plain HTTP into '
+            'a TCP connection configured for TLS-only traffic — '
+            'Sending 400 Bad Request.',
+        )
+
+        msg = (
+            'The client sent a plain HTTP request, but this server '
+            'only speaks HTTPS on this port.'
+        )
+
+        response_parts = [
+            f'{self.server.protocol} 400 Bad Request\r\n',
+            'Content-Type: text/plain\r\n',
+            f'Content-Length: {len(msg)}\r\n',
+            'Connection: close\r\n',
+            '\r\n',
+            msg,
+        ]
+        response_bytes = ''.join(response_parts).encode('ISO-8859-1')
+
+        # The original socket (sock) is SSL-wrapped, but we must send the 400
+        # response unencrypted over the raw TCP channel.
+        sock_to_send = sock
+        # Handle both raw sockets and SSL connections
+        if hasattr(sock, 'do_handshake'):
+            with suppress(AttributeError):
+                # Access the raw, underlying TCP socket via the
+                # common '._socket' attribute to bypass the SSL layer.
+                # fall back to using the given socket directly if
+                # the attribute does not exist.
+                sock_to_send = sock._socket
+        try:
+            # Use the determined socket (raw TCP if successfully retrieved)
+            sock_to_send.sendall(response_bytes)
+
+            # Shutdown the writing end of the socket used for sending.
+            sock_to_send.shutdown(socket.SHUT_WR)
+
+        except OSError as ex:
+            if ex.args[0] not in errors.socket_errors_to_ignore:
+                raise
+
+        sock.close()
