@@ -339,8 +339,9 @@ class pyOpenSSLAdapter(Adapter):
         # pyOpenSSL doesn't perform the handshake until the first read/write
         # forcing the handshake to complete tends to result in the connection
         # closing so we can't reliably access protocol/client cert for the env
-        conn = SSLConnection(self.context, sock)
+        super().wrap(sock)  # checks for hhtp on https port
 
+        conn = SSLConnection(self.context, sock)
         conn.set_accept_state()  # Tell OpenSSL this is a server connection
         return conn, self._environ.copy()
 

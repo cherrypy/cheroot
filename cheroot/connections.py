@@ -1,6 +1,5 @@
 """Utilities to manage open connections."""
 
-import io
 import os
 import selectors
 import socket
@@ -297,6 +296,7 @@ class ConnectionManager:
             ssl_env = {}
             # if ssl cert and key are set, we try to be a secure HTTP server
             if self.server.ssl_adapter is not None:
+                # FIRX ME: too many nested blocks
                 try:
                     s, ssl_env = self.server.ssl_adapter.wrap(s)
                 except errors.FatalSSLAlert as tls_connection_drop_error:
@@ -313,24 +313,9 @@ class ConnectionManager:
                         'trying to send back a plain HTTP error response: '
                         f'{http_over_https_err!s}',
                     )
-                    msg = (
-                        'The client sent a plain HTTP request, but '
-                        'this server only speaks HTTPS on this port.'
-                    )
-                    buf = [
-                        '%s 400 Bad Request\r\n' % self.server.protocol,
-                        'Content-Length: %s\r\n' % len(msg),
-                        'Content-Type: text/plain\r\n\r\n',
-                        msg,
-                    ]
-
-                    wfile = mf(s, 'wb', io.DEFAULT_BUFFER_SIZE)
-                    try:
-                        wfile.write(''.join(buf).encode('ISO-8859-1'))
-                    except OSError as ex:
-                        if ex.args[0] not in errors.socket_errors_to_ignore:
-                            raise
+                    self._send_bad_request_plain_http_error(s, addr)
                     return None
+
                 mf = self.server.ssl_adapter.makefile
                 # Re-apply our timeout since we may have a new socket object
                 if hasattr(s, 'settimeout'):
@@ -403,3 +388,40 @@ class ConnectionManager:
         """Flag whether it is allowed to add a new keep-alive connection."""
         ka_limit = self.server.keep_alive_conn_limit
         return ka_limit is None or self._num_connections < ka_limit
+
+    def _safe_socket_call(self, func, arg):
+        """Execute socket operation, ignoring expected errors."""
+        try:
+            func(arg)
+        except OSError as ex:
+            if ex.args[0] not in errors.socket_errors_to_ignore:
+                raise
+
+    def _send_bad_request_plain_http_error(self, raw_sock, addr):
+        """Send Bad Request 400 response, and close the socket."""
+        self.server.error_log(
+            f'Client {addr!s} attempted to speak plain HTTP into '
+            'a TCP connection configured for TLS-only traffic — '
+            'trying to send back a plain HTTP error response.',
+        )
+
+        msg = (
+            'The client sent a plain HTTP request, but this server '
+            'only speaks HTTPS on this port.'
+        )
+
+        # WPS237 too complex f-string warning ignored here for clarity
+        response_parts = [
+            f'{self.server.protocol} 400 Bad Request\r\n',  # noqa: WPS237
+            'Content-Type: text/plain\r\n',
+            f'Content-Length: {len(msg)}\r\n',
+            'Connection: close\r\n',
+            '\r\n',
+            msg,
+        ]
+        response_bytes = ''.join(response_parts).encode('ISO-8859-1')
+
+        self._safe_socket_call(raw_sock.sendall, response_bytes)
+        self._safe_socket_call(raw_sock.shutdown, socket.SHUT_WR)
+
+        raw_sock.close()
