@@ -9,8 +9,10 @@ To use this module, set ``HTTPServer.ssl_adapter`` to an instance of
 
 import socket
 import sys
-import threading
 from contextlib import suppress
+
+from . import Adapter
+from .tls_socket import TLSSocket
 
 
 try:
@@ -19,148 +21,24 @@ except ImportError:
     ssl = None
 
 try:
-    from _pyio import DEFAULT_BUFFER_SIZE
+    from cryptography import x509
+    from cryptography.hazmat.backends import default_backend
 except ImportError:
-    try:
-        from io import DEFAULT_BUFFER_SIZE
-    except ImportError:
-        DEFAULT_BUFFER_SIZE = -1
+    x509 = None
+    default_backend = None
+
 
 from .. import errors
-from ..makefile import StreamReader, StreamWriter
-from ..server import HTTPServer
-from . import Adapter
-
-
-def _assert_ssl_exc_contains(exc, *msgs):
-    """Check whether SSL exception contains either of messages provided."""
-    if len(msgs) < 1:
-        raise TypeError(
-            '_assert_ssl_exc_contains() requires '
-            'at least one message to be passed.',
-        )
-    err_msg_lower = str(exc).lower()
-    return any(m.lower() in err_msg_lower for m in msgs)
-
-
-def _loopback_for_cert_thread(context, server):
-    """Wrap a socket in ssl and perform the server-side handshake."""
-    # As we only care about parsing the certificate, the failure of
-    # which will cause an exception in ``_loopback_for_cert``,
-    # we can safely ignore connection and ssl related exceptions. Ref:
-    # https://github.com/cherrypy/cheroot/issues/302#issuecomment-662592030
-    with suppress(ssl.SSLError, OSError):
-        with context.wrap_socket(
-            server,
-            do_handshake_on_connect=True,
-            server_side=True,
-        ) as ssl_sock:
-            # in TLS 1.3 (Python 3.7+, OpenSSL 1.1.1+), the server
-            # sends the client session tickets that can be used to
-            # resume the TLS session on a new connection without
-            # performing the full handshake again. session tickets are
-            # sent as a post-handshake message at some _unspecified_
-            # time and thus a successful connection may be closed
-            # without the client having received the tickets.
-            # Unfortunately, on Windows (Python 3.8+), this is treated
-            # as an incomplete handshake on the server side and a
-            # ``ConnectionAbortedError`` is raised.
-            # TLS 1.3 support is still incomplete in Python 3.8;
-            # there is no way for the client to wait for tickets.
-            # While not necessary for retrieving the parsed certificate,
-            # we send a tiny bit of data over the connection in an
-            # attempt to give the server a chance to send the session
-            # tickets and close the connection cleanly.
-            # Note that, as this is essentially a race condition,
-            # the error may still occur ocasionally.
-            ssl_sock.send(b'0000')
-
-
-def _loopback_for_cert(
-    certificate,
-    private_key,
-    certificate_chain,
-    *,
-    private_key_password=None,
-):
-    """Create a loopback connection to parse a cert with a private key."""
-    context = ssl.create_default_context(cafile=certificate_chain)
-    context.load_cert_chain(
-        certificate,
-        private_key,
-        password=private_key_password,
-    )
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
-
-    # Python 3+ Unix, Python 3.5+ Windows
-    client, server = socket.socketpair()
-    try:
-        # `wrap_socket` will block until the ssl handshake is complete.
-        # it must be called on both ends at the same time -> thread
-        # openssl will cache the peer's cert during a successful handshake
-        # and return it via `getpeercert` even after the socket is closed.
-        # when `close` is called, the SSL shutdown notice will be sent
-        # and then python will wait to receive the corollary shutdown.
-        thread = threading.Thread(
-            target=_loopback_for_cert_thread,
-            args=(context, server),
-        )
-        try:
-            thread.start()
-            with context.wrap_socket(
-                client,
-                do_handshake_on_connect=True,
-                server_side=False,
-            ) as ssl_sock:
-                ssl_sock.recv(4)
-                return ssl_sock.getpeercert()
-        finally:
-            thread.join()
-    finally:
-        client.close()
-        server.close()
-
-
-def _parse_cert(
-    certificate,
-    private_key,
-    certificate_chain,
-    *,
-    private_key_password=None,
-):
-    """Parse a certificate."""
-    # loopback_for_cert uses socket.socketpair which was only
-    # introduced in Python 3.0 for *nix and 3.5 for Windows
-    # and requires OS support (AttributeError, OSError)
-    # it also requires a private key either in its own file
-    # or combined with the cert (SSLError)
-    with suppress(AttributeError, ssl.SSLError, OSError):
-        return _loopback_for_cert(
-            certificate,
-            private_key,
-            certificate_chain,
-            private_key_password=private_key_password,
-        )
-
-    # KLUDGE: using an undocumented, private, test method to parse a cert
-    # unfortunately, it is the only built-in way without a connection
-    # as a private, undocumented method, it may change at any time
-    # so be tolerant of *any* possible errors it may raise
-    with suppress(Exception):
-        return ssl._ssl._test_decode_cert(certificate)
-
-    return {}
-
-
-def _sni_callback(sock, sni, context):
-    """Handle the SNI callback to tag the socket with the SNI."""
-    sock.sni = sni
-    # return None to allow the TLS negotiation to continue
+from . import parse_x509_cert_to_environ
 
 
 class BuiltinSSLAdapter(Adapter):
-    """Wrapper for integrating Python's builtin :py:mod:`ssl` with Cheroot."""
+    """
+    Wrapper for integrating Python's builtin :py:mod:`ssl` with Cheroot.
+
+    This adapter uses TLSSocket internally to provide a consistent
+    interface for SSL/TLS connections.
+    """
 
     certificate = None
     """The file name of the server SSL certificate."""
@@ -235,11 +113,13 @@ class BuiltinSSLAdapter(Adapter):
         *,
         private_key_password=None,
     ):
-        """Set up context in addition to base class properties if available."""
+        """Initialize builtin SSL Adapter instance."""
         if ssl is None:
-            raise ImportError('You must install the ssl module to use HTTPS.')
+            raise ImportError(
+                'You must have ssl module available to use HTTPS.',
+            )
 
-        super(BuiltinSSLAdapter, self).__init__(
+        super().__init__(
             certificate,
             private_key,
             certificate_chain,
@@ -247,162 +127,378 @@ class BuiltinSSLAdapter(Adapter):
             private_key_password=private_key_password,
         )
 
-        self.context = ssl.create_default_context(
-            purpose=ssl.Purpose.CLIENT_AUTH,
-            cafile=certificate_chain,
-        )
-        self.context.load_cert_chain(
-            certificate,
-            private_key,
-            password=private_key_password,
-        )
-        if self.ciphers is not None:
-            self.context.set_ciphers(ciphers)
+        self._context = None
+        self._context = self._create_context()
 
-        self._server_env = self._make_env_cert_dict(
-            'SSL_SERVER',
-            _parse_cert(
-                certificate,
-                private_key,
-                self.certificate_chain,
-                private_key_password=private_key_password,
-            ),
-        )
-        if not self._server_env:
-            return
-        cert = None
-        with open(certificate) as f:
-            cert = f.read()
+    def bind(self, sock):
+        """Prepare the server socket."""
+        return sock  # Context already created
 
-        # strip off any keys by only taking the first certificate
-        cert_start = cert.find(ssl.PEM_HEADER)
-        if cert_start == -1:
-            return
-        cert_end = cert.find(ssl.PEM_FOOTER, cert_start)
-        if cert_end == -1:
-            return
-        cert_end += len(ssl.PEM_FOOTER)
-        self._server_env['SSL_SERVER_CERT'] = cert[cert_start:cert_end]
+    def wrap(self, sock):
+        """
+        Wrap client socket with SSL and return environ entries.
+
+        Args:
+            sock: Raw socket to wrap with TLS
+
+        Returns:
+            tuple: (TLSSocket, ssl_environ_dict)
+        """
+        if self._check_for_plain_http(sock):
+            raise errors.NoSSLError
+
+        tls_socket = self._wrap_with_builtin(sock)
+        ssl_environ = self.get_environ(tls_socket)
+        return tls_socket, ssl_environ
+
+    def _wrap_with_builtin(self, raw_socket, server_side=True):
+        """
+        Create a TLSSocket using Python's built-in ssl module.
+
+        Args:
+            raw_socket: The raw socket to wrap
+            server_side: True if this is the server side
+
+        Returns:
+            TLSSocket: Wrapped socket ready for secure I/O
+        """
+        try:
+            wrapped_ssl_socket = self._create_ssl_socket(
+                raw_socket,
+                server_side,
+            )
+            self._perform_handshake(wrapped_ssl_socket, raw_socket)
+
+            underlying_socket = wrapped_ssl_socket
+            if hasattr(wrapped_ssl_socket, '_sock'):
+                underlying_socket = wrapped_ssl_socket._sock
+
+            return TLSSocket(
+                ssl_socket=wrapped_ssl_socket,
+                raw_socket=underlying_socket,
+                context=self.context,
+            )
+        except errors.NoSSLError:
+            # Plain HTTP detected, let it propagate for proper error response
+            raise
+        except TimeoutError:
+            # Handshake timeout, let it propagate
+            with suppress(Exception):
+                raw_socket.close()
+            raise
+        except (ssl.SSLError, OSError) as e:
+            # SSL handshake or socket error - clean up and raise
+            with suppress(Exception):
+                raw_socket.close()
+            raise errors.FatalSSLAlert(f'SSL wrapping failed: {e}') from e
+
+    def _check_for_plain_http(self, raw_socket):
+        """Check if the client sent plain HTTP by peeking at first bytes.
+
+        This is a best-effort check to provide a helpful error message when
+        clients accidentally use HTTP on an HTTPS port. If we can't detect
+        plain HTTP (timeout, no data yet, etc), we return False and let the
+        SSL handshake proceed, which will fail with its own error.
+
+        Returns:
+            bool: True if plain HTTP is detected, False otherwise
+        """
+        PEEK_BYTES = 16
+        PEEK_TIMEOUT = 0.5
+
+        original_timeout = raw_socket.gettimeout()
+        try:
+            raw_socket.settimeout(PEEK_TIMEOUT)
+            first_bytes = raw_socket.recv(PEEK_BYTES, socket.MSG_PEEK)
+
+            if not first_bytes:
+                return False
+
+            http_methods = (
+                b'GET ',
+                b'POST ',
+                b'PUT ',
+                b'DELETE ',
+                b'HEAD ',
+                b'OPTIONS ',
+                b'PATCH ',
+                b'CONNECT ',
+                b'TRACE ',
+            )
+            return any(
+                first_bytes.startswith(method) for method in http_methods
+            )
+        except (OSError, socket.timeout):
+            return False
+        finally:
+            raw_socket.settimeout(original_timeout)
+
+    def _create_ssl_socket(self, raw_socket, server_side):
+        """Create SSL socket without handshake."""
+        try:
+            # Manual handshake for error handling
+            return self.context.wrap_socket(
+                raw_socket,
+                do_handshake_on_connect=False,
+                server_side=server_side,
+            )
+        except ssl.SSLError as e:
+            raise errors.FatalSSLAlert(
+                f'Error creating SSL socket: {e}',
+            ) from e
+
+    def _perform_handshake(self, ssl_socket, raw_socket):
+        """Perform SSL handshake with error handling and retries."""
+        HANDSHAKE_TIMEOUT = 5.0
+
+        # Set timeout on the SSL socket for the handshake
+        original_timeout = ssl_socket.gettimeout()
+        ssl_socket.settimeout(HANDSHAKE_TIMEOUT)
+
+        try:
+            while True:
+                try:  # noqa: WPS225
+                    ssl_socket.do_handshake()
+                    return
+                except (ssl.SSLWantReadError, ssl.SSLWantWriteError) as e:
+                    direction = (
+                        'read'
+                        if isinstance(e, ssl.SSLWantReadError)
+                        else 'write'
+                    )
+                    self._wait_for_handshake_data(raw_socket, direction)
+                except socket.timeout as e:
+                    raise errors.NoSSLError(
+                        'SSL handshake timeout.',
+                    ) from e
+                except ssl.SSLEOFError as e:
+                    raise errors.NoSSLError(
+                        'Peer closed connection during handshake.',
+                    ) from e
+                except ssl.SSLError as e:
+                    self._handle_ssl_error(e)
+                except OSError as e:
+                    raise errors.FatalSSLAlert(
+                        f'TCP error during handshake: {e}',
+                    ) from e
+        finally:
+            # Restore original timeout
+            with suppress(Exception):
+                ssl_socket.settimeout(original_timeout)
+
+    def _wait_for_handshake_data(self, raw_socket, direction):
+        """Wait for socket to be ready for read or write during handshake."""
+        import select
+
+        HANDSHAKE_TIMEOUT = 5.0
+        fileno = raw_socket.fileno()
+
+        if direction == 'read':
+            ready = select.select([fileno], [], [], HANDSHAKE_TIMEOUT)[0]
+        else:  # write
+            ready = select.select([], [fileno], [], HANDSHAKE_TIMEOUT)[1]
+
+        if not ready:
+            raise TimeoutError(
+                f'Handshake failed: Peer did not send expected data ({direction}).',
+            )
+
+    def _handle_ssl_error(self, error):
+        """Handle SSL errors during handshake."""
+        err_str = str(error).lower()
+
+        # Check for common patterns indicating plain HTTP
+        if any(
+            pattern in err_str
+            for pattern in (
+                'wrong version number',
+                'http request',
+                'unknown protocol',
+            )
+        ):
+            raise errors.NoSSLError(
+                'Client sent plain HTTP request',
+            ) from error
+
+        raise errors.FatalSSLAlert(
+            f'Fatal SSL error during handshake: {error}',
+        ) from error
 
     @property
     def context(self):
-        """:py:class:`~ssl.SSLContext` that will be used to wrap sockets."""
+        """Get the SSL context."""
         return self._context
 
     @context.setter
-    def context(self, context):
-        """Set the ssl ``context`` to use."""
-        self._context = context
-        # Python 3.7+
-        # if a context is provided via `cherrypy.config.update` then
-        # `self.context` will be set after `__init__`
-        # use a property to intercept it to add an SNI callback
-        # but don't override the user's callback
-        # TODO: chain callbacks
-        with suppress(AttributeError):
-            if ssl.HAS_SNI and context.sni_callback is None:
-                context.sni_callback = _sni_callback
+    def context(self, value):
+        """Set the SSL context (for testing)."""
+        self._context = value
 
-    def bind(self, sock):
-        """Wrap and return the given socket."""
-        return super(BuiltinSSLAdapter, self).bind(sock)
+    def _create_context(self):
+        """Return an py:class:`ssl.SSLContext` from self attributes."""
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
-    def wrap(self, sock):
-        """Wrap and return the given socket, plus WSGI environ entries."""
-        try:
-            s = self.context.wrap_socket(
-                sock,
-                do_handshake_on_connect=True,
-                server_side=True,
-            )
-        except (
-            ssl.SSLEOFError,
-            ssl.SSLZeroReturnError,
-        ) as tls_connection_drop_error:
-            raise errors.FatalSSLAlert(
-                *tls_connection_drop_error.args,
-            ) from tls_connection_drop_error
-        except ssl.SSLError as generic_tls_error:
-            peer_speaks_plain_http_over_https = (
-                generic_tls_error.errno == ssl.SSL_ERROR_SSL
-                and _assert_ssl_exc_contains(generic_tls_error, 'http request')
-            )
-            if peer_speaks_plain_http_over_https:
-                reraised_connection_drop_exc_cls = errors.NoSSLError
-            else:
-                reraised_connection_drop_exc_cls = errors.FatalSSLAlert
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
 
-            raise reraised_connection_drop_exc_cls(
-                *generic_tls_error.args,
-            ) from generic_tls_error
-        except OSError as tcp_connection_drop_error:
-            raise errors.FatalSSLAlert(
-                *tcp_connection_drop_error.args,
-            ) from tcp_connection_drop_error
+        # Only attempt to load the key/cert chain if a certificate
+        # path is available.
+        if self.certificate:
+            try:
+                ctx.load_cert_chain(
+                    self.certificate,
+                    self.private_key,
+                    self.private_key_password,
+                )
+            except FileNotFoundError as file_err:
+                raise FileNotFoundError(
+                    f'SSL certificate file not found: {file_err}',
+                ) from file_err
 
-        return s, self.get_environ(s)
+        # Load CA Trust/Verification Chain
+        # (Optional, independent of server cert)
+        # This is needed for verifying client certificates
+        # or connecting to other services.
+        if self.certificate_chain:
+            ctx.load_verify_locations(cafile=self.certificate_chain)
 
-    def get_environ(self, sock):
-        """Create WSGI environ entries to be merged into each request."""
-        cipher = sock.cipher()
-        ssl_environ = {
-            'wsgi.url_scheme': 'https',
-            'HTTPS': 'on',
-            'SSL_PROTOCOL': cipher[1],
-            'SSL_CIPHER': cipher[0],
-            'SSL_CIPHER_EXPORT': '',
-            'SSL_CIPHER_USEKEYSIZE': cipher[2],
-            'SSL_VERSION_INTERFACE': '%s Python/%s'
-            % (
-                HTTPServer.version,
-                sys.version,
-            ),
+        # Set Ciphers (Optional, independent of server cert)
+        if self.ciphers:
+            ctx.set_ciphers(self.ciphers)
+
+        return ctx
+
+    # ========================================================================
+    # Adapter-specific environment variable methods
+    # ========================================================================
+
+    def _get_library_version_environ(self):
+        """
+        Get SSL library version information.
+
+        Overrides base class method to provide builtin ssl module version.
+        """
+        python_version = sys.version.split()[0]
+        return {
+            'SSL_VERSION_INTERFACE': f'Python/{python_version} {ssl.OPENSSL_VERSION}',
             'SSL_VERSION_LIBRARY': ssl.OPENSSL_VERSION,
-            'SSL_CLIENT_VERIFY': 'NONE',
-            # 'NONE' - client did not provide a cert (overriden below)
         }
 
-        # Python 3.3+
-        with suppress(AttributeError):
-            compression = sock.compression()
-            if compression is not None:
-                ssl_environ['SSL_COMPRESS_METHOD'] = compression
+    def _get_optional_environ(self, conn):
+        """
+        Get optional environment variables.
 
-        # Python 3.6+
-        with suppress(AttributeError):
-            ssl_environ['SSL_SESSION_ID'] = sock.session.id.hex()
-        with suppress(AttributeError):
-            target_cipher = cipher[:2]
-            for cip in sock.context.get_ciphers():
-                if target_cipher == (cip['name'], cip['protocol']):
-                    ssl_environ['SSL_CIPHER_ALGKEYSIZE'] = cip['alg_bits']
-                    break
+        Overrides base class method for builtin ssl-specific handling.
+        """
+        environ = {}
 
-        # Python 3.7+ sni_callback
-        with suppress(AttributeError):
-            ssl_environ['SSL_TLS_SNI'] = sock.sni
+        # Compression (note: most modern OpenSSL builds disable compression)
+        try:
+            compression = conn.compression()
+            if compression:
+                environ['SSL_COMPRESS_METHOD'] = compression
+        except AttributeError:
+            # TLSSocket might not have compression method
+            ...
 
-        if self.context and self.context.verify_mode != ssl.CERT_NONE:
-            client_cert = sock.getpeercert()
-            if client_cert:
-                # builtin ssl **ALWAYS** validates client certificates
-                # and terminates the connection on failure
-                ssl_environ['SSL_CLIENT_VERIFY'] = 'SUCCESS'
-                ssl_environ.update(
-                    self._make_env_cert_dict('SSL_CLIENT', client_cert),
-                )
-                ssl_environ['SSL_CLIENT_CERT'] = ssl.DER_cert_to_PEM_cert(
-                    sock.getpeercert(binary_form=True),
-                ).strip()
+        # SNI (Server Name Indication) if available
+        try:
+            server_hostname = conn.server_hostname
+            if server_hostname:
+                environ['SSL_TLS_SNI'] = server_hostname
+        except AttributeError:
+            ...
 
-        ssl_environ.update(self._server_env)
+        return environ
 
-        # not supplied by the Python standard library (as of 3.8)
-        # - SSL_SESSION_RESUMED
-        # - SSL_SECURE_RENEG
-        # - SSL_CLIENT_CERT_CHAIN_n
-        # - SRP_USER
-        # - SRP_USERINFO
+    def _get_server_cert_environ(self):
+        """Get server certificate info using builtin ssl certificate parsing."""
+        if not self.certificate:
+            return {}
+
+        # Check if cryptography is available
+        if x509 is None:
+            return {}
+
+        try:
+            with open(self.certificate, 'rb') as cert_file:
+                cert_data = cert_file.read()
+
+            cert = x509.load_pem_x509_certificate(
+                cert_data,
+                default_backend(),
+            )
+
+            return parse_x509_cert_to_environ(cert, 'SSL_SERVER')
+
+        except Exception:
+            return {}
+
+    def _get_client_cert_environ(self, conn, ssl_environ):
+        """Populate the WSGI environment with client certificate details."""
+        # 1. Access the raw ssl.SSLSocket object
+        try:
+            # 'conn' is the TLSSocket wrapper; '_sock' is the raw ssl.SSLSocket
+            raw_ssl_socket = conn._sock
+        except AttributeError:
+            # If the socket is missing or already closed
+            ssl_environ['SSL_CLIENT_VERIFY'] = 'NONE'
+            return ssl_environ
+
+        # 2. Get the peer certificate details
+        try:
+            # getpeercert() returns a dict if a cert was presented,
+            # None otherwise.
+            peer_cert_details = raw_ssl_socket.getpeercert(binary_form=False)
+            # Also get the binary (DER) form to convert to PEM
+            peer_cert_binary = raw_ssl_socket.getpeercert(binary_form=True)
+        except ssl.SSLError:
+            # This occurs if verification failed during the handshake
+            ssl_environ['SSL_CLIENT_VERIFY'] = 'FAILURE'
+            return ssl_environ
+        except Exception:
+            # Catch any other socket errors
+            ssl_environ['SSL_CLIENT_VERIFY'] = 'NONE'
+            return ssl_environ
+
+        # --- Check Verification Status ---
+        if peer_cert_details:
+            ssl_environ['SSL_CLIENT_VERIFY'] = 'SUCCESS'
+        else:
+            # No cert presented
+            ssl_environ['SSL_CLIENT_VERIFY'] = 'NONE'
+            return ssl_environ
+
+        # --- Add the PEM-encoded certificate ---
+        if peer_cert_binary:
+            ssl_environ['SSL_CLIENT_CERT'] = ssl.DER_cert_to_PEM_cert(
+                peer_cert_binary,
+            )
+
+        # --- Populate Metadata using existing utility methods ---
+
+        # 3. Populate Subject DN
+        subject_dn_nested = peer_cert_details.get('subject', [])
+        subject_env = self._make_env_dn_dict(
+            env_prefix='SSL_CLIENT_S_DN',
+            cert_value=subject_dn_nested,
+        )
+        ssl_environ.update(subject_env)
+
+        # 4. Populate Issuer DN
+        issuer_dn_nested = peer_cert_details.get('issuer', [])
+        issuer_env = self._make_env_dn_dict(
+            env_prefix='SSL_CLIENT_I_DN',
+            cert_value=issuer_dn_nested,
+        )
+        ssl_environ.update(issuer_env)
+
+        # 5. Populate other cert details
+        ssl_environ['SSL_CLIENT_M_VERSION'] = str(
+            peer_cert_details.get('version', ''),
+        )
+        ssl_environ['SSL_CLIENT_M_SERIAL'] = str(
+            peer_cert_details.get('serialNumber', ''),
+        )
 
         return ssl_environ
 
@@ -482,8 +578,10 @@ class BuiltinSSLAdapter(Adapter):
                 dn_attrs.setdefault(attr_code, [])
                 dn_attrs[attr_code].append(val)
 
+        dn_string = '/'.join(dn)
+
         env = {
-            env_prefix: ','.join(dn),
+            env_prefix: '/%s' % (dn_string,),
         }
         for attr_code, values in dn_attrs.items():
             env['%s_%s' % (env_prefix, attr_code)] = ','.join(values)
@@ -492,8 +590,3 @@ class BuiltinSSLAdapter(Adapter):
             for i, val in enumerate(values):
                 env['%s_%s_%i' % (env_prefix, attr_code, i)] = val
         return env
-
-    def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
-        """Return socket file object."""
-        cls = StreamReader if 'r' in mode else StreamWriter
-        return cls(sock, mode, bufsize)

@@ -228,6 +228,8 @@ class Gateway(server.Gateway):
                 # Dang. We have probably already sent data. Truncate the chunk
                 # to fit (so the client doesn't hang) and raise an error later.
                 chunk = chunk[:rbo]
+                # Update chunklen to match the truncated size
+                chunklen = len(chunk)
 
         self.req.ensure_headers_sent()
 

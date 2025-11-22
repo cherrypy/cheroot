@@ -1,6 +1,5 @@
 """Utilities to manage open connections."""
 
-import io
 import os
 import selectors
 import socket
@@ -10,7 +9,6 @@ from contextlib import suppress
 
 from . import errors
 from ._compat import IS_WINDOWS
-from .makefile import MakeFile
 
 
 try:
@@ -293,50 +291,22 @@ class ConnectionManager:
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.server.timeout)
 
-            mf = MakeFile
             ssl_env = {}
+
             # if ssl cert and key are set, we try to be a secure HTTP server
             if self.server.ssl_adapter is not None:
                 try:
                     s, ssl_env = self.server.ssl_adapter.wrap(s)
-                except errors.FatalSSLAlert as tls_connection_drop_error:
+                except errors.FatalSSLAlert as tls_connection_error:
                     self.server.error_log(
-                        f'Client {addr!s} lost — peer dropped the TLS '
-                        'connection suddenly, during handshake: '
-                        f'{tls_connection_drop_error!s}',
+                        f'Failed to establish SSL connection with {addr!s}: '
+                        f'{tls_connection_error!s}',
                     )
                     return None
-                except errors.NoSSLError as http_over_https_err:
-                    self.server.error_log(
-                        f'Client {addr!s} attempted to speak plain HTTP into '
-                        'a TCP connection configured for TLS-only traffic — '
-                        'trying to send back a plain HTTP error response: '
-                        f'{http_over_https_err!s}',
-                    )
-                    msg = (
-                        'The client sent a plain HTTP request, but '
-                        'this server only speaks HTTPS on this port.'
-                    )
-                    buf = [
-                        '%s 400 Bad Request\r\n' % self.server.protocol,
-                        'Content-Length: %s\r\n' % len(msg),
-                        'Content-Type: text/plain\r\n\r\n',
-                        msg,
-                    ]
+                except errors.NoSSLError:
+                    return self._send_bad_request_plain_http_error(s, addr)
 
-                    wfile = mf(s, 'wb', io.DEFAULT_BUFFER_SIZE)
-                    try:
-                        wfile.write(''.join(buf).encode('ISO-8859-1'))
-                    except OSError as ex:
-                        if ex.args[0] not in errors.socket_errors_to_ignore:
-                            raise
-                    return None
-                mf = self.server.ssl_adapter.makefile
-                # Re-apply our timeout since we may have a new socket object
-                if hasattr(s, 'settimeout'):
-                    s.settimeout(self.server.timeout)
-
-            conn = self.server.ConnectionClass(self.server, s, mf)
+            conn = self.server.ConnectionClass(self.server, s)
 
             if not isinstance(self.server.bind_addr, (str, bytes)):
                 # optional values
@@ -380,6 +350,43 @@ class ConnectionManager:
                 # See https://github.com/cherrypy/cherrypy/issues/686.
                 return None
             raise
+
+    def _send_bad_request_plain_http_error(self, sock, addr):
+        """Send Bad Request 400 response, and close the socket."""
+        self.server.error_log(
+            f'Client {addr!s} attempted to speak plain HTTP into '
+            'a TCP connection configured for TLS-only traffic — '
+            'Sending 400 Bad Request.',
+        )
+
+        msg = (
+            'The client sent a plain HTTP request, but this server '
+            'only speaks HTTPS on this port.'
+        )
+
+        response_parts = [
+            f'{self.server.protocol} 400 Bad Request\r\n',
+            'Content-Type: text/plain\r\n',
+            f'Content-Length: {len(msg)}\r\n',
+            'Connection: close\r\n',
+            '\r\n',
+            msg,
+        ]
+        response_bytes = ''.join(response_parts).encode('ISO-8859-1')
+
+        try:
+            # Handle both raw sockets and SSL connections
+            if hasattr(sock, 'sendall'):
+                sock.sendall(response_bytes)
+            else:
+                # Fallback for older PyOpenSSL or SSL objects
+                sock.send(response_bytes)
+            sock.shutdown(socket.SHUT_WR)
+        except OSError as ex:
+            if ex.args[0] not in errors.socket_errors_to_ignore:
+                raise
+
+        sock.close()
 
     def close(self):
         """Close all monitored connections."""

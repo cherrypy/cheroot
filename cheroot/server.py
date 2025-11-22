@@ -83,7 +83,7 @@ from functools import lru_cache
 
 from . import __version__, connections, errors
 from ._compat import IS_PPC, bton
-from .makefile import MakeFile, StreamWriter
+from .makefile import StreamReader, StreamWriter
 from .workers import threadpool
 
 
@@ -1275,19 +1275,18 @@ class HTTPConnection:
     # Fields set by ConnectionManager.
     last_used = None
 
-    def __init__(self, server, sock, makefile=MakeFile):
+    def __init__(self, server, sock):
         """Initialize HTTPConnection instance.
 
         Args:
             server (HTTPServer): web server object receiving this request
             sock (socket._socketobject): the raw socket object (usually
                 TCP) for this connection
-            makefile (file): a fileobject class for reading from the socket
         """
         self.server = server
         self.socket = sock
-        self.rfile = makefile(sock, 'rb', self.rbufsize)
-        self.wfile = makefile(sock, 'wb', self.wbufsize)
+        self.rfile = StreamReader(sock, self.rbufsize)
+        self.wfile = StreamWriter(sock, self.wbufsize)
         self.requests_seen = 0
 
         self.peercreds_enabled = self.server.peercreds_enabled
@@ -1363,7 +1362,7 @@ class HTTPConnection:
         except AttributeError:
             # self.socket is of OpenSSL.SSL.Connection type
             resp_sock = self.socket._socket
-        self.wfile = StreamWriter(resp_sock, 'wb', self.wbufsize)
+        self.wfile = StreamWriter(resp_sock, self.wbufsize)
         msg = (
             'The client sent a plain HTTP request, but '
             'this server only speaks HTTPS on this port.'
