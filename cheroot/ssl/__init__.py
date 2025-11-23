@@ -1,5 +1,6 @@
 """Implementation of the SSL adapter base interface."""
 
+import socket
 from abc import ABC, abstractmethod
 
 
@@ -50,3 +51,43 @@ class Adapter(ABC):
     def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
         raise NotImplementedError  # pragma: no cover
+
+    def _check_for_plain_http(self, raw_socket):
+        """Check if the client sent plain HTTP by peeking at first bytes.
+
+        This is a best-effort check to provide a helpful error message when
+        clients accidentally use HTTP on an HTTPS port. If we can't detect
+        plain HTTP (timeout, no data yet, etc), we return False and let the
+        SSL handshake proceed, which will fail with its own error.
+
+        Returns:
+            bool: True if plain HTTP is detected, False otherwise
+        """
+        PEEK_BYTES = 16
+        PEEK_TIMEOUT = 0.5
+
+        original_timeout = raw_socket.gettimeout()
+        raw_socket.settimeout(PEEK_TIMEOUT)
+
+        try:
+            first_bytes = raw_socket.recv(PEEK_BYTES, socket.MSG_PEEK)
+        except (OSError, socket.timeout):
+            return False
+        finally:
+            raw_socket.settimeout(original_timeout)
+
+        if not first_bytes:
+            return False
+
+        http_methods = (
+            b'GET ',
+            b'POST ',
+            b'PUT ',
+            b'DELETE ',
+            b'HEAD ',
+            b'OPTIONS ',
+            b'PATCH ',
+            b'CONNECT ',
+            b'TRACE ',
+        )
+        return first_bytes.startswith(http_methods)

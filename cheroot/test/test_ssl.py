@@ -32,9 +32,7 @@ from .._compat import (
     IS_LINUX,
     IS_MACOS,
     IS_PYPY,
-    IS_SOLARIS,
     IS_WINDOWS,
-    SYS_PLATFORM,
     bton,
     ntob,
     ntou,
@@ -304,7 +302,6 @@ def test_ssl_adapters(  # pylint: disable=too-many-positional-arguments
         timeout=http_request_timeout,
         verify=tls_ca_certificate_pem_path,
     )
-
     assert resp.status_code == 200
     assert resp.text == 'Hello world!'
 
@@ -710,7 +707,6 @@ def test_https_over_http_error(http_server, ip_addr):
         pytest.param(ANY_INTERFACE_IPV6, marks=missing_ipv6),
     ),
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
 # pylint: disable-next=too-many-positional-arguments
 def test_http_over_https_error(
     http_request_timeout,
@@ -723,36 +719,6 @@ def test_http_over_https_error(
     tls_certificate_private_key_pem_path,
 ):
     """Ensure that connecting over HTTP to HTTPS port is handled."""
-    # disable some flaky tests
-    # https://github.com/cherrypy/cheroot/issues/225
-    issue_225 = IS_MACOS and adapter_type == 'builtin'
-    if issue_225:
-        pytest.xfail('Test fails in Travis-CI')
-
-    if IS_LINUX:
-        expected_error_code, expected_error_text = (
-            104,
-            'Connection reset by peer',
-        )
-    elif IS_MACOS:
-        expected_error_code, expected_error_text = (
-            54,
-            'Connection reset by peer',
-        )
-    elif IS_SOLARIS:
-        expected_error_code, expected_error_text = (
-            None,
-            'Remote end closed connection without response',
-        )
-    elif IS_WINDOWS:
-        expected_error_code, expected_error_text = (
-            10054,
-            'An existing connection was forcibly closed by the remote host',
-        )
-    else:
-        expected_error_code, expected_error_text = None, None
-        pytest.skip(f'{SYS_PLATFORM} is unsupported')  # pragma: no cover
-
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
     tls_adapter = tls_adapter_cls(
         tls_certificate_chain_pem_path,
@@ -774,31 +740,15 @@ def test_http_over_https_error(
     if ip_addr is ANY_INTERFACE_IPV6:
         fqdn = '[{fqdn}]'.format(**locals())
 
-    expect_fallback_response_over_plain_http = adapter_type == 'pyopenssl'
-    if expect_fallback_response_over_plain_http:
-        resp = requests.get(
-            f'http://{fqdn!s}:{port!s}/',
-            timeout=http_request_timeout,
-        )
-        assert resp.status_code == 400
-        assert resp.text == (
-            'The client sent a plain HTTP request, '
-            'but this server only speaks HTTPS on this port.'
-        )
-        return
-
-    with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
-        requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-            f'http://{fqdn!s}:{port!s}/',
-            timeout=http_request_timeout,
-        )
-
-    underlying_error = ssl_err.value.args[0].args[-1]
-    err_text = str(underlying_error)
-    assert underlying_error.errno == expected_error_code, (
-        'The underlying error is {underlying_error!r}'.format(**locals())
+    resp = requests.get(
+        f'http://{fqdn!s}:{port!s}/',
+        timeout=http_request_timeout,
     )
-    assert expected_error_text in err_text
+    assert resp.status_code == 400
+    assert resp.text == (
+        'The client sent a plain HTTP request, '
+        'but this server only speaks HTTPS on this port.'
+    )
 
 
 @pytest.mark.parametrize('adapter_type', ('builtin', 'pyopenssl'))
