@@ -1,6 +1,7 @@
 """Implementation of the SSL adapter base interface."""
 
 from abc import ABC, abstractmethod
+from warnings import warn as _warn
 
 
 class Adapter(ABC):
@@ -31,14 +32,25 @@ class Adapter(ABC):
         self.private_key_password = private_key_password
         self.context = None
 
-    @abstractmethod
     def bind(self, sock):
-        """Wrap and return the given socket."""
+        """
+        Return the given socket.
+
+        Deprecated:
+        This method no longer performs any SSL-specific operations.
+        SSL wrapping now happens in :meth:`.wrap`. :meth:`.bind` will be
+        removed in a future version.
+        """
+        _warn(
+            'SSLAdapter.bind() is deprecated and will be removed in a future version.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return sock
 
     @abstractmethod
     def wrap(self, sock):
-        """Wrap and return the given socket, plus WSGI environ entries."""
+        """Wrap the given socket and return WSGI environ entries."""
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod

@@ -196,7 +196,7 @@ class HTTPServer:
         type,
         proto,
         nodelay,
-        ssl_adapter,
+        ssl_adapter=None,
         reuse_port: bool = ...,
     ): ...
     @staticmethod

@@ -5,6 +5,7 @@ import functools
 import http.client
 import json
 import os
+import socket
 import ssl
 import subprocess
 import sys
@@ -25,6 +26,8 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 
+from cheroot.ssl import Adapter
+
 from .._compat import (
     IS_ABOVE_OPENSSL10,
     IS_ABOVE_OPENSSL31,
@@ -39,7 +42,7 @@ from .._compat import (
     ntob,
     ntou,
 )
-from ..server import Gateway, HTTPServer, get_ssl_adapter_class
+from ..server import HTTPServer, get_ssl_adapter_class
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -758,8 +761,6 @@ def test_http_over_https_error(
         tls_certificate_chain_pem_path,
         tls_certificate_private_key_pem_path,
     )
-    if adapter_type == 'pyopenssl':
-        tls_adapter.context = tls_adapter.get_context()
 
     tls_certificate.configure_cert(tls_adapter.context)
 
@@ -908,20 +909,7 @@ def test_openssl_adapter_with_false_key_password(
     expected_warn,
 ):
     """Check that server init fails when wrong private key password given."""
-    httpserver = HTTPServer(
-        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
-        gateway=Gateway,
-    )
-
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-    tls_adapter = tls_adapter_cls(
-        certificate=tls_certificate_chain_pem_path,
-        private_key=tls_certificate_passwd_private_key_pem_path,
-        private_key_password=false_password,
-    )
-
-    httpserver.ssl_adapter = tls_adapter
-
     with expected_warn, pytest.raises(
         OpenSSL.SSL.Error,
         # Decode error has happened very rarely with Python 3.9 in MacOS.
@@ -929,7 +917,67 @@ def test_openssl_adapter_with_false_key_password(
         # to interpretation of garbage characters in certificates.
         match=r'.+\'(bad decrypt|decode error)\'.+',
     ):
-        httpserver.prepare()
+        tls_adapter_cls(
+            certificate=tls_certificate_chain_pem_path,
+            private_key=tls_certificate_passwd_private_key_pem_path,
+            private_key_password=false_password,
+        )
 
-    assert not httpserver.requests._threads
-    assert not httpserver.ready
+
+@pytest.fixture
+def dummy_adapter(monkeypatch):
+    """Provide a dummy SSL adapter instance."""
+    # hide abstract methods so we can instantiate Adapter
+    monkeypatch.setattr(Adapter, '__abstractmethods__', set())
+    # pylint: disable=abstract-class-instantiated
+    return Adapter(
+        certificate='cert.pem',
+        private_key='key.pem',
+    )
+
+
+def test_bind_deprecated_call(dummy_adapter):
+    """Test deprecated ``bind()`` method issues warning and returns socket."""
+    sock = socket.socket()
+
+    with pytest.deprecated_call():
+        result = dummy_adapter.bind(sock)
+
+    assert result is sock
+
+    sock.close()
+
+
+def test_prepare_socket_emits_deprecation_warning(
+    dummy_adapter,
+):
+    """
+    Test ``prepare_socket()`` deprecated argument triggers a warning.
+
+    ``ssl_adapter`` has been deprecated in ``prepare_socket()``.
+    """
+    # Required parameters for prepare_socket (standard IPv4 TCP config)
+    bind_addr = ('127.0.0.1', 8080)
+    family = socket.AF_INET
+    sock_type = socket.SOCK_STREAM
+    proto = socket.IPPROTO_TCP
+    nodelay = True
+
+    expected_message = r'ssl_adapter.*deprecated'  # regex pattern
+
+    with pytest.deprecated_call(match=expected_message):
+        sock = HTTPServer.prepare_socket(
+            bind_addr=bind_addr,
+            family=family,
+            type=sock_type,
+            proto=proto,
+            nodelay=nodelay,
+            ssl_adapter=dummy_adapter,
+        )
+
+    # Check that the returned object is indeed a socket
+    assert isinstance(sock, socket.socket)
+    # Check we have a socket configured with file descriptor
+    assert sock.fileno() > 0
+
+    sock.close()
