@@ -713,7 +713,6 @@ def test_https_over_http_error(http_server, ip_addr):
         pytest.param(ANY_INTERFACE_IPV6, marks=missing_ipv6),
     ),
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
 # pylint: disable-next=too-many-positional-arguments
 def test_http_over_https_error(
     http_request_timeout,
@@ -726,12 +725,6 @@ def test_http_over_https_error(
     tls_certificate_private_key_pem_path,
 ):
     """Ensure that connecting over HTTP to HTTPS port is handled."""
-    # disable some flaky tests
-    # https://github.com/cherrypy/cheroot/issues/225
-    issue_225 = IS_MACOS and adapter_type == 'builtin'
-    if issue_225:
-        pytest.xfail('Test fails in Travis-CI')
-
     if IS_LINUX:
         expected_error_code, expected_error_text = (
             104,

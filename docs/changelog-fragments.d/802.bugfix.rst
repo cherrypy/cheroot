@@ -1,0 +1,3 @@
+Fixed socket errors when clients send HTTP to HTTPS-only ports.
+
+-- by :user:`julianz-`

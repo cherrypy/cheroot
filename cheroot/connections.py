@@ -327,6 +327,8 @@ class ConnectionManager:
                     wfile = mf(s, 'wb', io.DEFAULT_BUFFER_SIZE)
                     try:
                         wfile.write(''.join(buf).encode('ISO-8859-1'))
+                        wfile.flush()
+                        wfile.close()
                     except OSError as ex:
                         if ex.args[0] not in errors.socket_errors_to_ignore:
                             raise
