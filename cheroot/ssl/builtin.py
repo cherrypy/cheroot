@@ -303,10 +303,6 @@ class BuiltinSSLAdapter(Adapter):
             if ssl.HAS_SNI and context.sni_callback is None:
                 context.sni_callback = _sni_callback
 
-    def bind(self, sock):
-        """Wrap and return the given socket."""
-        return super(BuiltinSSLAdapter, self).bind(sock)
-
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
         try:

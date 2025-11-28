@@ -1,0 +1,9 @@
+Deprecated :py:meth:`~cheroot.ssl.Adapter.bind` method from the :py:class:`~cheroot.ssl.Adapter`
+interface and respective implementations. Previously :py:meth:`~cheroot.ssl.Adapter.bind` was
+doing nothing in the :py:class:`builtin TLS adapter <cheroot.ssl.builtin.BuiltinSSLAdapter>`
+but was being used in the :py:class:`~cheroot.ssl.pyopenssl.pyOpenSSLAdapter` to wrap the socket.
+Socket wrapping is now done exclusively in the :py:meth:`~cheroot.ssl.Adapter.wrap`
+method subclass implementations. A side-effect of this change is that the ``ssl_adapter`` argument
+of :py:meth:`~cheroot.server.HTTPServer.prepare_socket()` is also deprecated.
+
+-- by :user:`julianz-`

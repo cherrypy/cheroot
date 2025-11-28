@@ -19,6 +19,7 @@ cheroot.ssl.pyopenssl.SSLConnection.makefile
 cheroot.ssl.pyopenssl.SSLConnection.pending
 cheroot.ssl.pyopenssl.SSLConnection.read
 cheroot.ssl.pyopenssl.SSLConnection.recv
+cheroot.ssl.pyopenssl.SSLConnection.recv_into
 cheroot.ssl.pyopenssl.SSLConnection.renegotiate
 cheroot.ssl.pyopenssl.SSLConnection.send
 cheroot.ssl.pyopenssl.SSLConnection.sendall

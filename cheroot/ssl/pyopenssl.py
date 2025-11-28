@@ -216,6 +216,8 @@ class SSLConnectionProxyMeta:
             'settimeout',
             'gettimeout',
             'shutdown',
+            'recv_into',
+            '_decref_socketios',
         )
         proxy_methods_no_args = ('shutdown',)
 
@@ -270,6 +272,17 @@ class SSLConnection(metaclass=SSLConnectionProxyMeta):
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
 
+    @property
+    def _socket(self):
+        """
+        Expose underlying raw socket.
+
+        This is needed for times when the cheroot server needs access to the
+        original socket object, e.g. in response to a client attempting
+        to speak plain HTTP on an HTTPS port.
+        """
+        return self._ssl_conn._socket
+
 
 class pyOpenSSLAdapter(Adapter):
     """A wrapper for integrating :doc:`pyOpenSSL <pyopenssl:index>`."""
@@ -318,22 +331,18 @@ class pyOpenSSLAdapter(Adapter):
             private_key_password=private_key_password,
         )
 
-        self._environ = None
-
-    def bind(self, sock):
-        """Wrap and return the given socket."""
-        if self.context is None:
-            self.context = self.get_context()
-        conn = SSLConnection(self.context, sock)
+        self.context = self.get_context()
         self._environ = self.get_environ()
-        return conn
 
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
         # pyOpenSSL doesn't perform the handshake until the first read/write
         # forcing the handshake to complete tends to result in the connection
         # closing so we can't reliably access protocol/client cert for the env
-        return sock, self._environ.copy()
+        conn = SSLConnection(self.context, sock)
+
+        conn.set_accept_state()  # Tell OpenSSL this is a server connection
+        return conn, self._environ.copy()
 
     def _password_callback(
         self,
@@ -442,7 +451,8 @@ class pyOpenSSLAdapter(Adapter):
             if 'r' in mode
             else SSLFileobjectStreamWriter
         )
-        if SSL and isinstance(sock, ssl_conn_type):
+        # sock is an pyopenSSL.SSLConnection instance here
+        if SSL and isinstance(sock, SSLConnection):
             wrapped_socket = cls(sock, mode, bufsize)
             wrapped_socket.ssl_timeout = sock.gettimeout()
             return wrapped_socket
