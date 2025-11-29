@@ -1,7 +1,10 @@
 """Implementation of the SSL adapter base interface."""
 
+import socket as _socket
 from abc import ABC, abstractmethod
 from warnings import warn as _warn
+
+from .. import errors
 
 
 class Adapter(ABC):
@@ -48,10 +51,9 @@ class Adapter(ABC):
         )
         return sock
 
-    @abstractmethod
     def wrap(self, sock):
         """Wrap the given socket and return WSGI environ entries."""
-        raise NotImplementedError  # pragma: no cover
+        self._ensure_peer_speaks_https(sock)
 
     @abstractmethod
     def get_environ(self):
@@ -62,3 +64,46 @@ class Adapter(ABC):
     def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
         raise NotImplementedError  # pragma: no cover
+
+    def _ensure_peer_speaks_https(self, raw_socket) -> None:
+        """
+        Raise exception if the client sent plain HTTP.
+
+        Check if client sent HTTP on an HTTPS port by peeking at the
+        first bytes. If there's no data yet we return and let the
+        SSL handshake proceed, which which will raise an SSLError
+        if the client is not speaking TLS.
+
+        :raises NoSSLError: When plain HTTP is detected on an HTTPS socket
+        """
+        PEEK_BYTES = 16
+        PEEK_TIMEOUT = 0.5
+
+        original_timeout = raw_socket.gettimeout()
+        raw_socket.settimeout(PEEK_TIMEOUT)
+
+        try:
+            first_bytes = raw_socket.recv(PEEK_BYTES, _socket.MSG_PEEK)
+        except (OSError, _socket.timeout):
+            return
+        finally:
+            raw_socket.settimeout(original_timeout)
+
+        if not first_bytes:
+            return
+
+        http_methods = (
+            b'GET ',
+            b'POST ',
+            b'PUT ',
+            b'DELETE ',
+            b'HEAD ',
+            b'OPTIONS ',
+            b'PATCH ',
+            b'CONNECT ',
+            b'TRACE ',
+        )
+        if first_bytes.startswith(http_methods):
+            raise errors.NoSSLError(
+                'Expected HTTPS on the socket but got plain HTTP',
+            ) from None

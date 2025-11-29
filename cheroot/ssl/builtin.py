@@ -305,6 +305,8 @@ class BuiltinSSLAdapter(Adapter):
 
     def wrap(self, sock):
         """Wrap and return the given socket, plus WSGI environ entries."""
+        super().wrap(sock)  # checks for http on https port
+
         try:
             s = self.context.wrap_socket(
                 sock,

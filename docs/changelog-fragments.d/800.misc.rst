@@ -1,0 +1,3 @@
+Introduced unified handling of HTTP over HTTPS errors.
+
+-- by :user:`julianz-`

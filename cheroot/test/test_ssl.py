@@ -1,6 +1,7 @@
 """Tests for TLS support."""
 
 import contextlib
+import errno
 import functools
 import http.client
 import json
@@ -26,6 +27,7 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 
+from cheroot.connections import ConnectionManager
 from cheroot.ssl import Adapter
 
 from .._compat import (
@@ -35,9 +37,7 @@ from .._compat import (
     IS_LINUX,
     IS_MACOS,
     IS_PYPY,
-    IS_SOLARIS,
     IS_WINDOWS,
-    SYS_PLATFORM,
     bton,
     ntob,
     ntou,
@@ -706,6 +706,73 @@ def test_https_over_http_error(http_server, ip_addr):
         'pyopenssl',
     ),
 )
+def test_plain_http_check_no_data(
+    adapter_type,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+    mocker,
+):
+    """Test ``_ensure_peer_speaks_https()`` handles empty peek correctly."""
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+
+    tls_adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path,
+        tls_certificate_private_key_pem_path,
+    )
+
+    mock_socket = mocker.MagicMock()
+    mock_socket.recv.return_value = b''  # Empty peek
+    mock_socket.gettimeout.return_value = None
+
+    # Should not raise - empty peek means we can't detect plain HTTP
+    tls_adapter._ensure_peer_speaks_https(mock_socket)
+
+    mock_socket.recv.assert_called_once_with(16, socket.MSG_PEEK)
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    ('builtin', 'pyopenssl'),
+)
+@pytest.mark.parametrize(
+    'exception',
+    (
+        socket.timeout('Timed out'),
+        ConnectionResetError(errno.ECONNRESET, 'Connection reset by peer'),
+    ),
+    ids=['timeout', 'connection_reset'],
+)
+def test_plain_http_check_socket_errors(
+    adapter_type,
+    exception,
+    mocker,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+):
+    """Test ``_ensure_peer_speaks_https()`` handles socket errors gracefully."""
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path,
+        tls_certificate_private_key_pem_path,
+    )
+
+    mock_socket = mocker.MagicMock()
+    mock_socket.recv.side_effect = exception
+    mock_socket.gettimeout.return_value = None
+
+    # Should return None (no exception) on socket error
+    result = adapter._ensure_peer_speaks_https(mock_socket)
+
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    (
+        'builtin',
+        'pyopenssl',
+    ),
+)
 @pytest.mark.parametrize(
     'ip_addr',
     (
@@ -713,7 +780,6 @@ def test_https_over_http_error(http_server, ip_addr):
         pytest.param(ANY_INTERFACE_IPV6, marks=missing_ipv6),
     ),
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
 # pylint: disable-next=too-many-positional-arguments
 def test_http_over_https_error(
     http_request_timeout,
@@ -726,36 +792,6 @@ def test_http_over_https_error(
     tls_certificate_private_key_pem_path,
 ):
     """Ensure that connecting over HTTP to HTTPS port is handled."""
-    # disable some flaky tests
-    # https://github.com/cherrypy/cheroot/issues/225
-    issue_225 = IS_MACOS and adapter_type == 'builtin'
-    if issue_225:
-        pytest.xfail('Test fails in Travis-CI')
-
-    if IS_LINUX:
-        expected_error_code, expected_error_text = (
-            104,
-            'Connection reset by peer',
-        )
-    elif IS_MACOS:
-        expected_error_code, expected_error_text = (
-            54,
-            'Connection reset by peer',
-        )
-    elif IS_SOLARIS:
-        expected_error_code, expected_error_text = (
-            None,
-            'Remote end closed connection without response',
-        )
-    elif IS_WINDOWS:
-        expected_error_code, expected_error_text = (
-            10054,
-            'An existing connection was forcibly closed by the remote host',
-        )
-    else:
-        expected_error_code, expected_error_text = None, None
-        pytest.skip(f'{SYS_PLATFORM} is unsupported')  # pragma: no cover
-
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
     tls_adapter = tls_adapter_cls(
         tls_certificate_chain_pem_path,
@@ -775,31 +811,61 @@ def test_http_over_https_error(
     if ip_addr is ANY_INTERFACE_IPV6:
         fqdn = '[{fqdn}]'.format(**locals())
 
-    expect_fallback_response_over_plain_http = adapter_type == 'pyopenssl'
-    if expect_fallback_response_over_plain_http:
-        resp = requests.get(
-            f'http://{fqdn!s}:{port!s}/',
-            timeout=http_request_timeout,
-        )
-        assert resp.status_code == 400
-        assert resp.text == (
-            'The client sent a plain HTTP request, '
-            'but this server only speaks HTTPS on this port.'
-        )
-        return
-
-    with pytest.raises(requests.exceptions.ConnectionError) as ssl_err:
-        requests.get(  # FIXME: make stdlib ssl behave like PyOpenSSL
-            f'http://{fqdn!s}:{port!s}/',
-            timeout=http_request_timeout,
-        )
-
-    underlying_error = ssl_err.value.args[0].args[-1]
-    err_text = str(underlying_error)
-    assert underlying_error.errno == expected_error_code, (
-        'The underlying error is {underlying_error!r}'.format(**locals())
+    resp = requests.get(
+        f'http://{fqdn!s}:{port!s}/',
+        timeout=http_request_timeout,
     )
-    assert expected_error_text in err_text
+    assert resp.status_code == 400
+    assert resp.text == (
+        'The client sent a plain HTTP request, '
+        'but this server only speaks HTTPS on this port.'
+    )
+
+
+@pytest.mark.parametrize(
+    ('error', 'should_raise', 'error_msg'),
+    (
+        (OSError(32, 'Broken pipe'), False, None),  # EPIPE - ignorable
+        (
+            OSError(9999, 'An error to reckon with'),  # not ignorable
+            True,
+            'An error to reckon with',
+        ),
+    ),
+    ids=['ignorable_error', 'non_ignorable_error'],
+)
+def test_send_bad_request_socket_errors(
+    mocker,
+    error,
+    should_raise,
+    error_msg,
+):
+    """Test socket error handling when sending 400 Bad Request."""
+    # Mock the selector in ConnectionManager initialization
+    mocker.patch('cheroot.connections._ThreadsafeSelector')
+
+    mock_server = mocker.MagicMock()
+    mock_server.protocol = 'HTTP/1.1'
+    conn_manager = ConnectionManager(mock_server)
+
+    mock_raw_socket = mocker.Mock(spec=socket.socket)
+    mock_raw_socket.sendall.side_effect = error
+
+    addr = ('127.0.0.1', 12345)
+
+    if should_raise:
+        # Should raise the error
+        with pytest.raises(OSError, match=error_msg) as exc_info:
+            conn_manager._send_bad_request_plain_http_error(
+                mock_raw_socket,
+                addr,
+            )
+        assert exc_info.value.args[0] == error.args[0]
+    else:
+        # Should not raise - error should be suppressed
+        conn_manager._send_bad_request_plain_http_error(mock_raw_socket, addr)
+        mock_raw_socket.sendall.assert_called_once()
+        mock_raw_socket.close.assert_called_once()
 
 
 @pytest.mark.parametrize('adapter_type', ('builtin', 'pyopenssl'))
