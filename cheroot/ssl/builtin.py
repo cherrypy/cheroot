@@ -247,6 +247,10 @@ class BuiltinSSLAdapter(Adapter):
             private_key_password=private_key_password,
         )
 
+        key_password = private_key_password
+        if callable(private_key_password):
+            key_password = private_key_password()
+
         self.context = ssl.create_default_context(
             purpose=ssl.Purpose.CLIENT_AUTH,
             cafile=certificate_chain,
@@ -254,7 +258,7 @@ class BuiltinSSLAdapter(Adapter):
         self.context.load_cert_chain(
             certificate,
             private_key,
-            password=private_key_password,
+            password=key_password,
         )
         if self.ciphers is not None:
             self.context.set_ciphers(ciphers)
@@ -265,7 +269,7 @@ class BuiltinSSLAdapter(Adapter):
                 certificate,
                 private_key,
                 self.certificate_chain,
-                private_key_password=private_key_password,
+                private_key_password=key_password,
             ),
         )
         if not self._server_env:

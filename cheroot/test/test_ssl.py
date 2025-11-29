@@ -26,7 +26,7 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 
-from cheroot.ssl import Adapter
+from cheroot.ssl import Adapter, pyopenssl
 
 from .._compat import (
     IS_ABOVE_OPENSSL10,
@@ -149,10 +149,15 @@ def make_tls_http_server(bind_addr, ssl_adapter, request):
     return httpserver
 
 
+def get_key_password():
+    """Provide hardcoded password for private key as callable."""
+    return 'криївка'
+
+
 @pytest.fixture(scope='session')
 def private_key_password():
     """Provide hardcoded password for private key."""
-    return 'криївка'
+    return get_key_password()
 
 
 @pytest.fixture
@@ -810,8 +815,8 @@ def test_http_over_https_error(
 )
 @pytest.mark.parametrize(
     'password_as_bytes',
-    (True, False),
-    ids=('with-bytes-password', 'with-str-password'),
+    (True, False, None),
+    ids=('with-bytes-password', 'with-str-password', 'with-callable-password'),
 )
 # pylint: disable-next=too-many-positional-arguments
 def test_ssl_adapters_with_private_key_password(
@@ -833,9 +838,13 @@ def test_ssl_adapters_with_private_key_password(
         else tls_certificate_private_key_pem_path
     )
     key_pass = (
-        private_key_password.encode('utf-8')
+        private_key_password.encode('utf-8')  # use bytes
         if password_as_bytes
-        else private_key_password
+        else (
+            get_key_password  # use callable
+            if password_as_bytes is None
+            else private_key_password  # use str
+        )
     )
 
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
@@ -922,6 +931,50 @@ def test_openssl_adapter_with_false_key_password(
             private_key=tls_certificate_passwd_private_key_pem_path,
             private_key_password=false_password,
         )
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    ('pyopenssl',),
+)
+# pylint: disable-next=too-many-positional-arguments
+def test_openssl_adapter_with_none_key_password(
+    http_request_timeout,
+    tls_certificate_chain_pem_path,
+    tls_certificate_passwd_private_key_pem_path,
+    tls_ca_certificate_pem_path,
+    tls_http_server,
+    private_key_password,
+    adapter_type,
+    monkeypatch,
+):
+    """Check that openssl ssl-adapter prompts password when set as None."""
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    monkeypatch.setattr(
+        pyopenssl,
+        '_prompt_for_tls_password',
+        lambda: private_key_password,
+    )
+    tls_adapter = tls_adapter_cls(
+        certificate=tls_certificate_chain_pem_path,
+        private_key=tls_certificate_passwd_private_key_pem_path,
+    )
+
+    interface, _host, port = _get_conn_data(
+        tls_http_server(
+            (ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+            tls_adapter,
+        ).bind_addr,
+    )
+
+    resp = requests.get(
+        f'https://{interface!s}:{port!s}/',
+        timeout=http_request_timeout,
+        verify=tls_ca_certificate_pem_path,
+    )
+
+    assert resp.status_code == 200
+    assert resp.text == 'Hello world!'
 
 
 @pytest.fixture

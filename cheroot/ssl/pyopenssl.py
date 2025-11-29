@@ -54,6 +54,7 @@ import socket
 import sys
 import threading
 import time
+from getpass import getpass as _ask_for_password_interactively
 from warnings import warn as _warn
 
 
@@ -76,6 +77,11 @@ from .. import (
 )
 from ..makefile import StreamReader, StreamWriter
 from . import Adapter
+
+
+def _prompt_for_tls_password() -> str:
+    prompt = 'Enter PEM pass phrase:'
+    return _ask_for_password_interactively(prompt)
 
 
 class SSLFileobjectMixin:
@@ -347,11 +353,20 @@ class pyOpenSSLAdapter(Adapter):
     def _password_callback(
         self,
         password_max_length,
-        _verify_twice,
-        password,
+        verify_twice,
+        password_or_callback,
         /,
     ):
         """Pass a passphrase to password protected private key."""
+        if callable(password_or_callback):
+            password = password_or_callback()
+            if verify_twice and password != password_or_callback():
+                raise ValueError(
+                    'Verification failed: entered passwords do not match',
+                ) from None
+        else:
+            password = password_or_callback
+
         b_password = b''  # returning a falsy value communicates an error
         if isinstance(password, str):
             b_password = password.encode('utf-8')
@@ -376,6 +391,8 @@ class pyOpenSSLAdapter(Adapter):
         """
         # See https://code.activestate.com/recipes/442473/
         c = SSL.Context(SSL.SSLv23_METHOD)
+        if self.private_key_password is None:
+            self.private_key_password = _prompt_for_tls_password
         c.set_passwd_cb(self._password_callback, self.private_key_password)
         c.use_privatekey_file(self.private_key)
         if self.certificate_chain:

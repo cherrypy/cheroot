@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any, Callable, Type
 
 from OpenSSL import SSL
 
@@ -32,14 +32,14 @@ class pyOpenSSLAdapter(Adapter):
         certificate_chain: Any | None = ...,
         ciphers: Any | None = ...,
         *,
-        private_key_password: str | bytes | None = ...,
+        private_key_password: str | bytes | Callable | None = ...,
     ) -> None: ...
     def wrap(self, sock): ...
     def _password_callback(
         self,
         password_max_length: int,
-        _verify_twice: bool,
-        password: bytes | str | None,
+        verify_twice: bool,
+        password_or_callback: str | bytes | Callable | None,
         /,
     ) -> bytes: ...
     def get_environ(self): ...

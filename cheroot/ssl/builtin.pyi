@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 
 from . import Adapter
 
@@ -14,7 +14,7 @@ class BuiltinSSLAdapter(Adapter):
         certificate_chain: Any | None = ...,
         ciphers: Any | None = ...,
         *,
-        private_key_password: str | bytes | None = ...,
+        private_key_password: str | bytes | Callable | None = ...,
     ) -> None: ...
     @property
     def context(self): ...
