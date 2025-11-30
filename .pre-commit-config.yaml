@@ -185,17 +185,12 @@ repos:
     - flake8-annotations ~= 3.2.0
     - flake8-length ~= 0.3.1
     - flake8-logging-format ~= 2024.24.12
-    - flake8-pytest-style ~= 2.1.0
+    - flake8-pytest-style ~= 2.2.0
     - flake8-spellcheck ~= 0.28.0
     - wemake-python-styleguide ~= 1.4.0
 
     # `flake8-logging-format` is incompatible with Python 3.12+
     # * https://github.com/globality-corp/flake8-logging-format/issues/80
-    #
-    # `flake8-pytest-style` is incompatible with Python 3.13+ due to
-    # `flake8-plugin-utils` accessing removed things:
-    # * https://github.com/m-burst/flake8-pytest-style/issues/361
-    # * https://github.com/afonasev/flake8-plugin-utils/issues/94
     #
     language_version: python3.11
 
