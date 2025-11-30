@@ -1,18 +1,18 @@
-from typing import Any
+import typing as _t
 
 from . import Adapter
 
 DEFAULT_BUFFER_SIZE: int
 
 class BuiltinSSLAdapter(Adapter):
-    CERT_KEY_TO_ENV: Any
-    CERT_KEY_TO_LDAP_CODE: Any
+    CERT_KEY_TO_ENV: _t.Any
+    CERT_KEY_TO_LDAP_CODE: _t.Any
     def __init__(
         self,
         certificate,
         private_key,
-        certificate_chain: Any | None = ...,
-        ciphers: Any | None = ...,
+        certificate_chain: _t.Any | None = ...,
+        ciphers: _t.Any | None = ...,
         *,
         private_key_password: str | bytes | None = ...,
     ) -> None: ...

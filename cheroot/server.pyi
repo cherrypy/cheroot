@@ -1,4 +1,4 @@
-from typing import Any
+import typing as _t
 
 __all__ = (
     'ChunkedRFile',
@@ -14,66 +14,66 @@ __all__ = (
 )
 
 class HeaderReader:
-    def __call__(self, rfile, hdict: Any | None = ...): ...
+    def __call__(self, rfile, hdict: _t.Any | None = ...): ...
 
 class DropUnderscoreHeaderReader(HeaderReader): ...
 
 class SizeCheckWrapper:
-    rfile: Any
-    maxlen: Any
+    rfile: _t.Any
+    maxlen: _t.Any
     bytes_read: int
     def __init__(self, rfile, maxlen) -> None: ...
-    def read(self, size: Any | None = ...): ...
-    def readline(self, size: Any | None = ...): ...
+    def read(self, size: _t.Any | None = ...): ...
+    def readline(self, size: _t.Any | None = ...): ...
     def readlines(self, sizehint: int = ...): ...
     def close(self) -> None: ...
     def __iter__(self): ...
     def __next__(self): ...
-    next: Any
+    next: _t.Any
 
 class KnownLengthRFile:
-    rfile: Any
-    remaining: Any
+    rfile: _t.Any
+    remaining: _t.Any
     def __init__(self, rfile, content_length) -> None: ...
-    def read(self, size: Any | None = ...): ...
-    def readline(self, size: Any | None = ...): ...
+    def read(self, size: _t.Any | None = ...): ...
+    def readline(self, size: _t.Any | None = ...): ...
     def readlines(self, sizehint: int = ...): ...
     def close(self) -> None: ...
     def __iter__(self): ...
     def __next__(self): ...
-    next: Any
+    next: _t.Any
 
 class ChunkedRFile:
-    rfile: Any
-    maxlen: Any
+    rfile: _t.Any
+    maxlen: _t.Any
     bytes_read: int
-    buffer: Any
-    bufsize: Any
+    buffer: _t.Any
+    bufsize: _t.Any
     closed: bool
     def __init__(self, rfile, maxlen, bufsize: int = ...) -> None: ...
-    def read(self, size: Any | None = ...): ...
-    def readline(self, size: Any | None = ...): ...
+    def read(self, size: _t.Any | None = ...): ...
+    def readline(self, size: _t.Any | None = ...): ...
     def readlines(self, sizehint: int = ...): ...
     def read_trailer_lines(self) -> None: ...
     def close(self) -> None: ...
 
 class HTTPRequest:
-    server: Any
-    conn: Any
-    inheaders: Any
-    outheaders: Any
+    server: _t.Any
+    conn: _t.Any
+    inheaders: _t.Any
+    outheaders: _t.Any
     ready: bool
     close_connection: bool
     chunked_write: bool
-    header_reader: Any
+    header_reader: _t.Any
     started_request: bool
     scheme: bytes
     response_protocol: str
     status: str
     sent_headers: bool
     chunked_read: bool
-    proxy_mode: Any
-    strict_mode: Any
+    proxy_mode: _t.Any
+    strict_mode: _t.Any
     def __init__(
         self,
         server,
@@ -81,14 +81,14 @@ class HTTPRequest:
         proxy_mode: bool = ...,
         strict_mode: bool = ...,
     ) -> None: ...
-    rfile: Any
+    rfile: _t.Any
     def parse_request(self) -> None: ...
-    uri: Any
-    method: Any
-    authority: Any
-    path: Any
-    qs: Any
-    request_protocol: Any
+    uri: _t.Any
+    method: _t.Any
+    authority: _t.Any
+    path: _t.Any
+    qs: _t.Any
+    request_protocol: _t.Any
     def read_request_line(self): ...
     def read_request_headers(self): ...
     def respond(self) -> None: ...
@@ -98,19 +98,19 @@ class HTTPRequest:
     def send_headers(self) -> None: ...
 
 class HTTPConnection:
-    remote_addr: Any
-    remote_port: Any
-    ssl_env: Any
-    rbufsize: Any
-    wbufsize: Any
-    RequestHandlerClass: Any
+    remote_addr: _t.Any
+    remote_port: _t.Any
+    ssl_env: _t.Any
+    rbufsize: _t.Any
+    wbufsize: _t.Any
+    RequestHandlerClass: _t.Any
     peercreds_enabled: bool
     peercreds_resolve_enabled: bool
-    last_used: Any
-    server: Any
-    socket: Any
-    rfile: Any
-    wfile: Any
+    last_used: _t.Any
+    server: _t.Any
+    socket: _t.Any
+    rfile: _t.Any
+    wfile: _t.Any
     requests_seen: int
     def __init__(self, server, sock, makefile=...) -> None: ...
     def communicate(self): ...
@@ -130,40 +130,40 @@ class HTTPConnection:
     def peer_group(self): ...
 
 class HTTPServer:
-    gateway: Any
-    minthreads: Any
-    maxthreads: Any
-    server_name: Any
+    gateway: _t.Any
+    minthreads: _t.Any
+    maxthreads: _t.Any
+    server_name: _t.Any
     protocol: str
     request_queue_size: int
     shutdown_timeout: int
     timeout: int
     expiration_interval: float
-    version: Any
-    software: Any
+    version: _t.Any
+    software: _t.Any
     ready: bool
     max_request_header_size: int
     max_request_body_size: int
     nodelay: bool
-    ConnectionClass: Any
-    ssl_adapter: Any
+    ConnectionClass: _t.Any
+    ssl_adapter: _t.Any
     peercreds_enabled: bool
     peercreds_resolve_enabled: bool
     reuse_port: bool
     keep_alive_conn_limit: int
-    requests: Any
+    requests: _t.Any
     def __init__(
         self,
         bind_addr,
         gateway,
         minthreads: int = ...,
         maxthreads: int = ...,
-        server_name: Any | None = ...,
+        server_name: _t.Any | None = ...,
         peercreds_enabled: bool = ...,
         peercreds_resolve_enabled: bool = ...,
         reuse_port: bool = ...,
     ) -> None: ...
-    stats: Any
+    stats: _t.Any
     def clear_stats(self): ...
     def runtime(self): ...
     @property
@@ -171,7 +171,7 @@ class HTTPServer:
     @bind_addr.setter
     def bind_addr(self, value) -> None: ...
     def safe_start(self) -> None: ...
-    socket: Any
+    socket: _t.Any
     def prepare(self) -> None: ...
     def serve(self) -> None: ...
     def start(self) -> None: ...
@@ -211,7 +211,7 @@ class HTTPServer:
     def stop(self) -> None: ...
 
 class Gateway:
-    req: Any
+    req: _t.Any
     def __init__(self, req) -> None: ...
     def respond(self) -> None: ...
 

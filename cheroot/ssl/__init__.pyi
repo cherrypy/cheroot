@@ -1,20 +1,20 @@
+import typing as _t
 from abc import ABC, abstractmethod
-from typing import Any
 
 class Adapter(ABC):
-    certificate: Any
-    private_key: Any
-    certificate_chain: Any
-    ciphers: Any
+    certificate: _t.Any
+    private_key: _t.Any
+    certificate_chain: _t.Any
+    ciphers: _t.Any
     private_key_password: str | bytes | None
-    context: Any
+    context: _t.Any
     @abstractmethod
     def __init__(
         self,
         certificate,
         private_key,
-        certificate_chain: Any | None = ...,
-        ciphers: Any | None = ...,
+        certificate_chain: _t.Any | None = ...,
+        ciphers: _t.Any | None = ...,
         *,
         private_key_password: str | bytes | None = ...,
     ): ...

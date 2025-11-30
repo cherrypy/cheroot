@@ -1,11 +1,11 @@
-from typing import Any, Type
+import typing as _t
 
 from OpenSSL import SSL
 
 from ..makefile import StreamReader, StreamWriter
 from . import Adapter
 
-ssl_conn_type: Type[SSL.Connection]
+ssl_conn_type: _t.Type[SSL.Connection]
 
 class SSLFileobjectMixin:
     ssl_timeout: int
@@ -29,8 +29,8 @@ class pyOpenSSLAdapter(Adapter):
         self,
         certificate,
         private_key,
-        certificate_chain: Any | None = ...,
-        ciphers: Any | None = ...,
+        certificate_chain: _t.Any | None = ...,
+        ciphers: _t.Any | None = ...,
         *,
         private_key_password: str | bytes | None = ...,
     ) -> None: ...

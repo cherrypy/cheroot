@@ -1,29 +1,29 @@
-from typing import Any
+import typing as _t
 
 class BindLocation: ...
 
 class TCPSocket(BindLocation):
-    bind_addr: Any
+    bind_addr: _t.Any
     def __init__(self, address, port) -> None: ...
 
 class UnixSocket(BindLocation):
-    bind_addr: Any
+    bind_addr: _t.Any
     def __init__(self, path) -> None: ...
 
 class AbstractSocket(BindLocation):
-    bind_addr: Any
+    bind_addr: _t.Any
     def __init__(self, abstract_socket) -> None: ...
 
 class Application:
     @classmethod
     def resolve(cls, full_path): ...
-    wsgi_app: Any
+    wsgi_app: _t.Any
     def __init__(self, wsgi_app) -> None: ...
     def server_args(self, parsed_args): ...
     def server(self, parsed_args): ...
 
 class GatewayYo:
-    gateway: Any
+    gateway: _t.Any
     def __init__(self, gateway) -> None: ...
     def server(self, parsed_args): ...
 

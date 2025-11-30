@@ -1,13 +1,13 @@
-from typing import List, Set, Tuple, Type
+import typing as _t
 
 class MaxSizeExceeded(Exception): ...
 class NoSSLError(Exception): ...
 class FatalSSLAlert(Exception): ...
 
-def plat_specific_errors(*errnames: str) -> List[int]: ...
+def plat_specific_errors(*errnames: str) -> list[int]: ...
 
-socket_error_eintr: List[int]
-socket_errors_to_ignore: List[int]
-socket_errors_nonblocking: List[int]
-acceptable_sock_shutdown_error_codes: Set[int]
-acceptable_sock_shutdown_exceptions: Tuple[Type[Exception], ...]
+socket_error_eintr: list[int]
+socket_errors_to_ignore: list[int]
+socket_errors_nonblocking: list[int]
+acceptable_sock_shutdown_error_codes: set[int]
+acceptable_sock_shutdown_exceptions: tuple[_t.Type[Exception], ...]

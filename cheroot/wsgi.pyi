@@ -1,20 +1,20 @@
-from typing import Any
+import typing as _t
 
 from . import server
 
 class Server(server.HTTPServer):
-    wsgi_version: Any
-    wsgi_app: Any
-    request_queue_size: Any
-    timeout: Any
-    shutdown_timeout: Any
-    requests: Any
+    wsgi_version: _t.Any
+    wsgi_app: _t.Any
+    request_queue_size: _t.Any
+    timeout: _t.Any
+    shutdown_timeout: _t.Any
+    requests: _t.Any
     def __init__(
         self,
         bind_addr,
         wsgi_app,
         numthreads: int = ...,
-        server_name: Any | None = ...,
+        server_name: _t.Any | None = ...,
         max: int = ...,
         request_queue_size: int = ...,
         timeout: int = ...,
@@ -32,28 +32,33 @@ class Server(server.HTTPServer):
 
 class Gateway(server.Gateway):
     started_response: bool
-    env: Any
-    remaining_bytes_out: Any
+    env: _t.Any
+    remaining_bytes_out: _t.Any
     def __init__(self, req) -> None: ...
     @classmethod
     def gateway_map(cls): ...
     def get_environ(self) -> None: ...
     def respond(self) -> None: ...
-    def start_response(self, status, headers, exc_info: Any | None = ...): ...
+    def start_response(
+        self,
+        status,
+        headers,
+        exc_info: _t.Any | None = ...,
+    ): ...
     def write(self, chunk) -> None: ...
 
 class Gateway_10(Gateway):
-    version: Any
+    version: _t.Any
     def get_environ(self): ...
 
 class Gateway_u0(Gateway_10):
-    version: Any
+    version: _t.Any
     def get_environ(self): ...
 
-wsgi_gateways: Any
+wsgi_gateways: _t.Any
 
 class PathInfoDispatcher:
-    apps: Any
+    apps: _t.Any
     def __init__(self, apps): ...
     def __call__(self, environ, start_response): ...
 

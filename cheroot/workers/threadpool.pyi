@@ -1,5 +1,5 @@
 import threading
-from typing import Any
+import typing as _t
 
 __all__ = ('ThreadPool', 'WorkerThread')
 
@@ -10,23 +10,23 @@ class TrueyZero:
 trueyzero: TrueyZero
 
 class WorkerThread(threading.Thread):
-    conn: Any
-    server: Any
+    conn: _t.Any
+    server: _t.Any
     ready: bool
     requests_seen: int
     bytes_read: int
     bytes_written: int
-    start_time: Any
+    start_time: _t.Any
     work_time: int
-    stats: Any
+    stats: _t.Any
     def __init__(self, server): ...
     def run(self) -> None: ...
 
 class ThreadPool:
-    server: Any
-    min: Any
-    max: Any
-    get: Any
+    server: _t.Any
+    min: _t.Any
+    max: _t.Any
+    get: _t.Any
     def __init__(
         self,
         server,
