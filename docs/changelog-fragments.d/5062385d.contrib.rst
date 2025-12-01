@@ -1,0 +1,3 @@
+The documentation environment is now set up to use
+:pypi:`sphinx-issues` for GitHub-related URL roles
+-- by :user:`webknjaz`.
