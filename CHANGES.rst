@@ -197,7 +197,8 @@ Contributor-facing changes
 
 - The test infrastructure has been updated to start using
   the upstream reusable workflow :file:`reusable-tox.yml`
-  from :gh:`tox-dev/workflow` -- by :user:`webknjaz`.
+  from https://github.com/tox-dev/workflow
+  -- by :user:`webknjaz`.
 
   This chance allows us to de-duplicate the commonly used
   CI shape.
@@ -387,9 +388,9 @@ v9.0.0
 
 - :issue:`252` via :pr:`339`: Cheroot now requires Python
   3.6 or later. Python 3.5 and Python 2.7 are still supported
-  by the :gh:`maint/8.x branch
-  <cherrypy/cheroot/tree/maint/8.x>` and stabilizing
-  bugfixes will be accepted to that branch.
+  by the `maint/8.x branch
+  <https://github.com/cherrypy/cheroot/tree/maint/8.x>`__ and
+  stabilizing bugfixes will be accepted to that branch.
 
 v8.6.0
 ======
@@ -442,7 +443,7 @@ v8.5.1
 
 *(2020-12-12)*
 
-- :cp-issue:`1873` via :pr:`340`: Resurrected an
+- :issue:`cherrypy/cherrypy#1873` via :pr:`340`: Resurrected an
   unintentionally removed feature of interrupting a server
   main thread by externally assigning an exception to the
   :py:meth:`HTTPServer.interrupt <cheroot.server.\
@@ -595,8 +596,8 @@ v8.3.0
 
 *(2020-02-09)*
 
-- :cp-issue:`910` via :pr:`243`: Provide TLS-related
-  details via WSGI environment interface.
+- :issue:`cherrypy/cherrypy#910` via :pr:`243`: Provide
+  TLS-related details via WSGI environment interface.
 - :pr:`248`: Fix parsing of the ``--bind`` CLI option
   for abstract UNIX sockets.
 
@@ -606,8 +607,8 @@ v8.2.1
 
 *(2019-10-17)*
 
-- :cp-issue:`1818`: Restore support for ``None``
-  default argument to ``WebCase.getPage()``.
+- :issue:`cherrypy/cherrypy#1818`: Restore support for
+  :py:data:`None` default argument to ``WebCase.getPage()``.
 
 
 v8.2.0
@@ -617,8 +618,8 @@ v8.2.0
 
 - Deprecated use of negative timeouts as alias for
   infinite timeouts in ``ThreadPool.stop``.
-- :cp-issue:`1662` via :pr:`74`: For OPTION requests,
-  bypass URI as path if it does not appear absolute.
+- :issue:`cherrypy/cherrypy#1662` via :pr:`74`: For OPTION
+  requests, bypass URI as path if it does not appear absolute.
 
 
 v8.1.0
@@ -664,8 +665,8 @@ v6.6.0
 - Revisit :pr:`85` under :pr:`221`. Now
   ``backports.functools_lru_cache`` is only
   required on Python 3.2 and earlier.
-- :cp-issue:`1206` via :pr:`204`: Fix race condition in
-  threadpool shrink code.
+- :issue:`cherrypy/cherrypy#1206` via :pr:`204`: Fix race
+  condition in threadpool shrink code.
 
 
 v6.5.8
@@ -709,8 +710,8 @@ v6.5.5
 - :issue:`99` via :pr:`186`: Sockets now collect statistics (bytes
   read and written) on Python 3 same as Python 2.
 
-- :cp-issue:`1618` via :pr:`180`: Ignore OpenSSL's 1.1+ Error 0
-  under any Python while wrapping a socket.
+- :issue:`cherrypy/cherrypy#1618` via :pr:`180`: Ignore OpenSSL's
+  1.1+ ``Error 0`` under any Python while wrapping a socket.
 
 
 v6.5.4
@@ -789,8 +790,8 @@ v6.5.0
 
 *(2018-08-29)*
 
-- :cp-issue:`1001` via :pr:`52` and :pr:`108`: Add support for
-  validating client certificates.
+- :issue:`cherrypy/cherrypy#1001` via :pr:`52` and :pr:`108`:
+  Add support for validating client certificates.
 
 
 v6.4.0
@@ -827,8 +828,8 @@ v6.3.1
 
 *(2018-05-21)*
 
-- :cp-issue:`1618`: Ignore OpenSSL's 1.1+ Error 0 under Python 2 while
-  wrapping a socket.
+- :issue:`cherrypy/cherrypy#1618`: Ignore OpenSSL's 1.1+
+  ``Error 0`` under Python 2 while wrapping a socket.
 
 
 v6.3.0
@@ -868,8 +869,8 @@ v6.2.2
 
 *(2018-04-14)*
 
-- :issue:`84` (:cp-issue:`1704`): Fix regression, causing
-  :py:exc:`ModuleNotFoundError` under ``cygwin``.
+- :issue:`84` (:issue:`cherrypy/cherrypy#1704`): Fix regression,
+  causing :py:exc:`ModuleNotFoundError` under ``cygwin``.
 
 
 v6.2.1
@@ -940,10 +941,10 @@ v6.1.0
 
   * Stabilize testing
 
-- :cp-issue:`1664` via :pr:`66`: Implement input termination flag support as
-  suggested by `@mitsuhiko <https://github.com/mitsuhiko>`_ in his
-  `wsgi.input_terminated Proposal
-  <https://gist.github.com/mitsuhiko/5721547>`_.
+- :issue:`cherrypy/cherrypy#1664` via :pr:`66`: Implement input
+  termination flag support as suggested by `@mitsuhiko
+  <https://github.com/mitsuhiko>`__ in his `wsgi.input_terminated
+  Proposal <https://gist.github.com/mitsuhiko/5721547>`_.
 
 - :issue:`73`: Fix SSL error bypassing.
 
@@ -951,8 +952,9 @@ v6.1.0
 
 - :pr:`76`: Send correct conditional HTTP error in helper function.
 
-- :cp-issue:`1404` via :pr:`75`: Fix headers being unsent before request
-  closed. Now we double check that they've been sent.
+- :issue:`cherrypy/cherrypy#1404` via :pr:`75`: Fix headers being
+  unsent before request closed. Now we double check that they've
+  been sent.
 
 - Minor docs improvements.
 
@@ -975,9 +977,9 @@ v5.11.0
 
 *(2017-12-04)*
 
-- :cp-issue:`1621`: To support :py:mod:`~cheroot.test.webtest`
-  applications that feed absolute URIs to
-  :py:meth:`~cheroot.test.webtest.WebCase.getPage`
+- :issue:`cherrypy/cherrypy#1621`: To support
+  :py:mod:`~cheroot.test.webtest` applications that feed absolute
+  URIs to :py:meth:`~cheroot.test.webtest.WebCase.getPage`
   but expect the scheme/host/port to be ignored (as cheroot 5.8
   and earlier did), provide a ``strip_netloc`` helper and recipe
   for calling it in a subclass.
@@ -1018,8 +1020,8 @@ v5.9.0
 
 *(2017-11-16)*
 
-- :cp-issue:`1088` and :pr:`53`: Avoid using SO_REUSEADDR on Windows
-  where it has different semantics.
+- :issue:`cherrypy/cherrypy#1088` and :pr:`53`: Avoid using
+  ``SO_REUSEADDR`` on Windows where it has different semantics.
 
 - ``cheroot.tests.webtest`` adopts the one method that was unique
   in CherryPy, now superseding the implementation there.
@@ -1150,12 +1152,14 @@ v5.6.0
 
   ``cheroot/test/*`` folder is only one left allowed to fail with this linter.
 
-- :cp-issue:`1602` and :pr:`30`: Optimize chunked body reader loop by returning
-  empty data is the size is 0.
+- :issue:`cherrypy/cherrypy#1602` and :pr:`30`: Optimize chunked
+  body reader loop by returning empty data is the size is 0.
 
-- :cp-issue:`1486`: Reset buffer if the body size is unknown
+- :issue:`cherrypy/cherrypy#1486`: Reset buffer if the body size
+  is unknown.
 
-- :cp-issue:`1131`: Add missing size hint to SizeCheckWrapper
+- :issue:`cherrypy/cherrypy#1131`: Add missing size
+  hint to ``SizeCheckWrapper``.
 
 
 v5.5.2
@@ -1166,9 +1170,9 @@ v5.5.2
 - :pr:`32`: Ignore ``"unknown error"`` and ``"https proxy request"``
   SSL errors.
 
-  Ref: :gh:`sabnzbd/sabnzbd#820 <sabnzbd/sabnzbd/issues/820>`
+  Ref: :issue:`sabnzbd/sabnzbd#820`
 
-  Ref: :gh:`sabnzbd/sabnzbd#860 <sabnzbd/sabnzbd/issues/860>`
+  Ref: :issue:`sabnzbd/sabnzbd#860`
 
 
 v5.5.1
@@ -1184,9 +1188,11 @@ v5.5.1
 
   Move deploy stage to be run very last after all other stages finish.
 
-- :pr:`31`: Ignore "Protocol wrong type for socket" (EPROTOTYPE) @ OSX for non-blocking sockets.
+- :pr:`31`: Ignore "Protocol wrong type for socket" (``EPROTOTYPE``)
+  @ OSX for non-blocking sockets.
 
-  This was originally fixed for regular sockets in :cp-issue:`1392`.
+  This was originally fixed for regular sockets in
+  :issue:`cherrypy/cherrypy#1392`.
 
   Ref: https://forums.sabnzbd.org/viewtopic.php?f=2&t=22728&p=112251
 
@@ -1277,5 +1283,5 @@ v5.0.0
 
 *(2017-01-14)*
 
-- Initial release based on :gh:`cherrypy.cherrypy.wsgiserver 8.8.0
-  <cherrypy/cherrypy/tree/v8.8.0/cherrypy/wsgiserver>`.
+- Initial release based on `cherrypy.cherrypy.wsgiserver 8.8.0
+  <https://github.com/cherrypy/cherrypy/tree/v8.8.0/cherrypy/wsgiserver>`__.

@@ -32,10 +32,10 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',  # autocreate section targets for refs
     'sphinx.ext.doctest',
-    'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     # Third-party extensions:
     'jaraco.packaging.sphinx',
+    'sphinx_issues',  # implements `:issue:`, `:pr:` and other GH-related roles
     'sphinx_tabs.tabs',
     'sphinxcontrib.apidoc',
     'sphinxcontrib.towncrier.ext',  # provides `.. towncrier-draft-entries::`
@@ -76,24 +76,6 @@ spelling_show_suggestions = True
 spelling_word_list_filename = [
     'spelling_wordlist.txt',
 ]
-
-github_url = 'https://github.com'
-github_repo_org = 'cherrypy'
-github_repo_name = 'cheroot'
-github_repo_slug = f'{github_repo_org}/{github_repo_name}'
-github_repo_url = f'{github_url}/{github_repo_slug}'
-cp_github_repo_url = f'{github_url}/{github_repo_org}/cherrypy'
-github_sponsors_url = f'{github_url}/sponsors'
-
-extlinks = {
-    'issue': (f'{github_repo_url}/issues/%s', '#%s'),
-    'pr': (f'{github_repo_url}/pull/%s', 'PR #%s'),
-    'commit': (f'{github_repo_url}/commit/%s', '%s'),
-    'cp-issue': (f'{cp_github_repo_url}/issues/%s', 'CherryPy #%s'),
-    'cp-pr': (f'{cp_github_repo_url}/pull/%s', 'CherryPy PR #%s'),
-    'gh': (f'{github_url}/%s', 'GitHub: %s'),
-    'user': (f'{github_sponsors_url}/%s', '@%s'),
-}
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),

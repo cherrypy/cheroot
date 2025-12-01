@@ -5,5 +5,6 @@ jaraco.packaging >= 9  # first version to load meta through PEP 517 interface
 sphinx-tabs >= 1.1.0
 
 furo
+sphinx-issues  # Sphinx roles providing support for linking GitHub
 sphinxcontrib-apidoc >= 0.3.0
 sphinxcontrib-towncrier
