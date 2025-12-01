@@ -1,0 +1,2 @@
+Read the Docs is now configured to build the documentation
+using ``tox``, same as the CI -- by :user:`webknjaz`.
