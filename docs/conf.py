@@ -137,6 +137,12 @@ linkcheck_workers = 25
 # https://www.sphinx-doc.org/en/master/usage/extensions/autosectionlabel.html
 autosectionlabel_maxdepth = 1  # mitigate Towncrier nested subtitles collision
 
+# -- Options for sphinx_issues extension -------------------------------------
+
+# https://github.com/sloria/sphinx-issues#installation-and-configuration
+
+issues_github_path = 'cherrypy/cheroot'
+
 nitpicky = True
 
 # NOTE: consider having a separate ignore file
