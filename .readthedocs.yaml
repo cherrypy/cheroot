@@ -1,45 +1,31 @@
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 ---
 
-# .readthedocs.yml
-# Read the Docs configuration file
-# See https://docs.readthedocs.io/en/stable/config-file/v2.html
-# for details
-
-# Required
 version: 2
 
-# Build documentation in the docs/ directory with Sphinx
-sphinx:
-  builder: dirhtml
-  configuration: docs/conf.py
-  fail_on_warning: true
-
-# Build documentation with MkDocs
-# mkdocs:
-#   configuration: mkdocs.yml
-#   fail_on_warning: true
-
-# Optionally build your docs in additional formats
-# such as PDF and ePub
-formats: []
-
-submodules:
-  include: all  # []
-  exclude: []
-  recursive: true
-
 build:
-  os: ubuntu-20.04
+  os: ubuntu-24.04
   tools:
-    python: >-  # PyYAML parses it as float but RTD demands an explicit string
+    python: >-  # has to be parsed as a YAML string
       3.11
-
-# Optionally set the version of Python and requirements required
-# to build docs
-python:
-  install:
-  - method: pip
-    path: .
-  - requirements: dependencies/tox-build-docs-cp311-linux-x86_64.txt
+  commands:
+  - >-
+    PYTHONWARNINGS=error
+    python3 -Im venv "${READTHEDOCS_VIRTUALENV_PATH}"
+  - >-
+    PYTHONWARNINGS=error
+    "${READTHEDOCS_VIRTUALENV_PATH}"/bin/python -Im
+    pip install tox
+  - >-
+    PYTHONWARNINGS=error
+    "${READTHEDOCS_VIRTUALENV_PATH}"/bin/python -Im
+    tox -e build-docs --notest -vvvvv
+  - >-
+    PYTHONWARNINGS=error
+    "${READTHEDOCS_VIRTUALENV_PATH}"/bin/python -Im
+    tox -e build-docs --skip-pkg-install -q
+    --
+    "${READTHEDOCS_OUTPUT}"/html -b dirhtml
 
 ...
