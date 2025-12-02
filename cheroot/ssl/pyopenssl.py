@@ -108,11 +108,10 @@ class SSLFileobjectMixin:
                 if e.args == (-1, 'Unexpected EOF'):
                     if is_reader:
                         return b''
-                    else:
-                        # See #210. Prevents DOS attack caused by
-                        # silent connections lasting beyond connection
-                        # timeout length.
-                        raise errors.FatalSSLAlert(*e.args)
+                    # See #210. Prevents DOS attack caused by
+                    # silent connections lasting beyond connection
+                    # timeout length.
+                    raise errors.FatalSSLAlert(*e.args)
 
                 errnum = e.args[0]
                 if is_reader and errnum in errors.socket_errors_to_ignore:
