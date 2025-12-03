@@ -68,6 +68,26 @@ class StreamWriter(BufferedWriter):
         self.bytes_written += len(val)
         return res
 
+    def _flush_unlocked(self):
+        """
+        Flush buffered output to the underlying socket.
+
+        We override this method because when a client sends plaintext HTTP
+        to a TLS-only port, SSL detects a bad handshake and may
+        invalidate the underlying socket. At that point, the socket
+        may not be writable. Attempting to write (e.g., sending a
+        400 Bad Request) may succeed or raise OSError. This override
+        prevents OSError from propagating.
+        """
+        try:
+            super()._flush_unlocked()
+        except OSError:
+            # The socket is already closed or otherwise unusable (e.g. TLS
+            # fatal alert triggered by invalid handshake).
+            # Clearing the buffer prevents the error from happening
+            # again during cleanup.
+            self._write_buf.clear()
+
 
 def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
     """File object attached to a socket object."""
