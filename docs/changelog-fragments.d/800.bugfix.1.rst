@@ -1,0 +1,5 @@
+Plaintext HTTP error responses on HTTPS ports now reliably send complete
+messages to clients using :meth:`~socket.socket.sendall` instead of buffered
+writes that may not flush before the connection closes.
+
+-- by :user:`julianz-`
