@@ -125,7 +125,7 @@ termcolor==3.2.0
     # via pytest-sugar
 trustme==1.2.1
     # via -r dependencies/tox-py314-cp314-win32-amd64.in
-urllib3==2.5.0
+urllib3==2.6.0
     # via requests
 watchdog==6.0.0
     # via pytest-watch

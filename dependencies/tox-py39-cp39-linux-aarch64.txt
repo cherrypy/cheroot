@@ -136,7 +136,7 @@ typing-extensions==4.15.0
     #   cryptography
     #   exceptiongroup
     #   pyopenssl
-urllib3==2.5.0
+urllib3==2.6.0
     # via requests
 watchdog==6.0.0
     # via pytest-watch
