@@ -82,7 +82,7 @@ pyopenssl==25.3.0
     # via -r dependencies/tox-py310-cp310-darwin-x86_64.in
 pypytools==0.6.2
     # via -r dependencies/tox-py310-cp310-darwin-x86_64.in
-pytest==9.0.1
+pytest==9.0.2
     # via
     #   -r dependencies/tox-py310-cp310-darwin-x86_64.in
     #   pytest-clarity
