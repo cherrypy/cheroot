@@ -59,7 +59,10 @@ from warnings import warn as _warn
 
 try:
     import OpenSSL.version
-    from OpenSSL import SSL, crypto
+    from OpenSSL import (
+        SSL,
+        crypto,
+    )
 
     try:
         ssl_conn_type = SSL.Connection
@@ -67,6 +70,7 @@ try:
         ssl_conn_type = SSL.ConnectionType
 except ImportError:
     SSL = None
+    ssl_conn_type = type(None)
 
 import contextlib
 
@@ -106,15 +110,15 @@ class SSLFileobjectMixin:
                 time.sleep(self.ssl_retry)
             except SSL.SysCallError as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return b''
+                    return 0
 
                 errnum = e.args[0]
                 if is_reader and errnum in errors.socket_errors_to_ignore:
-                    return b''
+                    return 0
                 raise socket.error(errnum)
             except SSL.Error as e:
                 if is_reader and e.args == (-1, 'Unexpected EOF'):
-                    return b''
+                    return 0
 
                 thirdarg = None
                 with contextlib.suppress(IndexError):
@@ -128,26 +132,6 @@ class SSLFileobjectMixin:
 
             if time.time() - start > self.ssl_timeout:
                 raise socket.timeout('timed out')
-
-    def recv(self, size):
-        """Receive message of a size from the socket."""
-        return self._safe_call(
-            True,
-            super(SSLFileobjectMixin, self).recv,
-            size,
-        )
-
-    def readline(self, size=-1):
-        """Receive message of a size from the socket.
-
-        Matches the following interface:
-        https://docs.python.org/3/library/io.html#io.IOBase.readline
-        """
-        return self._safe_call(
-            True,
-            super(SSLFileobjectMixin, self).readline,
-            size,
-        )
 
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
@@ -169,11 +153,43 @@ class SSLFileobjectMixin:
 
 
 class SSLFileobjectStreamReader(SSLFileobjectMixin, StreamReader):
-    """SSL file object attached to a socket object."""
+    """
+    SSL file object attached to a socket object.
+
+    .. deprecated::11.2
+       This class is deprecated and will be removed in a future release.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Initialize SSLFileobjectStreamReader."""
+        _warn(
+            '`SSLFileobjectStreamReader` and `SSLFileobjectStreamWriter` '
+            'are deprecated. The `pyOpenSSL` adapter now returns `TLSSocket` '
+            'which works directly with StreamReader/StreamWriter.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
 
 class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
-    """SSL file object attached to a socket object."""
+    """
+    SSL file object attached to a socket object.
+
+    .. deprecated::11.2
+       This class is deprecated and will be removed in a future release.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Initialize SSLFileobjectStreamWriter."""
+        _warn(
+            '`SSLFileobjectStreamReader` and `SSLFileobjectStreamWriter` '
+            'are deprecated. The `pyOpenSSL` adapter now returns `TLSSocket` '
+            'which works directly with StreamReader/StreamWriter.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
 
 class SSLConnectionProxyMeta:
@@ -268,7 +284,7 @@ class SSLConnection(metaclass=SSLConnectionProxyMeta):
     """
 
     def __init__(self, *args):
-        """Initialize SSLConnection instance."""
+        """Initialize ``SSLConnection`` instance."""
         self._ssl_conn = SSL.Connection(*args)
         self._lock = threading.RLock()
 
@@ -319,7 +335,7 @@ class pyOpenSSLAdapter(Adapter):
         *,
         private_key_password=None,
     ):
-        """Initialize OpenSSL Adapter instance."""
+        """Initialize ``pyOpenSSLAdapter`` instance."""
         if SSL is None:
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
@@ -345,9 +361,11 @@ class pyOpenSSLAdapter(Adapter):
         )
 
         conn = SSLConnection(self.context, sock)
-
         conn.set_accept_state()  # Tell OpenSSL this is a server connection
-        return conn, self._environ.copy()
+
+        # Wrap the SSLConnection to provide standard socket interface
+        tls_socket = _TLSSocket(underlying_socket=sock, tls_connection=conn)
+        return tls_socket, self._environ.copy()
 
     def _password_callback(
         self,
@@ -461,17 +479,167 @@ class pyOpenSSLAdapter(Adapter):
         return ssl_environ
 
     def makefile(self, sock, mode='r', bufsize=-1):
-        """Return socket file object."""
-        cls = (
-            SSLFileobjectStreamReader
-            if 'r' in mode
-            else SSLFileobjectStreamWriter
+        """
+        Return socket file object.
+
+        ``makefile`` is now deprecated and will be removed in a future
+        version.
+        """
+        _warn(
+            'The `makefile` method is deprecated and will be removed in a future version. '
+            'The connection socket should be fully wrapped by the adapter '
+            'before being passed to the HTTPConnection constructor.',
+            DeprecationWarning,
+            stacklevel=2,
         )
-        # sock is an pyopenSSL.SSLConnection instance here
-        if SSL and isinstance(sock, SSLConnection):
-            wrapped_socket = cls(sock, mode, bufsize)
-            wrapped_socket.ssl_timeout = sock.gettimeout()
-            return wrapped_socket
-        # This is from past:
-        # TODO: figure out what it's meant for
-        return cheroot_server.CP_fileobject(sock, mode, bufsize)
+
+        return sock.makefile(mode, bufsize)
+
+
+class _TLSSocket(SSLFileobjectMixin):
+    """
+    Wrap :py:class:`SSL.Connection <pyopenssl:OpenSSL.SSL.Connection>`.
+
+    Wrapping with ``_TLSSocket`` makes it possible for an ``SSL.Connection``
+    to work with :py:class:`~cheroot.makefile.StreamReader`/\
+    :py:class:`~cheroot.makefile.StreamWriter`.
+
+    ``_TLSSocket`` handles OpenSSL-specific errors by either
+    suppressing them if they if they are acceptable during cleanup
+    (e.g., "shutdown while in init", "uninitialized") or converting them to
+    standard socket exceptions or Cheroot-specific errors (\
+    :py:exc:`~cheroot.errors.FatalSSLAlert`,
+    :py:exc:`~cheroot.errors.NoSSLError`) \
+    for error handling by the calling I/O classes.
+    """
+
+    def __init__(
+        self,
+        underlying_socket,
+        tls_connection,
+        ssl_timeout=None,
+        ssl_retry=0.01,
+    ):
+        """Initialize with an ``SSL.Connection`` object."""
+        self._ssl_conn = tls_connection
+        self._sock = underlying_socket  # Store reference to raw TCP socket
+        self._lock = threading.RLock()
+        self.ssl_timeout = ssl_timeout or 3.0
+        self.ssl_retry = ssl_retry
+
+    # Socket I/O
+    # _safe_call is delegated to _TLSSockettMixin
+
+    def recv_into(self, buffer, nbytes=None):
+        """Receive data into a buffer."""
+        with self._lock:
+            return self._safe_call(
+                True,
+                self._ssl_conn.recv_into,
+                buffer,
+                nbytes,
+            )
+
+    def send(self, data):
+        """Send data."""
+        with self._lock:
+            return self._safe_call(
+                False,  # is_reader=False
+                self._ssl_conn.send,
+                data,
+            )
+
+    def fileno(self):
+        """Return the file descriptor."""
+        return self._ssl_conn.fileno()
+
+    def _decref_socketios(self):
+        """Decrement reference count for socket I/O streams.
+
+        No-op for ``_TLSSocket`` since we don't track reference counts from
+        :py:meth:`socket.socket.makefile() <python:socket.socket.makefile>`.
+        The method is needed for compatibility with ``socket.SocketIO``,
+        which is used by :py:class:`~cheroot.makefile.StreamReader` and
+        :py:class:`~cheroot.makefile.StreamWriter`.
+        """
+
+    def shutdown(self, how):
+        """Shutdown the connection.
+
+        This is a no-op because actually for TLS sockets,
+        true shutdown is handled by ``close()`` to ensure
+        proper ordering (SSL shutdown before TCP shutdown).
+        This method is kept for interface compatibility.
+        """
+
+    # C901 close is too complex
+    def close(self):  # noqa: C901
+        """Close the TLS socket and underlying connection."""
+        exceptions = []
+
+        # SSL errors that are acceptable during shutdown
+        ACCEPTABLE_SSL_SHUTDOWN_ERRORS = {
+            # Shutdown before handshake completed
+            'shutdown while in init',
+            'uninitialized',
+        }
+
+        acceptable_codes = errors.acceptable_sock_shutdown_error_codes
+
+        # 1. Attempt an SSL-level shutdown
+        try:
+            self._ssl_conn.shutdown()
+        except SSL.Error as e:
+            # Many SSL shutdown errors expected when peer has already closed
+            # SSL.ZeroReturnError means clean shutdown
+            if isinstance(e, SSL.ZeroReturnError):
+                pass  # Clean shutdown, not an error
+            elif isinstance(e, SSL.SysCallError):
+                # Check if it's a syscall error with an acceptable errno
+                if e.args:
+                    errno_code = e.args[0]
+                    if errno_code not in acceptable_codes:
+                        exceptions.append(e)
+            else:
+                # Check the OpenSSL error reason code
+                error_reason = None
+                if hasattr(e, '_reason_code'):
+                    error_reason = e._reason_code
+                elif e.args:
+                    # PyOpenSSL Error format: ([('SSL routines', '', 'reason_string')],)
+                    # Note: e.args[0] is a LIST of tuples, not a tuple itself
+                    error_list = e.args[0] if e.args else []
+                    for err_tuple in error_list:
+                        if (
+                            isinstance(err_tuple, tuple)
+                            and len(err_tuple) >= 3
+                        ):
+                            error_reason = err_tuple[2]
+                            break
+
+                if error_reason not in ACCEPTABLE_SSL_SHUTDOWN_ERRORS:
+                    exceptions.append(e)
+        except OSError as e:
+            if e.errno not in acceptable_codes:
+                exceptions.append(e)
+
+        # 2. Close the raw TCP socket
+        try:
+            self._sock.close()
+        except OSError as e:
+            if e.errno not in acceptable_codes:
+                exceptions.append(e)
+
+        # Re-raise collected exceptions as Cheroot-compatible errors
+        if exceptions:
+            if len(exceptions) == 1:
+                exc = exceptions[0]
+                raise errors.FatalSSLAlert(
+                    f'Error during TLS socket close: {type(exc).__name__}: {exc}',
+                ) from exc
+            # Multiple errors - combine into single message
+            error_msgs = [f'{type(e).__name__}: {e}' for e in exceptions]
+            combined_errors = '; '.join(error_msgs)
+            raise errors.FatalSSLAlert(
+                f'Multiple errors during close: {combined_errors}',
+            ) from exceptions[0]
