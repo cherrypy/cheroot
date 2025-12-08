@@ -56,13 +56,27 @@ def _ensure_peer_speaks_https(raw_socket, /) -> None:
 
 
 class Adapter(ABC):
-    """Base class for SSL driver library adapters.
+    """
+    Base class for SSL driver library adapters.
 
     Required methods:
 
         * ``wrap(sock) -> (wrapped socket, ssl environ dict)``
-        * ``makefile(sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE) ->
-          socket file object``
+        * ``get_environ() -> (ssl environ dict)``
+
+    Optional methods:
+
+        * ``makefile(sock, mode='r', bufsize=-1) -> socket file object``
+
+        This method is deprecated and will be removed in a future release.
+
+        Historically, the ``PyOpenSSL`` adapter used ``makefile()`` to
+        wrap the underlying socket in an ``OpenSSL``-aware file object
+        so that Cheroot's HTTP request parser (which expects file-like I/O
+        such as ``readline()``) could read from TLS connections. The
+        adapter now fully wraps the socket in a TLSSocket object that
+        implements the necessary socket and file-like
+        methods directly, so ``makefile()`` is no longer needed.
     """
 
     @abstractmethod
@@ -110,9 +124,14 @@ class Adapter(ABC):
         """Return WSGI environ entries to be merged into each request."""
         raise NotImplementedError  # pragma: no cover
 
-    @abstractmethod
     def makefile(self, sock, mode='r', bufsize=-1):
-        """Return socket file object."""
+        """
+        Return socket file object.
+
+        This method is now deprecated. It will be removed in a future version.
+
+        :raises NotImplementedError: Must be overridden by subclasses.
+        """
         raise NotImplementedError  # pragma: no cover
 
     def _prompt_for_tls_password(self) -> str:

@@ -11,6 +11,7 @@ import socket
 import sys
 import threading
 from contextlib import suppress
+from warnings import warn as _warn
 
 
 try:
@@ -18,18 +19,29 @@ try:
 except ImportError:
     ssl = None
 
-try:
-    from _pyio import DEFAULT_BUFFER_SIZE
-except ImportError:
-    try:
-        from io import DEFAULT_BUFFER_SIZE
-    except ImportError:
-        DEFAULT_BUFFER_SIZE = -1
-
 from .. import errors
-from ..makefile import StreamReader, StreamWriter
 from ..server import HTTPServer
 from . import Adapter
+
+
+# WPS413 is to suppress linter error:
+# bad magic module function: __getattr__
+# DEFAULT_BUFFER_SIZE is deprecated so this module method will be removed
+# in a future release
+def __getattr__(name):  # noqa: WPS413
+    if name == 'DEFAULT_BUFFER_SIZE':
+        _warn(
+            (
+                '`DEFAULT_BUFFER_SIZE` is deprecated and '
+                'will be removed in a future release.'
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        from io import DEFAULT_BUFFER_SIZE
+
+        return DEFAULT_BUFFER_SIZE
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
 
 
 def _assert_ssl_exc_contains(exc, *msgs):
@@ -496,7 +508,19 @@ class BuiltinSSLAdapter(Adapter):
                 env['%s_%s_%i' % (env_prefix, attr_code, i)] = val
         return env
 
-    def makefile(self, sock, mode='r', bufsize=DEFAULT_BUFFER_SIZE):
-        """Return socket file object."""
-        cls = StreamReader if 'r' in mode else StreamWriter
-        return cls(sock, mode, bufsize)
+    def makefile(self, sock, mode='r', bufsize=-1):
+        """
+        Return socket file object.
+
+        ``makefile`` is now deprecated and will be removed in a future
+        version.
+        """
+        _warn(
+            'The `makefile` method is deprecated and will be removed in a future version. '
+            'The connection socket should be fully wrapped by the adapter '
+            'before being passed to the HTTPConnection constructor.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        return sock.makefile(mode, bufsize)

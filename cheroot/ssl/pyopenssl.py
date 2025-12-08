@@ -54,6 +54,7 @@ import socket
 import sys
 import threading
 import time
+from contextlib import suppress as _suppress
 from warnings import warn as _warn
 
 
@@ -74,7 +75,6 @@ from .. import (
     errors,
     server as cheroot_server,
 )
-from ..makefile import StreamReader, StreamWriter
 from . import Adapter
 
 
@@ -166,14 +166,6 @@ class SSLFileobjectMixin:
             *args,
             **kwargs,
         )
-
-
-class SSLFileobjectStreamReader(SSLFileobjectMixin, StreamReader):
-    """SSL file object attached to a socket object."""
-
-
-class SSLFileobjectStreamWriter(SSLFileobjectMixin, StreamWriter):
-    """SSL file object attached to a socket object."""
 
 
 class SSLConnectionProxyMeta:
@@ -345,9 +337,11 @@ class pyOpenSSLAdapter(Adapter):
         )
 
         conn = SSLConnection(self.context, sock)
-
         conn.set_accept_state()  # Tell OpenSSL this is a server connection
-        return conn, self._environ.copy()
+
+        # Wrap the SSLConnection to provide standard socket interface
+        tls_socket = TLSSocket(conn)
+        return tls_socket, self._environ.copy()
 
     def _password_callback(
         self,
@@ -461,17 +455,91 @@ class pyOpenSSLAdapter(Adapter):
         return ssl_environ
 
     def makefile(self, sock, mode='r', bufsize=-1):
-        """Return socket file object."""
-        cls = (
-            SSLFileobjectStreamReader
-            if 'r' in mode
-            else SSLFileobjectStreamWriter
+        """
+        Return socket file object.
+
+        ``makefile`` is now deprecated and will be removed in a future
+        version.
+        """
+        _warn(
+            'The `makefile` method is deprecated and will be removed in a future version. '
+            'The connection socket should be fully wrapped by the adapter '
+            'before being passed to the HTTPConnection constructor.',
+            DeprecationWarning,
+            stacklevel=2,
         )
-        # sock is an pyopenSSL.SSLConnection instance here
-        if SSL and isinstance(sock, SSLConnection):
-            wrapped_socket = cls(sock, mode, bufsize)
-            wrapped_socket.ssl_timeout = sock.gettimeout()
-            return wrapped_socket
-        # This is from past:
-        # TODO: figure out what it's meant for
-        return cheroot_server.CP_fileobject(sock, mode, bufsize)
+
+        return sock.makefile(mode, bufsize)
+
+
+class TLSSocket(SSLFileobjectMixin):
+    """
+    Wrap ``SSL.Connection`` to work with ``StreamReader``/``StreamWriter``.
+
+    Handles OpenSSL-specific errors internally so that standard Python I/O
+    classes can use it transparently.
+    """
+
+    def __init__(self, ssl_conn, ssl_timeout=None, ssl_retry=0.01):
+        """Initialize with an SSL.Connection object."""
+        self._ssl_conn = ssl_conn
+        self._sock = ssl_conn._socket  # Store reference to raw TCP socket
+        self._lock = threading.RLock()
+        self.ssl_timeout = ssl_timeout or 3.0
+        self.ssl_retry = ssl_retry
+
+    # Socket I/O
+    # _safe_call is delegated to the SSLFileobjectMixin
+
+    def recv_into(self, buffer, nbytes=None):
+        """Receive data into a buffer (socket interface)."""
+        with self._lock:
+            result = self._safe_call(
+                True,
+                self._ssl_conn.recv_into,
+                buffer,
+                nbytes,
+            )
+            # Handle the case where _safe_call returns b'' for EOF
+            if result == b'':
+                return 0
+            return result
+
+    def send(self, data):
+        """Send data (socket interface)."""
+        with self._lock:
+            return self._safe_call(
+                False,  # is_reader=False
+                self._ssl_conn.send,
+                data,
+            )
+
+    def fileno(self):
+        """Return the file descriptor."""
+        return self._ssl_conn.fileno()
+
+    def _decref_socketios(self):
+        """Shutdown the connection."""
+        return self._ssl_conn._decref_socketios()
+
+    def shutdown(self, how):
+        """Shutdown the connection."""
+        # SSL shutdown can fail if the handshake didn't complete or during
+        # error conditions. Since shutdown is a cleanup operation, we suppress
+        # all errors - the connection will be closed anyway.
+        with _suppress(SSL.Error, socket.error, OSError):
+            return self._ssl_conn.shutdown(how)
+
+    def close(self):
+        """Close the TLS socket and underlying connection."""
+        # 1. Attempt an SSL-level shutdown
+        with _suppress(SSL.Error, OSError):
+            self._ssl_conn.shutdown()
+
+        # 2. Close the SSL connection object
+        with _suppress(SSL.Error, OSError):
+            self._ssl_conn.close()
+
+        # 3. Close the raw TCP socket
+        with _suppress(OSError):
+            self._sock.close()

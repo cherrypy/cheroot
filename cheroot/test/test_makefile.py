@@ -1,5 +1,7 @@
 """Tests for :py:mod:`cheroot.makefile`."""
 
+import pytest
+
 from cheroot import makefile
 
 
@@ -39,7 +41,7 @@ def test_bytes_read():
     """Reader should capture bytes read."""
     sock = MockSocket()
     sock.messages.append(b'foo')
-    rfile = makefile.MakeFile(sock, 'r')
+    rfile = makefile.StreamReader(sock, 'r')
     rfile.read()
     assert rfile.bytes_read == 3
 
@@ -48,6 +50,21 @@ def test_bytes_written():
     """Writer should capture bytes written."""
     sock = MockSocket()
     sock.messages.append(b'foo')
-    wfile = makefile.MakeFile(sock, 'w')
+    wfile = makefile.StreamWriter(sock, 'w')
     wfile.write(b'bar')
     assert wfile.bytes_written == 3
+
+
+def test_makefile_deprecated():
+    """MakeFile function should emit a deprecation warning."""
+    sock = MockSocket()
+    sock.messages.append(b'foo')
+
+    with pytest.warns(
+        DeprecationWarning,
+        match='Use StreamReader or StreamWriter directly',
+    ) as warning_info:
+        makefile.MakeFile(sock, 'r')
+
+    assert len(warning_info) == 1
+    assert 'MakeFile is deprecated' in str(warning_info[0].message)
