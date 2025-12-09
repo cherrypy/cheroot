@@ -1,0 +1,3 @@
+GitHub Actions CI/CD is has been migrated from ``macos-13`` to
+``macos-15-intel`` VMs following the sunset of the former
+-- by :user:`webknjaz`.
