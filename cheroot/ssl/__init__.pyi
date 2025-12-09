@@ -1,3 +1,4 @@
+import collections.abc as _c
 import typing as _t
 from abc import ABC, abstractmethod
 
@@ -6,8 +7,9 @@ class Adapter(ABC):
     private_key: _t.Any
     certificate_chain: _t.Any
     ciphers: _t.Any
-    private_key_password: str | bytes | None
+    private_key_password: _c.Callable[[], bytes | str] | bytes | str | None
     context: _t.Any
+
     @abstractmethod
     def __init__(
         self,
@@ -16,7 +18,10 @@ class Adapter(ABC):
         certificate_chain: _t.Any | None = ...,
         ciphers: _t.Any | None = ...,
         *,
-        private_key_password: str | bytes | None = ...,
+        private_key_password: _c.Callable[[], bytes | str]
+        | bytes
+        | str
+        | None = ...,
     ): ...
     def bind(self, sock): ...
     @abstractmethod
@@ -25,3 +30,4 @@ class Adapter(ABC):
     def get_environ(self): ...
     @abstractmethod
     def makefile(self, sock, mode: str = ..., bufsize: int = ...): ...
+    def _prompt_for_tls_password(self) -> str: ...

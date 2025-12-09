@@ -2,6 +2,7 @@
 
 import socket as _socket
 from abc import ABC, abstractmethod
+from getpass import getpass as _ask_for_password_interactively
 from warnings import warn as _warn
 
 from .. import errors as _errors
@@ -113,3 +114,8 @@ class Adapter(ABC):
     def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
         raise NotImplementedError  # pragma: no cover
+
+    def _prompt_for_tls_password(self) -> str:
+        """Prompt for encrypted private key password interactively."""
+        prompt = 'Enter PEM pass phrase: '
+        return _ask_for_password_interactively(prompt)

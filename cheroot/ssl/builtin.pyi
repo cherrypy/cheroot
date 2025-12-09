@@ -1,3 +1,4 @@
+import collections.abc as _c
 import typing as _t
 
 from . import Adapter
@@ -14,7 +15,10 @@ class BuiltinSSLAdapter(Adapter):
         certificate_chain: _t.Any | None = ...,
         ciphers: _t.Any | None = ...,
         *,
-        private_key_password: str | bytes | None = ...,
+        private_key_password: _c.Callable[[], bytes | str]
+        | bytes
+        | str
+        | None = ...,
     ) -> None: ...
     @property
     def context(self): ...

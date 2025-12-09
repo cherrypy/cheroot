@@ -247,6 +247,9 @@ class BuiltinSSLAdapter(Adapter):
             private_key_password=private_key_password,
         )
 
+        if private_key_password is None:
+            private_key_password = self._prompt_for_tls_password
+
         self.context = ssl.create_default_context(
             purpose=ssl.Purpose.CLIENT_AUTH,
             cafile=certificate_chain,
