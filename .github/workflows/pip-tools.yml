@@ -71,7 +71,7 @@ jobs:
         - ubuntu-24.04-arm
         - macOS-15  # arm64
         - ubuntu-22.04
-        - macOS-13
+        - macOS-15-intel
         - windows-2022
 
     env:

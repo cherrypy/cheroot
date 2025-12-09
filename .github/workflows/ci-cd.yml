@@ -743,7 +743,7 @@ jobs:
         - macos-15
         - windows-2025
         - ubuntu-22.04
-        - macos-13
+        - macos-15-intel
         - windows-2022
         toxenv:
         - py
