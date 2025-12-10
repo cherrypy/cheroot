@@ -762,7 +762,7 @@ jobs:
         # NOTE: They should be re-added once it's fixed.
         - runner-vm-os: macos-15
           python-version: pypy-3.11
-        - runner-vm-os: macos-13
+        - runner-vm-os: macos-15-intel
           python-version: pypy-3.11
 
     uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@0b1e32642419392b5012b1efb66331a6babe6f79  # yamllint disable-line rule:line-length
