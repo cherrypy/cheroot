@@ -18,7 +18,7 @@ charset-normalizer==3.4.4
     # via requests
 colorama==0.4.6
     # via pytest-watch
-coverage==7.12.0
+coverage==7.13.0
     # via
     #   -r dependencies/tox-py310-cp310-linux-x86_64.in
     #   pytest-cov
@@ -136,7 +136,7 @@ typing-extensions==4.15.0
     #   cryptography
     #   exceptiongroup
     #   pyopenssl
-urllib3==2.6.0
+urllib3==2.6.1
     # via requests
 watchdog==6.0.0
     # via pytest-watch
