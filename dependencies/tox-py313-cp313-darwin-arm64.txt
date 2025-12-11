@@ -16,7 +16,7 @@ charset-normalizer==3.4.4
     # via requests
 colorama==0.4.6
     # via pytest-watch
-coverage==7.12.0
+coverage==7.13.0
     # via
     #   -r dependencies/tox-py313-cp313-darwin-arm64.in
     #   pytest-cov
@@ -123,7 +123,7 @@ termcolor==3.2.0
     # via pytest-sugar
 trustme==1.2.1
     # via -r dependencies/tox-py313-cp313-darwin-arm64.in
-urllib3==2.6.0
+urllib3==2.6.1
     # via requests
 watchdog==6.0.0
     # via pytest-watch
