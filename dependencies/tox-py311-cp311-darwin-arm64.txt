@@ -127,7 +127,7 @@ trustme==1.2.1
     # via -r dependencies/tox-py311-cp311-darwin-arm64.in
 typing-extensions==4.15.0
     # via pyopenssl
-urllib3==2.6.1
+urllib3==2.6.2
     # via requests
 watchdog==6.0.0
     # via pytest-watch

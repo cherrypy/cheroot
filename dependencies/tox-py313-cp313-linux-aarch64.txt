@@ -123,7 +123,7 @@ termcolor==3.2.0
     # via pytest-sugar
 trustme==1.2.1
     # via -r dependencies/tox-py313-cp313-linux-aarch64.in
-urllib3==2.6.1
+urllib3==2.6.2
     # via requests
 watchdog==6.0.0
     # via pytest-watch
