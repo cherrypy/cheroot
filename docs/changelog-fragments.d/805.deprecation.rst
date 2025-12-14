@@ -1,0 +1,12 @@
+Deprecated :py:meth:`~cheroot.makefile.MakeFile` in favor of :py:class:`~cheroot.makefile.StreamReader`
+and :py:class:`~cheroot.makefile.StreamWriter`.
+
+The ``MakeFile`` factory function is replaced with direct class instantiation
+and now emits a ``DeprecationWarning``. The function will be removed in
+a future release.
+
+Adapter specific ``makefile()`` methods are also deprecated in :py:mod:`~cheroot.ssl.builtin.BuiltinSSLAdapter`,
+:py:mod:`~cheroot.ssl.pyopenssl.pyOpenSSLAdapter` and the :py:mod:`~cheroot.ssl.Adapter` interface.
+All will be removed in a future release.
+
+-- by :user:`julianz-`

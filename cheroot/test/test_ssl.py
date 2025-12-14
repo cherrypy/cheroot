@@ -4,6 +4,7 @@ import contextlib
 import errno
 import functools
 import http.client
+import io
 import json
 import os
 import socket
@@ -28,7 +29,12 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 from cheroot.connections import ConnectionManager
-from cheroot.ssl import Adapter, _ensure_peer_speaks_https
+from cheroot.server import HTTPConnection
+from cheroot.ssl import (
+    Adapter,
+    _ensure_peer_speaks_https,
+    builtin as builtin_adapter,
+)
 
 from .._compat import (
     IS_ABOVE_OPENSSL10,
@@ -1127,7 +1133,7 @@ def test_prepare_socket_emits_deprecation_warning(
     """
     Test ``prepare_socket()`` deprecated argument triggers a warning.
 
-    ``ssl_adapter`` has been deprecated in ``prepare_socket()``.
+    ``ssl_adapter`` has been deprecated in ``HTTPServer.prepare_socket()``.
     """
     # Required parameters for prepare_socket (standard IPv4 TCP config)
     bind_addr = ('127.0.0.1', 8080)
@@ -1154,3 +1160,82 @@ def test_prepare_socket_emits_deprecation_warning(
     assert sock.fileno() > 0
 
     sock.close()
+
+
+def test_httpconnection_makefile_deprecation(mocker):
+    """
+    Test ``makefile`` argument on ``HTTPConnection`` triggers a warning.
+
+    ``makefile`` is now deprecated.
+    """
+    dummy_server = mocker.create_autospec(HTTPServer, instance=True)
+    dummy_sock = mocker.create_autospec(socket.socket, instance=True)
+
+    # Value for the deprecated 'makefile' parameter
+    dummy_makefile_value = object()
+
+    expected_message = r'makefile.*deprecated'
+
+    # Act & Assert
+    with pytest.deprecated_call(match=expected_message):
+        # Instantiate HTTPConnection, passing the deprecated 'makefile'
+        conn = HTTPConnection(
+            server=dummy_server,
+            sock=dummy_sock,
+            makefile=dummy_makefile_value,  # This triggers the warning
+        )
+
+    # Verify assignment
+    assert conn.server is dummy_server
+    assert conn.socket is dummy_sock
+
+
+@pytest.mark.parametrize(
+    'adapter_type',
+    (
+        'builtin',
+        'pyopenssl',
+    ),
+)
+def test_adapter_makefile_deprecation(
+    mocker,
+    adapter_type,
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+):
+    """Test the adapter's makefile() method emits a deprecation warning."""
+    # Mock the adapter
+    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
+    tls_adapter = tls_adapter_cls(
+        tls_certificate_chain_pem_path,
+        tls_certificate_private_key_pem_path,
+    )
+
+    # Create a mock socket with a makefile method
+    dummy_sock = mocker.Mock()
+    mock_file_stream = mocker.Mock(spec=io.FileIO)
+    dummy_sock.makefile.return_value = mock_file_stream
+
+    expected_message = r'makefile.*deprecated'
+
+    # Act & Assert
+    with pytest.deprecated_call(match=expected_message):
+        result = tls_adapter.makefile(dummy_sock, mode='r', bufsize=8192)
+
+    # Assert 1: The correct delegation happened
+    dummy_sock.makefile.assert_called_once_with('r', 8192)
+
+    # Assert 2: The result is the mock file stream
+    assert result is mock_file_stream
+
+
+def test_default_buffer_size_deprecated():
+    """Test accessing ``DEFAULT_BUFFER_SIZE`` raises warning."""
+    with pytest.warns(
+        DeprecationWarning,
+        match='`DEFAULT_BUFFER_SIZE` is deprecated',
+    ):
+        val = builtin_adapter.DEFAULT_BUFFER_SIZE
+
+    # Check that the returned value is correct
+    assert val == io.DEFAULT_BUFFER_SIZE, 'DEFAULT_BUFFER_SIZE value mismatch'

@@ -3,8 +3,6 @@ import typing as _t
 
 from . import Adapter
 
-DEFAULT_BUFFER_SIZE: int
-
 class BuiltinSSLAdapter(Adapter):
     CERT_KEY_TO_ENV: _t.Any
     CERT_KEY_TO_LDAP_CODE: _t.Any
