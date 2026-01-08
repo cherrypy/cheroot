@@ -1,3 +1,4 @@
+-c tox-docs-constraints.in  # limits known broken versions
 -r tests.in  # `sphinxcontrib-autodoc` will import all the files
 
 Sphinx >= 1.8.2

@@ -1,0 +1,4 @@
+Constrained the version of :pypi:`docutils` to before 0.22 so that the
+:pypi:`sphinx-tabs` plugin continues to work. Can be reverted once
+new release (``> 3.4.7``) of :pypi:`sphinx-tabs` is made
+-- by :user:`mr-c`.
