@@ -1,0 +1,2 @@
+Declared Python version 3.14 as officially supported
+-- by :user:`mr-c`.
