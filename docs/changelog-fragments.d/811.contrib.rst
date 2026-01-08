@@ -1,0 +1,3 @@
+Documentation building: adjusted :mod:`~sphinx.ext.intersphinx` links to remove
+"intersphinx inventory has moved" warnings
+-- by :user:`mr-c`.
