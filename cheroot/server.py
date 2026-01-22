@@ -756,6 +756,12 @@ class HTTPRequest:
                 'allowed bytes.',
             )
             return
+        except ValueError:
+            self.simple_response(
+                '400 Bad request',
+                'Invalid Content Header.',
+            )
+            return
         else:
             if not success:
                 return
