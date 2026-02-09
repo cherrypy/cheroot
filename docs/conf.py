@@ -80,15 +80,12 @@ spelling_word_list_filename = [
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'python2': ('https://docs.python.org/2', None),
-    # Ref: https://github.com/cherrypy/cherrypy/issues/1872
-    'cherrypy': (
-        'https://docs.cherrypy.dev/en/latest',
-        ('https://cherrypy.rtfd.io/en/latest', None),
-    ),
+    'cherrypy': ('https://docs.cherrypy.dev/en/latest', None),
     'trustme': ('https://trustme.readthedocs.io/en/latest/', None),
     'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
     'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
-    'towncrier': ('https://towncrier.rtfd.io/en/latest', None),
+    'towncrier': ('https://towncrier.readthedocs.io/en/latest/', None),
+    'sphinx': ('https://www.sphinx-doc.org', None),
 }
 
 linkcheck_ignore = [

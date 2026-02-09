@@ -21,6 +21,7 @@ Fortran
 hardcoded
 hostname
 inclusivity
+intersphinx
 iterable
 linter
 linters
