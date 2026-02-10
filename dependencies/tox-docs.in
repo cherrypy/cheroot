@@ -3,6 +3,7 @@
 
 Sphinx >= 1.8.2
 jaraco.packaging >= 9  # first version to load meta through PEP 517 interface
+jaraco.tidelift
 sphinx-tabs >= 1.1.0
 
 furo

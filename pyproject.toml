@@ -78,6 +78,7 @@ docs = [
   "sphinx >= 1.8.2",
   "jaraco.packaging >= 3.2",
   "sphinx-tabs >= 1.1.0",
+  "jaraco.tidelift >= 1.4",
 
   # local
   "furo",

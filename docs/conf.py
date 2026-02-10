@@ -34,6 +34,7 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     # Third-party extensions:
+    'jaraco.tidelift',  # provides `.. tidelift::` directive
     'jaraco.packaging.sphinx',
     'sphinx_issues',  # implements `:issue:`, `:pr:` and other GH-related roles
     'sphinx_tabs.tabs',
@@ -41,6 +42,10 @@ extensions = [
     'sphinxcontrib.towncrier.ext',  # provides `.. towncrier-draft-entries::`
     # In-tree extensions:
     'spelling_stub_ext',  # auto-loads `sphinxcontrib.spelling` if installed
+]
+
+suppress_warnings = [
+    'extension.parallel_read_safe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -85,7 +90,7 @@ intersphinx_mapping = {
     'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
     'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
     'towncrier': ('https://towncrier.readthedocs.io/en/latest/', None),
-    'sphinx': ('https://www.sphinx-doc.org', None),
+    'sphinx': ('https://www.sphinx-doc.org/en/master', None),
 }
 
 linkcheck_ignore = [
