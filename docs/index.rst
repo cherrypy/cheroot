@@ -6,21 +6,25 @@ Welcome to Cheroot documentation!
 .. toctree::
    :maxdepth: 1
    :glob:
+   :hidden:
 
    history
 
 .. toctree::
    :caption: Contributing
+   :hidden:
 
    contributing/guidelines
 
 .. toctree::
    :caption: Maintenance
+   :hidden:
 
    contributing/release_guide
 
 .. toctree::
    :caption: Reference
+   :hidden:
 
    devguide
    Private (dev) API autodoc <pkg/modules>
