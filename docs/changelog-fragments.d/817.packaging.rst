@@ -1,0 +1,4 @@
+Fixed the source code repository URL not being correctly
+exposed in the project metadata.
+
+-- by :user:`julianz-`
