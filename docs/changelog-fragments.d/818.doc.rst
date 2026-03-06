@@ -1,0 +1,6 @@
+Removed the redundant table of contents from the documentation home page.
+
+Previously the table of contents appeared twice on the :doc:`docs home page
+<index>` -- both in the left hand selection panel and in the main contents next to it.
+
+-- by :user:`julianz-`
