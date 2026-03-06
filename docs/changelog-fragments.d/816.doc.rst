@@ -1,0 +1,3 @@
+Removed the invalid Tidelift logo URL from the project description metadata.
+
+-- by :user:`julianz-`
