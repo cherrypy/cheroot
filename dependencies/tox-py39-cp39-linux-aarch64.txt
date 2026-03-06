@@ -4,11 +4,11 @@
 #
 #    pip-compile --allow-unsafe --output-file=dependencies/tox-py39-cp39-linux-aarch64.txt --strip-extras dependencies/tox-py39-cp39-linux-aarch64.in pyproject.toml
 #
-autocommand==2.2.2
-    # via jaraco-text
+annotated-doc==0.0.4
+    # via typer
 backports-tarfile==1.2.0
     # via jaraco-context
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 cffi==2.0.0
     # via cryptography
@@ -16,13 +16,15 @@ chardet==5.2.0
     # via requests
 charset-normalizer==3.4.4
     # via requests
+click==8.1.8
+    # via typer
 colorama==0.4.6
     # via pytest-watch
 coverage==7.10.7
     # via
     #   -r dependencies/tox-py39-cp39-linux-aarch64.in
     #   pytest-cov
-cryptography==46.0.3
+cryptography==46.0.5
     # via
     #   pyopenssl
     #   trustme
@@ -38,16 +40,16 @@ idna==3.11
     #   trustme
 iniconfig==2.1.0
     # via pytest
-jaraco-context==6.0.1
+jaraco-context==6.1.0
     # via
     #   -r dependencies/tox-py39-cp39-linux-aarch64.in
     #   jaraco-text
-jaraco-functools==4.3.0
+jaraco-functools==4.4.0
     # via
     #   cheroot (pyproject.toml)
     #   jaraco-text
     #   tempora
-jaraco-text==4.0.0
+jaraco-text==4.2.0
     # via -r dependencies/tox-py39-cp39-linux-aarch64.in
 markdown-it-py==3.0.0
     # via rich
@@ -58,7 +60,7 @@ more-itertools==10.8.0
     #   cheroot (pyproject.toml)
     #   jaraco-functools
     #   jaraco-text
-packaging==25.0
+packaging==26.0
     # via
     #   pytest
     #   pytest-rerunfailures
@@ -117,26 +119,34 @@ requests-toolbelt==1.0.0
     # via -r dependencies/tox-py39-cp39-linux-aarch64.in
 requests-unixsocket==0.4.1
     # via -r dependencies/tox-py39-cp39-linux-aarch64.in
-rich==14.2.0
-    # via pytest-clarity
+rich==14.3.2
+    # via
+    #   pytest-clarity
+    #   typer
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via python-dateutil
 tempora==5.8.1
     # via portend
 termcolor==3.1.0
     # via pytest-sugar
-tomli==2.3.0
+tomli==2.4.0
     # via
     #   coverage
     #   pytest
 trustme==1.2.1
     # via -r dependencies/tox-py39-cp39-linux-aarch64.in
+typer==0.23.0
+    # via typer-slim
+typer-slim==0.23.0
+    # via jaraco-text
 typing-extensions==4.15.0
     # via
     #   cryptography
     #   exceptiongroup
     #   pyopenssl
-urllib3==2.6.2
+urllib3==2.6.3
     # via requests
 watchdog==6.0.0
     # via pytest-watch

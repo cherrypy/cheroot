@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe --output-file=dependencies/tox-py314-cp314-darwin-arm64.txt --strip-extras dependencies/tox-py314-cp314-darwin-arm64.in pyproject.toml
 #
-autocommand==2.2.2
-    # via jaraco-text
-certifi==2025.11.12
+annotated-doc==0.0.4
+    # via typer
+certifi==2026.1.4
     # via requests
 cffi==2.0.0
     # via cryptography
@@ -14,13 +14,15 @@ chardet==5.2.0
     # via requests
 charset-normalizer==3.4.4
     # via requests
+click==8.3.1
+    # via typer
 colorama==0.4.6
     # via pytest-watch
-coverage==7.13.0
+coverage==7.13.4
     # via
     #   -r dependencies/tox-py314-cp314-darwin-arm64.in
     #   pytest-cov
-cryptography==46.0.3
+cryptography==46.0.5
     # via
     #   pyopenssl
     #   trustme
@@ -34,16 +36,16 @@ idna==3.11
     #   trustme
 iniconfig==2.3.0
     # via pytest
-jaraco-context==6.0.1
+jaraco-context==6.1.0
     # via
     #   -r dependencies/tox-py314-cp314-darwin-arm64.in
     #   jaraco-text
-jaraco-functools==4.3.0
+jaraco-functools==4.4.0
     # via
     #   cheroot (pyproject.toml)
     #   jaraco-text
     #   tempora
-jaraco-text==4.0.0
+jaraco-text==4.2.0
     # via -r dependencies/tox-py314-cp314-darwin-arm64.in
 markdown-it-py==4.0.0
     # via rich
@@ -54,7 +56,7 @@ more-itertools==10.8.0
     #   cheroot (pyproject.toml)
     #   jaraco-functools
     #   jaraco-text
-packaging==25.0
+packaging==26.0
     # via
     #   pytest
     #   pytest-rerunfailures
@@ -68,7 +70,7 @@ pprintpp==0.4.0
     # via pytest-clarity
 py==1.11.0
     # via pypytools
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pygments==2.19.2
     # via
@@ -113,17 +115,25 @@ requests-toolbelt==1.0.0
     # via -r dependencies/tox-py314-cp314-darwin-arm64.in
 requests-unixsocket==0.4.1
     # via -r dependencies/tox-py314-cp314-darwin-arm64.in
-rich==14.2.0
-    # via pytest-clarity
+rich==14.3.2
+    # via
+    #   pytest-clarity
+    #   typer
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via python-dateutil
 tempora==5.8.1
     # via portend
-termcolor==3.2.0
+termcolor==3.3.0
     # via pytest-sugar
 trustme==1.2.1
     # via -r dependencies/tox-py314-cp314-darwin-arm64.in
-urllib3==2.6.2
+typer==0.23.0
+    # via typer-slim
+typer-slim==0.23.0
+    # via jaraco-text
+urllib3==2.6.3
     # via requests
 watchdog==6.0.0
     # via pytest-watch
