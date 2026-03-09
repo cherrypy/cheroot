@@ -17,10 +17,12 @@ import pytest
 
 import requests
 import requests_unixsocket
+from OpenSSL import SSL
 from pypytools.gc.custom import DefaultGc
 
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
-from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
+from ..errors import FatalSSLAlert
+from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPConnection, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -626,3 +628,20 @@ def test_overload_thread_does_not_leak():
     # We use special exit code to indicate success, rather than normal zero, so
     # the test doesn't acidentally pass:
     assert process.returncode == SUCCESSFUL_SUBPROCESS_EXIT
+
+
+def test_close_kernel_socket_ssl_error_raises_fatal_alert(mocker):
+    """Test ``HTTPConnection`` handles ``FatalSSLAlert``."""
+    # Create an HTTPConnection instance
+    conn = HTTPConnection(server=mocker.Mock(), sock=mocker.Mock())
+
+    # Mock the socket's shutdown to raise SSL.Error
+    ssl_error = SSL.Error()
+    ssl_error.args = [[('SSL routines', '', 'some error')]]
+    conn.socket.shutdown.side_effect = ssl_error
+
+    with pytest.raises(FatalSSLAlert) as exc_info:
+        conn._close_kernel_socket()
+
+    assert 'TLS/SSL connection failure' in str(exc_info.value)
+    assert exc_info.value.__cause__ is ssl_error
