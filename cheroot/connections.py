@@ -295,61 +295,124 @@ class ConnectionManager:
             with _cm.suppress(OSError):
                 conn.close()
 
-    def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
+    def _setup_conn_addr(self, conn, s, addr):
+        """Configure remote address and port for the connection."""
+        # Optional values
+        # Until we do DNS lookups, omit REMOTE_HOST
+        if addr is None:
+            # Fallback for sockets that don't return an address on accept
+            # figure out if AF_INET or AF_INET6.
+            if len(s.getsockname()) == 2:
+                # AF_INET
+                addr = ('0.0.0.0', 0)
+            else:
+                # AF_INET6
+                addr = ('::', 0)
+        conn.remote_addr = addr[0]
+        conn.remote_port = addr[1]
+
+    def _handle_socket_error(self, ex, s=None):
+        """Handle OSErrors and determine if they should be ignored."""
+        if self.server.stats['Enabled']:
+            self.server.stats['Socket Errors'] += 1
+
+        if s:
+            with _cm.suppress(OSError):
+                s.close()
+
+        err_code = ex.args[0] if ex.args else None
+        ignored_groups = (
+            errors.socket_error_eintr,
+            # I *think* this is right. EINTR should occur when a signal
+            # is received during the accept() call; all docs say retry
+            # the call, and I *think* I'm reading it right that Python
+            # will then go ahead and poll for and handle the signal
+            # elsewhere. See
+            # https://github.com/cherrypy/cherrypy/issues/707.
+            errors.socket_errors_nonblocking,
+            # Just try again. See
+            # https://github.com/cherrypy/cherrypy/issues/479.
+            errors.socket_errors_to_ignore,
+            # Our socket was closed.
+            # See https://github.com/cherrypy/cherrypy/issues/686.
+        )
+        if any(err_code in group for group in ignored_groups):
+            return
+
+        raise ex
+
+    def _wrap_tls_socket(self, s, addr):
+        """Handle the TLS wrap and log specific error responses.
+
+        on success returns e.g. (SSLSocket, {'SSL_PROTOCOL': 'TLSv1.3', ...}).
+        on failure returns None, {}
+        """
+        try:
+            return self.server.ssl_adapter.wrap(s)
+        except errors.FatalSSLAlert as tls_connection_drop_error:
+            self.server.error_log(
+                f'Client {addr!s} lost — peer dropped the TLS '
+                'connection suddenly, during handshake: '
+                f'{tls_connection_drop_error!s}',
+            )
+        except errors.NoSSLError as http_over_https_err:
+            self.server.error_log(
+                f'Client {addr!s} attempted to speak plain HTTP into '
+                'a TCP connection configured for TLS-only traffic — '
+                'trying to send back a plain HTTP error response: '
+                f'{http_over_https_err!s}',
+            )
+            self._send_bad_request_plain_http_error(s)
+
+        # If we hit either exception, close the socket and signal failure
+        with _cm.suppress(OSError):
+            s.close()
+        return None, {}
+
+    def _create_conn(self, s, addr, ssl_env):
+        """Build and configure the Connection object."""
+        # 1. Determine the makefile type (SSL vs Plain)
+        mf = MakeFile
+        if self.server.ssl_adapter is not None:
+            mf = self.server.ssl_adapter.makefile
+
+            # 2. Re-apply timeout specifically for the new SSLSocket object
+            if hasattr(s, 'settimeout'):
+                s.settimeout(self.server.timeout)
+
+        # 3. Create the actual connection object
+        conn = self.server.ConnectionClass(self.server, s, mf)
+        conn.ssl_env = ssl_env
+
+        # 4. Configure the remote address/port if it's not a Unix socket
+        if not isinstance(self.server.bind_addr, (str, bytes)):
+            self._setup_conn_addr(conn, s, addr)
+
+        return conn
+
+    def _from_server_socket(self, server_socket):
+        """Coordinate socket acceptance and connection initialization."""
         try:
             s, addr = server_socket.accept()
             if self.server.stats['Enabled']:
                 self.server.stats['Accepts'] += 1
+
             prevent_socket_inheritance(s)
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.server.timeout)
 
-            mf = MakeFile
             ssl_env = {}
-            # if ssl cert and key are set, we try to be a secure HTTP server
             if self.server.ssl_adapter is not None:
-                # FIXME: WPS505 -- too many nested blocks
-                try:  # noqa: WPS505
-                    s, ssl_env = self.server.ssl_adapter.wrap(s)
-                except errors.FatalSSLAlert as tls_connection_drop_error:
-                    self.server.error_log(
-                        f'Client {addr!s} lost — peer dropped the TLS '
-                        'connection suddenly, during handshake: '
-                        f'{tls_connection_drop_error!s}',
-                    )
+                # try to become a secure server
+                s, ssl_env = self._wrap_tls_socket(s, addr)
+                if s is None:
                     return None
-                except errors.NoSSLError as http_over_https_err:
-                    self.server.error_log(
-                        f'Client {addr!s} attempted to speak plain HTTP into '
-                        'a TCP connection configured for TLS-only traffic — '
-                        'trying to send back a plain HTTP error response: '
-                        f'{http_over_https_err!s}',
-                    )
-                    self._send_bad_request_plain_http_error(s)
-                    return None
-                mf = self.server.ssl_adapter.makefile
-                # Re-apply our timeout since we may have a new socket object
+
+                # Re-apply timeout to the new SSLSocket object
                 if hasattr(s, 'settimeout'):
                     s.settimeout(self.server.timeout)
 
-            conn = self.server.ConnectionClass(self.server, s, mf)
-
-            if not isinstance(self.server.bind_addr, (str, bytes)):
-                # optional values
-                # Until we do DNS lookups, omit REMOTE_HOST
-                if addr is None:  # sometimes this can happen
-                    # figure out if AF_INET or AF_INET6.
-                    if len(s.getsockname()) == 2:
-                        # AF_INET
-                        addr = ('0.0.0.0', 0)
-                    else:
-                        # AF_INET6
-                        addr = ('::', 0)
-                conn.remote_addr = addr[0]
-                conn.remote_port = addr[1]
-
-            conn.ssl_env = ssl_env
-            return conn
+            return self._create_conn(s, addr, ssl_env)
 
         except socket.timeout:
             # The only reason for the timeout in start() is so we can
@@ -357,25 +420,11 @@ class ConnectionManager:
             # accept() by default
             return None
         except OSError as ex:
-            if self.server.stats['Enabled']:
-                self.server.stats['Socket Errors'] += 1
-            if ex.args[0] in errors.socket_error_eintr:
-                # I *think* this is right. EINTR should occur when a signal
-                # is received during the accept() call; all docs say retry
-                # the call, and I *think* I'm reading it right that Python
-                # will then go ahead and poll for and handle the signal
-                # elsewhere. See
-                # https://github.com/cherrypy/cherrypy/issues/707.
-                return None
-            if ex.args[0] in errors.socket_errors_nonblocking:
-                # Just try again. See
-                # https://github.com/cherrypy/cherrypy/issues/479.
-                return None
-            if ex.args[0] in errors.socket_errors_to_ignore:
-                # Our socket was closed.
-                # See https://github.com/cherrypy/cherrypy/issues/686.
-                return None
-            raise
+            # if socket.accept() fails s may not be defined
+            # or if the handshake fails it may exist but
+            # will need to be closed.
+            # pass it over to error handler if it exists
+            return self._handle_socket_error(ex, locals().get('s'))
 
     def close(self):
         """Close all monitored connections."""

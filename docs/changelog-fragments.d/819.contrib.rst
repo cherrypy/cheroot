@@ -1,0 +1,5 @@
+Refactored ``_from_server_socket()`` in :py:class:`~cheroot.connections.ConnectionManager`.
+This function had become highly nested and complex, triggering
+linter warnings (C901, WPS505). Decomposed the logic into
+several smaller private methods.
+-- by :user:`julianz-`
