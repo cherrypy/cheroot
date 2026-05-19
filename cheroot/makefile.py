@@ -26,13 +26,17 @@ class BufferedWriter(io.BufferedWriter):
     def _flush_unlocked(self):
         self._checkClosed('flush of closed file')
         while self._write_buf:
+            n = None
             try:
                 # ssl sockets only except 'bytes', not bytearrays
                 # so perhaps we should conditionally wrap this for perf?
-                n = self.raw.write(bytes(self._write_buf))
+                n = self.raw.write(
+                    bytes(self._write_buf[:SOCK_WRITE_BLOCKSIZE]),
+                )
             except io.BlockingIOError as e:
                 n = e.characters_written
-            del self._write_buf[:n]
+            if n:
+                del self._write_buf[:n]
 
 
 class StreamReader(io.BufferedReader):
