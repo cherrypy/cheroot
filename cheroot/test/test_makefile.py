@@ -53,7 +53,26 @@ def test_bytes_written():
     assert wfile.bytes_written == 3
 
 
-def test_flush_preserves_data_when_raw_write_returns_none():
+class _RawWriteBlockOnce:
+    """Mock raw.write() that returns None on the first call, then writes normally."""
+
+    def __init__(self):
+        """Initialize _RawWriteBlockOnce."""
+        self.call_count = 0
+        self.written = bytearray()
+
+    def __call__(self, chunk):
+        """Return None on first call to simulate a blocked socket write."""
+        self.call_count += 1
+        if self.call_count == 1:
+            return (
+                None  # simulates socket returning None on first blocked write
+            )
+        self.written.extend(chunk)
+        return len(chunk)
+
+
+def test_flush_when_raw_write_returns_none():
     """_flush_unlocked() must not treat None from raw.write() as a byte count.
 
     io.RawIOBase.write() returns None when a non-blocking socket cannot accept
@@ -61,29 +80,17 @@ def test_flush_preserves_data_when_raw_write_returns_none():
     which silently clears the entire buffer, truncating the response without
     raising an exception.
     """
-    data = b'x' * 32768  # larger than SOCK_WRITE_BLOCKSIZE to stress the loop
+    data = b'x' * (makefile.SOCK_WRITE_BLOCKSIZE * 2)  # stress the write loop
 
     sock = MockSocket()
     wfile = makefile.MakeFile(sock, 'w')
     wfile._write_buf.extend(data)
 
-    written = bytearray()
-    call_count = 0
-
-    def mock_raw_write(b):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return (
-                None  # simulates socket returning None on first blocked write
-            )
-        written.extend(b)
-        return len(b)
-
-    wfile.raw.write = mock_raw_write
+    mock = _RawWriteBlockOnce()
+    wfile.raw.write = mock
     wfile._flush_unlocked()
 
-    assert bytes(written) == data, (
-        f'Expected {len(data)} bytes but only {len(written)} reached raw.write(): '
+    assert bytes(mock.written) == data, (
+        f'Expected {len(data)} bytes but only {len(mock.written)} reached raw.write(): '
         'buffer was silently discarded when raw.write() returned None'
     )
