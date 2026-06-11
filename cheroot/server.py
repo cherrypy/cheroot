@@ -1888,7 +1888,7 @@ class HTTPServer:
                 # We can't just raise an exception because that will kill this
                 # thread, and prevent 503 errors from being sent to future
                 # connections.
-                self.server.error_log(
+                self.error_log(
                     repr(ex),
                     level=logging.ERROR,
                     traceback=True,
