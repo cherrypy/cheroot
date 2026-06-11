@@ -22,10 +22,10 @@ from pypytools.gc.custom import DefaultGc
 
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
 from ..server import (
+    _STOPPING_FOR_INTERRUPT,
     IS_UID_GID_RESOLVABLE,
     Gateway,
     HTTPServer,
-    _STOPPING_FOR_INTERRUPT,
 )
 from ..testing import (
     ANY_INTERFACE_IPV4,
