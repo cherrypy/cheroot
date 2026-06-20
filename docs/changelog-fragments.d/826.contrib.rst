@@ -1,0 +1,12 @@
+Bumped Ruff to v0.15.18, which introduces new rules:
+
+1. Property docstrings must now use noun phrases rather than verb phrases
+   (D421, e.g. "The queue size." not "Return the queue size."),
+2. Implicit string concatenation inside collection literals must be
+   parenthesized (ISC004).
+
+Three further new rules are suppressed pending fixes: too many statements
+in a try clause (PLW0717), non-empty ``__init__`` modules (RUF067), and
+starting a process with a partial executable path (S607)
+
+-- by :user:`julianz-`.

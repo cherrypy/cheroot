@@ -191,9 +191,7 @@ def testing_server(raw_testing_server, monkeypatch):
             continue
 
         assert c_msg in raw_testing_server.error_log.ignored_msgs, (
-            'Found error in the error log: '
-            f"message = '{c_msg}', level = '{c_level}'\n"
-            f'{c_traceback}',
+            f"Found error in the error log: message = '{c_msg}', level = '{c_level}'\n{c_traceback}"  # noqa: LN001
         )
 
 
@@ -790,17 +788,11 @@ def test_broken_connection_during_http_communication_fallback(  # noqa: WPS118
         (logging.WARNING, r'^socket\.error 666$'),
         (
             logging.INFO,
-            '^Got a connection error while handling a connection '
-            r'from .*:\d{1,5} \(666\)',
+            r'^Got a connection error while handling a connection from .*:\d{1,5} \(666\)',  # noqa: LN001
         ),
         (
             logging.CRITICAL,
-            r'A fatal exception happened\. Setting the server interrupt flag '
-            r'to ConnectionResetError\(666,?\) and giving up\.\n\nPlease, '
-            'report this on the Cheroot tracker at '
-            r'<https://github\.com/cherrypy/cheroot/issues/new/choose>, '
-            'providing a full reproducer with as much context and details '
-            r'as possible\.$',
+            r'A fatal exception happened\. Setting the server interrupt flag to ConnectionResetError\(666,?\) and giving up\.\n\nPlease, report this on the Cheroot tracker at <https://github\.com/cherrypy/cheroot/issues/new/choose>, providing a full reproducer with as much context and details as possible\.$',  # noqa: LN001
         ),
     )
 
@@ -840,13 +832,11 @@ def test_kb_int_from_http_handler(
     expected_log_entries = (
         (
             logging.DEBUG,
-            '^Got a server shutdown request while handling a connection '
-            r'from .*:\d{1,5} \(simulated test handler keyboard interrupt\)$',
+            r'^Got a server shutdown request while handling a connection from .*:\d{1,5} \(simulated test handler keyboard interrupt\)$',  # noqa: LN001
         ),
         (
             logging.DEBUG,
-            '^Setting the server interrupt flag to KeyboardInterrupt'
-            r"\('simulated test handler keyboard interrupt',?\)$",
+            r"^Setting the server interrupt flag to KeyboardInterrupt\('simulated test handler keyboard interrupt',?\)$",  # noqa: LN001
         ),
         (
             logging.INFO,
@@ -913,9 +903,7 @@ def test_unhandled_exception_in_request_handler(
     expected_log_entries = (
         (
             logging.ERROR,
-            '^Unhandled error while processing an incoming connection '
-            'SillyMistake'
-            r"\('simulated unhandled exception 💣 in test handler',?\)$",
+            r"^Unhandled error while processing an incoming connection SillyMistake\('simulated unhandled exception 💣 in test handler',?\)$",  # noqa: LN001
         ),
         (
             logging.INFO,
@@ -997,8 +985,7 @@ def test_remains_alive_post_unhandled_exception(
     expected_log_entries = (
         (
             logging.ERROR,
-            '^Unhandled error while processing an incoming connection '
-            r'ScaryCrash\(666,?\)$',
+            r'^Unhandled error while processing an incoming connection ScaryCrash\(666,?\)$',  # noqa: LN001
         ),
         (
             logging.INFO,

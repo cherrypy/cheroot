@@ -101,6 +101,7 @@ ignore = [
   "PLR6104",  # non-augmented-assignment  # FIXME
   "PLR6301",  # no-self-use  # FIXME / noqa
 
+  "PLW0717",  # too-many-statements-in-try-clause  # FIXME
   "PLW1514",  # unspecified-encoding  # FIXME
 
   "PTH100",  # os-path-abspath  # FIXME
@@ -115,6 +116,7 @@ ignore = [
   "PYI024",  # collections-named-tuple  # FIXME
 
   "RUF005",  # collection-literal-concatenation  # FIXME
+  "RUF067",  # non-empty-init-module  # FIXME
   "RUF012",  # mutable-class-default  # FIXME
   "RUF043",  # pytest-raises-ambiguous-pattern  # FIXME
   "RUF048",  # map-int-version-parsing  # FIXME
@@ -215,6 +217,7 @@ testing = [
   "S101",  # Allow use of `assert` in test files
   "S404",  # Allow importing 'subprocess' module to testing call external tools needed by these hooks
   "S603",  # subprocess-without-shell-equals-true
+  "S607",  # start-process-with-partial-path  # FIXME
   "SLF001",  # Private member accessed
 ]
 

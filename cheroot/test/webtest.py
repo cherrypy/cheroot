@@ -120,7 +120,7 @@ class WebCase(unittest.TestCase):
 
     @property
     def _Conn(self):
-        """Return HTTPConnection or HTTPSConnection based on self.scheme.
+        """HTTPConnection or HTTPSConnection based on self.scheme.
 
         * from :py:mod:`python:http.client`.
         """
@@ -305,7 +305,7 @@ class WebCase(unittest.TestCase):
             sys.stdout.flush()
 
     @property
-    def status_code(self):  # noqa: D401; irrelevant for properties
+    def status_code(self):
         """Integer HTTP status code."""
         return int(self.status[:3])
 
