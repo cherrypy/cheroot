@@ -4,23 +4,23 @@
 #
 #    pip-compile --allow-unsafe --output-file=dependencies/tox-pypy311-pp311-linux-aarch64.txt --strip-extras dependencies/tox-pypy311-pp311-linux-aarch64.in pyproject.toml
 #
-autocommand==2.2.2
-    # via jaraco-text
+annotated-doc==0.0.4
+    # via typer
 backports-tarfile==1.2.0
     # via jaraco-context
-certifi==2025.11.12
+certifi==2026.6.17
     # via requests
-chardet==5.2.0
+chardet==7.4.3
     # via requests
-charset-normalizer==3.4.4
+charset-normalizer==3.4.7
     # via requests
 colorama==0.4.6
     # via pytest-watch
-coverage==7.13.0
+coverage==7.14.2
     # via
     #   -r dependencies/tox-pypy311-pp311-linux-aarch64.in
     #   pytest-cov
-cryptography==46.0.3
+cryptography==49.0.0
     # via
     #   pyopenssl
     #   trustme
@@ -28,33 +28,39 @@ docopt==0.6.2
     # via pytest-watch
 execnet==2.1.2
     # via pytest-xdist
-idna==3.11
+idna==3.18
     # via
     #   requests
     #   trustme
 iniconfig==2.3.0
     # via pytest
-jaraco-context==6.0.1
+jaraco-collections==5.2.1
+    # via tempora
+jaraco-context==6.1.2
     # via
     #   -r dependencies/tox-pypy311-pp311-linux-aarch64.in
     #   jaraco-text
-jaraco-functools==4.3.0
+    #   tempora
+jaraco-functools==4.5.0
     # via
     #   cheroot (pyproject.toml)
     #   jaraco-text
     #   tempora
-jaraco-text==4.0.0
-    # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
-markdown-it-py==4.0.0
+jaraco-text==4.2.0
+    # via
+    #   -r dependencies/tox-pypy311-pp311-linux-aarch64.in
+    #   jaraco-collections
+markdown-it-py==4.2.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
-more-itertools==10.8.0
+more-itertools==11.1.0
     # via
     #   cheroot (pyproject.toml)
     #   jaraco-functools
     #   jaraco-text
-packaging==25.0
+    #   tempora
+packaging==26.2
     # via
     #   pytest
     #   pytest-rerunfailures
@@ -68,15 +74,15 @@ pprintpp==0.4.0
     # via pytest-clarity
 py==1.11.0
     # via pypytools
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   pytest
     #   rich
-pyopenssl==25.3.0
+pyopenssl==26.3.0
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
 pypytools==0.6.2
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
-pytest==9.0.2
+pytest==9.1.1
     # via
     #   -r dependencies/tox-pypy311-pp311-linux-aarch64.in
     #   pytest-clarity
@@ -88,11 +94,11 @@ pytest==9.0.2
     #   pytest-xdist
 pytest-clarity==1.0.1
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
-pytest-cov==7.0.0
+pytest-cov==7.1.0
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
 pytest-mock==3.15.1
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
-pytest-rerunfailures==16.1
+pytest-rerunfailures==16.3
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
 pytest-sugar==1.1.1
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
@@ -102,7 +108,7 @@ pytest-xdist==3.8.0
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
 python-dateutil==2.9.0.post0
     # via tempora
-requests==2.32.5
+requests==2.34.2
     # via
     #   -r dependencies/tox-pypy311-pp311-linux-aarch64.in
     #   requests-toolbelt
@@ -111,19 +117,27 @@ requests-toolbelt==1.0.0
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
 requests-unixsocket==0.4.1
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
-rich==14.2.0
-    # via pytest-clarity
+rich==15.0.0
+    # via
+    #   pytest-clarity
+    #   typer
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via python-dateutil
-tempora==5.8.1
+tempora==5.9.0
     # via portend
-termcolor==3.2.0
+termcolor==3.3.0
     # via pytest-sugar
 trustme==1.2.1
     # via -r dependencies/tox-pypy311-pp311-linux-aarch64.in
+typer==0.26.7
+    # via typer-slim
+typer-slim==0.24.0
+    # via jaraco-text
 typing-extensions==4.15.0
     # via pyopenssl
-urllib3==2.6.2
+urllib3==2.7.0
     # via requests
 watchdog==6.0.0
     # via pytest-watch
