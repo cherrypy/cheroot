@@ -130,6 +130,7 @@ def test_stop_interrupts_serve():
 
 def test_unservicable_conn_logs_unexpected_response_errors(monkeypatch):
     """Check that unexpected 503 response errors are logged."""
+
     class Conn:
         linger = False
         close_calls = 0
