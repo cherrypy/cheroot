@@ -130,22 +130,17 @@ def test_stop_interrupts_serve():
 
 def test_unservicable_conn_logs_unexpected_response_errors(monkeypatch):
     """Check that unexpected 503 response errors are logged."""
-
-    class Conn:
-        linger = False
-        close_calls = 0
-
-        def close(self):
-            self.close_calls += 1
-            httpserver.ready = False
-
     httpserver = HTTPServer(
         bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
         gateway=Gateway,
     )
     test_exception = RuntimeError('unexpected 503 response error')
-    conn = Conn()
+    close_calls = []
     log_entries = []
+
+    def close_conn():
+        close_calls.append(None)
+        httpserver.ready = False
 
     def simple_response(_request, _status):
         raise test_exception
@@ -153,6 +148,7 @@ def test_unservicable_conn_logs_unexpected_response_errors(monkeypatch):
     def log_error(*args, **kwargs):
         log_entries.append((args, kwargs))
 
+    conn = types.SimpleNamespace(linger=False, close=close_conn)
     httpserver.error_log = log_error
     httpserver.ready = True
     httpserver._unservicable_conns.put(conn)
@@ -167,7 +163,7 @@ def test_unservicable_conn_logs_unexpected_response_errors(monkeypatch):
         ((repr(test_exception),), {'level': logging.ERROR, 'traceback': True}),
     ]
     assert conn.linger is True
-    assert conn.close_calls == 1
+    assert close_calls == [None]
 
 
 @pytest.mark.parametrize(
