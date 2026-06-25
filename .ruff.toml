@@ -219,7 +219,6 @@ testing = [
   "ARG004",  # unused-static-method-argument (hit in WSGI test apps)
   "PLC2701",  # Allow importing internal files needed for testing
   # "PLR6301",  # Allow 'self' parameter in method definitions (required for test stubs)
-  "PLW0717",  # too-many-statements-in-try-clause  # FIXME
   "S101",  # Allow use of `assert` in test files
   "S404",  # Allow importing 'subprocess' module to testing call external tools needed by these hooks
   "S603",  # subprocess-without-shell-equals-true
