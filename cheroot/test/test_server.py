@@ -1,5 +1,6 @@
 """Tests for the HTTP server."""
 
+import logging
 import os
 import pathlib
 import queue
@@ -125,6 +126,47 @@ def test_stop_interrupts_serve():
 
     serve_thread.join(0.5)
     assert not serve_thread.is_alive()
+
+
+def test_unservicable_conn_logs_unexpected_response_errors(monkeypatch):
+    """Check that unexpected 503 response errors are logged."""
+    class Conn:
+        linger = False
+        close_calls = 0
+
+        def close(self):
+            self.close_calls += 1
+            httpserver.ready = False
+
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+    test_exception = RuntimeError('unexpected 503 response error')
+    conn = Conn()
+    log_entries = []
+
+    def simple_response(_request, _status):
+        raise test_exception
+
+    def log_error(*args, **kwargs):
+        log_entries.append((args, kwargs))
+
+    httpserver.error_log = log_error
+    httpserver.ready = True
+    httpserver._unservicable_conns.put(conn)
+    monkeypatch.setattr(
+        'cheroot.server.HTTPRequest.simple_response',
+        simple_response,
+    )
+
+    httpserver._serve_unservicable()
+
+    assert log_entries == [
+        ((repr(test_exception),), {'level': logging.ERROR, 'traceback': True}),
+    ]
+    assert conn.linger is True
+    assert conn.close_calls == 1
 
 
 @pytest.mark.parametrize(
