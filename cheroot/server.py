@@ -1306,7 +1306,12 @@ class HTTPConnection:
         """
         request_seen = False
         try:
-            req = self.RequestHandlerClass(self.server, self)
+            req = self.RequestHandlerClass(
+                self.server,
+                self,
+                proxy_mode=self.server.proxy_mode,
+                strict_mode=self.server.strict_mode,
+            )
             req.parse_request()
             if self.server.stats['Enabled']:
                 self.requests_seen += 1

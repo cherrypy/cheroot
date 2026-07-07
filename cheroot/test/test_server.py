@@ -20,7 +20,7 @@ import requests_unixsocket
 from pypytools.gc.custom import DefaultGc
 
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
-from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
+from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPConnection, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -125,6 +125,58 @@ def test_stop_interrupts_serve():
 
     serve_thread.join(0.5)
     assert not serve_thread.is_alive()
+
+
+def test_communicate_uses_server_proxy_and_strict_mode():
+    """Check that parsed requests inherit proxy/strict mode from the server."""
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+    request_init_args = []
+
+    class CapturingHTTPRequest:
+        """Capture request constructor args used during communication."""
+
+        def __init__(
+            self,
+            server,
+            conn,
+            proxy_mode=False,
+            strict_mode=True,
+        ):
+            request_init_args.append(
+                {
+                    'server': server,
+                    'conn': conn,
+                    'proxy_mode': proxy_mode,
+                    'strict_mode': strict_mode,
+                },
+            )
+            self.ready = False
+
+        def parse_request(self):
+            return None
+
+    conn = HTTPConnection(
+        httpserver,
+        types.SimpleNamespace(),
+        makefile=lambda _sock, _mode, _bufsize: types.SimpleNamespace(),
+    )
+    conn.RequestHandlerClass = CapturingHTTPRequest
+    httpserver.proxy_mode = True
+    httpserver.strict_mode = False
+
+    assert conn.communicate() is False
+
+    assert request_init_args == [
+        {
+            'server': httpserver,
+            'conn': conn,
+            'proxy_mode': True,
+            'strict_mode': False,
+        },
+    ]
 
 
 @pytest.mark.parametrize(
