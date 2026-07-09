@@ -1,0 +1,6 @@
+Started rejecting ``Content-Length`` request header values that are not
+valid ``1*DIGIT`` strings with a ``400 Bad Request`` response. Previously,
+values such as ``1_0`` (a digit-separating underscore) or ``+10`` (a leading
+sign) were silently accepted by :py:func:`int` and parsed as ``10``.
+
+-- by :user:`apoorvdarshan`
