@@ -1437,13 +1437,24 @@ def test_Content_Length_in(test_client):
     conn.close()
 
 
-def test_Content_Length_not_int(test_client):
-    """Test that malicious Content-Length header returns 400."""
+@pytest.mark.parametrize(
+    'content_length_value',
+    (
+        'not-an-integer',
+        # `int()` accepts these, but they are not valid `1*DIGIT` values
+        # per :rfc:`9110#section-8.6`, so they must be rejected (#738).
+        '1_0',  # a digit-separating underscore
+        '+10',  # a leading sign
+        '0x10',  # a hexadecimal literal
+    ),
+)
+def test_Content_Length_not_int(test_client, content_length_value):
+    """Test that a malformed Content-Length header returns 400."""
     status_line, _actual_headers, actual_resp_body = test_client.post(
         '/upload',
         headers=[
             ('Content-Type', 'text/plain'),
-            ('Content-Length', 'not-an-integer'),
+            ('Content-Length', content_length_value),
         ],
     )
     actual_status = int(status_line[:3])
