@@ -22,6 +22,9 @@ hardcoded
 hostname
 inclusivity
 intersphinx
+IPv
+IPv4
+IPv6
 iterable
 linter
 linters

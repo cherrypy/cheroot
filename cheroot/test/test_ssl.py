@@ -13,6 +13,7 @@ import sys
 import threading
 import time
 import traceback
+from types import SimpleNamespace
 
 import pytest
 
@@ -27,6 +28,9 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 
+from cheroot import (
+    errors,
+)
 from cheroot.connections import ConnectionManager
 from cheroot.ssl import Adapter, _ensure_peer_speaks_https
 
@@ -494,6 +498,8 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
                     'error(10054, '
                     "'An existing connection was forcibly closed "
                     "by the remote host'))",
+                    "('Connection aborted.', ConnectionResetError(10054, "
+                    "'An existing connection was forcibly closed by the remote host'))",
                 )
                 if IS_WINDOWS
                 else (
@@ -1154,3 +1160,209 @@ def test_prepare_socket_emits_deprecation_warning(
     assert sock.fileno() > 0
 
     sock.close()
+
+
+@pytest.fixture
+def conn_manager():
+    """Create a ConnectionManager with a minimal stub server."""
+    # Create the object without running the heavy __init__
+    mgr = ConnectionManager.__new__(ConnectionManager)
+
+    # Use SimpleNamespace to fake the server and its stats
+    mgr.server = SimpleNamespace(
+        stats={'Enabled': True, 'Socket Errors': 0},
+    )
+    return mgr
+
+
+@pytest.mark.parametrize(
+    ('err_code', 'should_ignore', 'stats_enabled', 'expect_error'),
+    (
+        (errors.socket_error_eintr[0], True, True, True),
+        (errors.socket_errors_nonblocking[0], True, True, True),
+        (errors.socket_errors_to_ignore[0], True, True, True),
+        (999, False, True, True),
+        (errors.socket_error_eintr[0], True, False, False),  # stats disabled
+    ),
+    ids=['eintr', 'nonblocking', 'to-ignore', 'unknown', 'stats-disabled'],
+)
+def test_is_ignorable_socket_error(
+    conn_manager,
+    err_code,
+    should_ignore,
+    stats_enabled,
+    expect_error,
+):
+    """_is_ignorable_socket_error correctly classifies errors and tracks them in stats."""
+    conn_manager.server.stats['Enabled'] = stats_enabled
+    exc = OSError(err_code)
+
+    result = conn_manager._is_ignorable_socket_error(exc)
+
+    assert result is should_ignore
+    assert conn_manager.server.stats['Socket Errors'] == expect_error
+
+
+@pytest.fixture
+def conn_manager_with_server(mocker):
+    """Create a ConnectionManager with a stub server."""
+    mgr = ConnectionManager.__new__(ConnectionManager)
+    mgr.server = SimpleNamespace(
+        stats={'Enabled': True, 'Accepts': 0, 'Socket Errors': 0},
+        ssl_adapter=None,
+        timeout=10,
+        ConnectionClass=lambda server, s, mf: SimpleNamespace(
+            server=server,
+            sock=s,
+            makefile=mf,
+            remote_addr=None,
+            remote_port=None,
+        ),
+        bind_addr=('127.0.0.1', 8080),
+        close=mocker.Mock(),
+    )
+    return mgr
+
+
+def _make_fake_socket(error):
+    def _accept():  # noqa: WPS430
+        raise error
+
+    return SimpleNamespace(accept=_accept)
+
+
+@pytest.mark.parametrize(
+    ('error', 'expected_exception'),
+    (
+        (socket.timeout(), None),
+        (OSError(errno.EAGAIN, 'Resource temporarily unavailable'), None),
+        # InterruptedError is an OSError subclass raised by Python for EINTR
+        (InterruptedError(errno.EINTR, 'Interrupted system call'), None),
+        (OSError(errno.EIO, 'Critical kernel error'), OSError),
+    ),
+    ids=['timeout', 'EAGAIN-ignored', 'EINTR-ignored', 'oserror-critical'],
+)
+def test_from_server_socket_transport_errors(
+    conn_manager_with_server,
+    error,
+    expected_exception,
+):
+    """Test errors raised during initial socket accept are handled correctly."""
+    fake_socket = _make_fake_socket(error)
+
+    if expected_exception:
+        with pytest.raises(
+            expected_exception,
+            match='Critical kernel error',
+        ):
+            conn_manager_with_server._from_server_socket(fake_socket)
+    else:
+        assert (
+            conn_manager_with_server._from_server_socket(fake_socket) is None
+        )
+
+
+def _make_connection(
+    conn_manager,
+    monkeypatch,
+    provided_addr=('1.2.3.4', 80),
+    sock_name=('127.0.0.1', 80),
+):
+    """Set up a fake listener and call _from_server_socket."""
+    if sys.platform != 'win32':
+        monkeypatch.setattr(
+            'fcntl.fcntl',
+            lambda fd, cmd, *args: 0,
+            raising=False,
+        )
+
+    conn_manager.ConnectionClass = lambda sock, addr, server: SimpleNamespace(
+        sock=sock,
+        server=server,
+    )
+    accepted_socket = SimpleNamespace(
+        fileno=lambda: 10,
+        setblocking=lambda x: None,
+        settimeout=lambda t: None,
+        setsockopt=lambda *a: None,
+        getsockname=lambda: sock_name,
+        close=lambda: None,
+    )
+    fake_listener = SimpleNamespace(
+        accept=lambda: (accepted_socket, provided_addr),
+    )
+    return conn_manager._from_server_socket(fake_listener)
+
+
+@pytest.mark.parametrize(
+    ('provided_addr', 'sock_name', 'expected_ip', 'expected_port'),
+    (
+        (('1.2.3.4', 80), ('127.0.0.1', 80), '1.2.3.4', 80),
+        (None, ('127.0.0.1', 80), '0.0.0.0', 0),
+        (None, ('::1', 80, 0, 0), '::', 0),
+    ),
+    ids=['explicit-addr', 'ipv4-fallback', 'ipv6-fallback'],
+)
+def test_from_server_socket_address_resolution(
+    conn_manager_with_server,
+    monkeypatch,
+    provided_addr,
+    sock_name,
+    expected_ip,
+    expected_port,
+):  # pylint: disable=too-many-positional-arguments
+    """Remote address is resolved correctly from accepted socket or fallback."""
+    conn = _make_connection(
+        conn_manager_with_server,
+        monkeypatch,
+        provided_addr,
+        sock_name,
+    )
+    assert conn is not None
+    assert conn.remote_addr == expected_ip
+    assert conn.remote_port == expected_port
+
+
+def _fatal_ssl_wrap(sock):
+    raise errors.FatalSSLAlert('Simulated handshake drop')
+
+
+def test_from_server_socket_ssl_failure(conn_manager_with_server, monkeypatch):
+    """A FatalSSLAlert during TLS wrap closes the connection and logs it."""
+    server = conn_manager_with_server.server
+    monkeypatch.setattr(
+        server,
+        'ssl_adapter',
+        SimpleNamespace(wrap=_fatal_ssl_wrap),
+    )
+
+    logged_messages = []
+    server.error_log = lambda msg, **kwargs: logged_messages.append(msg)
+
+    conn = _make_connection(conn_manager_with_server, monkeypatch)
+    assert conn is None
+    assert any('lost' in msg.lower() for msg in logged_messages)
+
+
+def test_connection_manager_close_logic(conn_manager_with_server, mocker):
+    """Verify close() shuts down client connections but not server."""
+    mgr = conn_manager_with_server
+
+    mock_conn_1 = mocker.Mock()
+    mock_conn_2 = mocker.Mock()
+
+    selector = mocker.Mock()
+    selector.connections = [
+        (None, mock_conn_1),
+        (None, mock_conn_2),
+        (None, mgr.server),
+    ]
+
+    mgr._selector = selector
+    mgr.close()
+
+    mock_conn_1.close.assert_called_once()
+    mock_conn_2.close.assert_called_once()
+    # Server is excluded from close() — only client connections are closed
+    mgr.server.close.assert_not_called()
+    selector.close.assert_called_once()
