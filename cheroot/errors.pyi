@@ -1,5 +1,3 @@
-import typing as _t
-
 class MaxSizeExceeded(Exception): ...
 class NoSSLError(Exception): ...
 class FatalSSLAlert(Exception): ...
@@ -10,4 +8,7 @@ socket_error_eintr: list[int]
 socket_errors_to_ignore: list[int]
 socket_errors_nonblocking: list[int]
 acceptable_sock_shutdown_error_codes: set[int]
-acceptable_sock_shutdown_exceptions: tuple[_t.Type[Exception], ...]
+acceptable_sock_shutdown_exceptions: tuple[
+    type[BrokenPipeError],
+    type[ConnectionResetError],
+]
