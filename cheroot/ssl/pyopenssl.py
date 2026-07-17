@@ -149,6 +149,14 @@ class SSLFileobjectMixin:
             size,
         )
 
+    def read(self, *args, **kwargs):
+        """Read from the wrapped socket."""
+        return self._safe_call(
+            True,
+            super(SSLFileobjectMixin, self).read,
+            *args, **kwargs
+        )
+
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
         return self._safe_call(
