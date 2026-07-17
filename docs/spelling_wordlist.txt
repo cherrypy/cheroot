@@ -5,6 +5,7 @@ backports
 bugfixes
 builtin
 b'xb
+buf
 compat
 config
 conftest
@@ -22,6 +23,7 @@ hardcoded
 hostname
 inclusivity
 intersphinx
+io
 iterable
 linter
 linters
@@ -48,6 +50,7 @@ preconfigure
 py
 pytest
 pythonic
+RawIOBase
 readonly
 rebase
 Refactor
