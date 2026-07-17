@@ -11,7 +11,6 @@ from http.client import responses as _http_responses
 
 from . import errors
 from ._compat import IS_WINDOWS
-from .makefile import MakeFile
 
 
 try:
@@ -304,7 +303,6 @@ class ConnectionManager:
             if hasattr(s, 'settimeout'):
                 s.settimeout(self.server.timeout)
 
-            mf = MakeFile
             ssl_env = {}
             # if ssl cert and key are set, we try to be a secure HTTP server
             if self.server.ssl_adapter is not None:
@@ -327,12 +325,12 @@ class ConnectionManager:
                     )
                     self._send_bad_request_plain_http_error(s)
                     return None
-                mf = self.server.ssl_adapter.makefile
+
                 # Re-apply our timeout since we may have a new socket object
                 if hasattr(s, 'settimeout'):
                     s.settimeout(self.server.timeout)
 
-            conn = self.server.ConnectionClass(self.server, s, mf)
+            conn = self.server.ConnectionClass(self.server, s)
 
             if not isinstance(self.server.bind_addr, (str, bytes)):
                 # optional values

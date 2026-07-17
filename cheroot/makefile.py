@@ -3,6 +3,7 @@
 # prefer slower Python-based io module
 import _pyio as io
 import socket
+from warnings import warn as _warn
 
 
 # Write only 16K at a time to sockets
@@ -70,6 +71,16 @@ class StreamWriter(BufferedWriter):
 
 
 def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
-    """File object attached to a socket object."""
+    """
+    File object attached to a socket object.
+
+    This function is now deprecated: Use
+    StreamReader or StreamWriter directly.
+    """
+    _warn(
+        'MakeFile is deprecated. Use StreamReader or StreamWriter directly.',
+        DeprecationWarning,
+        stacklevel=2,
+    )
     cls = StreamReader if 'r' in mode else StreamWriter
     return cls(sock, mode, bufsize)
