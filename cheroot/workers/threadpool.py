@@ -299,8 +299,8 @@ class ThreadPool:
         self.grow(self.min)
 
     @property
-    def idle(self):  # noqa: D401; irrelevant for properties
-        """Number of worker threads which are idle. Read-only."""  # noqa: D401
+    def idle(self):
+        """Number of worker threads which are idle. Read-only."""
         idles = len([t for t in self._threads if t.conn is None])
         return max(idles - len(self._pending_shutdowns), 0)
 
@@ -432,5 +432,5 @@ class ThreadPool:
 
     @property
     def qsize(self):
-        """Return the queue size."""
+        """The queue size."""
         return self._queue.qsize()

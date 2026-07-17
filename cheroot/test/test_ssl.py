@@ -480,51 +480,75 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
             expected_substrings += (
                 (
                     "bad handshake: SysCallError(10054, 'WSAECONNRESET')",
-                    "('Connection aborted.', "
-                    'OSError("(10054, \'WSAECONNRESET\')"))',
-                    "('Connection aborted.', "
-                    'OSError("(10054, \'WSAECONNRESET\')",))',
-                    "('Connection aborted.', "
-                    'error("(10054, \'WSAECONNRESET\')",))',
-                    "('Connection aborted.', "
-                    'ConnectionResetError(10054, '
-                    "'An existing connection was forcibly closed "
-                    "by the remote host', None, 10054, None))",
-                    "('Connection aborted.', "
-                    'error(10054, '
-                    "'An existing connection was forcibly closed "
-                    "by the remote host'))",
+                    (
+                        "('Connection aborted.', "
+                        'OSError("(10054, \'WSAECONNRESET\')"))'
+                    ),
+                    (
+                        "('Connection aborted.', "
+                        'OSError("(10054, \'WSAECONNRESET\')",))'
+                    ),
+                    (
+                        "('Connection aborted.', "
+                        'error("(10054, \'WSAECONNRESET\')",))'
+                    ),
+                    (
+                        "('Connection aborted.', "
+                        'ConnectionResetError(10054, '
+                        "'An existing connection was forcibly closed "
+                        "by the remote host', None, 10054, None))"
+                    ),
+                    (
+                        "('Connection aborted.', "
+                        'error(10054, '
+                        "'An existing connection was forcibly closed "
+                        "by the remote host'))"
+                    ),
                 )
                 if IS_WINDOWS
                 else (
-                    "('Connection aborted.', "
-                    'OSError("(104, \'ECONNRESET\')"))',
-                    "('Connection aborted.', "
-                    'OSError("(104, \'ECONNRESET\')",))',
+                    (
+                        "('Connection aborted.', "
+                        'OSError("(104, \'ECONNRESET\')"))'
+                    ),
+                    (
+                        "('Connection aborted.', "
+                        'OSError("(104, \'ECONNRESET\')",))'
+                    ),
                     "('Connection aborted.', error(\"(104, 'ECONNRESET')\",))",
-                    "('Connection aborted.', "
-                    "ConnectionResetError(104, 'Connection reset by peer'))",
-                    "('Connection aborted.', "
-                    "error(104, 'Connection reset by peer'))",
+                    (
+                        "('Connection aborted.', "
+                        "ConnectionResetError(104, 'Connection reset by peer'))"
+                    ),
+                    (
+                        "('Connection aborted.', "
+                        "error(104, 'Connection reset by peer'))"
+                    ),
                 )
                 if (IS_GITHUB_ACTIONS_WORKFLOW and IS_LINUX)
                 else (
-                    "('Connection aborted.', "
-                    "BrokenPipeError(32, 'Broken pipe'))",
+                    (
+                        "('Connection aborted.', "
+                        "BrokenPipeError(32, 'Broken pipe'))"
+                    ),
                 )
             )
 
         if PY310_PLUS:
             # FIXME: Figure out what's happening and correct the problem
             expected_substrings += (
-                'SSLError(SSLEOFError(8, '
-                "'EOF occurred in violation of protocol (_ssl.c:",
+                (
+                    'SSLError(SSLEOFError(8, '
+                    "'EOF occurred in violation of protocol (_ssl.c:"
+                ),
             )
         if IS_GITHUB_ACTIONS_WORKFLOW and IS_WINDOWS and PY310_PLUS:
             expected_substrings += (
-                "('Connection aborted.', "
-                'RemoteDisconnected('
-                "'Remote end closed connection without response'))",
+                (
+                    "('Connection aborted.', "
+                    'RemoteDisconnected('
+                    "'Remote end closed connection without response'))"
+                ),
             )
 
         assert any(e in err_text for e in expected_substrings)
@@ -662,8 +686,10 @@ def test_ssl_env(  # noqa: C901  # FIXME
             pytest.xfail(
                 '\n'.join(
                     (
-                        'Sometimes this test fails due to '
-                        'a socket.socket ResourceWarning:',
+                        (
+                            'Sometimes this test fails due to '
+                            'a socket.socket ResourceWarning:'
+                        ),
                         msg,
                     ),
                 ),

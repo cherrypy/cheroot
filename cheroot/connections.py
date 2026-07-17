@@ -80,7 +80,7 @@ class _ThreadsafeSelector:
 
     @property
     def connections(self):
-        """Retrieve connections registered with the selector."""
+        """Connections registered with the selector."""
         with self._lock:
             mapping = self._selector.get_map() or {}
             for _, (_, sock_fd, _, conn) in mapping.items():
@@ -386,7 +386,7 @@ class ConnectionManager:
 
     @property
     def _num_connections(self):
-        """Return the current number of connections.
+        """The current number of connections.
 
         Includes all connections registered with the selector,
         minus one for the server socket, which is always registered
