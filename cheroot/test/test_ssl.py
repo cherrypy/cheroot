@@ -486,10 +486,11 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
                     'OSError("(10054, \'WSAECONNRESET\')",))',
                     "('Connection aborted.', "
                     'error("(10054, \'WSAECONNRESET\')",))',
+                    # Truncated string matches both 2-arg (Python 3.14+/OpenSSL 3.4+)
+                    # and 5-arg forms. See https://github.com/cherrypy/cheroot/pull/838
                     "('Connection aborted.', "
-                    'ConnectionResetError(10054, '
-                    "'An existing connection was forcibly closed "
-                    "by the remote host', None, 10054, None))",
+                    "ConnectionResetError(10054, 'An existing connection "
+                    "was forcibly closed by the remote host'",
                     "('Connection aborted.', "
                     'error(10054, '
                     "'An existing connection was forcibly closed "
