@@ -6,7 +6,8 @@ Adding change notes with your PRs
 It is very important to maintain a log for news of how
 updating to the new version of the software will affect
 end-users. This is why we enforce collection of the change
-fragment files in pull requests as per `Towncrier philosophy`_.
+fragment files in pull requests as per `Towncrier philosophy
+<https://towncrier.readthedocs.io/en/stable/#philosophy>`_.
 
 The idea is that when somebody makes a change, they must record
 the bits that would affect end-users only including information
@@ -111,6 +112,3 @@ File :file:`docs/changelog-fragments.d/359.bugfix.rst`:
 
    See :file:`towncrier.toml` for all available categories
    (``tool.towncrier.type``).
-
-.. _Towncrier philosophy:
-   https://towncrier.readthedocs.io/en/stable/#philosophy

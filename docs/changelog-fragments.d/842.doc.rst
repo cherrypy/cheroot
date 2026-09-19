@@ -1,0 +1,5 @@
+Converted the contributing documentation (``.github/CONTRIBUTING.rst`` and
+``docs/contributing/guidelines.rst``) to Markdown, fixed a self-referential
+link in the "Also" section that pointed the rendered guidelines page back to
+itself, and dropped an unhelpful pointer to the project's root README
+-- by :user:`julianz-`.
