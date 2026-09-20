@@ -1,5 +1,7 @@
-Fixed the server stopping to answer overloaded connections with
-``503 Service Unavailable`` after a failure to send one of these responses.
-The failure is now logged and the following connections are still answered.
+Fixed the server's ability to send ``503 Service Unavailable`` whenever the
+server becomes too busy. Failures to send caused the handler for this message
+to crash, leaving new connections during busy times unanswered. Any failure in
+sending this message is now logged, and subsequent connections continue to be
+answered.
 
 -- by :user:`Tatamis`, :user:`avinashkamat48` and :user:`andrewkernel`
