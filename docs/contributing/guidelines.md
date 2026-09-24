@@ -132,6 +132,5 @@ After that, you can open [http://localhost:8000/](http://localhost:8000/) in you
 
 Read more about [Sphinx](https://www.sphinx-doc.org).
 
-```{eval-rst}
-.. include:: ../changelog-fragments.d/README.rst
+```{include} ../changelog-fragments.d/README.md
 ```
