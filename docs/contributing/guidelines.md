@@ -132,5 +132,7 @@ After that, you can open [http://localhost:8000/](http://localhost:8000/) in you
 
 Read more about [Sphinx](https://www.sphinx-doc.org).
 
+(adding change notes with your prs)=
+
 ```{include} ../changelog-fragments.d/README.md
 ```

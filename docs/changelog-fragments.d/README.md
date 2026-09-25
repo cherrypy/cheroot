@@ -1,5 +1,3 @@
-(adding change notes with your prs)=
-
 ## Adding change notes with your PRs
 
 It is very important to maintain a log for news of how
@@ -78,24 +76,24 @@ changes accompanying the relevant code changes.
 
 ## Examples for adding change log entries to your Pull Requests
 
-File {file}`docs/changelog-fragments.d/77.doc.rst`:
+File `docs/changelog-fragments.d/77.doc.rst`:
 
 ```rst
 Fixed a WSGI documentation example to support Python 3
 -- by :user:`jaymcgrath`.
 ```
 
-File {file}`docs/changelog-fragments.d/384.feature.rst` (could be symlinked
-to {file}`docs/changelog-fragments.d/384.doc.rst` so it shows up in several
-change log sections, and to {file}`docs/changelog-fragments.d/385.feature.rst`
-and {file}`docs/changelog-fragments.d/406.feature.rst` referencing several
+File `docs/changelog-fragments.d/384.feature.rst` (could be symlinked
+to `docs/changelog-fragments.d/384.doc.rst` so it shows up in several
+change log sections, and to `docs/changelog-fragments.d/385.feature.rst`
+and `docs/changelog-fragments.d/406.feature.rst` referencing several
 pull requests at once):
 
 ```rst
 Exposed type stubs with annotations for public API -- by :user:`kasium`.
 ```
 
-File {file}`docs/changelog-fragments.d/359.bugfix.rst`:
+File `docs/changelog-fragments.d/359.bugfix.rst`:
 
 ```rst
 Fixed a regression from :pr:`199` that made the worker threads exit on
@@ -103,7 +101,6 @@ invalid connection attempts and could make the whole server unresponsive
 once there was no workers left -- by :user:`cameronbrunner`.
 ```
 
-```{tip}
-See {file}`towncrier.toml` for all available categories
-(`tool.towncrier.type`).
-```
+> [!TIP]
+> See `towncrier.toml` for all available categories
+> (`tool.towncrier.type`).
