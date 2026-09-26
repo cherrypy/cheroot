@@ -6,7 +6,7 @@ jaraco.packaging >= 9  # first version to load meta through PEP 517 interface
 sphinx-tabs >= 1.1.0
 
 furo
-myst-parser[linkify]>=5.1.0  # Markdown documents support w/ in-text link detector; >=5.1.0 for the `alert` extension
+myst-parser [linkify] >= 5.1.0  # Markdown documents support w/ in-text link detector; >=5.1.0 for the `alert` extension
 sphinx-issues  # Sphinx roles providing support for linking GitHub
 sphinxcontrib-apidoc >= 0.3.0
 sphinxcontrib-towncrier
