@@ -3,7 +3,7 @@
 It is very important to maintain a log for news of how
 updating to the new version of the software will affect
 end-users. This is why we enforce collection of the change
-fragment files in pull requests as per [Towncrier philosophy](https://towncrier.readthedocs.io/en/stable/#philosophy).
+fragment files in pull requests as per [Towncrier philosophy].
 
 The idea is that when somebody makes a change, they must record
 the bits that would affect end-users only including information
@@ -104,3 +104,5 @@ once there was no workers left -- by :user:`cameronbrunner`.
 > [!TIP]
 > See `towncrier.toml` for all available categories
 > (`tool.towncrier.type`).
+
+[Towncrier philosophy]: https://towncrier.rtfd.io/en/stable/#philosophy
