@@ -19,6 +19,17 @@ runs:
 
       FILE_APPEND_MODE = 'a'
 
+      # NOTE: Bump this whenever the cache lineage needs to be
+      # NOTE: abandoned deliberately -- e.g. a corrupted/stale entry
+      # NOTE: kept getting restored and re-saved indefinitely (as
+      # NOTE: happened with the Windows pip-tools.yml pypy-3.11 job's
+      # NOTE: IncompleteRead failures, caused by a truncated cached
+      # NOTE: copy of the PyPI index page for `pip-tools`). Bumping
+      # NOTE: this changes the key, so a fresh cache gets built; the
+      # NOTE: old, orphaned entries are cleaned up automatically by
+      # NOTE: GitHub's cache eviction policy.
+      cache_salt = 'v1'
+
       files_derived_hash = '${{
           hashFiles(
             'tox.ini',
@@ -28,6 +39,7 @@ runs:
             'dependencies/**'
           )
       }}'
+      files_derived_hash = f'{cache_salt}-{files_derived_hash}'
 
       print(f'Computed file-derived hash is {files_derived_hash}.')
 

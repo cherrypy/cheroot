@@ -1,0 +1,7 @@
+Added a dependency-cache key salt used by CI, abandoning a stale
+cache on the ``pypy-3.11-v7.3.23 @ windows-2022`` job in
+``pip-tools.yml`` that kept restoring a truncated, corrupted copy of
+the ``pip-tools`` PyPI index page, causing its ``pip-tools`` install
+to fail with an ``IncompleteRead`` error.
+
+-- by :user:`julianz-`
