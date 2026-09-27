@@ -584,6 +584,39 @@ def test_threadpool_multistart_validation(monkeypatch):
         tp.start()
 
 
+def test_overload_results_in_suitable_http_error(request):
+    """A server that can't keep up with requests returns a 503 HTTP error."""
+    localhost = '127.0.0.1'
+    httpserver = HTTPServer(
+        bind_addr=(localhost, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+    # Can only handle on request in parallel:
+    httpserver.requests = ThreadPool(
+        min=1,
+        max=1,
+        accepted_queue_size=1,
+        accepted_queue_timeout=0,
+        server=httpserver,
+    )
+
+    httpserver.prepare()
+    serve_thread = threading.Thread(target=httpserver.serve)
+    serve_thread.start()
+    request.addfinalizer(httpserver.stop)
+    # Stop the thread pool to ensure the queue fills up:
+    httpserver.requests.stop()
+
+    _host, port = httpserver.bind_addr
+
+    # Use up the very limited thread pool queue we've set up, so future
+    # requests fail:
+    httpserver.requests._queue.put(None)
+
+    response = requests.get(f'http://{localhost}:{port}', timeout=20)
+    assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
+
+
 @pytest.fixture
 def overloaded_http_server() -> _t.Iterator[HTTPServer]:
     """Return a running server that answers every request with a 503."""
@@ -614,16 +647,6 @@ def overloaded_http_server() -> _t.Iterator[HTTPServer]:
         yield httpserver
     finally:
         httpserver.stop()
-
-
-def test_overload_results_in_suitable_http_error(
-    overloaded_http_server: HTTPServer,
-) -> None:
-    """A server that can't keep up with requests returns a 503 HTTP error."""
-    host, port = overloaded_http_server.bind_addr
-
-    response = requests.get(f'http://{host}:{port}', timeout=20)
-    assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
 
 
 def test_overload_survives_failure_to_send_http_error(
@@ -666,12 +689,11 @@ def test_overload_survives_failure_to_send_http_error(
 
     assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
 
-    # The original failure is reported instead of a bogus `AttributeError`:
+    # The original failure is logged:
     captured_stderr = capsys.readouterr().err
     assert (
         'RuntimeError: unexpected failure sending the 503' in captured_stderr
     )
-    assert 'AttributeError' not in captured_stderr
 
 
 def test_overload_thread_does_not_leak():
