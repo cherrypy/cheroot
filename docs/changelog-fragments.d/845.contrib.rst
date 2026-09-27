@@ -1,0 +1,6 @@
+Pinned the PyPy 3.11 CI jobs to ``7.3.23`` instead of tracking latest:
+the newly released PyPy 8.0.0 has a CFFI buffer-export bug that breaks
+reading TLS streams to EOF and crashes cheroot's SSL adapter tests.
+Already fixed upstream, but not yet in a released PyPy version.
+
+-- by :user:`julianz-`
