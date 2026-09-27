@@ -61,7 +61,13 @@ jobs:
         - 3.14
         - 3.13
         - 3.8
-        - pypy-3.11
+        # NOTE: Pinned to 7.3.23 rather than tracking latest: 8.0.0 has a
+        # NOTE: CFFI buffer-export bug breaking reads of TLS streams to
+        # NOTE: EOF. Ref: https://github.com/pypy/pypy/issues/5589
+        # NOTE: Already fixed upstream (pypy/pypy@66c739f5370), but not
+        # NOTE: yet in a released version as of 2026-09-26. Re-track
+        # NOTE: latest once a release includes the fix.
+        - pypy-3.11-v7.3.23
         - 3.12
         - 3.11
         - >-
