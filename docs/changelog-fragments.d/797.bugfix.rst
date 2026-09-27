@@ -4,4 +4,4 @@ to crash, leaving new connections during busy times unanswered. Any failure in
 sending this message is now logged, and subsequent connections continue to be
 answered.
 
--- by :user:`Tatamis`, :user:`avinashkamat48` and :user:`andrewkernel`
+-- by :user:`cristianchiriac`, :user:`avinashkamat48` and :user:`andrewkernel`
