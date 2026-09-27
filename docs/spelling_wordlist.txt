@@ -5,6 +5,7 @@ backend
 backports
 bugfixes
 builtin
+changelog
 b'xb
 compat
 config
