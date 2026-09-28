@@ -708,6 +708,42 @@ def test_ssl_env(  # noqa: C901  # FIXME
     )
 
 
+def test_pyopenssl_adapter_environ_server_dn(
+    tls_certificate_chain_pem_path,
+    tls_certificate_private_key_pem_path,
+):
+    """Check that the server cert issuer/subject DNs are exposed intact."""
+    tls_adapter_cls = get_ssl_adapter_class(name='pyopenssl')
+    tls_adapter = tls_adapter_cls(
+        certificate=tls_certificate_chain_pem_path,
+        private_key=tls_certificate_private_key_pem_path,
+    )
+    environ = tls_adapter.get_environ()
+
+    assert 'SSL_SERVER_M_VERSION' in environ
+    assert 'SSL_SERVER_M_SERIAL' in environ
+
+    for prefix in ('I', 'S'):
+        dn_key = f'SSL_SERVER_{prefix}_DN'
+        assert dn_key in environ
+        dnstr = environ[dn_key]
+        assert dnstr.startswith('/')
+
+        component_keys = [
+            key for key in environ if key.startswith(dn_key + '_')
+        ]
+        assert component_keys
+
+        # Every individually-exposed component should also appear as a
+        # `/key=value` substring of the combined DN string (order of the
+        # components in the dict isn't part of the contract).
+        for key in component_keys:
+            attr_name = key[len(dn_key) + 1 :]
+            attr_value = environ[key]
+            component = f'/{attr_name}={attr_value}'
+            assert component in dnstr
+
+
 @pytest.mark.parametrize(
     'ip_addr',
     (
@@ -1015,20 +1051,29 @@ def test_builtin_adapter_with_false_key_password(
 
 
 @pytest.mark.parametrize(
-    ('adapter_type', 'false_password', 'expected_warn'),
+    ('adapter_type', 'false_password', 'expected_exception'),
     (
         (
             'pyopenssl',
             '837550fd-bcb9-4320-87e6-09de6456b09',
-            contextlib.nullcontext(),
+            pytest.raises(
+                ValueError,
+                match='Incorrect password|Could not deserialize key data',
+            ),
         ),
-        ('pyopenssl', 555555, contextlib.nullcontext()),
+        (
+            # Non-str/bytes passwords can't be used to decrypt a key, so
+            # this is treated the same as not providing one at all.
+            'pyopenssl',
+            555555,
+            pytest.raises(TypeError, match='Password was not given'),
+        ),
         (
             'pyopenssl',
             '@' * 2048,
-            pytest.warns(
-                UserWarning,
-                match=r'^User-provided password is 2048 bytes.+',
+            pytest.raises(
+                ValueError,
+                match='Incorrect password|Could not deserialize key data',
             ),
         ),
     ),
@@ -1039,17 +1084,11 @@ def test_openssl_adapter_with_false_key_password(
     tls_certificate_passwd_private_key_pem_path,
     adapter_type,
     false_password,
-    expected_warn,
+    expected_exception,
 ):
     """Check that server initializer fails when wrong private key password given."""
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-    with expected_warn, pytest.raises(
-        OpenSSL.SSL.Error,
-        # Decode error has happened very rarely with Python 3.9 in MacOS.
-        # Might be caused by a random issue in file handling leading
-        # to interpretation of garbage characters in certificates.
-        match=r'.+\'(bad decrypt|decode error)\'.+',
-    ):
+    with expected_exception:
         tls_adapter_cls(
             certificate=tls_certificate_chain_pem_path,
             private_key=tls_certificate_passwd_private_key_pem_path,
@@ -1080,51 +1119,6 @@ def test_ssl_adapter_with_none_key_password(
     )
 
     assert tls_adapter.context is not None
-
-
-class PasswordCallbackHelper:
-    """Collects helper methods for mocking password callback."""
-
-    def __init__(self, adapter: Adapter):
-        """Initialize helper variables."""
-        self.counter = 0
-        self.callback = adapter._password_callback
-
-    def get_password(self):
-        """Provide correct password on first call, wrong on other calls."""
-        self.counter += 1
-        return get_key_password() * self.counter
-
-    def verify_twice_callback(self, max_length, _verify_twice, userdata):
-        """Establish a mock callback for testing two-factor password prompt."""
-        return self.callback(self, max_length, True, userdata)
-
-
-@pytest.mark.parametrize('adapter_type', ('pyopenssl',))
-def test_openssl_adapter_verify_twice_callback(
-    tls_certificate_chain_pem_path,
-    tls_certificate_passwd_private_key_pem_path,
-    adapter_type,
-    mocker,
-):
-    """Check that two-time password verification fails with correct error."""
-    tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
-    helper = PasswordCallbackHelper(tls_adapter_cls)
-
-    mocker.patch(
-        'cheroot.ssl.pyopenssl.pyOpenSSLAdapter._password_callback',
-        side_effect=helper.verify_twice_callback,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match='Verification failed: entered passwords do not match',
-    ):
-        tls_adapter_cls(
-            certificate=tls_certificate_chain_pem_path,
-            private_key=tls_certificate_passwd_private_key_pem_path,
-            private_key_password=helper.get_password,
-        )
 
 
 @pytest.fixture
