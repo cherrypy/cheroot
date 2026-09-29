@@ -1,0 +1,4 @@
+Socket I/O is now resilient to race conditions happening during connection teardown
+due to sockets dying independently or being closed externally.
+
+-- by :user:`julianz-`
