@@ -1015,7 +1015,7 @@ def test_openssl_adapter_with_false_key_password(
     false_password,
     expected_warn,
 ):
-    """Check that server init fails when wrong private key password given."""
+    """Check that server initializer fails when wrong private key password given."""
     tls_adapter_cls = get_ssl_adapter_class(name=adapter_type)
     with expected_warn, pytest.raises(
         OpenSSL.SSL.Error,
