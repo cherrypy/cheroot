@@ -1,0 +1,8 @@
+Regenerated the stale ``build-docs``, ``doctest-docs``, ``linkcheck-docs``,
+and ``spellcheck-docs`` pip-tools lockfiles for Python 3.11 (the only
+Python version CI actually runs these four tox environments under): they
+hadn't been updated since :pypi:`myst-parser` was added to the docs
+dependencies, so these tox environments were missing it entirely and
+failed to even start.
+
+-- by :user:`julianz-`
