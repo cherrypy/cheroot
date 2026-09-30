@@ -46,7 +46,11 @@ class StreamReader(io.BufferedReader):
     def read(self, *args, **kwargs):
         """Capture bytes read."""
         val = super().read(*args, **kwargs)
-        self.bytes_read += len(val)
+        # A non-blocking socket with nothing available yet can make the
+        # underlying BufferedReader return None instead of b''. That's
+        # documented io.RawIOBase behavior, so don't choke on it here.
+        if val is not None:
+            self.bytes_read += len(val)
         return val
 
     def has_data(self):
