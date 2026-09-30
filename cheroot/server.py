@@ -162,6 +162,7 @@ ASTERISK = b'*'
 FORWARD_SLASH = b'/'
 QUOTED_SLASH = b'%2F'
 QUOTED_SLASH_REGEX = re.compile(b''.join((b'(?i)', QUOTED_SLASH)))
+HTTP_TOKEN_RE = re.compile(rb'^[!#$%&\'*+\-.^_`|~0-9A-Za-z]+$')
 
 
 _STOPPING_FOR_INTERRUPT = Exception()  # sentinel used during shutdown
@@ -824,6 +825,10 @@ class HTTPRequest:
                 return False
         except (ValueError, IndexError):
             self.simple_response('400 Bad Request', 'Malformed Request-Line')
+            return False
+
+        if not HTTP_TOKEN_RE.match(method):
+            self.simple_response('400 Bad Request', 'Malformed method name')
             return False
 
         self.uri = uri
