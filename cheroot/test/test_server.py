@@ -1,5 +1,6 @@
 """Tests for the HTTP server."""
 
+import logging
 import os
 import pathlib
 import queue
@@ -20,7 +21,12 @@ import requests_unixsocket
 from pypytools.gc.custom import DefaultGc
 
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
-from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
+from ..server import (
+    _STOPPING_FOR_INTERRUPT,
+    IS_UID_GID_RESOLVABLE,
+    Gateway,
+    HTTPServer,
+)
 from ..testing import (
     ANY_INTERFACE_IPV4,
     ANY_INTERFACE_IPV6,
@@ -125,6 +131,53 @@ def test_stop_interrupts_serve():
 
     serve_thread.join(0.5)
     assert not serve_thread.is_alive()
+
+
+def test_serve_unservicable_logs_simple_response_errors(monkeypatch):
+    """Check errors while sending 503 responses are logged by the server."""
+    error_log_calls = []
+
+    class BrokenRequest:
+        def __init__(self, server, conn):
+            self.server = server
+            self.conn = conn
+
+        def simple_response(self, status):
+            assert status == '503 Service Unavailable'
+            raise RuntimeError('response failed')
+
+    class FakeConnection:
+        linger = False
+
+        def __init__(self):
+            self.closed = False
+
+        def close(self):
+            self.closed = True
+
+    def error_log(msg='', level=20, traceback=False):
+        error_log_calls.append((msg, level, traceback))
+
+    httpserver = HTTPServer(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+    httpserver.ready = True
+    httpserver.error_log = error_log
+
+    fake_conn = FakeConnection()
+    httpserver._unservicable_conns.put(fake_conn)
+    httpserver._unservicable_conns.put(_STOPPING_FOR_INTERRUPT)
+
+    monkeypatch.setattr('cheroot.server.HTTPRequest', BrokenRequest)
+
+    httpserver._serve_unservicable()
+
+    assert error_log_calls == [
+        ("RuntimeError('response failed')", logging.ERROR, True),
+    ]
+    assert fake_conn.linger
+    assert fake_conn.closed
 
 
 @pytest.mark.parametrize(
