@@ -315,6 +315,11 @@ def test_large_request(test_client_with_defaults):
             b'Malformed Request-Line',
         ),
         (
+            b'GET /\x00 HTTP/1.1',  # NUL byte
+            HTTP_BAD_REQUEST,
+            b'Malformed Request-Line',
+        ),
+        (
             b'GET / HTTPS/1.1',  # invalid proto
             HTTP_BAD_REQUEST,
             b'Malformed Request-Line: bad protocol',
