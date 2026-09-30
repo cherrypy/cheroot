@@ -60,7 +60,7 @@ repos:
   - id: no_optional
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.13.3
+  rev: v0.15.18
   hooks:
   - id: ruff
     args:
@@ -68,7 +68,7 @@ repos:
     - --fix  # NOTE: When `--fix` is used, linting should be before ruff-format
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.13.3
+  rev: v0.15.18
   hooks:
   - id: ruff-format
     alias: ruff-format-first-pass
@@ -80,7 +80,7 @@ repos:
   - id: add-trailing-comma
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.13.3
+  rev: v0.15.18
   hooks:
   - id: ruff-format
     alias: ruff-format-second-pass
