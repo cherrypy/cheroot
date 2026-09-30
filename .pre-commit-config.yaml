@@ -36,7 +36,7 @@ repos:
             |contrib
             |misc
           )(\.\d+)?(\.rst)?
-          |README\.rst
+          |README\.md
           |\.towncrier-template\.rst\.j2
         )
       $

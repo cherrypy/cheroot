@@ -44,6 +44,14 @@ extensions = [
     'spelling_stub_ext',  # auto-loads `sphinxcontrib.spelling` if installed
 ]
 
+myst_enable_extensions = [
+    # Enables GitHub's `> [!TIP]`-style alerts to render as Sphinx
+    # admonitions too. Needed for files like README.md and
+    # CONTRIBUTING.md, which GitHub also renders directly as plain
+    # GFM -- this way the same syntax works correctly in both places.
+    'alert',
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
