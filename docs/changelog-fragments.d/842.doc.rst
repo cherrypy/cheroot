@@ -1,0 +1,9 @@
+Converted the contributing documentation -- the
+`quick-start guide <https://github.com/cherrypy/cheroot/blob/main/.github/CONTRIBUTING.md>`_,
+the :doc:`Contributing Guidelines </contributing/guidelines>`, and the
+`changelog fragment guide <https://github.com/cherrypy/cheroot/blob/main/docs/changelog-fragments.d/README.md>`_
+-- to Markdown, so GitHub renders the quick-start guide and the
+changelog fragment guide natively without needing Sphinx to process
+them first.
+
+-- by :user:`julianz-`.

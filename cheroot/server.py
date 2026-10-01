@@ -1453,19 +1453,19 @@ class HTTPConnection:
 
     @property
     def peer_pid(self):
-        """Return the id of the connected peer process."""
+        """The id of the connected peer process."""
         pid, _, _ = self.get_peer_creds()
         return pid
 
     @property
     def peer_uid(self):
-        """Return the user id of the connected peer process."""
+        """The user id of the connected peer process."""
         _, uid, _ = self.get_peer_creds()
         return uid
 
     @property
     def peer_gid(self):
-        """Return the group id of the connected peer process."""
+        """The group id of the connected peer process."""
         _, _, gid = self.get_peer_creds()
         return gid
 
@@ -1495,13 +1495,13 @@ class HTTPConnection:
 
     @property
     def peer_user(self):
-        """Return the username of the connected peer process."""
+        """The username of the connected peer process."""
         user, _ = self.resolve_peer_creds()
         return user
 
     @property
     def peer_group(self):
-        """Return the group of the connected peer process."""
+        """The group of the connected peer process."""
         _, group = self.resolve_peer_creds()
         return group
 
@@ -1750,7 +1750,7 @@ class HTTPServer:
 
     @property
     def bind_addr(self):
-        """Return the interface on which to listen for connections.
+        """The interface on which to listen for connections.
 
         For TCP sockets, a (host, port) tuple. Host values may be any
         :term:`IPv4` or :term:`IPv6` address, or any valid hostname.
@@ -2234,7 +2234,7 @@ class HTTPServer:
 
     @property
     def _stopping_for_interrupt(self):
-        """Return whether the server is responding to an interrupt."""
+        """Whether the server is responding to an interrupt."""
         return self._interrupt is _STOPPING_FOR_INTERRUPT
 
     @interrupt.setter

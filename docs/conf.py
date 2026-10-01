@@ -44,6 +44,14 @@ extensions = [
     'spelling_stub_ext',  # auto-loads `sphinxcontrib.spelling` if installed
 ]
 
+myst_enable_extensions = [
+    # Enables GitHub's `> [!TIP]`-style alerts to render as Sphinx
+    # admonitions too. Needed for files like README.md and
+    # CONTRIBUTING.md, which GitHub also renders directly as plain
+    # GFM -- this way the same syntax works correctly in both places.
+    'alert',
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -108,10 +116,14 @@ linkcheck_ignore = [
     r'https://github\.com/cherrypy/cherrypy/tree',
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
     # line anchors.
-    r'https://github\.com'
-    r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302',
-    r'https://github\.com'
-    r'/python/cpython/blob/c39b52f/Lib/poplib\.py#user-content-L297-L302',
+    (
+        r'https://github\.com'
+        r'/python/cpython/blob/c39b52f/Lib/poplib\.py#L297-L302'
+    ),
+    (
+        r'https://github\.com'
+        r'/python/cpython/blob/c39b52f/Lib/poplib\.py#user-content-L297-L302'
+    ),
     r'^https://img\.shields\.io/matrix',  # these are rate-limited
     r'^https://matrix\.to/#',  # these render fully on front-end from anchors
     r'^https://stackoverflow\.com/',  # these generate HTTP 403 Forbidden
@@ -125,8 +137,9 @@ linkcheck_anchors_ignore = [
     r'\/.*',
     r'issuecomment-\d+',  # GitHub comments
 ]
-# FIXME: fossa timeout?
-linkcheck_timeout = 2  # default: 30
+# Was 2s since 2025-11-03 to keep CI fail-fast, but that made
+# app.fossa.io intermittently time out and fail CI; raised to 5s.
+linkcheck_timeout = 5  # default: 30
 linkcheck_workers = 25
 
 # -- Options for sphinx.ext.autosectionlabel extension -----------------------

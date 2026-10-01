@@ -1,0 +1,7 @@
+Fixing a crash in the ``spellcheck-docs`` tox environment (caused by a
+stale pip-tools lockfile) meant it could actually run for the first time
+in a while, which surfaced several pre-existing spelling gaps in test
+docstrings that were missed during this outage. Added the missing words
+to the spelling word list.
+
+-- by :user:`julianz-`
