@@ -1,0 +1,7 @@
+Stopped buffered socket writes from raising when the underlying
+descriptor has already been invalidated. Such flushes are frequently
+triggered from the finalizer (``IOBase.__del__``) while tearing down
+abruptly closed TLS connections, and the escaping :exc:`OSError`
+(``EBADF``) or :exc:`ValueError` could taint the worker thread teardown
+path, gradually draining the thread pool and wedging the server while it
+appeared to keep running -- by :user:`mwstowe`.
