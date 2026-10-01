@@ -1,0 +1,11 @@
+Pinned the :ref:`coverage core <coverage:config_run_core>` to
+:ref:`ctrace <coverage:config_run_core>` in test runs. On Python
+3.12+, :pypi:`coverage` picks the newer
+:ref:`sysmon <coverage:config_run_core>` core by default, but
+``sysmon`` does not support dynamic contexts, which means it is
+unable to keep track of which specific tests were run on each line
+-- something :pypi:`pytest-cov` relies on. :pypi:`coverage` 7.15.3+
+turns the resulting warning into a hard error here, since warnings
+are configured to fail the test suite.
+
+-- by :user:`julianz-`
