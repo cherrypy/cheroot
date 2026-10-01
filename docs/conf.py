@@ -137,8 +137,9 @@ linkcheck_anchors_ignore = [
     r'\/.*',
     r'issuecomment-\d+',  # GitHub comments
 ]
-# FIXME: fossa timeout?
-linkcheck_timeout = 2  # default: 30
+# Was 2s since 2025-11-03 to keep CI fail-fast, but that made
+# app.fossa.io intermittently time out and fail CI; raised to 5s.
+linkcheck_timeout = 5  # default: 30
 linkcheck_workers = 25
 
 # -- Options for sphinx.ext.autosectionlabel extension -----------------------
