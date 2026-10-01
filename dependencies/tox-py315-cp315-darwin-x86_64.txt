@@ -16,7 +16,7 @@ charset-normalizer==3.5.2
     # via requests
 colorama==0.4.6
     # via pytest-watch
-coverage==7.16.2
+coverage==7.15.2
     # via
     #   -r dependencies/tox-py315-cp315-darwin-x86_64.in
     #   pytest-cov
