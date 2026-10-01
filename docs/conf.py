@@ -162,6 +162,10 @@ nitpick_ignore = [
     ('py:class', '_pyio.BufferedWriter'),
     ('py:class', '_pyio.BufferedReader'),
     ('py:class', 'unittest.case.TestCase'),
+    # Pytest exposes these under the public `pytest.` names but the
+    # documented objects live in its private `_pytest` package:
+    ('py:class', '_pytest.capture.CaptureFixture'),
+    ('py:class', '_pytest.monkeypatch.MonkeyPatch'),
     ('py:meth', 'cheroot.connections.ConnectionManager.get_conn'),
     # Ref: https://github.com/pyca/pyopenssl/issues/1012
     ('py:class', 'pyopenssl:OpenSSL.SSL.Context'),
