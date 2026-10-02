@@ -1,0 +1,14 @@
+Capped :external+coverage:doc:`coverage <index>` below ``7.15.3`` for
+Python 3.13+ in the test dependencies: on Python 3.12+, ``coverage``
+picks the :external+coverage:ref:`sysmon <config_run_core>` core by
+default, and ``coverage`` 7.15.3 turned that core's incompatibility
+with dynamic contexts into a hard
+:external+coverage:py:exc:`CoverageWarning
+<coverage.exceptions.CoverageWarning>` (previously handled silently),
+which broke the test suite since
+warnings are configured to fail it. Also directly downgraded the
+already-committed Python 3.15 lockfiles, which had pinned a broken
+version past the new cap, so CI is fixed immediately rather than
+waiting on the next automated lockfile regeneration.
+
+-- by :user:`julianz-`

@@ -1,3 +1,5 @@
+-c tests-constraints.in  # limits known broken versions
+
 # chardet is a dependency of requests. It is optional under
 # Python 3 but is used if present. Starting with requests v2.26.0,
 # requests depends on charset_normalizer that emits a warning in

@@ -19,7 +19,7 @@ colorama==0.4.6
     #   pytest
     #   pytest-watch
     #   typer
-coverage==7.16.2
+coverage==7.15.2
     # via
     #   -r dependencies/tox-py315-cp315-win32-amd64.in
     #   pytest-cov
