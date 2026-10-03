@@ -1,0 +1,9 @@
+Silenced the :exc:`DeprecationWarning`\ s :pypi:`pyOpenSSL` 26.3.0+
+emits for
+:external+pyopenssl:py:meth:`Context.set_passwd_cb <OpenSSL.SSL.Context.set_passwd_cb>`,
+:external+pyopenssl:py:meth:`X509.get_issuer <OpenSSL.crypto.X509.get_issuer>`,
+and
+:external+pyopenssl:py:meth:`X509.get_subject <OpenSSL.crypto.X509.get_subject>`.
+A stopgap until :pr:`846` lands.
+
+-- by :user:`julianz-`
