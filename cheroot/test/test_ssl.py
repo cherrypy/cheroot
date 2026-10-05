@@ -580,7 +580,7 @@ def test_tls_client_auth(  # noqa: C901, WPS213  # FIXME
     ),
 )
 # pylint: disable-next=too-many-positional-arguments
-def test_ssl_env(  # noqa: C901  # FIXME
+def test_ssl_env(  # ruff: ignore[complex-structure]  # FIXME
     thread_exceptions,
     recwarn,
     mocker,

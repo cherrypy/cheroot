@@ -295,7 +295,7 @@ class ConnectionManager:
             with _cm.suppress(OSError):
                 conn.close()
 
-    def _from_server_socket(self, server_socket):  # noqa: C901  # FIXME
+    def _from_server_socket(self, server_socket):  # ruff: ignore[complex-structure]  # FIXME
         try:
             s, addr = server_socket.accept()
             if self.server.stats['Enabled']:

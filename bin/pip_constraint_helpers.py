@@ -3,7 +3,7 @@
 import functools
 import os
 import platform
-import subprocess  # noqa: S404
+import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
 
 
@@ -95,4 +95,4 @@ def run_cmd(cmd):
     print_info(
         'Invoking the following command: {cmd}'.format(cmd=' '.join(cmd)),
     )
-    subprocess.check_call(cmd)  # noqa: S603
+    subprocess.check_call(cmd)  # ruff: ignore[subprocess-without-shell-equals-true]
