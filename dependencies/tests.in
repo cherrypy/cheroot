@@ -21,7 +21,10 @@ jaraco.text >= 3.1
 
 portend
 
-pyopenssl
+# >= 24.3.0 for accepting a `cryptography` key directly in
+# `Context.use_privatekey()` -- older versions raise `TypeError: pkey
+# must be a PKey instance`.
+pyopenssl >= 24.3.0
 
 # The pypytools library provides a cross-implementation context
 # manager for disabling garbage collection in specific blocks

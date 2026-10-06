@@ -1,0 +1,27 @@
+Stopped using several of :external+pyopenssl:py:mod:`pyOpenSSL <OpenSSL>`'s
+deprecated APIs in the :py:class:`~cheroot.ssl.pyopenssl.pyOpenSSLAdapter`,
+replacing them with :external+cryptography:doc:`cryptography <index>`'s own
+APIs per ``pyOpenSSL``'s :external+pyopenssl:doc:`migration guidance
+<changelog>` for version 26.3.0. This raises the minimum supported
+``pyOpenSSL`` version to ``24.3.0``, the first release to accept a
+``cryptography`` key directly in
+:external+pyopenssl:py:meth:`Context.use_privatekey
+<OpenSSL.SSL.Context.use_privatekey>`; older versions raise
+``TypeError: pkey must be a PKey instance``. Password-protected private
+keys are now decrypted directly via
+:external+cryptography:py:func:`load_pem_private_key
+<cryptography.hazmat.primitives.serialization.load_pem_private_key>` and
+handed to :external+pyopenssl:py:meth:`Context.use_privatekey
+<OpenSSL.SSL.Context.use_privatekey>`, instead of using the deprecated
+:external+pyopenssl:py:meth:`Context.set_passwd_cb
+<OpenSSL.SSL.Context.set_passwd_cb>` callback; a wrong or invalid private key
+password now raises ``ValueError`` or ``TypeError`` instead of
+:external+pyopenssl:py:exc:`OpenSSL.SSL.Error`.
+The server certificate's issuer and subject DNs are now read via
+:external+cryptography:py:attr:`~cryptography.x509.Certificate.issuer` and
+:external+cryptography:py:attr:`~cryptography.x509.Certificate.subject`
+instead of the deprecated :external+pyopenssl:py:meth:`X509.get_issuer
+<OpenSSL.crypto.X509.get_issuer>` and :external+pyopenssl:py:meth:`X509.get_subject
+<OpenSSL.crypto.X509.get_subject>`.
+
+-- by :user:`julianz-`

@@ -94,6 +94,7 @@ intersphinx_mapping = {
     'ddt': ('https://ddt.readthedocs.io/en/latest/', None),
     'pyopenssl': ('https://www.pyopenssl.org/en/latest/', None),
     'coverage': ('https://coverage.readthedocs.io/en/latest/', None),
+    'cryptography': ('https://cryptography.io/en/latest/', None),
     'towncrier': ('https://towncrier.readthedocs.io/en/latest/', None),
     'sphinx': ('https://www.sphinx-doc.org', None),
 }
