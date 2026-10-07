@@ -2,11 +2,15 @@
 
 # prefer slower Python-based io module
 import _pyio as io
+import select
 import socket
 
 
 # Write only 16K at a time to sockets
 SOCK_WRITE_BLOCKSIZE = 16384
+
+# Seconds to wait for a blocked socket to become writable
+SOCK_WRITE_TIMEOUT = 10
 
 
 class BufferedWriter(io.BufferedWriter):
@@ -26,12 +30,28 @@ class BufferedWriter(io.BufferedWriter):
     def _flush_unlocked(self):
         self._checkClosed('flush of closed file')
         while self._write_buf:
+            n = None
             try:
                 # ssl sockets only except 'bytes', not bytearrays
                 # so perhaps we should conditionally wrap this for perf?
-                n = self.raw.write(bytes(self._write_buf))
+                n = self.raw.write(
+                    bytes(self._write_buf[:SOCK_WRITE_BLOCKSIZE]),
+                )
             except io.BlockingIOError as e:
                 n = e.characters_written
+            if n is None:
+                _, writable, _ = select.select(
+                    [],
+                    [self.raw],
+                    [],
+                    SOCK_WRITE_TIMEOUT,
+                )
+                if not writable:
+                    raise io.BlockingIOError(
+                        0,
+                        'raw stream blocked; no bytes written',
+                    )
+                continue
             del self._write_buf[:n]
 
 
