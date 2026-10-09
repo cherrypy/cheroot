@@ -96,5 +96,5 @@ def test_gateway_map_includes_indirect_subclasses():
     ``Server.wsgi_version = ('u', 0)`` raise a ``KeyError``.
     """
     gateway_map = wsgi.Gateway.gateway_map()
-    assert gateway_map[(1, 0)] is wsgi.Gateway_10
-    assert gateway_map[('u', 0)] is wsgi.Gateway_u0
+    assert gateway_map[1, 0] is wsgi.Gateway_10
+    assert gateway_map['u', 0] is wsgi.Gateway_u0
