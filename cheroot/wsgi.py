@@ -127,7 +127,14 @@ class Gateway(server.Gateway):
                 corresponding class
 
         """
-        return {gw.version: gw for gw in cls.__subclasses__()}
+        return {gw.version: gw for gw in cls._all_subclasses()}
+
+    @classmethod
+    def _all_subclasses(cls):
+        """Yield ``cls``'s subclasses, direct and indirect."""
+        for subclass in cls.__subclasses__():
+            yield subclass
+            yield from subclass._all_subclasses()
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
