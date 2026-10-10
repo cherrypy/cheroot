@@ -6,9 +6,11 @@ from cheroot import makefile
 class MockSocket:
     """A mock socket."""
 
-    def __init__(self):
+    def __init__(self, keep_buffer_exported=False):
         """Initialize :py:class:`MockSocket`."""
         self.messages = []
+        self.keep_buffer_exported = keep_buffer_exported
+        self.leaked_view = None
 
     def recv_into(self, buf):
         """Simulate ``recv_into`` for Python 3."""
@@ -17,6 +19,10 @@ class MockSocket:
         msg = self.messages.pop(0)
         for index, byte in enumerate(msg):
             buf[index] = byte
+        if self.keep_buffer_exported:
+            # Simulate ssl.SSLSocket.recv_into() leaking a memoryview over
+            # ``buf`` past the call, as happens on PyPy (see GH-#XXX).
+            self.leaked_view = memoryview(buf)
         return len(msg)
 
     def recv(self, size):
@@ -51,3 +57,21 @@ def test_bytes_written():
     wfile = makefile.MakeFile(sock, 'w')
     wfile.write(b'bar')
     assert wfile.bytes_written == 3
+
+
+def test_socket_io_read_does_not_resize_buffer():
+    """``_SocketIO.read()`` must not shrink its buffer in place.
+
+    Regression test for a PyPy-only ``BufferError: Existing exports of
+    data: object cannot be re-sized``, triggered when the default
+    ``_pyio.RawIOBase.read()`` implementation (``del b[n:]``) resizes a
+    buffer still referenced by an unreleased ``memoryview``, e.g. one
+    created internally by ``ssl.SSLSocket.recv_into()``. On PyPy that
+    memoryview stays alive until the next GC run instead of being
+    released immediately, unlike CPython's deterministic refcounting.
+    """
+    sock = MockSocket(keep_buffer_exported=True)
+    sock.messages.append(b'foo')
+    raw = makefile._SocketIO(sock, 'r')
+    assert raw.read(3) == b'foo'
+    assert sock.leaked_view is not None

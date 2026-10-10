@@ -35,12 +35,38 @@ class BufferedWriter(io.BufferedWriter):
             del self._write_buf[:n]
 
 
+class _SocketIO(socket.SocketIO):
+    """``socket.SocketIO`` with a resize-safe ``read()``.
+
+    ``_pyio.RawIOBase.read()`` (the base class' default implementation,
+    inherited unchanged by ``socket.SocketIO``) allocates a ``bytearray``,
+    fills it via ``readinto()``, then shrinks it in place with
+    ``del b[n:]``. On PyPy, ``ssl.SSLSocket.recv_into()`` creates a local
+    ``memoryview`` over that same buffer which is not released
+    deterministically (PyPy keeps buffer exports alive until the next GC
+    run, unlike CPython's immediate refcounting), so the later in-place
+    resize can randomly raise ``BufferError: Existing exports of data:
+    object cannot be re-sized``. Returning a fresh copy via slicing avoids
+    resizing the original buffer and sidesteps the issue entirely.
+    """
+
+    def read(self, size=-1):
+        """Read and return up to ``size`` bytes, without resizing."""
+        if size is None or size < 0:
+            return self.readall()
+        b = bytearray(size)
+        n = self.readinto(b)
+        if n is None:
+            return None
+        return bytes(b[:n])
+
+
 class StreamReader(io.BufferedReader):
     """Socket stream reader."""
 
     def __init__(self, sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
         """Initialize socket stream reader."""
-        super().__init__(socket.SocketIO(sock, mode), bufsize)
+        super().__init__(_SocketIO(sock, mode), bufsize)
         self.bytes_read = 0
 
     def read(self, *args, **kwargs):
