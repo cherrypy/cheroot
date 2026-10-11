@@ -127,7 +127,13 @@ class Gateway(server.Gateway):
                 corresponding class
 
         """
-        return {gw.version: gw for gw in cls.__subclasses__()}
+        gateways = {}
+        pending = [cls]
+        while pending:
+            for gw in pending.pop().__subclasses__():
+                gateways[gw.version] = gw
+                pending.append(gw)
+        return gateways
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version."""
