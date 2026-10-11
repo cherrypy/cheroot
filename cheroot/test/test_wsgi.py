@@ -85,3 +85,16 @@ def test_gateway_write_needs_start_response_called_before(monkeypatch):
     err_msg = '^WSGI write called before start_response.$'
     with pytest.raises(RuntimeError, match=err_msg):
         wsgi_gateway.write(None)  # The actual arg value is unimportant
+
+
+def test_gateway_map_includes_indirect_subclasses():
+    """``Gateway_u0`` is a grandchild of ``Gateway`` and must be found.
+
+    Regression test: ``Gateway.gateway_map()`` used to rely on
+    ``__subclasses__()``, which only returns direct subclasses, silently
+    excluding ``Gateway_u0`` (a subclass of ``Gateway_10``) and making
+    ``Server.wsgi_version = ('u', 0)`` raise a ``KeyError``.
+    """
+    gateway_map = wsgi.Gateway.gateway_map()
+    assert gateway_map[1, 0] is wsgi.Gateway_10
+    assert gateway_map['u', 0] is wsgi.Gateway_u0
