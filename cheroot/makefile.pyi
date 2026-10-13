@@ -1,6 +1,7 @@
 import io
 
 SOCK_WRITE_BLOCKSIZE: int
+SOCK_WRITE_TIMEOUT: int
 
 class BufferedWriter(io.BufferedWriter):
     def write(self, b): ...
