@@ -54,19 +54,21 @@ import socket
 import sys
 import threading
 import time
-from warnings import warn as _warn
 
 
 try:
     import OpenSSL.version
+    from cryptography.hazmat.primitives.serialization import (
+        load_pem_private_key as _load_pem_private_key,
+    )
     from OpenSSL import SSL, crypto
-
+except ImportError:
+    SSL = None
+else:
     try:
         ssl_conn_type = SSL.Connection
     except AttributeError:
         ssl_conn_type = SSL.ConnectionType
-except ImportError:
-    SSL = None
 
 import contextlib
 
@@ -349,39 +351,41 @@ class pyOpenSSLAdapter(Adapter):
         conn.set_accept_state()  # Tell OpenSSL this is a server connection
         return conn, self._environ.copy()
 
-    def _password_callback(
-        self,
-        password_max_length,
-        verify_twice,
-        password_or_callback,
-        /,
-    ):
-        """Pass a passphrase to password protected private key."""
-        if callable(password_or_callback):
-            password = password_or_callback()
-            if verify_twice and password != password_or_callback():
-                raise ValueError(
-                    'Verification failed: entered passwords do not match',
-                ) from None
-        else:
-            password = password_or_callback
+    def _load_private_key(self):
+        """Decrypt (if needed) and return the private key.
 
-        b_password = b''  # returning a falsy value communicates an error
+        ``Context.set_passwd_cb`` is deprecated as of ``pyOpenSSL``
+        26.3.0.
+        Its replacement is to decrypt the key ourselves via
+        ``cryptography`` and hand the already-decrypted key to
+        :external+pyopenssl:py:meth:`SSL.Context.use_privatekey
+        <OpenSSL.SSL.Context.use_privatekey>`.
+
+        Ref: https://www.pyopenssl.org/en/latest/changelog.html
+        """
+        with open(self.private_key, 'rb') as key_file:
+            key_data = key_file.read()
+
+        # PEM-encoded encrypted keys always say so in their header -- either
+        # a PKCS#8 header containing the word "ENCRYPTED", or a
+        # `Proc-Type: 4,ENCRYPTED` line (traditional OpenSSL format).
+        # Checking this directly avoids touching `private_key_password`
+        # (which may prompt interactively) for keys that don't need it.
+        if b'ENCRYPTED' not in key_data:
+            return _load_pem_private_key(key_data, password=None)
+
+        password = self.private_key_password
+        if password is None:
+            password = self._prompt_for_tls_password()
+        elif callable(password):
+            password = password()
+
         if isinstance(password, str):
-            b_password = password.encode('utf-8')
-        elif isinstance(password, bytes):
-            b_password = password
+            password = password.encode('utf-8')
+        elif not isinstance(password, bytes):
+            password = b''  # invalid types can't decrypt; let it fail below
 
-        password_length = len(b_password)
-        if password_length > password_max_length:
-            _warn(
-                f'User-provided password is {password_length} bytes long and will '
-                f'be truncated since it exceeds the maximum of {password_max_length}.',
-                UserWarning,
-                stacklevel=1,
-            )
-
-        return b_password
+        return _load_pem_private_key(key_data, password=password)
 
     def get_context(self):
         """Return an ``SSL.Context`` from self attributes.
@@ -390,10 +394,7 @@ class pyOpenSSLAdapter(Adapter):
         """
         # See https://code.activestate.com/recipes/442473/
         c = SSL.Context(SSL.SSLv23_METHOD)
-        if self.private_key_password is None:
-            self.private_key_password = self._prompt_for_tls_password
-        c.set_passwd_cb(self._password_callback, self.private_key_password)
-        c.use_privatekey_file(self.private_key)
+        c.use_privatekey(self._load_private_key())
         if self.certificate_chain:
             c.load_verify_locations(self.certificate_chain)
         c.use_certificate_file(self.certificate)
@@ -435,28 +436,25 @@ class pyOpenSSLAdapter(Adapter):
                 },
             )
 
-            for prefix, dn in [
-                ('I', cert.get_issuer()),
-                ('S', cert.get_subject()),
-            ]:
-                # X509Name objects don't seem to have a way to get the
-                # complete DN string. Use str() and slice it instead,
-                # because str(dn) == "<X509Name object '/C=US/ST=...'>"
-                dnstr = str(dn)[18:-2]
+            # ``X509.get_issuer``/``X509.get_subject`` are deprecated as of
+            # ``pyOpenSSL`` 26.3.0 in favor of ``cryptography``'s X.509 APIs.
+            cryptography_cert = cert.to_cryptography()
+            for prefix, name in (
+                ('I', cryptography_cert.issuer),
+                ('S', cryptography_cert.subject),
+            ):
+                dnstr = ''.join(
+                    '/%s=%s' % (attr.rfc4514_attribute_name, attr.value)
+                    for attr in name
+                )
+                ssl_environ['SSL_SERVER_%s_DN' % prefix] = dnstr
 
-                wsgikey = 'SSL_SERVER_%s_DN' % prefix
-                ssl_environ[wsgikey] = dnstr
-
-                # The DN should be of the form: /k1=v1/k2=v2, but we must allow
-                # for any value to contain slashes itself (in a URL).
-                while dnstr:
-                    pos = dnstr.rfind('=')
-                    dnstr, value = dnstr[:pos], dnstr[pos + 1 :]
-                    pos = dnstr.rfind('/')
-                    dnstr, key = dnstr[:pos], dnstr[pos + 1 :]
-                    if key and value:
-                        wsgikey = 'SSL_SERVER_%s_DN_%s' % (prefix, key)
-                        ssl_environ[wsgikey] = value
+                for attr in name:
+                    wsgikey = 'SSL_SERVER_%s_DN_%s' % (
+                        prefix,
+                        attr.rfc4514_attribute_name,
+                    )
+                    ssl_environ[wsgikey] = attr.value
 
         return ssl_environ
 
