@@ -399,6 +399,18 @@ def test_request_line_split_issue_1220(test_client):
     assert actual_resp_body == b'Hello world!'
 
 
+def test_parse_invalid_line_fold(test_client):
+    """Check that the first field line can't begin with whitespace."""
+    c = test_client.get_connection()
+    c._output(b'GET / HTTP/1.1\r\n invalid\r\n\r\n')
+    c._send_output()
+    response = _get_http_response(c, method='GET')
+    response.begin()
+    assert response.status == HTTP_BAD_REQUEST
+    assert response.read(26) == b'Illegal continuation line.'
+    c.close()
+
+
 def test_garbage_in(test_client):
     """Test that server sends an error for garbage received over TCP."""
     # Connect without SSL regardless of server.scheme
