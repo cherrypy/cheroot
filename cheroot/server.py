@@ -800,6 +800,13 @@ class HTTPRequest:
             )
             return False
 
+        if b'\x00' in request_line:
+            self.simple_response(
+                '400 Bad Request',
+                'Malformed Request-Line',
+            )
+            return False
+
         try:
             method, uri, req_protocol = request_line.strip().split(SPACE, 2)
             if not req_protocol.startswith(b'HTTP/'):
