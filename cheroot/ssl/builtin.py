@@ -50,30 +50,40 @@ def _loopback_for_cert_thread(context, server):
     # we can safely ignore connection and ssl related exceptions. Ref:
     # https://github.com/cherrypy/cheroot/issues/302#issuecomment-662592030
     with suppress(ssl.SSLError, OSError):
-        with context.wrap_socket(
-            server,
-            do_handshake_on_connect=True,
-            server_side=True,
-        ) as ssl_sock:
-            # in TLS 1.3 (Python 3.7+, OpenSSL 1.1.1+), the server
-            # sends the client session tickets that can be used to
-            # resume the TLS session on a new connection without
-            # performing the full handshake again. session tickets are
-            # sent as a post-handshake message at some _unspecified_
-            # time and thus a successful connection may be closed
-            # without the client having received the tickets.
-            # Unfortunately, on Windows (Python 3.8+), this is treated
-            # as an incomplete handshake on the server side and a
-            # ``ConnectionAbortedError`` is raised.
-            # TLS 1.3 support is still incomplete in Python 3.8;
-            # there is no way for the client to wait for tickets.
-            # While not necessary for retrieving the parsed certificate,
-            # we send a tiny bit of data over the connection in an
-            # attempt to give the server a chance to send the session
-            # tickets and close the connection cleanly.
-            # Note that, as this is essentially a race condition,
-            # the error may still occur ocasionally.
-            ssl_sock.send(b'0000')
+        try:
+            with context.wrap_socket(
+                server,
+                do_handshake_on_connect=True,
+                server_side=True,
+            ) as ssl_sock:
+                # in TLS 1.3 (Python 3.7+, OpenSSL 1.1.1+), the server
+                # sends the client session tickets that can be used to
+                # resume the TLS session on a new connection without
+                # performing the full handshake again. session tickets are
+                # sent as a post-handshake message at some _unspecified_
+                # time and thus a successful connection may be closed
+                # without the client having received the tickets.
+                # Unfortunately, on Windows (Python 3.8+), this is treated
+                # as an incomplete handshake on the server side and a
+                # ``ConnectionAbortedError`` is raised.
+                # TLS 1.3 support is still incomplete in Python 3.8;
+                # there is no way for the client to wait for tickets.
+                # While not necessary for retrieving the parsed certificate,
+                # we send a tiny bit of data over the connection in an
+                # attempt to give the server a chance to send the session
+                # tickets and close the connection cleanly.
+                # Note that, as this is essentially a race condition,
+                # the error may still occur ocasionally.
+                ssl_sock.send(b'0000')
+        except ssl.SSLError as e:
+            # Handle TLS 1.3 post-handshake authentication failures
+            # that may occur after the initial handshake. This can
+            # happen when the client uses the `post_handshake_auth`
+            # extension and authentication fails, resulting in an
+            # exception during the `send` call or when reading
+            # subsequent data.
+            if not _assert_ssl_exc_contains(e, 'tlsv1 alert', 'decrypt error'):
+                raise
 
 
 def _loopback_for_cert(
