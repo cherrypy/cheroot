@@ -11,7 +11,7 @@ import pytest
 
 from .._compat import IS_MACOS, IS_WINDOWS
 from ..server import Gateway, HTTPServer
-from ..testing import (  # noqa: F401  # pylint: disable=unused-import
+from ..testing import (  # ruff: ignore[unused-import]  # pylint: disable=unused-import
     get_server_client,
     native_server,
     thread_and_native_server,
@@ -36,7 +36,7 @@ def http_request_timeout():
 
 @pytest.fixture
 # pylint: disable=redefined-outer-name
-def wsgi_server_thread(thread_and_wsgi_server):  # noqa: F811
+def wsgi_server_thread(thread_and_wsgi_server):  # ruff: ignore[redefined-while-unused]
     """Set up and tear down a Cheroot WSGI server instance.
 
     This exposes the server thread.
@@ -47,7 +47,7 @@ def wsgi_server_thread(thread_and_wsgi_server):  # noqa: F811
 
 @pytest.fixture
 # pylint: disable=redefined-outer-name
-def native_server_thread(thread_and_native_server):  # noqa: F811
+def native_server_thread(thread_and_native_server):  # ruff: ignore[redefined-while-unused]
     """Set up and tear down a Cheroot HTTP server instance.
 
     This exposes the server thread.
@@ -58,14 +58,14 @@ def native_server_thread(thread_and_native_server):  # noqa: F811
 
 @pytest.fixture
 # pylint: disable=redefined-outer-name
-def wsgi_server_client(wsgi_server):  # noqa: F811
+def wsgi_server_client(wsgi_server):  # ruff: ignore[redefined-while-unused]
     """Create a test client out of given WSGI server."""
     return get_server_client(wsgi_server)
 
 
 @pytest.fixture
 # pylint: disable=redefined-outer-name
-def native_server_client(native_server):  # noqa: F811
+def native_server_client(native_server):  # ruff: ignore[redefined-while-unused]
     """Create a test client out of given HTTP server."""
     return get_server_client(native_server)
 

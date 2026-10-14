@@ -85,7 +85,7 @@ class SSLFileobjectMixin:
     ssl_retry = 0.01
 
     # FIXME:
-    def _safe_call(self, is_reader, call, *args, **kwargs):  # noqa: C901
+    def _safe_call(self, is_reader, call, *args, **kwargs):  # ruff: ignore[complex-structure]
         """Wrap the given call with TLS error-trapping.
 
         is_reader: if False EOF errors will be raised. If True, EOF errors
