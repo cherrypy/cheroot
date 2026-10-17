@@ -163,6 +163,13 @@ FORWARD_SLASH = b'/'
 QUOTED_SLASH = b'%2F'
 QUOTED_SLASH_REGEX = re.compile(b''.join((b'(?i)', QUOTED_SLASH)))
 
+# ``Content-Length`` is defined as ``1*DIGIT`` by
+# https://datatracker.ietf.org/doc/html/rfc9110#section-8.6. ``int()``
+# additionally tolerates surrounding whitespace, a leading sign and
+# digit-separating underscores (e.g. ``1_0`` -> ``10``), none of which are
+# valid, so the raw value has to be validated before it is parsed.
+NUMERIC_REGEX = re.compile(rb'[0-9]+')
+
 
 _STOPPING_FOR_INTERRUPT = Exception()  # sentinel used during shutdown
 
@@ -1008,14 +1015,17 @@ class HTTPRequest:
 
         mrbs = self.server.max_request_body_size
 
-        try:
-            cl = int(self.inheaders.get(b'Content-Length', 0))
-        except ValueError:
+        raw_content_length = self.inheaders.get(b'Content-Length', b'0')
+        # ``int()`` silently accepts values that are not valid ``1*DIGIT``
+        # strings (e.g. ``b'1_0'``, ``b'+10'`` or surrounding whitespace), so
+        # the raw value has to be checked against the grammar first.
+        if NUMERIC_REGEX.fullmatch(raw_content_length) is None:
             self.simple_response(
                 '400 Bad Request',
                 'Malformed Content-Length Header.',
             )
             return False
+        cl = int(raw_content_length)
 
         if mrbs and cl > mrbs:
             self.simple_response(
