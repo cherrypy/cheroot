@@ -151,6 +151,23 @@ class WorkerThread(threading.Thread):
             raise
         finally:
             self.ready = False
+            self._forget_empty_stats()
+
+    def _forget_empty_stats(self):
+        """Remove this thread's statistics, if it recorded none.
+
+        The counters only change while statistics are enabled. Otherwise,
+        the entry would keep the retired thread alive, and the server's
+        statistics would grow, each time the pool grows and shrinks again.
+        """
+        recorded = (
+            self.requests_seen,
+            self.bytes_read,
+            self.bytes_written,
+            self.work_time,
+        )
+        if not any(recorded):
+            self.server.stats['Worker Threads'].pop(self.name, None)
 
     def _process_connections_until_interrupted(self):
         """Process incoming HTTP connections in an infinite loop.

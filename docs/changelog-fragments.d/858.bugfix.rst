@@ -1,0 +1,8 @@
+Fixed every :py:class:`~cheroot.server.HTTPServer` staying alive with its
+gateway for the life of the process, stopped ones and ones whose
+:py:meth:`~cheroot.server.HTTPServer.prepare` failed or never ran included:
+``logging.statistics`` now holds a server's statistics only while it serves.
+A retired worker thread also no longer stays in its server's statistics,
+unless it recorded some.
+
+-- by :user:`rm-you`

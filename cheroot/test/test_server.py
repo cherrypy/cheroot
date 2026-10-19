@@ -1,6 +1,7 @@
 """Tests for the HTTP server."""
 
 import gc
+import logging
 import os
 import pathlib
 import queue
@@ -9,9 +10,11 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import types
 import urllib.parse  # noqa: WPS301
 import uuid
+import weakref
 from http import HTTPStatus
 
 import pytest
@@ -19,7 +22,15 @@ import pytest
 import requests
 import requests_unixsocket
 
-from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
+from .._compat import (
+    IS_LINUX,
+    IS_MACOS,
+    IS_PYPY,
+    IS_WINDOWS,
+    SYS_PLATFORM,
+    bton,
+    ntob,
+)
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
@@ -586,6 +597,106 @@ def test_threadpool_multistart_validation(monkeypatch):
         match='Threadpools can only be started once.',
     ):
         tp.start()
+
+
+def _wait_until(condition, timeout=10):
+    """Wait for a condition to hold, at most for the timeout."""
+    deadline = time.monotonic() + timeout
+    while not condition() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return condition()
+
+
+def test_statistics_are_published_while_serving(request):
+    """Test that a server's statistics are published only while it serves."""
+    httpserver = HTTPServer(
+        bind_addr=('127.0.0.1', EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+    stats_key = 'Cheroot HTTPServer %d' % id(httpserver)
+    assert stats_key not in logging.statistics
+
+    httpserver.prepare()
+    request.addfinalizer(httpserver.stop)
+    assert logging.statistics[stats_key] is httpserver.stats
+    httpserver.clear_stats()
+    assert logging.statistics[stats_key] is httpserver.stats
+
+    httpserver.stop()
+    assert stats_key not in logging.statistics
+
+
+@pytest.mark.parametrize(
+    'lifecycle',
+    (
+        'never started',
+        'failed to bind',
+        pytest.param(
+            'stopped',
+            marks=pytest.mark.xfail(
+                IS_PYPY,
+                reason='Under PyPy, coverage.py traces in Python and keeps '
+                'every thread that it traced, which holds the server',
+                strict=False,
+            ),
+        ),
+    ),
+)
+def test_discarded_server_is_collected(lifecycle):
+    """Test that the statistics registry keeps no discarded server alive."""
+    host = '127.0.0.1'
+    if lifecycle == 'failed to bind':
+        # An address of a documentation network, which no host has
+        host = '192.0.2.1'
+    httpserver = HTTPServer(bind_addr=(host, EPHEMERAL_PORT), gateway=Gateway)
+    if lifecycle == 'failed to bind':
+        with pytest.raises(OSError, match='No socket could be created'):
+            httpserver.prepare()
+    elif lifecycle == 'stopped':
+        httpserver.prepare()
+        httpserver.stop()
+    server_ref = weakref.ref(httpserver)
+
+    del httpserver  # noqa: WPS420
+    for _ in range(3):
+        gc.collect()
+    assert server_ref() is None
+
+
+def test_retired_threads_leave_no_statistics(request):
+    """Test that a pool that grows and shrinks forgets its retired threads."""
+    httpserver = HTTPServer(
+        bind_addr=('127.0.0.1', EPHEMERAL_PORT),
+        gateway=Gateway,
+        minthreads=1,
+    )
+    httpserver.prepare()
+    request.addfinalizer(httpserver.stop)
+    httpserver.requests.grow(3)
+    httpserver.requests.shrink(3)
+    worker_stats = httpserver.stats['Worker Threads']
+    assert _wait_until(lambda: len(worker_stats) == 1)
+
+
+def test_retired_threads_keep_recorded_statistics(request):
+    """Test that a retired thread that recorded statistics keeps them."""
+    httpserver = HTTPServer(
+        bind_addr=('127.0.0.1', EPHEMERAL_PORT),
+        gateway=Gateway,
+        minthreads=1,
+    )
+    httpserver.prepare()
+    request.addfinalizer(httpserver.stop)
+    httpserver.requests.grow(1)
+    workers = list(httpserver.requests._threads)
+    for worker in workers:
+        # As if each had served a request with statistics enabled
+        worker.requests_seen = 1
+    httpserver.requests.shrink(1)
+    assert _wait_until(
+        lambda: sum(worker.is_alive() for worker in workers) == 1,
+    )
+    assert len(httpserver.stats['Worker Threads']) == len(workers)
 
 
 def test_overload_results_in_suitable_http_error(request):

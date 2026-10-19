@@ -1732,7 +1732,13 @@ class HTTPServer:
             ),
             'Worker Threads': {},
         }
-        logging.statistics['Cheroot HTTPServer %d' % id(self)] = self.stats
+        if self.ready:
+            logging.statistics[self._stats_key] = self.stats
+
+    @property
+    def _stats_key(self):
+        """Key of the server's statistics in ``logging.statistics``."""
+        return 'Cheroot HTTPServer %d' % id(self)
 
     def runtime(self):
         """Return server uptime."""
@@ -1885,6 +1891,9 @@ class HTTPServer:
         self.requests.start()
 
         self.ready = True
+        # Only while serving: the statistics' callbacks hold the server,
+        # which the process-wide registry would otherwise keep alive for good
+        logging.statistics[self._stats_key] = self.stats
         self._start_time = time.time()
 
     def _serve_unservicable(self):
@@ -2263,6 +2272,7 @@ class HTTPServer:
             return  # already stopped
 
         self.ready = False
+        logging.statistics.pop(self._stats_key, None)
 
         # This tells the thread that handles unservicable connections to shut
         # down:
