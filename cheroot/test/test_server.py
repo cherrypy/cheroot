@@ -1,5 +1,6 @@
 """Tests for the HTTP server."""
 
+import gc
 import os
 import pathlib
 import queue
@@ -17,7 +18,6 @@ import pytest
 
 import requests
 import requests_unixsocket
-from pypytools.gc.custom import DefaultGc
 
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
@@ -418,8 +418,13 @@ def test_reuse_port(http_server, ip_addr, mocker):
 @pytest.fixture
 def _garbage_bin():
     """Disable garbage collection when this fixture is in use."""
-    with DefaultGc().nogc():
+    # A collection would close the sockets that only garbage still holds,
+    # freeing low file descriptors for the server to take
+    gc.disable()
+    try:  # noqa: WPS501
         yield
+    finally:
+        gc.enable()
 
 
 @pytest.fixture
