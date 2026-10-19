@@ -1,0 +1,6 @@
+Fixed :py:meth:`ThreadPool.shrink() <cheroot.workers.threadpool.ThreadPool.shrink>`
+mostly ignoring a call made soon after another, and letting the pool drop below
+its minimum. Stopping a pool that had shrunk also no longer leaves shutdown
+requests behind, which made starting it again hang.
+
+-- by :user:`rm-you`
