@@ -1667,6 +1667,7 @@ class HTTPServer:
         """Reset server stat counters.."""
         self._start_time = None
         self._run_time = 0
+        worker_stats = self.worker_stats = threadpool.WorkerStats()
         self.stats = {
             'Enabled': False,
             'Bind Address': lambda s: repr(self.bind_addr),
@@ -1680,57 +1681,27 @@ class HTTPServer:
             'Threads Idle': lambda s: getattr(self.requests, 'idle', None),
             'Socket Errors': 0,
             'Requests': lambda s: (
-                ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Requests'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                ((not s['Enabled']) and -1) or worker_stats.total('Requests')
             ),
             'Bytes Read': lambda s: (
-                ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Bytes Read'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                ((not s['Enabled']) and -1) or worker_stats.total('Bytes Read')
             ),
             'Bytes Written': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Written'](w)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or worker_stats.total('Bytes Written')
             ),
             'Work Time': lambda s: (
-                ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Work Time'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                ((not s['Enabled']) and -1) or worker_stats.total('Work Time')
             ),
             'Read Throughput': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or worker_stats.total('Read Throughput')
             ),
             'Write Throughput': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or worker_stats.total('Write Throughput')
             ),
-            'Worker Threads': {},
+            'Worker Threads': worker_stats.records,
         }
         if self.ready:
             logging.statistics[self._stats_key] = self.stats

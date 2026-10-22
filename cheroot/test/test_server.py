@@ -15,6 +15,7 @@ import types
 import urllib.parse  # noqa: WPS301
 import uuid
 import weakref
+from concurrent.futures import ThreadPoolExecutor
 from http import HTTPStatus
 
 import pytest
@@ -22,6 +23,7 @@ import pytest
 import requests
 import requests_unixsocket
 
+from .. import wsgi
 from .._compat import (
     IS_LINUX,
     IS_MACOS,
@@ -678,8 +680,9 @@ def test_retired_threads_leave_no_statistics(request):
     assert _wait_until(lambda: len(worker_stats) == 1)
 
 
-def test_retired_threads_keep_recorded_statistics(request):
-    """Test that a retired thread that recorded statistics keeps them."""
+@pytest.mark.parametrize('clear_stats', (False, True))
+def test_retired_threads_preserve_totals(request, clear_stats):
+    """Retired workers release their records without losing totals."""
     httpserver = HTTPServer(
         bind_addr=('127.0.0.1', EPHEMERAL_PORT),
         gateway=Gateway,
@@ -687,16 +690,97 @@ def test_retired_threads_keep_recorded_statistics(request):
     )
     httpserver.prepare()
     request.addfinalizer(httpserver.stop)
-    httpserver.requests.grow(1)
+    httpserver.requests.grow(3)
+    httpserver.stats['Enabled'] = True
     workers = list(httpserver.requests._threads)
-    for worker in workers:
-        # As if each had served a request with statistics enabled
-        worker.requests_seen = 1
-    httpserver.requests.shrink(1)
+    for number, worker in enumerate(workers, 1):
+        # Distinct durations check sum-of-worker-rates throughput semantics.
+        worker.requests_seen = number
+        worker.bytes_read = number * 10
+        worker.bytes_written = number * 20
+        worker.work_time = number
+    totals = {
+        'Requests': 10,
+        'Bytes Read': 100,
+        'Bytes Written': 200,
+        'Work Time': 10,
+        'Read Throughput': 40,
+        'Write Throughput': 80,
+    }
+    if clear_stats:
+        httpserver.clear_stats()
+        httpserver.stats['Enabled'] = True
+        totals = dict.fromkeys(totals, 0)
+    httpserver.requests.shrink(3)
     assert _wait_until(
         lambda: sum(worker.is_alive() for worker in workers) == 1,
     )
-    assert len(httpserver.stats['Worker Threads']) == len(workers)
+    # Reap the pool's own references before checking statistics retention.
+    httpserver.requests._clear_dead_threads()
+    assert len(httpserver.stats['Worker Threads']) <= 1
+    for name, expected in totals.items():
+        assert httpserver.stats[name](httpserver.stats) == expected
+    httpserver.stats['Enabled'] = False
+    assert httpserver.stats['Requests'](httpserver.stats) == -1
+    httpserver.stats['Enabled'] = True
+    assert httpserver.stats['Requests'](httpserver.stats) == totals['Requests']
+
+
+def test_statistics_survive_http_worker_churn():
+    """Real requests keep their totals after their workers retire."""
+    barrier = threading.Barrier(4)
+
+    def app(_environ, start_response):
+        barrier.wait(10)
+        start_response('200 OK', [('Content-Length', '2')])
+        return [b'ok']
+
+    server = wsgi.Server(('127.0.0.1', EPHEMERAL_PORT), app, numthreads=1)
+    server.stats['Enabled'] = True
+    with server._run_in_thread():
+        url = f'http://127.0.0.1:{server.bind_addr[1]}/'
+
+        def request():
+            with requests.get(
+                url,
+                headers={'Connection': 'close'},
+                timeout=10,
+            ) as response:
+                assert response.status_code == HTTPStatus.OK
+                assert response.content == b'ok'
+
+        def workers_idle():
+            return all(t.conn is None for t in server.requests._threads)
+
+        def one_worker_alive():
+            return sum(t.is_alive() for t in server.requests._threads) == 1
+
+        for cycle in range(5):
+            server.requests.grow(3)
+            with ThreadPoolExecutor(max_workers=4) as clients:
+                futures = [clients.submit(request) for _ in range(4)]
+                for future in futures:
+                    future.result()
+            assert _wait_until(workers_idle)
+            stats = server.stats
+            expected = {
+                name: stats[name](stats)
+                for name in (
+                    'Requests',
+                    'Bytes Read',
+                    'Bytes Written',
+                    'Work Time',
+                    'Read Throughput',
+                    'Write Throughput',
+                )
+            }
+            assert expected['Requests'] == 4 * (cycle + 1)
+            server.requests.shrink(3)
+            assert _wait_until(one_worker_alive)
+            server.requests._clear_dead_threads()
+            assert len(stats['Worker Threads']) == 1
+            for name, total in expected.items():
+                assert stats[name](stats) == pytest.approx(total)
 
 
 def test_overload_results_in_suitable_http_error(request):

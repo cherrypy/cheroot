@@ -2,7 +2,9 @@ Fixed every :py:class:`~cheroot.server.HTTPServer` staying alive with its
 gateway for the life of the process, stopped ones and ones whose
 :py:meth:`~cheroot.server.HTTPServer.prepare` failed or never ran included:
 ``logging.statistics`` now holds a server's statistics only while it serves.
-A retired worker thread also no longer stays in its server's statistics,
-unless it recorded some.
+Retired worker threads no longer stay in their server's statistics, even
+when statistics are enabled. Their counters and throughput contributions
+are retained in bounded totals, while ``Worker Threads`` lists only live
+records.
 
 -- by :user:`rm-you`
