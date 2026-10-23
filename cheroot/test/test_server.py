@@ -561,21 +561,21 @@ def test_threadpool_invalid_threadrange(minthreads, maxthreads, error):
         )
 
 
-def _live_threads(pool):
+def _count_live_threads(pool):
     return sum(thread.is_alive() for thread in pool._threads)
 
 
 def _wait_for_live_threads(pool, count, timeout=10):
-    """Wait for the pool to have so many live threads, at most the timeout."""
+    """Wait until the pool has exactly ``count`` live threads, or timeout."""
     deadline = time.monotonic() + timeout
-    while _live_threads(pool) != count and time.monotonic() < deadline:
+    while _count_live_threads(pool) != count and time.monotonic() < deadline:
         time.sleep(0.05)
-    return _live_threads(pool)
+    return _count_live_threads(pool)
 
 
 @pytest.fixture
 def prepared_server():
-    """Yield a function that prepares a server with the given threads."""
+    """Yield a function that prepares a server with a set number of threads."""
     servers = []
 
     def prepare(minthreads):
@@ -593,8 +593,8 @@ def prepared_server():
         httpserver.stop()
 
 
-def test_threadpool_shrink_calls_add_up(prepared_server):
-    """Test that shrink() calls made close together each retire threads."""
+def test_threadpool_shrink_calls_are_additive(prepared_server):
+    """Test two close-together shrink() calls retire the total requested."""
     pool = prepared_server(minthreads=1).requests
     pool.grow(20)
     pool.shrink(10)
@@ -610,7 +610,7 @@ def test_threadpool_shrink_keeps_minimum(prepared_server):
     pool.shrink(80)
     assert _wait_for_live_threads(pool, 10) == 10
     time.sleep(0.5)
-    assert _live_threads(pool) == 10
+    assert _count_live_threads(pool) == 10
 
 
 def test_threadpool_restarts_after_shrinking(prepared_server, request):
@@ -622,8 +622,8 @@ def test_threadpool_restarts_after_shrinking(prepared_server, request):
     assert _wait_for_live_threads(pool, 2) == 2
     httpserver.stop()
 
-    # Before, the new threads took the requests left over and exited, and
-    # start() waited for them forever.
+    # Check that restarting the pool doesn't hang.
+    # Run on a separate thread so we can apply a timeout.
     request.addfinalizer(pool.stop)
     restart = threading.Thread(target=pool.start, daemon=True)
     restart.start()

@@ -1,6 +1,8 @@
 Fixed :py:meth:`ThreadPool.shrink() <cheroot.workers.threadpool.ThreadPool.shrink>`
-mostly ignoring a call made soon after another, and letting the pool drop below
-its minimum. Stopping a pool that had shrunk also no longer leaves shutdown
-requests behind, which made starting it again hang.
+accounting for pending shutdowns. Repeated calls now request up to ``amount``
+additional thread retirements while preserving the pool's minimum size.
+Previously, pending shutdowns could suppress a later call or let the pool
+drop below its minimum. Stopping a pool that had shrunk no longer leaves
+shutdown requests queued, which could make starting the pool again hang.
 
 -- by :user:`rm-you`

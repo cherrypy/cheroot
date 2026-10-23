@@ -386,9 +386,8 @@ class ThreadPool:
 
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
-        # shrink() has queued the requests of the threads it asked to shut
-        # down. Queue one for each other live thread, so that none is left
-        # over to stop the threads of the next start().
+        # Some threads may already have a shutdown request from an earlier
+        # shrink() call. Add one for every thread that does not have one yet.
         self._clear_dead_threads()
         for _ in range(len(self._threads) - len(self._pending_shutdowns)):
             self._queue.put(_SHUTDOWNREQUEST)
