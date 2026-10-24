@@ -614,7 +614,7 @@ def test_threadpool_shrink_keeps_minimum(prepared_server):
 
 
 def test_threadpool_restarts_after_shrinking(prepared_server, request):
-    """Test that a stopped pool leaves no shutdown request for its restart."""
+    """Test that a pool stopped after shrinking can restart without hanging."""
     httpserver = prepared_server(minthreads=2)
     pool = httpserver.requests
     pool.grow(5)
