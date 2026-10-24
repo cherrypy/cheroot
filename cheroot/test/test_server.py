@@ -602,7 +602,7 @@ def test_threadpool_multistart_validation(monkeypatch):
 
 
 def _wait_until(condition, timeout=10):
-    """Wait for a condition to hold, at most for the timeout."""
+    """Wait until the condition is true or the timeout expires."""
     deadline = time.monotonic() + timeout
     while not condition() and time.monotonic() < deadline:
         time.sleep(0.05)
@@ -666,7 +666,7 @@ def test_discarded_server_is_collected(lifecycle):
 
 
 def test_retired_threads_leave_no_statistics(request):
-    """Test that a pool that grows and shrinks forgets its retired threads."""
+    """Test that shrinking removes retired workers' statistics records."""
     httpserver = HTTPServer(
         bind_addr=('127.0.0.1', EPHEMERAL_PORT),
         gateway=Gateway,
@@ -727,7 +727,7 @@ def test_retired_threads_preserve_totals(request, clear_stats):
 
 
 def test_statistics_survive_http_worker_churn():
-    """Real requests keep their totals after their workers retire."""
+    """Test that server statistics retain totals after workers retire."""
     barrier = threading.Barrier(4)
 
     def app(_environ, start_response):

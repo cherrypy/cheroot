@@ -159,6 +159,9 @@ class WorkerThread(threading.Thread):
 
         # noqa: DAR401 KeyboardInterrupt SystemExit
         """
+        # Keep the collector this worker registers with: clear_stats() can
+        # replace the server's collector before this worker exits. Retirement
+        # must remove the record from the original collector.
         worker_stats = self.server.worker_stats
         worker_stats.register(self.name, self.stats)
         self.ready = True
