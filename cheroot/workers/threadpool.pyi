@@ -9,6 +9,13 @@ class TrueyZero:
 
 trueyzero: TrueyZero
 
+class WorkerStats:
+    records: _t.Dict[str, _t.Any]
+    def __init__(self) -> None: ...
+    def register(self, name, stats) -> None: ...
+    def retire(self, name) -> None: ...
+    def total(self, name): ...
+
 class WorkerThread(threading.Thread):
     conn: _t.Any
     server: _t.Any

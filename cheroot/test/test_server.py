@@ -1,5 +1,7 @@
 """Tests for the HTTP server."""
 
+import gc
+import logging
 import os
 import pathlib
 import queue
@@ -8,18 +10,29 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import types
 import urllib.parse  # noqa: WPS301
 import uuid
+import weakref
+from concurrent.futures import ThreadPoolExecutor
 from http import HTTPStatus
 
 import pytest
 
 import requests
 import requests_unixsocket
-from pypytools.gc.custom import DefaultGc
 
-from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
+from .. import wsgi
+from .._compat import (
+    IS_LINUX,
+    IS_MACOS,
+    IS_PYPY,
+    IS_WINDOWS,
+    SYS_PLATFORM,
+    bton,
+    ntob,
+)
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
     ANY_INTERFACE_IPV4,
@@ -418,8 +431,13 @@ def test_reuse_port(http_server, ip_addr, mocker):
 @pytest.fixture
 def _garbage_bin():
     """Disable garbage collection when this fixture is in use."""
-    with DefaultGc().nogc():
+    # A collection would close the sockets that only garbage still holds,
+    # freeing low file descriptors for the server to take
+    gc.disable()
+    try:  # noqa: WPS501
         yield
+    finally:
+        gc.enable()
 
 
 @pytest.fixture
@@ -581,6 +599,188 @@ def test_threadpool_multistart_validation(monkeypatch):
         match='Threadpools can only be started once.',
     ):
         tp.start()
+
+
+def _wait_until(condition, timeout=10):
+    """Wait until the condition is true or the timeout expires."""
+    deadline = time.monotonic() + timeout
+    while not condition() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return condition()
+
+
+def test_statistics_are_published_while_serving(request):
+    """Test that a server's statistics are published only while it serves."""
+    httpserver = HTTPServer(
+        bind_addr=('127.0.0.1', EPHEMERAL_PORT),
+        gateway=Gateway,
+    )
+    stats_key = 'Cheroot HTTPServer %d' % id(httpserver)
+    assert stats_key not in logging.statistics
+
+    httpserver.prepare()
+    request.addfinalizer(httpserver.stop)
+    assert logging.statistics[stats_key] is httpserver.stats
+    httpserver.clear_stats()
+    assert logging.statistics[stats_key] is httpserver.stats
+
+    httpserver.stop()
+    assert stats_key not in logging.statistics
+
+
+@pytest.mark.parametrize(
+    'lifecycle',
+    (
+        'never started',
+        'failed to bind',
+        pytest.param(
+            'stopped',
+            marks=pytest.mark.xfail(
+                IS_PYPY,
+                reason='Under PyPy, coverage.py traces in Python and keeps '
+                'every thread that it traced, which holds the server',
+                strict=False,
+            ),
+        ),
+    ),
+)
+def test_discarded_server_is_collected(lifecycle):
+    """Test that the statistics registry keeps no discarded server alive."""
+    host = '127.0.0.1'
+    if lifecycle == 'failed to bind':
+        # An address of a documentation network, which no host has
+        host = '192.0.2.1'
+    httpserver = HTTPServer(bind_addr=(host, EPHEMERAL_PORT), gateway=Gateway)
+    if lifecycle == 'failed to bind':
+        with pytest.raises(OSError, match='No socket could be created'):
+            httpserver.prepare()
+    elif lifecycle == 'stopped':
+        httpserver.prepare()
+        httpserver.stop()
+    server_ref = weakref.ref(httpserver)
+
+    del httpserver  # noqa: WPS420
+    for _ in range(3):
+        gc.collect()
+    assert server_ref() is None
+
+
+def test_retired_threads_leave_no_statistics(request):
+    """Test that shrinking removes retired workers' statistics records."""
+    httpserver = HTTPServer(
+        bind_addr=('127.0.0.1', EPHEMERAL_PORT),
+        gateway=Gateway,
+        minthreads=1,
+    )
+    httpserver.prepare()
+    request.addfinalizer(httpserver.stop)
+    httpserver.requests.grow(3)
+    httpserver.requests.shrink(3)
+    worker_stats = httpserver.stats['Worker Threads']
+    assert _wait_until(lambda: len(worker_stats) == 1)
+
+
+@pytest.mark.parametrize('clear_stats', (False, True))
+def test_retired_threads_preserve_totals(request, clear_stats):
+    """Retired workers release their records without losing totals."""
+    httpserver = HTTPServer(
+        bind_addr=('127.0.0.1', EPHEMERAL_PORT),
+        gateway=Gateway,
+        minthreads=1,
+    )
+    httpserver.prepare()
+    request.addfinalizer(httpserver.stop)
+    httpserver.requests.grow(3)
+    httpserver.stats['Enabled'] = True
+    workers = list(httpserver.requests._threads)
+    for number, worker in enumerate(workers, 1):
+        # Distinct durations check sum-of-worker-rates throughput semantics.
+        worker.requests_seen = number
+        worker.bytes_read = number * 10
+        worker.bytes_written = number * 20
+        worker.work_time = number
+    totals = {
+        'Requests': 10,
+        'Bytes Read': 100,
+        'Bytes Written': 200,
+        'Work Time': 10,
+        'Read Throughput': 40,
+        'Write Throughput': 80,
+    }
+    if clear_stats:
+        httpserver.clear_stats()
+        httpserver.stats['Enabled'] = True
+        totals = dict.fromkeys(totals, 0)
+    httpserver.requests.shrink(3)
+    assert _wait_until(
+        lambda: sum(worker.is_alive() for worker in workers) == 1,
+    )
+    # Reap the pool's own references before checking statistics retention.
+    httpserver.requests._clear_dead_threads()
+    assert len(httpserver.stats['Worker Threads']) <= 1
+    for name, expected in totals.items():
+        assert httpserver.stats[name](httpserver.stats) == expected
+    httpserver.stats['Enabled'] = False
+    assert httpserver.stats['Requests'](httpserver.stats) == -1
+    httpserver.stats['Enabled'] = True
+    assert httpserver.stats['Requests'](httpserver.stats) == totals['Requests']
+
+
+def test_statistics_survive_http_worker_churn():
+    """Test that server statistics retain totals after workers retire."""
+    barrier = threading.Barrier(4)
+
+    def app(_environ, start_response):
+        barrier.wait(10)
+        start_response('200 OK', [('Content-Length', '2')])
+        return [b'ok']
+
+    server = wsgi.Server(('127.0.0.1', EPHEMERAL_PORT), app, numthreads=1)
+    server.stats['Enabled'] = True
+    with server._run_in_thread():
+        url = f'http://127.0.0.1:{server.bind_addr[1]}/'
+
+        def request():
+            with requests.get(
+                url,
+                headers={'Connection': 'close'},
+                timeout=10,
+            ) as response:
+                assert response.status_code == HTTPStatus.OK
+                assert response.content == b'ok'
+
+        def workers_idle():
+            return all(t.conn is None for t in server.requests._threads)
+
+        def one_worker_alive():
+            return sum(t.is_alive() for t in server.requests._threads) == 1
+
+        for cycle in range(5):
+            server.requests.grow(3)
+            with ThreadPoolExecutor(max_workers=4) as clients:
+                futures = [clients.submit(request) for _ in range(4)]
+                for future in futures:
+                    future.result()
+            assert _wait_until(workers_idle)
+            stats = server.stats
+            expected = {
+                name: stats[name](stats)
+                for name in (
+                    'Requests',
+                    'Bytes Read',
+                    'Bytes Written',
+                    'Work Time',
+                    'Read Throughput',
+                    'Write Throughput',
+                )
+            }
+            assert expected['Requests'] == 4 * (cycle + 1)
+            server.requests.shrink(3)
+            assert _wait_until(one_worker_alive)
+            server.requests._clear_dead_threads()
+            assert len(stats['Worker Threads']) == 1
+            for name, total in expected.items():
+                assert stats[name](stats) == pytest.approx(total)
 
 
 def test_overload_results_in_suitable_http_error(request):

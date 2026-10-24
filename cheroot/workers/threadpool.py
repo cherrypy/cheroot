@@ -35,6 +35,43 @@ trueyzero = TrueyZero()
 _SHUTDOWNREQUEST = object()
 
 
+class WorkerStats:
+    """Live worker records with bounded totals for retired workers.
+
+    Publish the live records as a plain dict for statistics reporters.
+    Retired records are reduced to numeric totals, without their callbacks
+    or worker references. The lock makes retirement atomic with respect to
+    totals, so a worker is counted exactly once.
+    """
+
+    def __init__(self):
+        """Initialize the live records and retired totals."""
+        self.records = {}
+        self._retired = collections.Counter()
+        self._lock = threading.Lock()
+
+    def register(self, name, stats):
+        """Register a live worker's statistics."""
+        with self._lock:
+            self.records[name] = stats
+
+    def retire(self, name):
+        """Keep a worker's final totals without retaining its record."""
+        with self._lock:
+            stats = self.records.pop(name, None)
+            if stats is not None:
+                self._retired.update(
+                    {key: value(stats) for key, value in stats.items()},
+                )
+
+    def total(self, name):
+        """Sum a statistic over live and retired workers."""
+        with self._lock:
+            return self._retired[name] + sum(
+                stats[name](stats) for stats in self.records.values()
+            )
+
+
 class WorkerThread(threading.Thread):
     """Thread which continuously polls a Queue for Connection objects.
 
@@ -122,7 +159,11 @@ class WorkerThread(threading.Thread):
 
         # noqa: DAR401 KeyboardInterrupt SystemExit
         """
-        self.server.stats['Worker Threads'][self.name] = self.stats
+        # Keep the collector this worker registers with: clear_stats() can
+        # replace the server's collector before this worker exits. Retirement
+        # must remove the record from the original collector.
+        worker_stats = self.server.worker_stats
+        worker_stats.register(self.name, self.stats)
         self.ready = True
         try:
             self._process_connections_until_interrupted()
@@ -151,6 +192,7 @@ class WorkerThread(threading.Thread):
             raise
         finally:
             self.ready = False
+            worker_stats.retire(self.name)
 
     def _process_connections_until_interrupted(self):
         """Process incoming HTTP connections in an infinite loop.

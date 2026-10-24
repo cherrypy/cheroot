@@ -1,0 +1,13 @@
+Fixed ``logging.statistics`` retaining
+:py:class:`~cheroot.server.HTTPServer` instances and their gateways for the
+life of the process, including servers that had stopped, failed to start,
+or never started. Server statistics are now registered after
+:py:meth:`~cheroot.server.HTTPServer.prepare` succeeds and removed by
+:py:meth:`~cheroot.server.HTTPServer.stop`.
+
+Retired worker threads no longer stay in their server's statistics, even
+when statistics are enabled. Their counters and throughput contributions
+are retained in bounded totals, while ``Worker Threads`` lists only live
+records.
+
+-- by :user:`rm-you`
