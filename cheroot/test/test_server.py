@@ -632,6 +632,18 @@ def test_threadpool_restarts_after_shrinking(prepared_server, request):
     assert _wait_for_live_threads(pool, 2) == 2
 
 
+def test_threadpool_stop_while_shrinking(prepared_server):
+    """Test that a pool stopped mid-shrink restarts with its threads idle."""
+    pool = prepared_server(minthreads=2).requests
+    pool.grow(5)
+    pool.shrink(5)
+    pool.stop()
+    # Checked before restarting: a pool that keeps them can't stop again
+    assert not pool._pending_shutdowns
+    pool.start()
+    assert pool.idle == 2
+
+
 def test_threadpool_multistart_validation(monkeypatch):
     """Test for ThreadPool multi-start behavior.
 
