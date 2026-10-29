@@ -60,6 +60,14 @@ non_macos_sock_test = pytest.mark.skipif(
 )
 
 
+def _wait_until(condition, timeout=10):
+    """Wait until the condition is true or the timeout expires."""
+    deadline = time.monotonic() + timeout
+    while not condition() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return condition()
+
+
 @pytest.fixture(params=('abstract', 'file'))
 def unix_sock_file(request):
     """Check that bound UNIX socket address is stored in server."""
@@ -600,14 +608,6 @@ def test_threadpool_multistart_validation(monkeypatch):
         match='Threadpools can only be started once.',
     ):
         tp.start()
-
-
-def _wait_until(condition, timeout=10):
-    """Wait until the condition is true or the timeout expires."""
-    deadline = time.monotonic() + timeout
-    while not condition() and time.monotonic() < deadline:
-        time.sleep(0.05)
-    return condition()
 
 
 def test_statistics_are_published_while_serving(request):
