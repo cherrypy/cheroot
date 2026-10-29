@@ -47,6 +47,14 @@ non_macos_sock_test = pytest.mark.skipif(
 )
 
 
+def _wait_until(condition, timeout=10):
+    """Wait until the condition is true or the timeout expires."""
+    deadline = time.monotonic() + timeout
+    while not condition() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return condition()
+
+
 @pytest.fixture(params=('abstract', 'file'))
 def unix_sock_file(request):
     """Check that bound UNIX socket address is stored in server."""
@@ -565,14 +573,6 @@ def _count_live_threads(pool):
     return sum(thread.is_alive() for thread in pool._threads)
 
 
-def _wait_for_live_threads(pool, count, timeout=10):
-    """Wait until the pool has exactly ``count`` live threads, or timeout."""
-    deadline = time.monotonic() + timeout
-    while _count_live_threads(pool) != count and time.monotonic() < deadline:
-        time.sleep(0.05)
-    return _count_live_threads(pool)
-
-
 @pytest.fixture
 def prepared_server():
     """Yield a function that prepares a server with a set number of threads."""
@@ -599,7 +599,7 @@ def test_threadpool_shrink_calls_are_additive(prepared_server):
     pool.grow(20)
     pool.shrink(10)
     pool.shrink(10)
-    assert _wait_for_live_threads(pool, 1) == 1
+    assert _wait_until(lambda: _count_live_threads(pool) == 1)
 
 
 def test_threadpool_shrink_keeps_minimum(prepared_server):
@@ -608,7 +608,7 @@ def test_threadpool_shrink_keeps_minimum(prepared_server):
     pool.grow(40)
     pool.shrink(40)
     pool.shrink(80)
-    assert _wait_for_live_threads(pool, 10) == 10
+    assert _wait_until(lambda: _count_live_threads(pool) == 10)
     time.sleep(0.5)
     assert _count_live_threads(pool) == 10
 
@@ -619,7 +619,7 @@ def test_threadpool_restarts_after_shrinking(prepared_server, request):
     pool = httpserver.requests
     pool.grow(5)
     pool.shrink(5)
-    assert _wait_for_live_threads(pool, 2) == 2
+    assert _wait_until(lambda: _count_live_threads(pool) == 2)
     httpserver.stop()
 
     # Check that restarting the pool doesn't hang.
@@ -629,7 +629,7 @@ def test_threadpool_restarts_after_shrinking(prepared_server, request):
     restart.start()
     restart.join(10)
     assert not restart.is_alive()
-    assert _wait_for_live_threads(pool, 2) == 2
+    assert _wait_until(lambda: _count_live_threads(pool) == 2)
 
 
 def test_threadpool_stop_while_shrinking(prepared_server):
