@@ -23,11 +23,6 @@ portend
 
 pyopenssl
 
-# The pypytools library provides a cross-implementation context
-# manager for disabling garbage collection in specific blocks
-# of the control flow:
-pypytools
-
 pytest-clarity
 pytest-cov
 pytest-mock >= 1.11.0
