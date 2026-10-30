@@ -420,6 +420,17 @@ def test_garbage_in(test_client):
             raise
 
 
+def test_invalid_character_in_http_method(test_client):
+    """Check that methods with invalid token characters are rejected."""
+    c = test_client.get_connection()
+    c._output(b'GE(T / HTTP/1.1\r\nHost: localhost\r\n\r\n')
+    c._send_output()
+    response = _get_http_response(c, method='GET')
+    response.begin()
+    assert response.status == HTTP_BAD_REQUEST
+    c.close()
+
+
 class CloseController:
     """Controller for testing the close callback."""
 
