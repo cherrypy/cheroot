@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import types
 import urllib.parse  # noqa: WPS301
 import uuid
@@ -44,6 +45,14 @@ non_macos_sock_test = pytest.mark.skipif(
     IS_MACOS,
     reason='Peercreds lookup does not work under macOS/BSD currently.',
 )
+
+
+def _wait_until(condition, timeout=10):
+    """Wait until the condition is true or the timeout expires."""
+    deadline = time.monotonic() + timeout
+    while not condition() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return condition()
 
 
 @pytest.fixture(params=('abstract', 'file'))
@@ -558,6 +567,81 @@ def test_threadpool_invalid_threadrange(minthreads, maxthreads, error):
             min=minthreads,
             max=maxthreads,
         )
+
+
+def _count_live_threads(pool):
+    return sum(thread.is_alive() for thread in pool._threads)
+
+
+@pytest.fixture
+def prepared_server():
+    """Yield a function that prepares a server with a set number of threads."""
+    servers = []
+
+    def prepare(minthreads):
+        httpserver = HTTPServer(
+            bind_addr=('127.0.0.1', EPHEMERAL_PORT),
+            gateway=Gateway,
+            minthreads=minthreads,
+        )
+        httpserver.prepare()
+        servers.append(httpserver)
+        return httpserver
+
+    yield prepare
+    for httpserver in servers:
+        httpserver.stop()
+
+
+def test_threadpool_shrink_calls_are_additive(prepared_server):
+    """Test two close-together shrink() calls retire the total requested."""
+    pool = prepared_server(minthreads=1).requests
+    pool.grow(20)
+    pool.shrink(10)
+    pool.shrink(10)
+    assert _wait_until(lambda: _count_live_threads(pool) == 1)
+
+
+def test_threadpool_shrink_keeps_minimum(prepared_server):
+    """Test that shrink() keeps the minimum number of threads."""
+    pool = prepared_server(minthreads=10).requests
+    pool.grow(40)
+    pool.shrink(40)
+    pool.shrink(80)
+    assert _wait_until(lambda: _count_live_threads(pool) == 10)
+    time.sleep(0.5)
+    assert _count_live_threads(pool) == 10
+
+
+def test_threadpool_restarts_after_shrinking(prepared_server, request):
+    """Test that a pool stopped after shrinking can restart without hanging."""
+    httpserver = prepared_server(minthreads=2)
+    pool = httpserver.requests
+    pool.grow(5)
+    pool.shrink(5)
+    assert _wait_until(lambda: _count_live_threads(pool) == 2)
+    httpserver.stop()
+
+    # Check that restarting the pool doesn't hang.
+    # Run on a separate thread so we can apply a timeout.
+    request.addfinalizer(pool.stop)
+    restart = threading.Thread(target=pool.start, daemon=True)
+    restart.start()
+    restart.join(10)
+    assert not restart.is_alive()
+    assert _wait_until(lambda: _count_live_threads(pool) == 2)
+
+
+def test_threadpool_stop_while_shrinking(prepared_server):
+    """Test that a pool stopped mid-shrink restarts with its threads idle."""
+    pool = prepared_server(minthreads=2).requests
+    pool.grow(5)
+    pool.shrink(5)
+    pool.stop()
+    # Checked before restarting: a pool that keeps them can't stop again
+    assert not pool._pending_shutdowns
+    pool.start()
+    assert pool.idle == 2
 
 
 def test_threadpool_multistart_validation(monkeypatch):
