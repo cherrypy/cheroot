@@ -84,8 +84,14 @@ from warnings import warn as _warn
 
 from . import __version__, connections, errors
 from ._compat import IS_PPC, bton
-from .makefile import MakeFile, StreamWriter
+from .makefile import StreamReader, StreamWriter
 from .workers import threadpool
+
+
+try:
+    from OpenSSL import SSL
+except ImportError:
+    SSL = None  # OpenSSL not available
 
 
 __all__ = (
@@ -1276,19 +1282,31 @@ class HTTPConnection:
     # Fields set by ConnectionManager.
     last_used = None
 
-    def __init__(self, server, sock, makefile=MakeFile):
+    def __init__(self, server, sock, makefile=None):
         """Initialize HTTPConnection instance.
 
         Args:
             server (HTTPServer): web server object receiving this request
             sock (socket._socketobject): the raw socket object (usually
                 TCP) for this connection
-            makefile (file): a fileobject class for reading from the socket
+            makefile (file): Now deprecated.
+                Used to be a fileobject class for reading from the socket.
         """
         self.server = server
         self.socket = sock
-        self.rfile = makefile(sock, 'rb', self.rbufsize)
-        self.wfile = makefile(sock, 'wb', self.wbufsize)
+
+        if makefile is not None:
+            _warn(
+                'The `makefile` parameter in creating an `HTTPConnection` '
+                'is deprecated and will be removed in a future version. '
+                'The connection socket should now be fully wrapped by the '
+                'adapter before being passed to this constructor.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        self.rfile = StreamReader(sock, 'rb', self.rbufsize)
+        self.wfile = StreamWriter(sock, 'wb', self.wbufsize)
         self.requests_seen = 0
 
         self.peercreds_enabled = self.server.peercreds_enabled
@@ -1358,12 +1376,8 @@ class HTTPConnection:
     def _handle_no_ssl(self, req):
         if not req or req.sent_headers:
             return
-        # Unwrap wfile
-        try:
-            resp_sock = self.socket._sock
-        except AttributeError:
-            # self.socket is of OpenSSL.SSL.Connection type
-            resp_sock = self.socket._socket
+        # Unwrap to get raw TCP socket
+        resp_sock = self.socket._sock
         self.wfile = StreamWriter(resp_sock, 'wb', self.wbufsize)
         msg = (
             'The client sent a plain HTTP request, but '
@@ -1507,20 +1521,23 @@ class HTTPConnection:
 
     def _close_kernel_socket(self):
         """Terminate the connection at the transport level."""
-        # Honor ``sock_shutdown`` for PyOpenSSL connections.
-        shutdown = getattr(
-            self.socket,
-            'sock_shutdown',
-            self.socket.shutdown,
-        )
-
         try:
-            shutdown(socket.SHUT_RDWR)  # actually send a TCP FIN
+            self.socket.shutdown(socket.SHUT_RDWR)
         except errors.acceptable_sock_shutdown_exceptions:
             pass
         except socket.error as e:
             if e.errno not in errors.acceptable_sock_shutdown_error_codes:
                 raise
+        except Exception as exc:
+            # translate SSL exceptions to FatalSSLAlert
+            if SSL is not None and isinstance(
+                exc,
+                (SSL.Error, SSL.SysCallError),
+            ):
+                raise errors.FatalSSLAlert(
+                    'TLS/SSL connection failure',
+                ) from exc
+            raise  # re-raise everything else
 
 
 class HTTPServer:
