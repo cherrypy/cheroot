@@ -747,10 +747,10 @@ jobs:
         runner-vm-os:
         - ubuntu-24.04-arm
         - ubuntu-24.04
-        - macos-15
+        - macos-26
         - windows-2025
         - ubuntu-22.04
-        - macos-15-intel
+        - macos-26-intel
         - windows-2022
         toxenv:
         - py
@@ -767,9 +767,9 @@ jobs:
         # NOTE: macOS PyPy 3.11 jobs are excluded because they flakily
         # NOTE: crash `pytest-xdist` workers.
         # NOTE: They should be re-added once it's fixed.
-        - runner-vm-os: macos-15
+        - runner-vm-os: macos-26
           python-version: pypy-3.11-v7.3.23
-        - runner-vm-os: macos-15-intel
+        - runner-vm-os: macos-26-intel
           python-version: pypy-3.11-v7.3.23
 
     uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@1bb961580e20073f66ccb9024f248357f8c8fecb  # yamllint disable-line rule:line-length
@@ -801,7 +801,7 @@ jobs:
         ${{ matrix.runner-vm-os }}
       source-tarball-name: >-
         ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-      timeout-minutes: 7
+      timeout-minutes: 9
       toxenv: >-
         ${{ matrix.toxenv }}
       # tox-provision-args: >-
