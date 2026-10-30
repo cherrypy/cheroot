@@ -1,0 +1,13 @@
+Removed the long-standing blanket
+:external+sphinx:confval:`linkcheck_ignore` exclusion of
+`github.com <https://github.com>`_ commit/issue/pull-request/file
+links: that workaround
+predated Sphinx gaining proper rate-limit handling (backing off and
+retrying on HTTP 429), so it was silently leaving hundreds of GitHub
+links in the changelog and history unchecked. Also authenticated
+those requests via
+:external+sphinx:confval:`linkcheck_request_headers`, using the
+``GITHUB_TOKEN`` CI already provisions for every workflow run, to
+raise the anonymous 60-per-hour rate limit to 5000 per hour.
+
+-- by :user:`julianz-`

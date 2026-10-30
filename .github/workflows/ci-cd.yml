@@ -649,6 +649,16 @@ jobs:
         }}
       dists-artifact-name: >-
         ${{ needs.pre-setup.outputs.dists-artifact-name }}
+      # NOTE: Raises linkcheck's GitHub request rate limit from 60/hour
+      # NOTE: (anonymous) to 5000/hour (authenticated). See `docs/conf.py`.
+      # NOTE: `github.token` (not `secrets.GITHUB_TOKEN`) because the
+      # NOTE: `secrets` context isn't accessible in a `with:` input.
+      environment-variables: >-
+        ${{
+          matrix.toxenv == 'linkcheck-docs'
+          && format('GITHUB_TOKEN={0}', github.token)
+          || ''
+        }}
       post-toxenv-preparation-command: >-
         ${{
           matrix.toxenv == 'pre-commit'
