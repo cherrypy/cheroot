@@ -2,6 +2,6 @@ Bumped the macOS runners in CI's test matrix from
 ``macos-15``/``macos-15-intel`` to ``macos-26``/``macos-26-intel``,
 and raised the matrix's ``timeout-minutes`` from 7 to 9: jobs on
 the old images had started occasionally needing more than 7
-minutes to finish, getting cancelled as a result.
+minutes to finish, getting canceled as a result.
 
 -- by :user:`julianz-`
