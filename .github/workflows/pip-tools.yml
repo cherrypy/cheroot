@@ -50,9 +50,9 @@ jobs:
       }}
     runs-on: ${{ matrix.os }}
 
-    # NOTE: 2 minutes was too tight for ~3.15.0-0 @ macOS-15-intel,
-    # NOTE: which consistently ran ~2m48s and got cancelled by the
-    # NOTE: timeout, blocking the Open/refresh a PR step every time.
+    # NOTE: 2 minutes was too tight for 3.15 @ macOS-15-intel, which
+    # NOTE: consistently ran ~2m48s and got cancelled by the timeout,
+    # NOTE: blocking the Open/refresh a PR step every time.
     timeout-minutes: 5
 
     strategy:
@@ -76,7 +76,7 @@ jobs:
         - >-
           3.10
         - 3.9
-        - ~3.15.0-0
+        - 3.15
         os:
         - ubuntu-24.04-arm
         - macOS-15  # arm64

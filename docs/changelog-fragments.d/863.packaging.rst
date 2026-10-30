@@ -1,0 +1,2 @@
+Declared Python version 3.15 as officially supported
+-- by :user:`julianz-`.
