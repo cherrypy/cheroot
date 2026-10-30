@@ -1,0 +1,2 @@
+Dropped :pypi:`pypytools` from the test dependencies, since the test
+suite no longer uses it -- by :user:`rm-you`.

@@ -1,0 +1,4 @@
+Tests: the test of high file descriptor numbers now disables garbage
+collection while it runs, as its fixture intended, so a collection can
+no longer free a low file descriptor for the server to take
+-- by :user:`rm-you`.
