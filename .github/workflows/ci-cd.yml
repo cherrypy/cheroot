@@ -1070,20 +1070,26 @@ jobs:
         'release/${{ needs.pre-setup.outputs.dist-version }}'
         '${{ needs.pre-setup.outputs.git-tag }}'
 
-    - name: pull-request-action
+    - name: Create a PR
       id: pr
-      uses: vsoch/pull-request-action@1.1.1
       env:
-        BRANCH_PREFIX: ''
+        DIST_VERSION: ${{ needs.pre-setup.outputs.dist-version }}
+        GIT_TAG: ${{ needs.pre-setup.outputs.git-tag }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PULL_REQUEST_BODY: >-
+        PR_BODY: >-
           Automated changelog generation with the version
           ${{ needs.pre-setup.outputs.dist-version }}.
-        PULL_REQUEST_BRANCH: ${{ github.event.repository.default_branch }}
-        PULL_REQUEST_FROM_BRANCH: >-
-          release/${{ needs.pre-setup.outputs.dist-version }}
-        PULL_REQUEST_TITLE: >-
-          🔖 Release ${{ needs.pre-setup.outputs.git-tag }}
+      run: |
+        PR_URL="$(
+          gh pr create \
+            --base '${{ github.event.repository.default_branch }}' \
+            --body "${PR_BODY}" \
+            --head "release/${DIST_VERSION}" \
+            --repo '${{ github.repository }}' \
+            --title "🔖 Release ${GIT_TAG}"
+        )"
+        echo "pull_request_number=${PR_URL##*/}" >> "${GITHUB_OUTPUT}"
+        echo "pull_request_url=${PR_URL}" >> "${GITHUB_OUTPUT}"
     - name: Log the pull request details
       run: |
         echo "PR number: ${{ steps.pr.outputs.pull_request_number }}"
