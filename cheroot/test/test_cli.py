@@ -29,12 +29,12 @@ from cheroot.cli import (
         ('123456789', ('123456789', None)),
         # unix sockets
         (
-            '/tmp/cheroot.sock',  # noqa: S108  # false-positive, no disk use
-            '/tmp/cheroot.sock',  # noqa: S108  # false-positive, no disk use
+            '/tmp/cheroot.sock',  # ruff: ignore[hardcoded-temp-file]  # false-positive, no disk use
+            '/tmp/cheroot.sock',  # ruff: ignore[hardcoded-temp-file]  # false-positive, no disk use
         ),
         (
-            '/tmp/some-random-file-name',  # noqa: S108  # false-positive
-            '/tmp/some-random-file-name',  # noqa: S108  # false-positive
+            '/tmp/some-random-file-name',  # ruff: ignore[hardcoded-temp-file]  # false-positive
+            '/tmp/some-random-file-name',  # ruff: ignore[hardcoded-temp-file]  # false-positive
         ),
         # abstract sockets
         ('@cheroot', '\x00cheroot'),
