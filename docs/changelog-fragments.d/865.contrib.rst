@@ -1,0 +1,9 @@
+Switched the :file:`.github/workflows/pip-tools.yml` workflow from
+pushing the lock file update PR branches with an SSH deploy key and
+opening them via ``vsoch/pull-request-action`` to
+``peter-evans/create-pull-request`` authenticated with the built-in
+GitHub Actions token. Since pushes made with that token do not
+trigger workflows, these PRs are now created as drafts and the CI/CD
+workflow runs once they are marked as ready for review.
+
+-- by :user:`webknjaz`
