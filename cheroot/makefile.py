@@ -32,6 +32,21 @@ class BufferedWriter(io.BufferedWriter):
                 n = self.raw.write(bytes(self._write_buf))
             except io.BlockingIOError as e:
                 n = e.characters_written
+            except (OSError, ValueError):
+                # The underlying socket may have already been closed or had
+                # its file descriptor invalidated by the time a buffered
+                # write is flushed. This commonly happens on TLS connections
+                # that were torn down abruptly (client abort, timeout), where
+                # the implicit flush is triggered from the finalizer via
+                # ``IOBase.__del__`` -> ``close`` -> ``flush``. Letting the
+                # resulting ``OSError`` (e.g. ``EBADF``) or ``ValueError``
+                # ("I/O operation on closed file") escape a finalizer taints
+                # the worker thread's teardown path and can drain the thread
+                # pool over time, wedging the server. There is nowhere left
+                # to send the buffered bytes, so drop them and stop.
+                # Ref: https://github.com/cherrypy/cheroot/issues/710
+                self._write_buf.clear()
+                break
             del self._write_buf[:n]
 
 
