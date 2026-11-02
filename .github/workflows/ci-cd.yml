@@ -15,6 +15,11 @@ on:
   pull_request:
     paths-ignore:  # changes to the cron workflow are triggered through it
     - .github/workflows/scheduled-runs.yml
+    types:
+    - opened  # default
+    - synchronize  # default
+    - reopened  # default
+    - ready_for_review  # used in PRs created from GitHub Actions workflows
   workflow_call:  # a way to embed the main tests
   workflow_dispatch:
     inputs:

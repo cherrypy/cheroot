@@ -274,7 +274,7 @@ jobs:
     environment: pip-tools
 
     permissions:
-      contents: write  # Needed to enable auto-merge
+      contents: write  # Needed to push the PR branch
       pull-requests: write
 
     steps:
@@ -296,8 +296,6 @@ jobs:
     - name: Grab the source from Git
       if: steps.artifacts.outputs.lockfile-updates-needed
       uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.PIP_TOOLS_DEPLOYMENT_KEY }}
     - name: Setup git user as [bot]
       if: steps.artifacts.outputs.lockfile-updates-needed
       # Refs:
@@ -305,52 +303,24 @@ jobs:
       # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
       uses: fregante/setup-git-user@v1.1.0
 
-    - name: Figure out if the pre-existing remote branch exists
+    - name: List Git patches
       if: steps.artifacts.outputs.lockfile-updates-needed
-      id: pre-existing-remote-branch
-      run: >-
-        echo "info=$(
-        git ls-remote origin '${{ env.git-branch }}'
-        )" >> "${GITHUB_OUTPUT}"
-    - name: Fetch the existing remote PR branch
-      if: steps.pre-existing-remote-branch.outputs.info
-      run: git fetch origin '${{ env.git-branch }}'
-    - name: Switch to the PR branch
+      run: ls -alh '${{ runner.temp }}/patches/'
+    - name: Apply patches to the Git repo
       if: steps.artifacts.outputs.lockfile-updates-needed
-      run: git checkout -B '${{ env.git-branch }}'
-    - name: Make an empty initial commit
-      if: >-
-        !steps.pre-existing-remote-branch.outputs.info
-        && steps.artifacts.outputs.lockfile-updates-needed
-      run: git commit --allow-empty -m "Pip-tools initial commit $(uuidgen)"
-    - name: Push the PR branch to remote
-      # ... so that it's possible to create a PR out of it
-      if: >-
-        !steps.pre-existing-remote-branch.outputs.info
-        && steps.artifacts.outputs.lockfile-updates-needed
-      # FIXME: use `GITHUB_TOKEN`
-      run: git push --atomic origin 'HEAD:${{ env.git-branch }}'
-    - name: Wipe the dummy commit
-      if: >-
-        !steps.pre-existing-remote-branch.outputs.info
-        && steps.artifacts.outputs.lockfile-updates-needed
-      # ... so that it's possible to create a PR out of it
-      run: git reset HEAD^
+      run: git am '${{ runner.temp }}/patches'/*.patch
 
     - name: Create a PR
-      if: >-
-        !steps.pre-existing-remote-branch.outputs.info
-        && steps.artifacts.outputs.lockfile-updates-needed
+      if: steps.artifacts.outputs.lockfile-updates-needed
       id: pr
-      uses: vsoch/pull-request-action@1.1.1
-      env:
-        BRANCH_PREFIX: ''
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PULL_REQUEST_BODY: >-
+      uses: peter-evans/create-pull-request@v8.1.1
+      with:
+        base: ${{ github.event.repository.default_branch }}
+        body: >-
           Automated pip-tools-managed pip constraint lockfiles update.
-        PULL_REQUEST_BRANCH: ${{ github.event.repository.default_branch }}
-        PULL_REQUEST_FROM_BRANCH: ${{ env.git-branch }}
-        PULL_REQUEST_TITLE: >-
+        branch: ${{ env.git-branch }}
+        draft: always-true
+        title: >-
           Bump transitive deps in pip-tools-managed lockfiles${{
           (
           github.event_name == 'workflow_dispatch'
@@ -359,34 +329,28 @@ jobs:
           && format(' for {0}', github.event.inputs.package-distribuition)
           || ''
           }}
+        token: ${{ github.token }}
     - name: Log the pull request details
       run: >-
         echo
-        "PR number: ${{ steps.pr.outputs.pull_request_number }}"
-        "\nPR URL: ${{ steps.pr.outputs.pull_request_url }}"
-
-    - name: List Git patches
-      if: steps.artifacts.outputs.lockfile-updates-needed
-      run: ls -alh '${{ runner.temp }}/patches/'
-    - name: Apply patches to the Git repo
-      if: steps.artifacts.outputs.lockfile-updates-needed
-      run: git am '${{ runner.temp }}/patches'/*.patch
-    - name: Force-push the PR branch to remote
-      # ... with only the useful commits which will cause a `pull_request`
-      # `synchronize` event because of the SSH key
-      if: steps.artifacts.outputs.lockfile-updates-needed
+        "PR number: ${{ steps.pr.outputs.pull-request-number }}"
+        "\nPR URL: ${{ steps.pr.outputs.pull-request-url }}"
+    - name: Instruct the maintainers to trigger CI by undrafting the PR
+      if: steps.pr.outputs.pull-request-operation == 'created'
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: >-
-        git push
-        --atomic
-        origin 'HEAD:${{ env.git-branch }}'
-        --force-with-lease
+        gh pr comment
+        --body 'Please mark the PR as ready for review to trigger PR checks.'
+        --repo '${{ github.repository }}'
+        '${{ steps.pr.outputs.pull-request-url }}'
 
     - name: Enable auto-merge for the PR
-      if: steps.pr.outputs.pull_request_url
+      if: steps.pr.outputs.pull-request-operation == 'created'
       run: >-
         gh pr merge
         --auto --merge
-        '${{ steps.pr.outputs.pull_request_url }}'
+        '${{ steps.pr.outputs.pull-request-url }}'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
