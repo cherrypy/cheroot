@@ -338,5 +338,8 @@ repos:
     - requests_unixsocket
     - Sphinx
     - trustme  # needed by pylint-pytest since it picks up pytest's args
+    # FIXME: drop the pytest constraint once `pylint-pytest` supports v9.2+
+    - >-  # Ref: https://github.com/pylint-dev/pylint-pytest/issues/163
+      pytest < 9.2
 
 ...
