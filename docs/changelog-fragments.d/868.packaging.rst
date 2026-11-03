@@ -1,0 +1,7 @@
+Excluded the ``.git_archival.txt`` file from the source distributions
+built from Git checkouts, so that :pypi:`setuptools-scm` does not emit
+warnings about its unprocessed placeholders when building wheels from
+such sdists. The file still gets included and templated in the archives
+produced by ``git archive``.
+
+-- by :user:`webknjaz`
