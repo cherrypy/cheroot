@@ -1,0 +1,7 @@
+The lock file update PRs opened by the :file:`.github/workflows/pip-tools.yml`
+workflow now contain commits signed by GitHub on behalf of
+``github-actions[bot]``. They are recreated through the GitHub API one by
+one, which is slower than a single ``git push``, so the timeout of the job
+publishing them has been raised from 1 to 5 minutes.
+
+-- by :user:`webknjaz`
