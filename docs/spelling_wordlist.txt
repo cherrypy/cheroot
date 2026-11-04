@@ -66,6 +66,7 @@ Refactor
 Refactored
 refactoring
 refactorings
+sdists
 Sep
 sep
 sexualized
@@ -77,9 +78,11 @@ stdout
 subclasses
 submodules
 subpackages
+sunsetting
 symlinked
 syscall
 systemd
+templated
 threadpool
 Tidelift
 TLS

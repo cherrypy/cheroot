@@ -1,0 +1,6 @@
+Moved the macOS jobs of the :file:`.github/workflows/pip-tools.yml`
+workflow from the ``macOS-15`` and ``macOS-15-intel`` runners that
+GitHub is sunsetting to ``macOS-26`` and ``macOS-26-intel``, matching
+the main CI/CD workflow.
+
+-- by :user:`webknjaz`
