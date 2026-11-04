@@ -26,6 +26,7 @@ environ
 errored
 Faux
 fd
+finalizer
 Fortran
 hardcoded
 hostname
@@ -82,6 +83,7 @@ sunsetting
 symlinked
 syscall
 systemd
+teardown
 templated
 threadpool
 Tidelift
