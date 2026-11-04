@@ -31,7 +31,7 @@ pypytools
 pytest-clarity
 pytest-cov
 pytest-mock >= 1.11.0
-pytest-rerunfailures >= 16.2
+pytest-rerunfailures >= 16.2; python_version >= "3.10"
 pytest-sugar >= 0.9.3
 pytest-watch == 4.2.0
 pytest-xdist >= 1.28.0
