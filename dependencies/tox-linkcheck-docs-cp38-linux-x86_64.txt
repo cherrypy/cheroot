@@ -157,7 +157,7 @@ pytest-forked==1.4.0 ; sys_platform != "win32"
     #   pytest-xdist
 pytest-mock==3.6.1
     # via -r dependencies/tests.in
-pytest-rerunfailures==16.7
+pytest-rerunfailures==10.2
     # via -r dependencies/tests.in
 pytest-sugar==0.9.4
     # via -r dependencies/tests.in
