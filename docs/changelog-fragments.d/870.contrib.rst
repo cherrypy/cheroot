@@ -1,0 +1,8 @@
+Bumped ``pytest-rerunfailures`` to ``>= 16.2`` in the test dependencies,
+and bumped the already-committed lockfiles pinned below that. Versions
+before 16.2 are incompatible with ``pytest`` 9+: a rerun could leave a
+fixture's finalizer list non-empty, which trips an assertion in
+``pytest`` 9's fixture teardown and errors the test instead of
+rerunning it.
+
+-- by :user:`julianz-`
