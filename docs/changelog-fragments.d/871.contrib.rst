@@ -1,0 +1,8 @@
+Added ``setuptools < 82`` to the ``flake8`` pre-commit hook's
+dependencies. ``flake8-logging-format`` still imports
+``pkg_resources``, which recent ``virtualenv``/``venv`` tooling no
+longer seeds by default, and which ``setuptools`` itself removed
+outright as of version 82.0.0. This broke ``flake8`` on
+``pre-commit.ci``'s own hook environment.
+
+-- by :user:`julianz-`
