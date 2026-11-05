@@ -50,6 +50,7 @@ will be read, and the context will be automatically created from them.
    pyopenssl
 """
 
+import pathlib
 import socket
 import sys
 import threading
@@ -363,8 +364,7 @@ class pyOpenSSLAdapter(Adapter):
 
         Ref: https://www.pyopenssl.org/en/latest/changelog.html
         """
-        with open(self.private_key, 'rb') as key_file:
-            key_data = key_file.read()
+        key_data = pathlib.Path(self.private_key).read_bytes()
 
         # PEM-encoded encrypted keys always say so in their header -- either
         # a PKCS#8 header containing the word "ENCRYPTED", or a
