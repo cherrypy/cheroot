@@ -20,3 +20,10 @@
 # * https://coverage.rtfd.io/en/latest/changes.html#version-7-15-3-2026-08-02
 # * https://github.com/coveragepy/coveragepy/issues/2200
 coverage < 7.15.3; python_version >= "3.13"
+
+# pytest-rerunfailures < 16.2 is incompatible with pytest 9+: a rerun
+# can leave a fixture's finalizer list non-empty, tripping an
+# assertion pytest added in its own teardown. 16.2 also requires
+# Python >= 3.10, which is fine -- below that, pytest itself is still
+# pinned below 9, so the bug this excludes doesn't apply there.
+pytest-rerunfailures >= 16.2; python_version >= "3.10"
