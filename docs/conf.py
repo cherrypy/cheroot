@@ -102,19 +102,6 @@ linkcheck_ignore = [
     r'http://localhost:\d+/',  # local URLs
     r'https://codecov\.io/gh/cherrypy/cheroot/branch/master/graph/badge\.svg',
     r'https://github\.com/cherrypy/cheroot/actions',  # 404 if no auth
-    # Too many links to GitHub so they cause
-    # "429 Client Error: too many requests for url"
-    # Ref: https://github.com/sphinx-doc/sphinx/issues/7388
-    r'https://github\.com/cherrypy/cheroot/blob',
-    r'https://github\.com/cherrypy/cheroot/commit',
-    r'https://github\.com/cherrypy/cheroot/issues',
-    r'https://github\.com/cherrypy/cheroot/pull',
-    r'https://github\.com/cherrypy/cheroot/tree',
-    r'https://github\.com/cherrypy/cherrypy/blob',
-    r'https://github\.com/cherrypy/cherrypy/commit',
-    r'https://github\.com/cherrypy/cherrypy/issues',
-    r'https://github\.com/cherrypy/cherrypy/pull',
-    r'https://github\.com/cherrypy/cherrypy/tree',
     # Has an ephemeral anchor (line-range) but actual HTML has separate per-
     # line anchors.
     (
@@ -131,6 +118,22 @@ linkcheck_ignore = [
     r'^https://forums\.sabnzbd\.org/',  # these generate HTTP 403 Forbidden
     r'^https://web\.archive\.org/web/',  # these timeout
 ]
+linkcheck_request_headers = (
+    {
+        'https://github.com/': {
+            'Authorization': f'Bearer {os.environ["GITHUB_TOKEN"]}',
+        },
+        'https://api.github.com/': {
+            'Authorization': f'Bearer {os.environ["GITHUB_TOKEN"]}',
+        },
+    }
+    if os.environ.get('GITHUB_TOKEN')
+    # Anonymous GitHub requests are capped at 60/hour; an authenticated
+    # token raises that to 5000/hour, keeping `linkcheck` from needing
+    # to back off and retry when checking the many GitHub links in the
+    # changelog/history.
+    else {}
+)
 linkcheck_anchors_ignore = [
     r'^!',  # default
     # ignore anchors that start with a '/', e.g. Wikipedia media files:
