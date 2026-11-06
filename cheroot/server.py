@@ -1667,6 +1667,7 @@ class HTTPServer:
         """Reset server stat counters.."""
         self._start_time = None
         self._run_time = 0
+        worker_stats = self._worker_stats = threadpool._WorkerStats()
         self.stats = {
             'Enabled': False,
             'Bind Address': lambda s: repr(self.bind_addr),
@@ -1680,59 +1681,35 @@ class HTTPServer:
             'Threads Idle': lambda s: getattr(self.requests, 'idle', None),
             'Socket Errors': 0,
             'Requests': lambda s: (
-                ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Requests'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                ((not s['Enabled']) and -1) or worker_stats.total('Requests')
             ),
             'Bytes Read': lambda s: (
-                ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Bytes Read'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                ((not s['Enabled']) and -1) or worker_stats.total('Bytes Read')
             ),
             'Bytes Written': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Written'](w)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or worker_stats.total('Bytes Written')
             ),
             'Work Time': lambda s: (
-                ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Work Time'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                ((not s['Enabled']) and -1) or worker_stats.total('Work Time')
             ),
             'Read Throughput': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or worker_stats.total('Read Throughput')
             ),
             'Write Throughput': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or worker_stats.total('Write Throughput')
             ),
-            'Worker Threads': {},
+            'Worker Threads': worker_stats.records,
         }
-        logging.statistics['Cheroot HTTPServer %d' % id(self)] = self.stats
+        if self.ready:
+            logging.statistics[self._stats_key] = self.stats
+
+    @property
+    def _stats_key(self):
+        """Key of the server's statistics in ``logging.statistics``."""
+        return 'Cheroot HTTPServer %d' % id(self)
 
     def runtime(self):
         """Return server uptime."""
@@ -1885,6 +1862,9 @@ class HTTPServer:
         self.requests.start()
 
         self.ready = True
+        # Only while serving: the statistics' callbacks hold the server,
+        # which the process-wide registry would otherwise keep alive for good
+        logging.statistics[self._stats_key] = self.stats
         self._start_time = time.time()
 
     def _serve_unservicable(self):
@@ -2263,6 +2243,7 @@ class HTTPServer:
             return  # already stopped
 
         self.ready = False
+        logging.statistics.pop(self._stats_key, None)
 
         # This tells the thread that handles unservicable connections to shut
         # down:
