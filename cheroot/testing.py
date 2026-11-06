@@ -5,7 +5,7 @@ import http.client
 import socket
 import threading
 import time
-from contextlib import closing, contextmanager
+from contextlib import closing, contextmanager, suppress
 
 import pytest
 
@@ -109,6 +109,7 @@ class _TestClient:
             server.bind_addr,
         )
         self.server_instance = server
+        self._connections = []
         self._http_connection = self.get_connection()
 
     def get_connection(self):
@@ -118,7 +119,22 @@ class _TestClient:
             if self.server_instance.ssl_adapter is None
             else http.client.HTTPSConnection
         )
-        return conn_cls(name)
+        conn = conn_cls(name)
+        self._connections.append(conn)
+        return conn
+
+        def close(self):
+            """Close every HTTP connection this client opened.
+
+        Connections handed out by :meth:`get_connection` are otherwise
+        left open until garbage collection, which used to surface as
+        ``ResourceWarning: unclosed <socket.socket ...>`` in the test
+        suite. Ref: https://github.com/cherrypy/cheroot/issues/768
+        """
+            for conn in self._connections:
+                with suppress(OSError):
+                    conn.close()
+            self._connections.clear()
 
     def request(  # pylint: disable=too-many-positional-arguments
         self,
