@@ -18,7 +18,7 @@ IS_RELEASE_ON_RTD = (
 if IS_RELEASE_ON_RTD:
     tags: set[str]
     # pylint: disable-next=used-before-assignment
-    tags.add('is_release')  # noqa: F821
+    tags.add('is_release')  # ruff: ignore[undefined-name]
 
 
 # Make in-tree extension importable in non-tox setups/envs, like RTD.

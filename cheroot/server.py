@@ -204,7 +204,7 @@ class HeaderReader:
     Interface and default implementation.
     """
 
-    def __call__(self, rfile, hdict=None):  # noqa: C901  # FIXME
+    def __call__(self, rfile, hdict=None):  # ruff: ignore[complex-structure]  # FIXME
         """
         Read headers from the given stream into the given header dict.
 
@@ -762,7 +762,7 @@ class HTTPRequest:
 
         self.ready = True
 
-    def read_request_line(self):  # noqa: C901  # FIXME
+    def read_request_line(self):  # ruff: ignore[complex-structure]  # FIXME
         """Read and parse first line of the HTTP request.
 
         Returns:
@@ -991,7 +991,7 @@ class HTTPRequest:
 
         return True
 
-    def read_request_headers(self):  # noqa: C901  # FIXME
+    def read_request_headers(self):  # ruff: ignore[complex-structure]  # FIXME
         """Read ``self.rfile`` into ``self.inheaders``.
 
         Ref: :py:attr:`self.inheaders <HTTPRequest.outheaders>`.
@@ -1166,7 +1166,7 @@ class HTTPRequest:
         else:
             self.conn.wfile.write(chunk)
 
-    def send_headers(self):  # noqa: C901  # FIXME
+    def send_headers(self):  # ruff: ignore[complex-structure]  # FIXME
         """Assert, process, and send the HTTP response message-headers.
 
         You must set ``self.status``, and :py:attr:`self.outheaders
@@ -1299,7 +1299,7 @@ class HTTPConnection:
         self.resolve_peer_creds = lru_cache(maxsize=1)(self.resolve_peer_creds)
         self.get_peer_creds = lru_cache(maxsize=1)(self.get_peer_creds)
 
-    def communicate(self):  # noqa: C901  # FIXME
+    def communicate(self):  # ruff: ignore[complex-structure]  # FIXME
         """Read each request and respond appropriately.
 
         Returns true if the connection should be kept open.
@@ -1812,7 +1812,7 @@ class HTTPServer:
                 self.interrupt = sys_exit_exc
             raise sys_exit_exc from underlying_interrupt
 
-    def prepare(self):  # noqa: C901  # FIXME
+    def prepare(self):  # ruff: ignore[complex-structure]  # FIXME
         """Prepare server to serving requests.
 
         It binds a socket's port, setups the socket to ``listen()`` and does
@@ -2010,7 +2010,7 @@ class HTTPServer:
         self.bind_addr = self.resolve_real_bind_addr(sock)
         return sock
 
-    def bind_unix_socket(self, bind_addr):  # noqa: C901  # FIXME
+    def bind_unix_socket(self, bind_addr):  # ruff: ignore[complex-structure]  # FIXME
         """Create (or recreate) a UNIX socket object."""
         if IS_WINDOWS:
             """
@@ -2257,7 +2257,7 @@ class HTTPServer:
         self.stop()
         self._interrupt = interrupt
 
-    def stop(self):  # noqa: C901  # FIXME
+    def stop(self):  # ruff: ignore[complex-structure]  # FIXME
         """Gracefully shutdown a server that is serving forever."""
         if not self.ready:
             return  # already stopped

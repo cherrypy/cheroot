@@ -256,7 +256,7 @@ class WebCase(unittest.TestCase):
 
     console_height = 30
 
-    def _handlewebError(self, msg):  # noqa: C901  # FIXME
+    def _handlewebError(self, msg):  # ruff: ignore[complex-structure]  # FIXME
         print()
         print('    ERROR: %s' % msg)
 
