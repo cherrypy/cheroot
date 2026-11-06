@@ -1,6 +1,7 @@
 import collections.abc as _c
 import typing as _t
 
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from OpenSSL import SSL
 
 from ..makefile import StreamReader, StreamWriter
@@ -39,16 +40,7 @@ class pyOpenSSLAdapter(Adapter):
         | None = ...,
     ) -> None: ...
     def wrap(self, sock): ...
-    def _password_callback(
-        self,
-        password_max_length: int,
-        verify_twice: bool,
-        password_or_callback: _c.Callable[[], bytes | str]
-        | bytes
-        | str
-        | None,
-        /,
-    ) -> bytes: ...
+    def _load_private_key(self) -> PrivateKeyTypes: ...
     def get_environ(self): ...
     def makefile(self, sock, mode: str = ..., bufsize: int = ...): ...
     def get_context(self) -> SSL.Context: ...
