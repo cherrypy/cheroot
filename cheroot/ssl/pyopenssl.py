@@ -391,7 +391,11 @@ class pyOpenSSLAdapter(Adapter):
         if isinstance(password, str):
             password = password.encode('utf-8')
         elif not isinstance(password, bytes):
-            password = b''  # invalid types can't decrypt; let it fail below
+            # password is neither a string nor bytes, so use None.
+            # `cryptography` treats a missing password the same as
+            # an empty one, raising the same `TypeError: Password
+            # was not given but private key is encrypted` either way.
+            password = None
 
         return _load_pem_private_key(key_data, password=password)
 
