@@ -364,14 +364,22 @@ class pyOpenSSLAdapter(Adapter):
 
         Ref: https://www.pyopenssl.org/en/latest/changelog.html
         """
-        key_data = pathlib.Path(self.private_key).read_bytes()
+        with pathlib.Path(self.private_key).open('rb') as key_file:
+            header = key_file.read(256)
 
-        # PEM-encoded encrypted keys always say so in their header -- either
-        # a PKCS#8 header containing the word "ENCRYPTED", or a
-        # `Proc-Type: 4,ENCRYPTED` line (traditional OpenSSL format).
-        # Checking this directly avoids touching `private_key_password`
-        # (which may prompt interactively) for keys that don't need it.
-        if b'ENCRYPTED' not in key_data:
+            # PEM-encoded encrypted keys always say so in their header --
+            # either a PKCS#8 header containing the word "ENCRYPTED", or a
+            # `Proc-Type: 4,ENCRYPTED` line (traditional OpenSSL format).
+            # Both fit well within this many bytes, so checking just this
+            # much avoids false matches in the base64 body below. This
+            # doesn't save us from reading the rest of the file -- it's
+            # read right after regardless -- it only bounds where we look
+            # for the marker, so it can't match something in the key data
+            # itself.
+            is_encrypted = b'ENCRYPTED' in header
+            key_data = header + key_file.read()
+
+        if not is_encrypted:
             return _load_pem_private_key(key_data, password=None)
 
         password = self.private_key_password
