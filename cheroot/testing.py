@@ -126,11 +126,11 @@ class _TestClient:
         def close(self):
             """Close every HTTP connection this client opened.
 
-        Connections handed out by :meth:`get_connection` are otherwise
-        left open until garbage collection, which used to surface as
-        ``ResourceWarning: unclosed <socket.socket ...>`` in the test
-        suite. Ref: https://github.com/cherrypy/cheroot/issues/768
-        """
+            Connections handed out by :meth:`get_connection` are otherwise
+            left open until garbage collection, which used to surface as
+            ``ResourceWarning: unclosed <socket.socket ...>`` in the test
+            suite. Ref: https://github.com/cherrypy/cheroot/issues/768
+            """
             for conn in self._connections:
                 with suppress(OSError):
                     conn.close()
