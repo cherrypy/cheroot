@@ -1401,11 +1401,17 @@ class HTTPConnection:
         else:
             # On the other hand, sometimes we want to hang around for a bit
             # to make sure the client has a chance to read our entire
-            # response. Skipping the close() calls here delays the FIN
-            # packet until the socket object is garbage-collected later.
-            # Someday, perhaps, we'll do the full lingering_close that
-            # Apache does, but not today.
-            pass
+            # response. The socket used to be left for the garbage
+            # collector here, but that only delays the FIN packet until
+            # the socket object is collected -- which under CPython
+            # happens as soon as the connection is dropped anyway -- and
+            # it leaks the file descriptor until then, surfacing as
+            # ``ResourceWarning: unclosed <socket.socket ...>``.
+            # Close it explicitly instead: closing sends the FIN after
+            # the queued response bytes, so the client can still read
+            # the response, and no file descriptor is leaked.
+            # Ref: https://github.com/cherrypy/cheroot/issues/768
+            self.socket.close()
 
     def get_peer_creds(self):  # LRU cached on per-instance basis, see __init__
         """Return the PID/UID/GID tuple of the peer socket for UNIX sockets.
