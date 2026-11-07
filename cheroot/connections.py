@@ -318,11 +318,11 @@ class ConnectionManager:
                         f'{tls_connection_drop_error!s}',
                     )
                     # The handshake failed before the socket was wrapped,
-                # so the accepted socket is still ours to close.
-                # Otherwise it would leak until garbage collection.
-                # Ref: https://github.com/cherrypy/cheroot/issues/768
-                s.close()
-                return None
+                    # so the accepted socket is still ours to close.
+                    # Otherwise it would leak until garbage collection.
+                    # Ref: https://github.com/cherrypy/cheroot/issues/768
+                    s.close()
+                    return None
                 except errors.NoSSLError as http_over_https_err:
                     self.server.error_log(
                         f'Client {addr!s} attempted to speak plain HTTP into '
