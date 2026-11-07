@@ -61,13 +61,11 @@ def native_server_thread(thread_and_native_server):  # noqa: F811
 def wsgi_server_client(wsgi_server):  # noqa: F811
     """Create a test client out of given WSGI server."""
     client = get_server_client(wsgi_server)
-    return client
+    yield client
     # Close every connection the client opened so that no socket is
-
-
-# left unclosed once the test ends. Ref:
-# https://github.com/cherrypy/cheroot/issues/768
-client.close()
+    # left unclosed once the test ends. Ref:
+    # https://github.com/cherrypy/cheroot/issues/768
+    client.close()
 
 
 @pytest.fixture
@@ -75,13 +73,11 @@ client.close()
 def native_server_client(native_server):  # noqa: F811
     """Create a test client out of given HTTP server."""
     client = get_server_client(native_server)
-    return client
+    yield client
     # Close every connection the client opened so that no socket is
-
-
-# left unclosed once the test ends. Ref:
-# https://github.com/cherrypy/cheroot/issues/768
-client.close()
+    # left unclosed once the test ends. Ref:
+    # https://github.com/cherrypy/cheroot/issues/768
+    client.close()
 
 
 @pytest.fixture
