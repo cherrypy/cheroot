@@ -1,0 +1,5 @@
+*
+!.gitignore
+!direct/
+!lock-files/
+!README.md

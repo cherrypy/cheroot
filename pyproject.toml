@@ -1,6 +1,6 @@
 [build-system]
-# NOTE: Keep this in sync with `dependencies/dist-build-constraints.in`
-# NOTE: at all times.
+# NOTE: Regenerate the build deps lock file in
+# NOTE: `dependencies/lock-files/` whenever this changes.
 requires = [
   # Essentials
   "setuptools >= 61.2",
