@@ -14,6 +14,7 @@ on:
   pull_request:
     paths:
     - .github/workflows/pip-tools.yml
+    - .github/workflows/reusable-pip-tools.yml
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
@@ -42,19 +43,7 @@ concurrency:
 jobs:
 
   deps:
-    name: >-
-      ⛓🔒 🐍${{
-          matrix.python-version
-      }} @ ${{
-          matrix.os
-      }}
-    runs-on: ${{ matrix.os }}
-
-    # NOTE: 2 minutes was too tight for 3.15 @ macOS-15-intel, which
-    # NOTE: consistently ran ~2m48s and got cancelled by the timeout,
-    # NOTE: blocking the Open/refresh a PR step every time.
-    timeout-minutes: 5
-
+    name: ⛓🔒 Lock files${{ '' }}  # nest jobs under the same sidebar category
     strategy:
       matrix:
         python-version:
@@ -63,7 +52,11 @@ jobs:
         # NOTE: important results first.
         - 3.14
         - 3.13
-        - 3.8
+        # NOTE: Python 3.8 is not locked anymore, since the last tox
+        # NOTE: release supporting it lacks the hook needed for injecting
+        # NOTE: the lock file generation env. Its existing lock files are
+        # NOTE: kept as is, considering that this runtime has reached EOL.
+        - 3.9
         # NOTE: Pinned to 7.3.23 rather than tracking latest: 8.0.0 has a
         # NOTE: CFFI buffer-export bug breaking reads of TLS streams to
         # NOTE: EOF. Ref: https://github.com/pypy/pypy/issues/5589
@@ -75,165 +68,34 @@ jobs:
         - 3.11
         - >-
           3.10
-        - 3.9
         - 3.15
-        os:
+        runner-vm-os:
         - ubuntu-24.04-arm
         - macOS-26  # arm64
         - ubuntu-22.04
         - macOS-26-intel
         - windows-2022
+        lock-file-env:
+        - py
+        lock-file-extra-input:
+        - pyproject.toml
 
-    env:
-      PIP_DISABLE_PIP_VERSION_CHECK: 1
-      PIP_NO_PYTHON_VERSION_WARNING: 1
-      PIP_NO_WARN_SCRIPT_LOCATION: 1
-      PY_COLORS: 1
-
-    steps:
-    - name: Grab the source from Git
-      uses: actions/checkout@v3  # Keep before `setup-python` for cache to work
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: >-
-        Calculate dependency files' combined hash value
-        for use in the cache key
-      id: calc-cache-key-files
-      uses: ./.github/actions/cache-keys
-    - name: Set up pip cache
-      uses: re-actors/cache-python-deps@release/v1
-      with:
-        cache-key-for-dependency-files: >-
-          ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
-
-    - name: Install pip-tools
-      run: >-
-        python -m
-        pip install
-        --user
-        pip-tools
-
-    - name: Setup git user as [bot]
-      # Refs:
-      # * https://github.community/t/github-actions-bot-email-address/17204/6
-      # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
-      uses: fregante/setup-git-user@v1.1.0
-
-    - name: Generate constraints files
-      id: constraints
-      # NOTE: `sed` under macOS needs a backup argument.
-      # Ref: https://stackoverflow.com/a/7573438/595220
-      run: >
-        set -x
-
-
-        BASE_NAME=$(
-        PYTHONPATH=bin/ python -c
-        'from pip_constraint_helpers import get_constraint_file_path,
-        get_runtime_python_tag;
-        print(get_constraint_file_path(
-        "", "py", get_runtime_python_tag())[:-4]
-        )
-        '
-        )
-
-
-        (cd dependencies/;
+    uses: ./.github/workflows/reusable-pip-tools.yml
+    with:
+      lock-file-env: ${{ matrix.lock-file-env }}
+      lock-file-extra-input: ${{ matrix.lock-file-extra-input }}
+      python-version: ${{ matrix.python-version }}
+      runner-vm-os: ${{ matrix.runner-vm-os }}
+      # NOTE: 2 minutes was too tight for 3.15 @ macOS-15-intel, which
+      # NOTE: consistently ran ~2m48s and got cancelled by the timeout,
+      # NOTE: blocking the Open/refresh a PR step every time.
+      timeout-minutes: 5
+      upgrade-package: >-
         ${{
-        runner.os != 'Windows'
-        && 'ln -svf tests.in "${BASE_NAME}.in"; git add "${BASE_NAME}.in"'
-        || 'GIT_INDEX_OBJECT_SYMLINK_TYPE=120000;
-        SYMLINK_TARGET_HASH=$(echo -n tests.in | git hash-object --stdin);
-        CURRENT_SRC_OBJECT_TYPE="$(
-        git ls-tree HEAD -- "${BASE_NAME}.in"
-        | awk "{print\$1}"
-        )";
-        echo "CURRENT_SRC_OBJECT_TYPE=${CURRENT_SRC_OBJECT_TYPE}";
-        if [[ "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" !=
-        "${CURRENT_SRC_OBJECT_TYPE}" ]];
-        then
-        git update-index --add --cacheinfo
-        "${GIT_INDEX_OBJECT_SYMLINK_TYPE}" "${SYMLINK_TARGET_HASH}"
-        "dependencies/${BASE_NAME}.in" &&
-        git status &&
-        git restore -- "${BASE_NAME}.in";
-        fi'
+          github.event_name == 'workflow_dispatch'
+          && github.event.inputs.package-distribuition
+          || ''
         }}
-        )
-
-
-        python -m piptools compile
-        ${{
-        (
-        github.event_name == 'workflow_dispatch'
-        && github.event.inputs.package-distribuition
-        )
-        && format(
-        '--upgrade-package="{0}"',
-        github.event.inputs.package-distribuition
-        )
-        || '--upgrade'
-        }}
-        --output-file="dependencies/${BASE_NAME}.txt"
-        "dependencies/${BASE_NAME}.in"
-        pyproject.toml
-
-
-        git add "dependencies/${BASE_NAME}.txt"
-
-
-        git commit -m "Update ${BASE_NAME} constraints${{
-        (
-        github.event_name == 'workflow_dispatch'
-        && github.event.inputs.package-distribuition
-        )
-        && format(' for {0}', github.event.inputs.package-distribuition)
-        || ''
-        }}" dependencies/
-        && {
-        echo
-        "patch=0001-Update-${BASE_NAME}-constraints.patch"
-        >> "${GITHUB_OUTPUT}"
-        ;
-        }
-        || :
-      shell: bash
-
-    - name: Log the patch
-      if: steps.constraints.outputs.patch
-      run: git show --color
-    - name: Create a temporary patch directory
-      if: steps.constraints.outputs.patch
-      run: mkdir -pv '${{ runner.temp }}/patches'
-      shell: bash
-    - name: Create a patch from the last Git commit
-      if: steps.constraints.outputs.patch
-      run: >-
-        git format-patch
-        --output='${{
-            runner.temp
-        }}/patches/${{
-            steps.constraints.outputs.patch
-        }}'
-        -1
-        HEAD
-    - name: Make a GHA artifact suffix
-      if: steps.constraints.outputs.patch
-      id: random
-      run: >-
-        echo uuid=$(python -c 'import uuid; print(uuid.uuid4())')
-        >> "${GITHUB_OUTPUT}"
-      shell: bash  # windows compat
-    - name: Save the package bump patch as a GHA artifact
-      if: steps.constraints.outputs.patch
-      uses: actions/upload-artifact@v4
-      with:
-        name: pip-constraints-git-patches--${{ steps.random.outputs.uuid }}
-        path: ${{ runner.temp }}/patches/${{ steps.constraints.outputs.patch }}
 
   check:  # This job does nothing and is only used for the branch protection
     name: >-
