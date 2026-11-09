@@ -370,7 +370,9 @@ def tox_register_tox_env(register: ToxEnvRegister) -> None:
     register._default_run_env = run_env_id  # noqa: SLF001, WPS437
 
 
-@impl
+# NOTE: The hook is marked as optional to keep the plugin loadable under
+# NOTE: older tox versions that lack it, like the ones supporting Python 3.8.
+@impl(optionalhook=True)
 def tox_extend_envs() -> tuple[str, ...]:
     """Declare plugin-provided pip-compile in-memory tox envs.
 
@@ -412,6 +414,13 @@ class PipCompileToxEnvBase:
             '-s',
             '-I',
             '-Werror',
+            # NOTE: Some dependencies are only shipped as sdists with
+            # NOTE: outdated packaging metadata that recent `setuptools`
+            # NOTE: versions warn about when building it. The build
+            # NOTE: backend warnings get re-emitted as `UserWarning`
+            # NOTE: subclasses, are out of our control, and must not fail
+            # NOTE: the locking. Other warning categories remain fatal.
+            '-Wdefault::UserWarning',
             '-mpiptools',
             'compile',
             *self._first_args,
