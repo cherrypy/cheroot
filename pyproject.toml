@@ -3,7 +3,7 @@
 # NOTE: `dependencies/lock-files/` whenever this changes.
 requires = [
   # Essentials
-  "setuptools >= 61.2",
+  "setuptools >= 77.0.1",  # PEP 639 license expressions support
 
   # Plugins
   "setuptools-scm >= 7.0.0",
@@ -19,7 +19,6 @@ classifiers = [
   "Intended Audience :: Developers",
   "Operating System :: OS Independent",
   "Framework :: CherryPy",
-  "License :: OSI Approved :: BSD License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
@@ -46,6 +45,10 @@ keywords = [
   "server",
   "ssl",
   "wsgi",
+]
+license = "BSD-3-Clause"
+license-files = [
+  "LICENSE.md",
 ]
 requires-python = ">= 3.8"
 dependencies = [
