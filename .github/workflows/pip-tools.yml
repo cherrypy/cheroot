@@ -97,6 +97,58 @@ jobs:
           || ''
         }}
 
+  deps-tox-envs:
+    name: ⛓🔒 Lock files${{ '' }}  # nest jobs under the same sidebar category
+    strategy:
+      matrix:
+        python-version:
+        # NOTE: These are the runtimes the CI/CD workflow uses for the
+        # NOTE: corresponding tox envs.
+        - 3.14
+        - 3.11
+        - 3.12
+        runner-vm-os:
+        - ubuntu-22.04
+        lock-file-env:
+        # NOTE: The envs with lock files symlinked to the `build-docs` ones,
+        # NOTE: like `doctest-docs`, are covered by locking `build-docs`.
+        - build-dists
+        - build-docs
+        - linkcheck-docs
+        - pre-commit
+        - spellcheck-docs
+        lock-file-extra-input:
+        - pyproject.toml
+        - ''
+        exclude:
+        - lock-file-env: build-dists
+          lock-file-extra-input: pyproject.toml
+        - lock-file-env: build-dists
+          python-version: 3.14
+        - lock-file-env: build-dists
+          python-version: 3.12
+        - lock-file-env: build-docs
+          lock-file-extra-input: ''
+        - lock-file-env: linkcheck-docs
+          lock-file-extra-input: ''
+        - lock-file-env: pre-commit
+          lock-file-extra-input: pyproject.toml
+        - lock-file-env: spellcheck-docs
+          lock-file-extra-input: ''
+
+    uses: ./.github/workflows/reusable-pip-tools.yml
+    with:
+      lock-file-env: ${{ matrix.lock-file-env }}
+      lock-file-extra-input: ${{ matrix.lock-file-extra-input }}
+      python-version: ${{ matrix.python-version }}
+      runner-vm-os: ${{ matrix.runner-vm-os }}
+      upgrade-package: >-
+        ${{
+          github.event_name == 'workflow_dispatch'
+          && github.event.inputs.package-distribuition
+          || ''
+        }}
+
   check:  # This job does nothing and is only used for the branch protection
     name: >-
       check
@@ -113,6 +165,7 @@ jobs:
 
     needs:
     - deps
+    - deps-tox-envs
 
     runs-on: ubuntu-latest
 
