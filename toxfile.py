@@ -16,12 +16,8 @@ from shlex import join as _shlex_join
 from sys import path as _sys_path
 
 from tox.config.loader.memory import MemoryLoader
-from tox.config.sets import ConfigSet
-from tox.config.types import Command
 from tox.execute.request import StdinSource
 from tox.plugin import impl
-from tox.session.state import State
-from tox.tox_env.api import ToxEnv
 from tox.tox_env.python.pip.pip_install import Pip as PipInstaller
 from tox.tox_env.python.virtual_env.package.cmd_builder import (
     VirtualEnvCmdBuilder,
@@ -30,11 +26,15 @@ from tox.tox_env.python.virtual_env.package.pyproject import (
     Pep517VirtualEnvPackager,
 )
 from tox.tox_env.python.virtual_env.runner import VirtualEnvRunner
-from tox.tox_env.register import ToxEnvRegister
 
 
 if _t.TYPE_CHECKING:
+    from tox.config.sets import ConfigSet
+    from tox.config.types import Command
+    from tox.session.state import State
+    from tox.tox_env.api import ToxEnv
     from tox.tox_env.python.api import Python
+    from tox.tox_env.register import ToxEnvRegister
 
 
 _sys_path[:0] = ['bin/']  # noqa: WPS362
