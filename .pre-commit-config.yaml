@@ -136,12 +136,12 @@ repos:
   #   exclude: >-
   #     (?x)
   #     ^
-  #       dependencies/[^/]+.txt
+  #       dependencies/lock-files/[^/]+.txt
   #     $
   #   files: >-
   #     (?x)
   #     ^
-  #       dependencies/[^/]+.in
+  #       dependencies/direct/[^/]+.in
   #     $
 
   # Non-modifying checks:

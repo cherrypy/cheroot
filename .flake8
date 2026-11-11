@@ -102,9 +102,11 @@ per-file-ignores =
   # these will need to be added to that line as well.
 
   # FIXME: toxfile is currently rather complicated, allowing these temporarily:
+  # WPS201 Found module with too many imports
   # WPS202 Found too many module members: 8 > 7
   # WPS226 Found string literal over-use: %s%s> %s > 3
-  toxfile.py: WPS202, WPS226
+  # WPS402 Found `noqa` comments overuse
+  toxfile.py: WPS201, WPS202, WPS226, WPS402
 
   # NOTE: Python stub files don't need most of the linting checks, only
   # NOTE: `flake8-typing-as-t` is important.
@@ -114,10 +116,6 @@ per-file-ignores =
   # There are multiple `assert`s (S101)
   # and subprocesses (import – S404; call – S603) in tests:
   cheroot/test/test_*.py: S101, S404, S603
-
-  # WPS102 Found incorrect module name pattern
-  # This is not a regular module but a standalone script:
-  bin/pip-wrapper: WPS102
 
   # FIXME: These sneaked with lint updates sowehow, allowing these temporarily:
   # WPS226 Found string literal over-use: py > 3

@@ -1,5 +1,8 @@
 ---
 
+name: placeholder
+description: placeholder
+
 outputs:
   cache-key-for-dep-files:
     description: >-
@@ -25,7 +28,9 @@ runs:
             'pyproject.toml',
             '.pre-commit-config.yaml',
             'pytest.ini',
-            'dependencies/**'
+            'dependencies/**',
+            'dependencies/*/**',
+            'setup.cfg'
           )
       }}'
 

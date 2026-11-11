@@ -1,0 +1,187 @@
+---
+
+name: >-
+  ❌
+  [DO NOT CLICK]
+  Reusable pip-tools
+
+on:  # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      lock-file-env:
+        description: >-
+          The tox env to produce a lock file for
+        required: true
+        type: string
+      lock-file-extra-input:
+        description: >-
+          Extra arguments to pass to the lock file generator,
+          like the `pyproject.toml` path
+        default: ''
+        required: false
+        type: string
+      python-version:
+        description: >-
+          The Python version to generate the lock file for
+        required: true
+        type: string
+      runner-vm-os:
+        description: >-
+          The runner VM OS to generate the lock file under
+        required: true
+        type: string
+      timeout-minutes:
+        description: >-
+          Deadline for the lock file generation job
+        default: 3
+        required: false
+        type: number
+      upgrade-package:
+        description: >-
+          A target Python package distribution to upgrade,
+          everything is upgraded if unset
+        default: ''
+        required: false
+        type: string
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  PIP_NO_PYTHON_VERSION_WARNING: 1
+  PIP_NO_WARN_SCRIPT_LOCATION: 1
+  PY_COLORS: 1
+
+jobs:
+  deps:
+    name: >-
+      ⛓${{ inputs.lock-file-env }}:
+      🐍${{
+          inputs.python-version
+      }}@${{
+          inputs.runner-vm-os
+      }}
+    runs-on: ${{ inputs.runner-vm-os }}
+
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    env:
+      TOXENV: pip-compile-tox-env-lock
+
+    steps:
+    - name: Grab the source from Git
+      uses: actions/checkout@v4  # Keep before `setup-python` for cache to work
+
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: >-
+        Calculate dependency files' combined hash value
+        for use in the cache key
+      id: calc-cache-key-files
+      uses: ./.github/actions/cache-keys
+    - name: Set up pip cache
+      uses: re-actors/cache-python-deps@release/v1
+      with:
+        cache-key-for-dependency-files: >-
+          ${{ steps.calc-cache-key-files.outputs.cache-key-for-dep-files }}
+
+    - name: Identify tox's own lock file
+      id: tox-deps
+      run: >
+        LOCK_FILE_PATH="dependencies/lock-files/$(
+        python bin/print_lockfile_base_name.py tox
+        ).txt"
+
+
+        echo lock-file="$(
+        ls -1 "${LOCK_FILE_PATH}"
+        || >&2 echo "${LOCK_FILE_PATH}" not found, not injecting...
+        )"
+        >> "${GITHUB_OUTPUT}"
+      shell: bash  # windows compat
+
+    - name: Install tox
+      run: >-
+        python -Im pip install -r dependencies/direct/tox.in
+        ${{
+          steps.tox-deps.outputs.lock-file
+          && format('--constraint={0}', steps.tox-deps.outputs.lock-file)
+          || ''
+        }}
+      shell: bash  # windows compat
+
+    - name: Pre-populate the tox env
+      run: python -Im tox --skip-missing-interpreters false --notest
+
+    - name: Setup git user as [bot]
+      # Refs:
+      # * https://github.community/t/github-actions-bot-email-address/17204/6
+      # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
+      uses: fregante/setup-git-user@v2.0.1
+
+    - name: Generate constraints files
+      run: >-
+        python -Im tox r --quiet
+        --
+        ${{ inputs.lock-file-env }} ${{ inputs.lock-file-extra-input }}
+        ${{
+          inputs.upgrade-package
+          && format('--upgrade-package="{0}"', inputs.upgrade-package)
+          || '--upgrade'
+        }}
+
+    - name: Commit version bumps to Git
+      id: constraints
+      run: |
+        LOCK_BASE_NAME=$(python bin/print_lockfile_base_name.py ${{
+          inputs.lock-file-env
+        }})
+
+        git add "dependencies/lock-files/${LOCK_BASE_NAME}.txt"
+
+        # shellcheck disable=SC2015  # `|| :` is meant as a no-op
+        git commit "dependencies/lock-files/${LOCK_BASE_NAME}.txt" \
+          -m "Update ${LOCK_BASE_NAME} constraints${{
+          inputs.upgrade-package
+          && format(' for {0}', inputs.upgrade-package)
+          || ''
+          }}" \
+          && {
+            echo "patch=${{
+              runner.temp
+            }}/patches/0001-Update-${LOCK_BASE_NAME}-constraints.patch" \
+            >> "${GITHUB_OUTPUT}"
+          } \
+          || :
+      shell: bash  # windows compat
+
+    - name: Log the patch
+      if: steps.constraints.outputs.patch
+      run: git show --color
+    - name: Create a temporary patch directory
+      if: steps.constraints.outputs.patch
+      run: mkdir -pv '${{ runner.temp }}/patches'
+      shell: bash  # windows compat
+    - name: Create a patch from the last Git commit
+      if: steps.constraints.outputs.patch
+      run: >-
+        git format-patch
+        --output='${{ steps.constraints.outputs.patch }}'
+        -1
+        HEAD
+    - name: Make a GHA artifact suffix
+      if: steps.constraints.outputs.patch
+      id: random
+      run: >-
+        echo uuid="$(python -c 'import uuid; print(uuid.uuid4())')"
+        >> "${GITHUB_OUTPUT}"
+      shell: bash  # windows compat
+    - name: Save the package bump patch as a GHA artifact
+      if: steps.constraints.outputs.patch
+      uses: actions/upload-artifact@v4
+      with:
+        name: pip-constraints-git-patches--${{ steps.random.outputs.uuid }}
+        path: ${{ steps.constraints.outputs.patch }}
+
+...
