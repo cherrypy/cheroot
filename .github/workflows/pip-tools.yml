@@ -105,6 +105,22 @@ jobs:
           lock-file-extra-input: ''
         - lock-file-env: spellcheck-docs
           lock-file-extra-input: ''
+        # NOTE: `myst-parser` used for building the docs requires Python 3.11+.
+        - lock-file-env: build-docs
+          python-version: 3.9
+        - lock-file-env: build-docs
+          python-version: >-
+            3.10
+        - lock-file-env: linkcheck-docs
+          python-version: 3.9
+        - lock-file-env: linkcheck-docs
+          python-version: >-
+            3.10
+        - lock-file-env: spellcheck-docs
+          python-version: 3.9
+        - lock-file-env: spellcheck-docs
+          python-version: >-
+            3.10
 
     uses: ./.github/workflows/reusable-pip-tools.yml
     with:
