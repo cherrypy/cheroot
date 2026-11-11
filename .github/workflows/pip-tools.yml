@@ -76,9 +76,35 @@ jobs:
         - macOS-26-intel
         - windows-2022
         lock-file-env:
+        # NOTE: The envs with lock files symlinked to the `build-docs` ones,
+        # NOTE: like `doctest-docs`, are covered by locking `build-docs`.
+        # NOTE: All the envs are locked for all the runtimes and platforms
+        # NOTE: so that contributors could use them in any environment, even
+        # NOTE: if CI/CD only runs some of them in a subset of those. Mind
+        # NOTE: the limit of 256 configurations per job that GitHub has: the
+        # NOTE: matrix may need splitting across several calling jobs.
+        - build-dists
+        - build-docs
+        - linkcheck-docs
+        - pre-commit
         - py
+        - spellcheck-docs
         lock-file-extra-input:
         - pyproject.toml
+        - ''
+        exclude:
+        - lock-file-env: build-dists
+          lock-file-extra-input: pyproject.toml
+        - lock-file-env: build-docs
+          lock-file-extra-input: ''
+        - lock-file-env: linkcheck-docs
+          lock-file-extra-input: ''
+        - lock-file-env: pre-commit
+          lock-file-extra-input: pyproject.toml
+        - lock-file-env: py
+          lock-file-extra-input: ''
+        - lock-file-env: spellcheck-docs
+          lock-file-extra-input: ''
 
     uses: ./.github/workflows/reusable-pip-tools.yml
     with:
@@ -90,58 +116,6 @@ jobs:
       # NOTE: consistently ran ~2m48s and got cancelled by the timeout,
       # NOTE: blocking the Open/refresh a PR step every time.
       timeout-minutes: 5
-      upgrade-package: >-
-        ${{
-          github.event_name == 'workflow_dispatch'
-          && github.event.inputs.package-distribuition
-          || ''
-        }}
-
-  deps-tox-envs:
-    name: ⛓🔒 Lock files${{ '' }}  # nest jobs under the same sidebar category
-    strategy:
-      matrix:
-        python-version:
-        # NOTE: These are the runtimes the CI/CD workflow uses for the
-        # NOTE: corresponding tox envs.
-        - 3.14
-        - 3.11
-        - 3.12
-        runner-vm-os:
-        - ubuntu-22.04
-        lock-file-env:
-        # NOTE: The envs with lock files symlinked to the `build-docs` ones,
-        # NOTE: like `doctest-docs`, are covered by locking `build-docs`.
-        - build-dists
-        - build-docs
-        - linkcheck-docs
-        - pre-commit
-        - spellcheck-docs
-        lock-file-extra-input:
-        - pyproject.toml
-        - ''
-        exclude:
-        - lock-file-env: build-dists
-          lock-file-extra-input: pyproject.toml
-        - lock-file-env: build-dists
-          python-version: 3.14
-        - lock-file-env: build-dists
-          python-version: 3.12
-        - lock-file-env: build-docs
-          lock-file-extra-input: ''
-        - lock-file-env: linkcheck-docs
-          lock-file-extra-input: ''
-        - lock-file-env: pre-commit
-          lock-file-extra-input: pyproject.toml
-        - lock-file-env: spellcheck-docs
-          lock-file-extra-input: ''
-
-    uses: ./.github/workflows/reusable-pip-tools.yml
-    with:
-      lock-file-env: ${{ matrix.lock-file-env }}
-      lock-file-extra-input: ${{ matrix.lock-file-extra-input }}
-      python-version: ${{ matrix.python-version }}
-      runner-vm-os: ${{ matrix.runner-vm-os }}
       upgrade-package: >-
         ${{
           github.event_name == 'workflow_dispatch'
@@ -165,7 +139,6 @@ jobs:
 
     needs:
     - deps
-    - deps-tox-envs
 
     runs-on: ubuntu-latest
 
