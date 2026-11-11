@@ -1,0 +1,5 @@
+The lock files for the docs-related :pypi:`tox` environments are now
+only generated under Python 3.11 and newer, as required by
+:pypi:`myst-parser`.
+
+-- by :user:`webknjaz`
