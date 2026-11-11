@@ -1,0 +1,5 @@
+The in-tree :pypi:`tox` plugin no longer imports the objects only
+referenced in its type hints at runtime, keeping it in sync with the
+copies in other projects.
+
+-- by :user:`webknjaz`
