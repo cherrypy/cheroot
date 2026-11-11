@@ -1,0 +1,6 @@
+All the :pypi:`tox` environments with lock files now get them
+regenerated for every supported runtime and platform, so that
+contributors could use any of them locally regardless of where CI/CD
+runs them.
+
+-- by :user:`webknjaz`
