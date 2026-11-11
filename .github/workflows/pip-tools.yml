@@ -175,8 +175,8 @@ jobs:
 
     # NOTE: Signing makes `create-pull-request` recreate every commit via
     # NOTE: 3 throttled GitHub API calls, taking ~3s per lock file. With
-    # NOTE: all the lock files updated, this adds up to ~2.5 minutes.
-    timeout-minutes: 5
+    # NOTE: all the lock files updated, this adds up to ~13 minutes.
+    timeout-minutes: 20
 
     environment: pip-tools
 

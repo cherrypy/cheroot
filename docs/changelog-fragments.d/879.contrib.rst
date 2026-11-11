@@ -1,0 +1,4 @@
+Raised the timeout of the job publishing the lock file updates to
+accommodate signing the commits for all the :pypi:`tox` environments.
+
+-- by :user:`webknjaz`
