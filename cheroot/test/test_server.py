@@ -1,6 +1,10 @@
 """Tests for the HTTP server."""
 
+from __future__ import annotations
+
+import errno
 import gc
+import logging
 import os
 import pathlib
 import queue
@@ -10,6 +14,7 @@ import sys
 import tempfile
 import threading
 import types
+import typing as _t
 import urllib.parse  # noqa: WPS301
 import uuid
 from http import HTTPStatus
@@ -82,6 +87,18 @@ def unix_file_sock():
 
     os.close(tmp_sock_fh)
     os.unlink(tmp_sock_fname)
+
+
+def _make_server(
+    server_class: type[HTTPServer] = HTTPServer,
+    **kwargs: _t.Any,
+) -> HTTPServer:
+    """Make a server on an ephemeral port, without starting it."""
+    return server_class(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+        **kwargs,
+    )
 
 
 def test_prepare_makes_server_ready():
@@ -627,3 +644,40 @@ def test_overload_thread_does_not_leak():
     # We use special exit code to indicate success, rather than normal zero, so
     # the test doesn't acidentally pass:
     assert process.returncode == SUCCESSFUL_SUBPROCESS_EXIT
+
+
+def test_statistics_are_published_while_serving(
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test that a server's statistics are published only while it serves."""
+    httpserver = _make_server()
+    stats_key = f'Cheroot HTTPServer {id(httpserver)}'
+    assert stats_key not in logging.statistics
+
+    httpserver.prepare()
+    request.addfinalizer(httpserver.stop)
+    assert logging.statistics[stats_key] is httpserver.stats
+    httpserver.clear_stats()
+    assert logging.statistics[stats_key] is httpserver.stats
+
+    httpserver.stop()
+    assert stats_key not in logging.statistics
+
+    httpserver.prepare()
+    assert logging.statistics[stats_key] is httpserver.stats
+
+
+def test_statistics_are_not_published_after_failed_bind(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that a server that fails to bind publishes no statistics."""
+    httpserver = _make_server()
+    stats_key = f'Cheroot HTTPServer {id(httpserver)}'
+
+    def _fail_bind(*_args: object) -> None:
+        raise OSError(errno.EADDRINUSE, 'Address already in use')
+
+    monkeypatch.setattr(httpserver, 'bind', _fail_bind)
+    with pytest.raises(OSError, match='No socket could be created'):
+        httpserver.prepare()
+    assert stats_key not in logging.statistics
