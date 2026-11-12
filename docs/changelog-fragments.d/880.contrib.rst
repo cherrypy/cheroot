@@ -1,0 +1,9 @@
+Made the test of high file descriptor numbers disable garbage
+collection while it runs, as its fixture intended: the
+:pypi:`pypytools` context manager that it used only pauses the
+collections that :pypi:`pypytools` starts itself, so the interpreter's
+collector kept running and could free a low file descriptor for the
+server to take. Nothing else used :pypi:`pypytools`, so it is no
+longer a test dependency.
+
+-- by :user:`rm-you`
