@@ -18,7 +18,7 @@ charset-normalizer==3.5.2
     # via requests
 colorama==0.4.6
     # via pytest-watch
-coverage==7.17.2
+coverage==7.17.3
     # via
     #   -r dependencies/direct/py.in
     #   pytest-cov
@@ -73,8 +73,6 @@ portend==3.2.1
     # via -r dependencies/direct/py.in
 pprintpp==0.4.0
     # via pytest-clarity
-py==1.11.0
-    # via pypytools
 pydantic==2.14.3
     # via typer
 pydantic-core==2.50.4
@@ -84,8 +82,6 @@ pygments==2.21.0
     #   pytest
     #   rich
 pyopenssl==26.4.0
-    # via -r dependencies/direct/py.in
-pypytools==0.6.2
     # via -r dependencies/direct/py.in
 pytest==9.2.0
     # via
