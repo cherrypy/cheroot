@@ -1659,6 +1659,10 @@ class HTTPServer:
             peercreds_resolve_enabled and peercreds_enabled
         )
         self.reuse_port = reuse_port
+        self._stats_key = f'Cheroot HTTPServer {id(self)}'
+        # Guards `ready` together with the server's entry in
+        # `logging.statistics`, so a stopped server is never registered
+        self._stats_lock = threading.Lock()
         self.clear_stats()
 
         self._unservicable_conns = queue.Queue()
@@ -1732,7 +1736,9 @@ class HTTPServer:
             ),
             'Worker Threads': {},
         }
-        logging.statistics['Cheroot HTTPServer %d' % id(self)] = self.stats
+        with self._stats_lock:
+            if self.ready:
+                logging.statistics[self._stats_key] = self.stats
 
     def runtime(self):
         """Return server uptime."""
@@ -1884,7 +1890,11 @@ class HTTPServer:
         # Create worker threads
         self.requests.start()
 
-        self.ready = True
+        with self._stats_lock:
+            self.ready = True
+            # Only while serving: the statistics' callbacks hold the server,
+            # which the process-wide registry would otherwise keep alive
+            logging.statistics[self._stats_key] = self.stats
         self._start_time = time.time()
 
     def _serve_unservicable(self):
@@ -2262,7 +2272,9 @@ class HTTPServer:
         if not self.ready:
             return  # already stopped
 
-        self.ready = False
+        with self._stats_lock:
+            self.ready = False
+            logging.statistics.pop(self._stats_key, None)
 
         # This tells the thread that handles unservicable connections to shut
         # down:
