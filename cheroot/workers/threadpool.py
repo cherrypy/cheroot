@@ -122,7 +122,12 @@ class WorkerThread(threading.Thread):
 
         # noqa: DAR401 KeyboardInterrupt SystemExit
         """
-        self.server.stats['Worker Threads'][self.name] = self.stats
+        # The record stays under the name that the thread had at this point,
+        # in the mapping it joined, even if the thread is renamed or the
+        # server's statistics are cleared meanwhile
+        worker_threads = self.server.stats['Worker Threads']
+        record_name = self.name
+        self.server._add_worker_record(worker_threads, record_name, self.stats)
         self.ready = True
         try:
             self._process_connections_until_interrupted()
@@ -151,6 +156,7 @@ class WorkerThread(threading.Thread):
             raise
         finally:
             self.ready = False
+            self.server._remove_worker_record(worker_threads, record_name)
 
     def _process_connections_until_interrupted(self):
         """Process incoming HTTP connections in an infinite loop.
