@@ -178,7 +178,9 @@ jobs:
     # NOTE: all the lock files updated, this adds up to ~13 minutes.
     timeout-minutes: 20
 
-    environment: pip-tools
+    environment:
+      name: pip-tools
+      url: ${{ steps.pr.outputs.pull-request-url }}
 
     permissions:
       contents: write  # Needed to push the PR branch
