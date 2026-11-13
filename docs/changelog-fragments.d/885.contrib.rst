@@ -1,0 +1,4 @@
+The deployment environment of the job publishing the lock file updates
+now links to the pull request it creates or updates.
+
+-- by :user:`webknjaz`
