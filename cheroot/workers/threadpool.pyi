@@ -12,12 +12,15 @@ trueyzero: TrueyZero
 class _ShrinkRequest:
     taken: bool
     cancelled: bool
+    run: int
+    def __init__(self, run: int) -> None: ...
 
 class WorkerThread(threading.Thread):
     conn: _t.Any
     server: _t.Any
     ready: bool
     _retiring: bool
+    _run: int | None
     requests_seen: int
     bytes_read: int
     bytes_written: int
@@ -35,6 +38,7 @@ class ThreadPool:
     get: _t.Any
     _lock: threading.Lock
     _shutdowns_due: int
+    _run: int
     def __init__(
         self,
         server,
@@ -48,6 +52,7 @@ class ThreadPool:
     def idle(self): ...
     def put(self, obj) -> None: ...
     def grow(self, amount) -> None: ...
+    def _grow(self, amount) -> None: ...
     def shrink(self, amount) -> None: ...
     def _serving(self) -> list[WorkerThread]: ...
     def _cancel(self, requests: list[_ShrinkRequest]) -> None: ...
@@ -56,6 +61,7 @@ class ThreadPool:
         worker: WorkerThread,
         request: _ShrinkRequest,
     ) -> bool: ...
+    def _stops(self, worker: WorkerThread) -> bool: ...
     def stop(self, timeout: int = ...) -> None: ...
     @property
     def qsize(self) -> int: ...
