@@ -38,7 +38,6 @@
    :alt: Matrix Space — #cherrypy-space:matrix.org
 
 .. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
-   :target: https://gitter.im/cherrypy/cherrypy
 
 .. image:: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
    :target: https://web.archive.org/web/20250306034535/https://makeapullrequest.com/
