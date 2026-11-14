@@ -5,8 +5,6 @@
    joinable
 """
 
-import collections
-import contextlib
 import logging
 import queue
 import socket
@@ -35,6 +33,33 @@ trueyzero = TrueyZero()
 _SHUTDOWNREQUEST = object()
 
 
+class _ShrinkRequest:
+    """A request that shrink() queued for one thread to shut down."""
+
+    taken = False
+    """Whether a worker took it, so that its shutdown is no longer due."""
+
+    cancelled = False
+    """Whether its shrink() call gave its shutdown back before then."""
+
+    def __init__(self, run):
+        """Initialize a request of one run of the pool."""
+        self.run = run
+
+
+class _RequestQueue(queue.Queue):
+    """A queue of connections, and of requests for workers to shut down."""
+
+    def put_shutdown(self, request):
+        """Queue a shutdown request, even when the queue has no room."""
+        # stop() then always reaches its timeout, which closes the
+        # connection that a worker may be stuck on
+        with self.not_empty:
+            self._put(request)
+            self.unfinished_tasks += 1
+            self.not_empty.notify()
+
+
 class WorkerThread(threading.Thread):
     """Thread which continuously polls a Queue for Connection objects.
 
@@ -54,6 +79,12 @@ class WorkerThread(threading.Thread):
     ready = False
     """A simple flag for the calling server to know when this thread
     has begun polling the Queue."""
+
+    _retiring = False
+    """Whether this thread took a shutdown request, and is exiting."""
+
+    _run = None
+    """The run of the pool that started this thread, if one did."""
 
     def __init__(self, server):
         """Initialize WorkerThread instance.
@@ -152,6 +183,18 @@ class WorkerThread(threading.Thread):
         finally:
             self.ready = False
 
+    def _get_request(self):
+        """Get a connection, or a shutdown request if this thread exits."""
+        while True:
+            conn = self.server.requests.get()
+            if conn is _SHUTDOWNREQUEST:
+                if self._run is None or self.server.requests._stops(self):
+                    return conn
+            elif not isinstance(conn, _ShrinkRequest):
+                return conn
+            elif self.server.requests._retires(self, conn):
+                return _SHUTDOWNREQUEST
+
     def _process_connections_until_interrupted(self):
         """Process incoming HTTP connections in an infinite loop.
 
@@ -162,7 +205,7 @@ class WorkerThread(threading.Thread):
                             server instance
         """
         while True:
-            conn = self.server.requests.get()
+            conn = self._get_request()
             if conn is _SHUTDOWNREQUEST:
                 return
 
@@ -284,25 +327,35 @@ class ThreadPool:
         self.min = min
         self.max = max
         self._threads = []
-        self._queue = queue.Queue(maxsize=accepted_queue_size)
+        self._queue = _RequestQueue(maxsize=accepted_queue_size)
         self._queue_put_timeout = accepted_queue_timeout
         self.get = self._queue.get
-        self._pending_shutdowns = collections.deque()
+        # Guards the number of shutdowns that shrink() asked for and that
+        # no thread has taken yet, which threads take them, and the pool's
+        # run: stop() ends a run, and the threads of the runs it ended
+        # shut down on a stop request
+        self._lock = threading.Lock()
+        self._shutdowns_due = 0
+        self._run = 0
 
     def start(self):
         """Start the pool of threads.
 
         :raises RuntimeError: if the pool is already started
         """
-        if self._threads:
-            raise RuntimeError('Threadpools can only be started once.')
-        self.grow(self.min)
+        with self._lock:
+            if self._threads:
+                raise RuntimeError('Threadpools can only be started once.')
+            self._grow(self.min)
 
     @property
     def idle(self):
         """Number of worker threads which are idle. Read-only."""
-        idles = len([t for t in self._threads if t.conn is None])
-        return max(idles - len(self._pending_shutdowns), 0)
+        # The threads and the shutdowns due change together as a worker
+        # takes a shrink request
+        with self._lock:
+            idles = len([t for t in self._serving() if t.conn is None])
+            return max(idles - self._shutdowns_due, 0)
 
     def put(self, obj):
         """Put request into queue.
@@ -317,11 +370,34 @@ class ThreadPool:
         # Remove any dead threads from our list
         for t in [t for t in self._threads if not t.is_alive()]:
             self._threads.remove(t)
-            with contextlib.suppress(IndexError):
-                self._pending_shutdowns.popleft()
+
+    def _serving(self):
+        """Return the threads that run and that are not shutting down."""
+        # A thread clears `ready` as it exits. Workers call this, and before
+        # Python 3.13, is_alive() can fail when two threads call it, or
+        # join(), at once for a thread that is exiting.
+        return [
+            t
+            for t in self._threads
+            if t.ready and t._run == self._run and not t._retiring
+        ]
 
     def grow(self, amount):
-        """Spawn new worker threads (not above self.max)."""
+        """Spawn new worker threads (not above self.max).
+
+        :raises RuntimeError: while stop() ends the threads
+        """
+        with self._lock:
+            # A new thread could take the stop request that one of them
+            # still needs
+            if any(
+                t.ready and t._run != self._run and not t._retiring
+                for t in self._threads
+            ):
+                raise RuntimeError('Cannot grow a threadpool while it stops.')
+            self._grow(amount)
+
+    def _grow(self, amount):
         budget = max(self.max - len(self._threads), 0)
         n_new = min(amount, budget)
 
@@ -334,30 +410,75 @@ class ThreadPool:
     def _spawn_worker(self):
         worker = WorkerThread(self.server)
         worker.name = f'CP Server {worker.name!s}'
+        worker._run = self._run
         worker.start()
         return worker
 
     def shrink(self, amount):
-        """Kill off worker threads (not below self.min)."""
-        # Grow/shrink the pool if necessary.
-        # Remove any dead threads from our list
-        amount -= len(self._pending_shutdowns)
-        self._clear_dead_threads()
-        if amount <= 0:
-            return
+        """Kill off worker threads (not below self.min).
 
-        # calculate the number of threads above the minimum
-        n_extra = max(len(self._threads) - self.min, 0)
+        Threads that earlier calls asked to shut down count as gone.
+        """
+        with self._lock:
+            # Remove any dead threads from our list
+            self._clear_dead_threads()
 
-        # don't remove more than amount
-        n_to_remove = min(amount, n_extra)
+            # calculate the number of threads above the minimum, without
+            # those that earlier calls asked to shut down
+            n_removable = max(
+                len(self._serving()) - self._shutdowns_due - self.min,
+                0,
+            )
 
-        # put shutdown requests on the queue equal to the number of threads
-        # to remove. As each request is processed by a worker, that worker
-        # will terminate and be culled from the list.
-        for _ in range(n_to_remove):
-            self._pending_shutdowns.append(None)
-            self._queue.put(_SHUTDOWNREQUEST)
+            # don't remove more than amount
+            n_to_remove = min(amount, n_removable)
+            # Count them as due before they're queued, so that a concurrent
+            # shrink() call sees them and doesn't pick the same threads
+            self._shutdowns_due += n_to_remove
+            requests = [_ShrinkRequest(self._run) for _ in range(n_to_remove)]
+
+        # put a request on the queue for each shutdown
+        n_queued = 0
+        try:
+            for request in requests:
+                self._queue.put(request)
+                n_queued += 1
+        finally:
+            self._cancel(requests[n_queued:])
+
+    def _cancel(self, requests):
+        """Give back the shutdowns of requests that no worker has taken."""
+        # A put() was interrupted, such as while it waited for room, maybe
+        # after its request got into the queue, where a worker skips it now
+        with self._lock:
+            for request in requests:
+                # A stop() since then forgot the shutdowns of its run
+                if not request.taken and request.run == self._run:
+                    self._shutdowns_due -= 1
+                request.cancelled = True
+
+    def _retires(self, worker, request):
+        """Tell whether a worker that took a shrink request shuts down."""
+        with self._lock:
+            # A stop() forgot the shutdowns of the run it ended
+            if request.cancelled or request.run != self._run:
+                return False
+            request.taken = True
+            self._shutdowns_due -= 1
+            # Another thread may have exited since shrink() was called
+            if len(self._serving()) <= self.min:
+                return False
+            worker._retiring = True
+            return True
+
+    def _stops(self, worker):
+        """Tell whether a worker that took a stop request shuts down."""
+        with self._lock:
+            # One that a stop() left behind does not end a later run
+            if worker._run == self._run:
+                return False
+            worker._retiring = True
+            return True
 
     def stop(self, timeout=5):
         """Terminate all worker threads.
@@ -380,10 +501,19 @@ class ThreadPool:
         else:
             endtime = time.time() + timeout
 
+        with self._lock:
+            # End the run. The shutdowns that shrink() asked for are no
+            # longer due, and every thread that has not taken a request,
+            # of this run or of a stop() that was interrupted, needs one.
+            self._run += 1
+            self._shutdowns_due = 0
+            threads = [t for t in self._threads if t.is_alive()]
+            n_running = len([t for t in threads if not t._retiring])
+
         # Must shut down threads here so the code that calls
         # this method can know when all threads are stopped.
-        for _worker in self._threads:
-            self._queue.put(_SHUTDOWNREQUEST)
+        for _ in range(n_running):
+            self._queue.put_shutdown(_SHUTDOWNREQUEST)
 
         ignored_errors = (
             # Raised when start_response called >1 time w/o exc_info or
@@ -393,7 +523,10 @@ class ThreadPool:
             KeyboardInterrupt,
         )
 
-        for worker in self._clear_threads():
+        current_thread = threading.current_thread()
+        for worker in threads:
+            if worker is current_thread:
+                continue
             remaining_time = timeout and endtime - time.time()
             try:
                 worker.join(remaining_time)
@@ -403,6 +536,15 @@ class ThreadPool:
                     worker.join()
             except ignored_errors:
                 pass
+
+        with self._lock:
+            # A thread still running keeps the pool from starting again,
+            # unless it is this one, which exits after its connection
+            self._threads[:] = [
+                t
+                for t in self._threads
+                if t.is_alive() and t is not current_thread
+            ]
 
     @staticmethod
     @pass_none
@@ -419,16 +561,6 @@ class ThreadPool:
             # shutdown sometimes fails (race with 'closed' check?)
             # ref #238
             pass
-
-    def _clear_threads(self):
-        """Clear self._threads and yield all joinable threads."""
-        # threads = pop_all(self._threads)
-        threads, self._threads[:] = self._threads[:], []
-        return (
-            thread
-            for thread in threads
-            if thread is not threading.current_thread()
-        )
 
     @property
     def qsize(self):

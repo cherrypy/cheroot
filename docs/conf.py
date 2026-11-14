@@ -96,6 +96,7 @@ intersphinx_mapping = {
     'coverage': ('https://coverage.readthedocs.io/en/latest/', None),
     'towncrier': ('https://towncrier.readthedocs.io/en/latest/', None),
     'sphinx': ('https://www.sphinx-doc.org', None),
+    'pytest': ('https://docs.pytest.org/en/stable', None),
 }
 
 linkcheck_ignore = [
