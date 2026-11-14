@@ -1465,7 +1465,7 @@ def test_threadpool_stop_retries_an_interrupted_enqueue(
     with _paused_workers(monkeypatch) as release:
         pool = _prepared_pool(request, minthreads=2)
         workers = list(pool._threads)
-        queue_put = pool._queue.put
+        queue_put = pool._queue.put_shutdown
         queued: list[object] = []
 
         def _put_then_release(obj: object) -> None:
@@ -1476,14 +1476,100 @@ def test_threadpool_stop_retries_an_interrupted_enqueue(
                 release.set()
 
         with monkeypatch.context() as patch:
-            patch.setattr(pool._queue, 'put', _interrupt_after(queue_put))
+            patch.setattr(
+                pool._queue,
+                'put_shutdown',
+                _interrupt_after(queue_put),
+            )
             with pytest.raises(KeyboardInterrupt):
                 pool.stop()
-            patch.setattr(pool._queue, 'put', _put_then_release)
+            patch.setattr(pool._queue, 'put_shutdown', _put_then_release)
             pool.stop()
     assert not any(worker.is_alive() for worker in workers)
     assert pool.qsize == 1
     _assert_restart_ignores_leftovers(pool)
+
+
+class _HeldConnection:
+    """A connection that its worker handles until it is closed."""
+
+    def __init__(self) -> None:
+        self.closed = threading.Event()
+        self.rfile = types.SimpleNamespace(closed=False)
+        self.socket = types.SimpleNamespace(shutdown=self._shutdown)
+
+    def communicate(self) -> bool:
+        """Handle the connection until it is closed."""
+        self.closed.wait(30)
+        return False
+
+    def close(self) -> None:
+        """Close nothing: the worker closes the connection it handled."""
+
+    def _shutdown(self, *_args: object) -> None:
+        self.closed.set()
+
+
+def _pool_with_one_slot(
+    request: pytest.FixtureRequest,
+    *,
+    minthreads: int,
+) -> ThreadPool:
+    """Start a pool whose queue holds one item."""
+    pool = ThreadPool(_make_server(), min=minthreads, accepted_queue_size=1)
+    pool.server.requests = pool
+    pool.start()
+    request.addfinalizer(pool.stop)
+    return pool
+
+
+def test_threadpool_stop_with_a_full_queue_reaches_force_close(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A full queue must not keep stop() from closing a stuck connection."""
+    pool = _pool_with_one_slot(request, minthreads=1)
+    worker = pool._threads[0]
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(compute_condition=lambda: worker.conn is stuck)
+    # Another connection fills the queue
+    waiting = _HeldConnection()
+    waiting.closed.set()
+    pool.put(waiting)
+    stopper = threading.Thread(target=pool.stop, args=(0,), daemon=True)
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(stuck.closed.set)
+        stopper.start()
+        stopper.join(5)
+        # Checked while the connection is still stuck
+        assert not stopper.is_alive()
+    assert not worker.is_alive()
+
+
+def test_threadpool_overlapping_stops_end_every_thread(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two stop() calls at once, each asking every thread, both finish."""
+    pool = _pool_with_one_slot(request, minthreads=2)
+    workers = list(pool._threads)
+    put_shutdown = pool._queue.put_shutdown
+    together = threading.Barrier(2)
+
+    def _put_together(obj: object) -> None:
+        # Each call has counted every thread before either queues
+        with contextlib.suppress(threading.BrokenBarrierError):
+            together.wait(timeout=5)
+        put_shutdown(obj)
+
+    monkeypatch.setattr(pool._queue, 'put_shutdown', _put_together)
+    stoppers = [threading.Thread(target=pool.stop, daemon=True) for _ in '12']
+    for stopper in stoppers:
+        stopper.start()
+    for stopper in stoppers:
+        stopper.join(10)
+    assert not any(stopper.is_alive() for stopper in stoppers)
+    assert not any(worker.is_alive() for worker in workers)
 
 
 class _ObservedLock:

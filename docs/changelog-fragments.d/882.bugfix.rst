@@ -4,6 +4,6 @@ started again, so that starting it hung. This happened after stopping a pool
 that was still shrinking, one that its own worker stopped on an interrupt, or
 one whose stop was interrupted. A stopped pool now starts again once its
 previous threads have exited, and stopping it no longer waits for room in a
-bounded queue for threads that have already exited.
+full connection queue.
 
 -- by :user:`rm-you`
