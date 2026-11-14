@@ -1,0 +1,8 @@
+Fixed :py:meth:`ThreadPool.shrink() <cheroot.workers.threadpool.ThreadPool.shrink>`
+accounting for pending shutdowns. Repeated calls now request up to ``amount``
+additional thread retirements while preserving the pool's minimum size,
+including when calls overlap, a call is interrupted, or a thread exits for
+another reason. Previously, pending shutdowns could suppress a later call, or
+let the pool drop below its minimum.
+
+-- by :user:`rm-you`
