@@ -1,6 +1,7 @@
 line-length = 79  # Accessibility-friendly
 
 namespace-packages = [
+  ".claude/hooks/",
   "bin/",
   "cheroot/test/",
   "docs/",
