@@ -700,6 +700,28 @@ def test_threadpool_idle_is_exact_while_threads_retire(
     assert not any(wrong)
 
 
+def test_threadpool_workers_do_not_check_other_threads(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A worker that takes a shrink request does not call is_alive()."""
+    pool = single_thread_pool
+    callers = []
+    original_is_alive = WorkerThread.is_alive
+
+    def _recorded_is_alive(thread: WorkerThread) -> bool:
+        if isinstance(threading.current_thread(), WorkerThread):
+            callers.append(threading.current_thread())
+        return original_is_alive(thread)
+
+    monkeypatch.setattr(WorkerThread, 'is_alive', _recorded_is_alive)
+    pool.grow(3)
+    pool.shrink(3)
+    assert _wait_for_empty_queue(pool)
+    assert not pool._shutdowns_due
+    assert not callers
+
+
 @pytest.mark.parametrize('queued_before_error', (0, 1))
 def test_threadpool_interrupted_shrink_releases_unused_reservations(
     request: pytest.FixtureRequest,

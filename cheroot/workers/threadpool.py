@@ -346,7 +346,10 @@ class ThreadPool:
 
     def _serving(self):
         """Return the threads that run and that are not shutting down."""
-        return [t for t in self._threads if t.is_alive() and not t._retiring]
+        # A thread clears `ready` as it exits. Workers call this, and before
+        # Python 3.13, is_alive() can fail when two threads call it, or
+        # join(), at once for a thread that is exiting.
+        return [t for t in self._threads if t.ready and not t._retiring]
 
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
