@@ -383,8 +383,18 @@ class ThreadPool:
         ]
 
     def grow(self, amount):
-        """Spawn new worker threads (not above self.max)."""
+        """Spawn new worker threads (not above self.max).
+
+        :raises RuntimeError: while stop() ends the threads
+        """
         with self._lock:
+            # A new thread could take the stop request that one of them
+            # still needs
+            if any(
+                t.ready and t._run != self._run and not t._retiring
+                for t in self._threads
+            ):
+                raise RuntimeError('Cannot grow a threadpool while it stops.')
             self._grow(amount)
 
     def _grow(self, amount):

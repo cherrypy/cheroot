@@ -1572,6 +1572,38 @@ def test_threadpool_overlapping_stops_end_every_thread(
     assert not any(worker.is_alive() for worker in workers)
 
 
+def test_threadpool_grow_while_stopping_is_refused(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A thread grown during stop() could take a busy thread's request."""
+    pool = single_thread_pool
+    worker = pool._threads[0]
+    busy = _HeldConnection()
+    pool.put(busy)
+    assert _wait_until(compute_condition=lambda: worker.conn is busy)
+    joining = threading.Event()
+    release = threading.Event()
+    original_join = worker.join
+
+    def _held_join(timeout: float | None = None) -> None:
+        joining.set()
+        assert release.wait(10)
+        original_join(timeout)
+
+    monkeypatch.setattr(worker, 'join', _held_join)
+    stopper = threading.Thread(target=pool.stop, daemon=True)
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_join_thread, stopper)
+        cleanup.callback(_release_events, busy.closed, release)
+        stopper.start()
+        # stop() has queued the busy thread's request
+        assert joining.wait(10)
+        with pytest.raises(RuntimeError, match='while it stops'):
+            pool.grow(1)
+    assert not worker.is_alive()
+
+
 class _ObservedLock:
     """Report a caller that has to wait for the pool's lock."""
 
