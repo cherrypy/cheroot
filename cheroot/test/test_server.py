@@ -702,29 +702,31 @@ def test_threadpool_idle_is_exact_while_threads_retire(
 
 @pytest.mark.parametrize('queued_before_error', (0, 1))
 def test_threadpool_interrupted_shrink_releases_unused_reservations(
-    single_thread_pool: ThreadPool,
+    request: pytest.FixtureRequest,
     monkeypatch: pytest.MonkeyPatch,
     queued_before_error: int,
 ) -> None:
     """An interrupted shrink keeps only successfully queued retirements."""
-    pool = single_thread_pool
-    pool.grow(2)
-    original_put = pool._queue.put
     queued: list[object] = []
+    # Workers wait until the counts are checked
+    with _paused_workers(monkeypatch):
+        pool = _prepared_pool(request, minthreads=1)
+        pool.grow(2)
+        original_put = pool._queue.put
 
-    def _interrupted_put(obj: object) -> None:
-        if len(queued) == queued_before_error:
-            # Such as a KeyboardInterrupt while waiting for room in the queue
-            raise RuntimeError('interrupted')
-        original_put(obj)
-        queued.append(obj)
+        def _interrupted_put(obj: object) -> None:
+            if len(queued) == queued_before_error:
+                # Such as a KeyboardInterrupt while waiting for room
+                raise RuntimeError('interrupted')
+            original_put(obj)
+            queued.append(obj)
 
-    with monkeypatch.context() as patch:
-        patch.setattr(pool._queue, 'put', _interrupted_put)
-        with pytest.raises(RuntimeError, match='interrupted'):
-            pool.shrink(2)
-    assert pool._shutdowns_due == queued_before_error
-    assert pool.idle == 3 - queued_before_error
+        with monkeypatch.context() as patch:
+            patch.setattr(pool._queue, 'put', _interrupted_put)
+            with pytest.raises(RuntimeError, match='interrupted'):
+                pool.shrink(2)
+        assert pool._shutdowns_due == queued_before_error
+        assert pool.idle == 3 - queued_before_error
 
     pool.shrink(3)
     assert _wait_for_thread_count(pool, pool.min)
@@ -950,24 +952,72 @@ def test_threadpool_unneeded_shrink_request_keeps_threads(
     request: pytest.FixtureRequest,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A shrink request that is no longer due must not end a thread."""
-    pool = _prepared_pool(request, minthreads=1)
-    pool.grow(2)
-    original_put = pool._queue.put
+    """A shrink request that its call cancelled must not end a thread."""
+    # Workers wait until the interrupted call has cancelled its request
+    with _paused_workers(monkeypatch):
+        pool = _prepared_pool(request, minthreads=1)
+        pool.grow(2)
+        original_put = pool._queue.put
 
-    def _put_then_interrupt(obj: object) -> None:
-        original_put(obj)
-        raise KeyboardInterrupt
+        def _put_then_interrupt(obj: object) -> None:
+            original_put(obj)
+            raise KeyboardInterrupt
 
-    with monkeypatch.context() as patch:
-        patch.setattr(pool._queue, 'put', _put_then_interrupt)
-        with pytest.raises(KeyboardInterrupt):
-            pool.shrink(2)
-    # The interrupted call gave its shutdown back, but its request is queued
-    assert not pool._shutdowns_due
+        with monkeypatch.context() as patch:
+            patch.setattr(pool._queue, 'put', _put_then_interrupt)
+            with pytest.raises(KeyboardInterrupt):
+                pool.shrink(2)
+        # It gave its shutdowns back, but its first request is queued
+        assert not pool._shutdowns_due
+        assert pool.qsize == 1
     assert _wait_for_empty_queue(pool)
     assert _count_live_threads(pool) == 3
     assert pool.idle == 3
+
+
+def _interrupt_a_shrink_while_another_is_due(
+    pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Interrupt a call once another has reserved a shutdown."""
+    original_put = pool._queue.put
+    second_queuing = threading.Event()
+    first_done = threading.Event()
+    second = threading.Thread(target=pool.shrink, args=(1,))
+
+    def _controlled_put(obj: object) -> None:
+        if threading.current_thread() is second:
+            second_queuing.set()
+            assert first_done.wait(10)
+        original_put(obj)
+        if threading.current_thread() is second:
+            return
+        # A worker takes the request and exits
+        assert _wait_for_thread_count(pool, 2)
+        second.start()
+        assert second_queuing.wait(10)
+        # Interrupted after its request got into the queue
+        raise KeyboardInterrupt
+
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(_join_thread, second)
+        cleanup.callback(first_done.set)
+        patch.setattr(pool._queue, 'put', _controlled_put)
+        with pytest.raises(KeyboardInterrupt):
+            pool.shrink(amount=1)
+
+
+def test_threadpool_interrupted_shrink_keeps_other_calls_shutdowns(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An interrupted call gives back only shutdowns of its own requests."""
+    pool = single_thread_pool
+    pool.grow(2)
+    _interrupt_a_shrink_while_another_is_due(pool, monkeypatch)
+    # One thread retired for each call
+    assert _wait_for_thread_count(pool, 1)
+    assert not pool._shutdowns_due
 
 
 def test_threadpool_shrink_keeps_minimum_after_an_unrelated_exit(

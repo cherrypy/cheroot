@@ -31,7 +31,16 @@ class TrueyZero:
 trueyzero = TrueyZero()
 
 _SHUTDOWNREQUEST = object()
-_SHRINKREQUEST = object()
+
+
+class _ShrinkRequest:
+    """A request that shrink() queued for one thread to shut down."""
+
+    taken = False
+    """Whether a worker took it, so that its shutdown is no longer due."""
+
+    cancelled = False
+    """Whether its shrink() call gave its shutdown back before then."""
 
 
 class WorkerThread(threading.Thread):
@@ -158,9 +167,9 @@ class WorkerThread(threading.Thread):
         """Get a connection, or a shutdown request if this thread exits."""
         while True:
             conn = self.server.requests.get()
-            if conn is not _SHRINKREQUEST:
+            if not isinstance(conn, _ShrinkRequest):
                 return conn
-            if self.server.requests._retires(self):
+            if self.server.requests._retires(self, conn):
                 return _SHUTDOWNREQUEST
 
     def _process_connections_until_interrupted(self):
@@ -378,28 +387,32 @@ class ThreadPool:
             # shrink() call sees them and doesn't pick the same threads
             self._shutdowns_due += n_to_remove
 
-        # put a request on the queue for each shutdown. The worker that
-        # takes one shuts down only while a shutdown is due, so a request
-        # that is no longer needed is harmless.
-        n_unsent = n_to_remove
+        # put a request on the queue for each shutdown
+        requests = [_ShrinkRequest() for _ in range(n_to_remove)]
+        n_queued = 0
         try:
-            while n_unsent:
-                self._queue.put(_SHRINKREQUEST)
-                n_unsent -= 1
+            for request in requests:
+                self._queue.put(request)
+                n_queued += 1
         finally:
-            if n_unsent:
-                # The put() was interrupted, such as while it waited for room
-                with self._lock:
-                    self._shutdowns_due = max(
-                        self._shutdowns_due - n_unsent,
-                        0,
-                    )
+            self._cancel(requests[n_queued:])
 
-    def _retires(self, worker):
+    def _cancel(self, requests):
+        """Give back the shutdowns of requests that no worker has taken."""
+        # A put() was interrupted, such as while it waited for room, maybe
+        # after its request got into the queue, where a worker skips it now
+        with self._lock:
+            for request in requests:
+                if not request.taken:
+                    request.cancelled = True
+                    self._shutdowns_due -= 1
+
+    def _retires(self, worker, request):
         """Tell whether a worker that took a shrink request shuts down."""
         with self._lock:
-            if not self._shutdowns_due:
+            if request.cancelled:
                 return False
+            request.taken = True
             self._shutdowns_due -= 1
             # Another thread may have exited since shrink() was called
             if len(self._serving()) <= self.min:
