@@ -1341,6 +1341,38 @@ def _stop_during_shrink_enqueue(
         pool.stop()
 
 
+def test_threadpool_shrink_interrupted_after_a_stop(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A shrink() interrupted after a stop() leaves the next run's count."""
+    pool = single_thread_pool
+    pool.grow(1)
+    release = threading.Event()
+
+    def _held_interrupted_put(_obj: object) -> None:
+        assert release.wait(10)
+        raise KeyboardInterrupt
+
+    def _shrink() -> None:
+        with contextlib.suppress(KeyboardInterrupt):
+            pool.shrink(amount=1)
+
+    shrinker = threading.Thread(target=_shrink)
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(_join_thread, shrinker)
+        cleanup.callback(release.set)
+        patch.setattr(pool._queue, 'put', _held_interrupted_put)
+        shrinker.start()
+        # The call has reserved its shutdown
+        assert _wait_until(compute_condition=lambda: pool._shutdowns_due == 1)
+        pool.stop()
+        pool.start()
+    # stop() forgot the shutdown, so the interrupted call gives none back
+    assert not pool._shutdowns_due
+    assert pool.idle == pool.min
+
+
 def test_threadpool_restarts_after_late_shrink_enqueue(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
