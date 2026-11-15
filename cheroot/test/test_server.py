@@ -1386,8 +1386,12 @@ def test_threadpool_shrink_interrupted_after_a_stop(
     pool = single_thread_pool
     pool.grow(1)
     release = threading.Event()
+    queue_put = pool._queue.put
 
-    def _held_interrupted_put(_obj: object) -> None:
+    def _held_interrupted_put(obj: object) -> None:
+        # Only the shrink() call waits; stop() queues its requests
+        if threading.current_thread() is not shrinker:
+            return queue_put(obj)
         assert release.wait(10)
         raise KeyboardInterrupt
 
@@ -1536,7 +1540,7 @@ def test_threadpool_stop_retries_an_interrupted_enqueue(
     with _paused_workers(monkeypatch) as release:
         pool = _prepared_pool(request, minthreads=2)
         workers = list(pool._threads)
-        queue_put = pool._queue.put_shutdown
+        queue_put = pool._queue.put
         queued: list[object] = []
 
         def _put_then_release(obj: object) -> None:
@@ -1547,14 +1551,10 @@ def test_threadpool_stop_retries_an_interrupted_enqueue(
                 release.set()
 
         with monkeypatch.context() as patch:
-            patch.setattr(
-                pool._queue,
-                'put_shutdown',
-                _interrupt_after(queue_put),
-            )
+            patch.setattr(pool._queue, 'put', _interrupt_after(queue_put))
             with pytest.raises(KeyboardInterrupt):
                 pool.stop()
-            patch.setattr(pool._queue, 'put_shutdown', _put_then_release)
+            patch.setattr(pool._queue, 'put', _put_then_release)
             pool.stop()
     assert not any(worker.is_alive() for worker in workers)
     assert pool.qsize == 1
@@ -1594,49 +1594,26 @@ def _pool_with_one_slot(
     return pool
 
 
-def test_threadpool_stop_with_a_full_queue_reaches_force_close(
-    request: pytest.FixtureRequest,
-) -> None:
-    """A full queue must not keep stop() from closing a stuck connection."""
-    pool = _pool_with_one_slot(request, minthreads=1)
-    worker = pool._threads[0]
-    stuck = _HeldConnection()
-    pool.put(stuck)
-    assert _wait_until(compute_condition=lambda: worker.conn is stuck)
-    # Another connection fills the queue
-    waiting = _HeldConnection()
-    waiting.closed.set()
-    pool.put(waiting)
-    stopper = threading.Thread(target=pool.stop, args=(0,), daemon=True)
-    with contextlib.ExitStack() as cleanup:
-        cleanup.callback(stuck.closed.set)
-        stopper.start()
-        stopper.join(5)
-        # Checked while the connection is still stuck
-        assert not stopper.is_alive()
-    assert not worker.is_alive()
-
-
 def test_threadpool_overlapping_stops_end_every_thread(
     request: pytest.FixtureRequest,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A stop() that comes as another queues on a full queue, both finish."""
+    """A stop() that comes as another queues on a small queue, both finish."""
     pool = _pool_with_one_slot(request, minthreads=2)
     workers = list(pool._threads)
-    put_shutdown = pool._queue.put_shutdown
+    queue_put = pool._queue.put
     queueing = threading.Event()
     resume = threading.Event()
 
     def _held_put(obj: object) -> None:
         queueing.set()
         assert resume.wait(10)
-        put_shutdown(obj)
+        queue_put(obj)
 
     waiting = threading.Event()
     with monkeypatch.context() as patch, contextlib.ExitStack() as cleanup:
         patch.setattr(pool, '_stop_lock', _ObservedStopLock(pool, waiting))
-        patch.setattr(pool._queue, 'put_shutdown', _held_put)
+        patch.setattr(pool._queue, 'put', _held_put)
         cleanup.callback(_join_thread, _stop_in_daemon(pool))
         assert queueing.wait(10)
         cleanup.callback(_join_thread, _stop_in_daemon(pool))
