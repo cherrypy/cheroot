@@ -1,0 +1,12 @@
+Fixed :py:meth:`ThreadPool.stop() <cheroot.workers.threadpool.ThreadPool.stop>`
+leaving shutdown requests queued that ended the threads of the pool when it
+started again, so that starting it hung. This happened after stopping a pool
+that was still shrinking, one that its own worker stopped on an interrupt, or
+one whose stop was interrupted. A stopped pool now starts again once its
+previous threads have exited, and stopping it no longer waits for room in a
+full connection queue. :py:meth:`ThreadPool.grow()
+<cheroot.workers.threadpool.ThreadPool.grow>` now raises
+:py:exc:`RuntimeError` while :py:meth:`ThreadPool.stop()
+<cheroot.workers.threadpool.ThreadPool.stop>` ends the pool's threads.
+
+-- by :user:`rm-you`
