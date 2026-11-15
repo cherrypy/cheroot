@@ -158,7 +158,7 @@ class WorkerThread(threading.Thread):
             self.ready = False
 
     def _get_request(self):
-        """Get a connection, or a shutdown request if this thread exits."""
+        """Get a connection, or a shutdown request for this thread to exit."""
         while True:
             conn = self.server.requests.get()
             if not isinstance(conn, _RetirementRequest):
@@ -339,7 +339,7 @@ class ThreadPool:
             self._threads.remove(t)
 
     def _serving(self):
-        """Return the threads that run and that are not shutting down."""
+        """Return the threads that run and that are not retiring."""
         # A thread clears `ready` as it exits. Workers call this, and before
         # Python 3.13, is_alive() can fail when two threads call it, or
         # join(), at once for a thread that is exiting.
@@ -410,15 +410,21 @@ class ThreadPool:
     def _decide_retirement(self, worker, request):
         """Decide whether a worker that took a retirement request retires.
 
-        The request stops being due whatever the answer, and the worker is
+        The retirement stops being due whatever the answer, and the worker is
         marked as retiring when it is yes.
         """
         with self._lock:
-            # Its shrink() call may have taken it back
+            # If interrupted, the shrink() call that placed this request
+            # on the queue may have withdrawn it from _retirements_due.
+            # If not in _retirements_due, the request should be ignored.
             if request not in self._retirements_due:
                 return False
             self._retirements_due.remove(request)
-            # Another thread may have exited since shrink() was called
+            # Serving threads may have exited since shrink() was called,
+            # for reasons unrelated to any retirement tickets (e.g.
+            # fatal exceptions). Recheck against self.min here, before
+            # committing this worker to retire, to ensure the pool never
+            # drops below it.
             if len(self._serving()) <= self.min:
                 return False
             worker._retiring = True

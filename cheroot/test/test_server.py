@@ -687,10 +687,10 @@ def _read_idle_while_retiring(pool: ThreadPool) -> list[int]:
     return wrong
 
 
-def test_threadpool_idle_is_exact_while_threads_retire(
+def test_threadpool_idle_is_accurate_while_threads_retire(
     single_thread_pool: ThreadPool,
 ) -> None:
-    """A thread taking its shutdown never shows as idle and due at once."""
+    """pool.idle is accurate throughout concurrent retirements."""
     pool = single_thread_pool
     with contextlib.ExitStack() as cleanup:
         cleanup.callback(sys.setswitchinterval, sys.getswitchinterval())
