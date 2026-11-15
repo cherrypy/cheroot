@@ -5,8 +5,6 @@
    joinable
 """
 
-import collections
-import contextlib
 import logging
 import queue
 import socket
@@ -35,6 +33,10 @@ trueyzero = TrueyZero()
 _SHUTDOWNREQUEST = object()
 
 
+class _RetirementRequest:
+    """A ticket that shrink() queues, for any one thread to take and retire."""
+
+
 class WorkerThread(threading.Thread):
     """Thread which continuously polls a Queue for Connection objects.
 
@@ -54,6 +56,9 @@ class WorkerThread(threading.Thread):
     ready = False
     """A simple flag for the calling server to know when this thread
     has begun polling the Queue."""
+
+    _retiring = False
+    """Whether this thread took a retirement request, and is exiting."""
 
     def __init__(self, server):
         """Initialize WorkerThread instance.
@@ -152,6 +157,15 @@ class WorkerThread(threading.Thread):
         finally:
             self.ready = False
 
+    def _get_request(self):
+        """Get a connection, or a shutdown request if this thread exits."""
+        while True:
+            conn = self.server.requests.get()
+            if not isinstance(conn, _RetirementRequest):
+                return conn
+            if self.server.requests._decide_retirement(self, conn):
+                return _SHUTDOWNREQUEST
+
     def _process_connections_until_interrupted(self):
         """Process incoming HTTP connections in an infinite loop.
 
@@ -162,7 +176,7 @@ class WorkerThread(threading.Thread):
                             server instance
         """
         while True:
-            conn = self.server.requests.get()
+            conn = self._get_request()
             if conn is _SHUTDOWNREQUEST:
                 return
 
@@ -287,7 +301,10 @@ class ThreadPool:
         self._queue = queue.Queue(maxsize=accepted_queue_size)
         self._queue_put_timeout = accepted_queue_timeout
         self.get = self._queue.get
-        self._pending_shutdowns = collections.deque()
+        # Guards _retirements_due and _threads against concurrent access
+        # from `idle`, `shrink()`, and a worker claiming its own retirement.
+        self._lock = threading.Lock()
+        self._retirements_due = set()
 
     def start(self):
         """Start the pool of threads.
@@ -301,8 +318,11 @@ class ThreadPool:
     @property
     def idle(self):
         """Number of worker threads which are idle. Read-only."""
-        idles = len([t for t in self._threads if t.conn is None])
-        return max(idles - len(self._pending_shutdowns), 0)
+        # The threads and the retirements due change together as a worker
+        # takes a retirement request
+        with self._lock:
+            idles = len([t for t in self._serving() if t.conn is None])
+            return max(idles - len(self._retirements_due), 0)
 
     def put(self, obj):
         """Put request into queue.
@@ -317,8 +337,13 @@ class ThreadPool:
         # Remove any dead threads from our list
         for t in [t for t in self._threads if not t.is_alive()]:
             self._threads.remove(t)
-            with contextlib.suppress(IndexError):
-                self._pending_shutdowns.popleft()
+
+    def _serving(self):
+        """Return the threads that run and that are not shutting down."""
+        # A thread clears `ready` as it exits. Workers call this, and before
+        # Python 3.13, is_alive() can fail when two threads call it, or
+        # join(), at once for a thread that is exiting.
+        return [t for t in self._threads if t.ready and not t._retiring]
 
     def grow(self, amount):
         """Spawn new worker threads (not above self.max)."""
@@ -338,26 +363,66 @@ class ThreadPool:
         return worker
 
     def shrink(self, amount):
-        """Kill off worker threads (not below self.min)."""
-        # Grow/shrink the pool if necessary.
-        # Remove any dead threads from our list
-        amount -= len(self._pending_shutdowns)
-        self._clear_dead_threads()
-        if amount <= 0:
-            return
+        """Kill off worker threads (not below self.min).
 
-        # calculate the number of threads above the minimum
-        n_extra = max(len(self._threads) - self.min, 0)
+        Threads that earlier calls asked to retire count as gone.
+        """
+        retirement_requests = []
+        n_queued = 0
+        try:
+            with self._lock:
+                # Remove any dead threads from our list
+                self._clear_dead_threads()
 
-        # don't remove more than amount
-        n_to_remove = min(amount, n_extra)
+                # calculate the number of threads it's safe to remove,
+                # taking into account the minimum and any retirement
+                # requests still pending from previous calls
+                n_removable = max(
+                    len(self._serving())
+                    - len(self._retirements_due)
+                    - self.min,
+                    0,
+                )
 
-        # put shutdown requests on the queue equal to the number of threads
-        # to remove. As each request is processed by a worker, that worker
-        # will terminate and be culled from the list.
-        for _ in range(n_to_remove):
-            self._pending_shutdowns.append(None)
-            self._queue.put(_SHUTDOWNREQUEST)
+                # don't remove more than amount
+                retirement_requests = [
+                    _RetirementRequest()
+                    for _ in range(min(amount, n_removable))
+                ]
+                # Add these retirement requests to _retirements_due before
+                # they're queued, so a concurrent shrink() call knows about
+                # them and budgets for them accordingly.
+                self._retirements_due.update(retirement_requests)
+
+            # put a request on the queue for each retirement
+            for request in retirement_requests:
+                self._queue.put(request)
+                n_queued += 1
+        finally:
+            # If shrink() was interrupted, remove the ones we added to
+            # _retirements_due that never made it onto the queue, or that got
+            # in as put() was interrupted: a thread that takes one skips it.
+            with self._lock:
+                self._retirements_due.difference_update(
+                    retirement_requests[n_queued:],
+                )
+
+    def _decide_retirement(self, worker, request):
+        """Decide whether a worker that took a retirement request retires.
+
+        The request stops being due whatever the answer, and the worker is
+        marked as retiring when it is yes.
+        """
+        with self._lock:
+            # Its shrink() call may have taken it back
+            if request not in self._retirements_due:
+                return False
+            self._retirements_due.remove(request)
+            # Another thread may have exited since shrink() was called
+            if len(self._serving()) <= self.min:
+                return False
+            worker._retiring = True
+            return True
 
     def stop(self, timeout=5):
         """Terminate all worker threads.
