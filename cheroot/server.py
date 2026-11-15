@@ -1534,6 +1534,19 @@ _WORKER_TOTALS = (
 )
 
 
+def _worker_share(record, name):
+    """Return a worker record's part in one of its server's statistics."""
+    # A throughput is a sum of the workers' rates, from their counts,
+    # whatever rates their records keep
+    if name == 'Read Throughput':
+        byte_count = 'Bytes Read'
+    elif name == 'Write Throughput':
+        byte_count = 'Bytes Written'
+    else:
+        return record[name](record)
+    return record[byte_count](record) / (record['Work Time'](record) or 1e-6)
+
+
 class HTTPServer:
     """An HTTP server."""
 
@@ -1746,17 +1759,24 @@ class HTTPServer:
     def _remove_worker_record(self, worker_threads, removed, name):
         """Remove a worker's record, keeping its counts in the totals."""
         with self._stats_lock:
-            record = worker_threads.pop(name, None)
+            record = worker_threads.get(name)
             if record is not None:
-                for total in _WORKER_TOTALS:
-                    removed[total] += record[total](record)
+                # Every count before any, so that a record that cannot give
+                # them all stays as it is
+                shares = {
+                    total: _worker_share(record, total)
+                    for total in _WORKER_TOTALS
+                }
+                del worker_threads[name]
+                for total, share in shares.items():
+                    removed[total] += share
 
     def _worker_total(self, stats, removed, name):
         """Sum a statistic over the current and the removed worker records."""
         with self._stats_lock:
             return removed[name] + sum(
                 (
-                    record[name](record)
+                    _worker_share(record, name)
                     for record in stats['Worker Threads'].values()
                 ),
                 0,

@@ -831,6 +831,55 @@ def test_worker_retiring_after_clear_stats_keeps_to_its_statistics(
     assert httpserver.stats['Requests'](httpserver.stats) == 20
 
 
+@pytest.mark.parametrize('direction', ('Read', 'Write'))
+@pytest.mark.parametrize(
+    'replacement',
+    (
+        pytest.param(lambda _record: 999, id='callback'),
+        pytest.param(999, id='scalar'),
+        pytest.param(None, id='absent'),
+    ),
+)
+def test_server_throughput_comes_from_worker_counts(
+    request: pytest.FixtureRequest,
+    direction: str,
+    replacement: object,
+) -> None:
+    """Test that server throughput sums each worker's bytes per work time."""
+    httpserver = _start_server_with_workers(request)
+    stats = httpserver.stats
+    assert _wait_until(
+        compute_condition=lambda: len(stats['Worker Threads']) == 4,
+    )
+    throughput = f'{direction} Throughput'
+    for number, worker in enumerate(httpserver.requests._threads):
+        # Rates of 10 over distinct work times, and a worker that did none
+        worker.requests_seen = number
+        worker.bytes_read = number * 10
+        worker.bytes_written = number * 10
+        worker.work_time = number
+        if replacement is None:
+            worker.stats.pop(throughput)
+        else:
+            worker.stats[throughput] = replacement
+    expected = {
+        'Requests': 6,
+        'Bytes Read': 60,
+        'Bytes Written': 60,
+        'Work Time': 6,
+        'Read Throughput': 30,
+        'Write Throughput': 30,
+    }
+    assert stats[throughput](stats) == pytest.approx(30)
+
+    _retire_workers(httpserver)
+
+    assert len(stats['Worker Threads']) == 1
+    assert {name: stats[name](stats) for name in expected} == pytest.approx(
+        expected,
+    )
+
+
 @pytest.mark.parametrize('change', ('extra field', 'renamed thread'))
 def test_retiring_worker_removes_its_changed_record(
     request: pytest.FixtureRequest,
