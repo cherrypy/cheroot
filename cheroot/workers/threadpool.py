@@ -537,12 +537,15 @@ class ThreadPool:
 
             self._wait_for(threads, timeout, endtime)
         finally:
-            with self._lock:
-                # A thread still running, even this one, keeps the pool
-                # from starting again: a new thread could take its stop
-                # request
-                self._threads[:] = [t for t in self._threads if t.ready]
-            self._stop_lock.release()
+            try:
+                with self._lock:
+                    # A thread still running, even this one, keeps the pool
+                    # from starting again: a new thread could take its stop
+                    # request
+                    self._threads[:] = [t for t in self._threads if t.ready]
+            finally:
+                # Even if an interrupt came as it waited for the lock above
+                self._stop_lock.release()
 
     def _wait_for(self, threads, timeout, endtime):
         """Wait for threads to exit, closing connections after the timeout."""

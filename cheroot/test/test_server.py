@@ -1863,6 +1863,52 @@ def test_threadpool_stop_interrupted_while_waiting_can_be_repeated(
     assert _wait_until(compute_condition=lambda: not worker.is_alive())
 
 
+class _LockInterruptedOnAcquire:
+    """The pool's lock, interrupted once before one thread acquires it."""
+
+    def __init__(self, pool: ThreadPool, thread: threading.Thread) -> None:
+        self.lock = pool._lock
+        self.interrupted = False
+        self._thread = thread
+
+    def __enter__(self) -> None:
+        if threading.current_thread() is self._thread and not self.interrupted:
+            self.interrupted = True
+            # Such as a second Ctrl-C while the thread waits for the lock
+            raise KeyboardInterrupt
+        self.lock.acquire()
+
+    def __exit__(self, *_exc: object) -> None:
+        self.lock.release()
+
+
+def test_threadpool_stop_interrupted_in_its_cleanup_can_be_repeated(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stop() interrupted as it tidies up lets the pool stop and start."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    workers = tuple(pool._threads)
+    original_wait_for = pool._wait_for
+    interrupted = _LockInterruptedOnAcquire(pool, threading.current_thread())
+    with monkeypatch.context() as patch:
+
+        def _wait_then_interrupt(*args: object) -> None:
+            original_wait_for(*args)
+            # The next time this thread takes the pool's lock is to tidy up
+            patch.setattr(pool, '_lock', interrupted)
+
+        patch.setattr(pool, '_wait_for', _wait_then_interrupt)
+        with pytest.raises(KeyboardInterrupt):
+            pool.stop()
+    assert interrupted.interrupted
+    # Checked first, as a later stop() would wait for it forever
+    assert not pool._stop_lock.locked()
+    assert not any(t.is_alive() for t in workers)
+    pool.stop()
+    _assert_restart_ignores_leftovers(pool)
+
+
 def test_threadpool_worker_that_stops_its_pool_closes_stuck_connections(
     request: pytest.FixtureRequest,
 ) -> None:
