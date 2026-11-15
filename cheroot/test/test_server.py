@@ -766,6 +766,71 @@ def test_retired_threads_preserve_totals(
         assert httpserver.stats[name](httpserver.stats) == expected
 
 
+def _serve_requests(server: wsgi.Server, count: int) -> None:
+    """Run a server on a new ephemeral port and send it some requests."""
+    # A port of its own, clear of the last run's connections in TIME_WAIT
+    server.bind_addr = (ANY_INTERFACE_IPV4, EPHEMERAL_PORT)
+    with server._run_in_thread():
+        host = webtest.interface(ANY_INTERFACE_IPV4)
+        url = f'http://{host}:{server.bind_addr[1]}/'
+        for _ in range(count):
+            response = requests.get(
+                url,
+                headers={'Connection': 'close'},
+                timeout=10,
+            )
+            assert response.status_code == HTTPStatus.OK
+
+
+def test_statistics_cleared_between_runs_keep_their_counts() -> None:
+    """Test that statistics replaced between runs keep their own counts."""
+
+    def app(
+        _environ: dict[str, object],
+        start_response: _t.Callable[..., object],
+    ) -> list[bytes]:
+        start_response('200 OK', [('Content-Length', '2')])
+        return [b'ok']
+
+    server = _make_wsgi_server(app)
+    server.stats['Enabled'] = True
+    _serve_requests(server, 2)
+    first_run_stats = server.stats
+    server.clear_stats()
+    server.stats['Enabled'] = True
+    _serve_requests(server, 3)
+
+    assert first_run_stats['Requests'](first_run_stats) == 2
+    assert server.stats['Requests'](server.stats) == 3
+
+
+def test_worker_retiring_after_clear_stats_keeps_to_its_statistics(
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test that a worker's counts go to the statistics that it joined."""
+    httpserver = _start_server_with_workers(request)
+    old_stats = httpserver.stats
+    old_workers = list(httpserver.requests._threads)
+    assert _wait_until(
+        compute_condition=lambda: (
+            len(old_stats['Worker Threads']) == len(old_workers)
+        ),
+    )
+    for worker in old_workers:
+        worker.requests_seen = 1
+    httpserver.clear_stats()
+    httpserver.stats['Enabled'] = True
+    httpserver.requests.grow(2)
+    for worker in httpserver.requests._threads:
+        if worker not in old_workers:
+            worker.requests_seen = 10
+
+    httpserver.stop()
+
+    assert old_stats['Requests'](old_stats) == 4
+    assert httpserver.stats['Requests'](httpserver.stats) == 20
+
+
 @pytest.mark.parametrize('change', ('extra field', 'renamed thread'))
 def test_retiring_worker_removes_its_changed_record(
     request: pytest.FixtureRequest,

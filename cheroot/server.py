@@ -1684,6 +1684,8 @@ class HTTPServer:
         """Reset server stat counters.."""
         self._start_time = None
         self._run_time = 0
+        # What the workers that leave these statistics have counted
+        removed = dict.fromkeys(_WORKER_TOTALS, 0)
         stats = {
             'Enabled': False,
             'Bind Address': lambda s: repr(self.bind_addr),
@@ -1698,59 +1700,61 @@ class HTTPServer:
             'Socket Errors': 0,
             'Requests': lambda s: (
                 ((not s['Enabled']) and -1)
-                or self._worker_total(s, 'Requests')
+                or self._worker_total(s, removed, 'Requests')
             ),
             'Bytes Read': lambda s: (
                 ((not s['Enabled']) and -1)
-                or self._worker_total(s, 'Bytes Read')
+                or self._worker_total(s, removed, 'Bytes Read')
             ),
             'Bytes Written': lambda s: (
                 ((not s['Enabled']) and -1)
-                or self._worker_total(s, 'Bytes Written')
+                or self._worker_total(s, removed, 'Bytes Written')
             ),
             'Work Time': lambda s: (
                 ((not s['Enabled']) and -1)
-                or self._worker_total(s, 'Work Time')
+                or self._worker_total(s, removed, 'Work Time')
             ),
             'Read Throughput': lambda s: (
                 ((not s['Enabled']) and -1)
-                or self._worker_total(s, 'Read Throughput')
+                or self._worker_total(s, removed, 'Read Throughput')
             ),
             'Write Throughput': lambda s: (
                 ((not s['Enabled']) and -1)
-                or self._worker_total(s, 'Write Throughput')
+                or self._worker_total(s, removed, 'Write Throughput')
             ),
             'Worker Threads': {},
         }
         with self._stats_lock:
-            # In one step, so that a worker that exits meanwhile adds its
-            # counts to the old totals, or to none
+            # In one step, so that a worker joins either these statistics
+            # and their totals, or the old ones and theirs
             self.stats = stats
-            self._removed_worker_totals = dict.fromkeys(_WORKER_TOTALS, 0)
+            self._removed_worker_totals = removed
             if self.ready:
                 logging.statistics[self._stats_key] = self.stats
 
-    def _add_worker_record(self, worker_threads, name, record):
-        """Add a worker's record to its ``Worker Threads`` statistics."""
-        with self._stats_lock:
-            worker_threads[name] = record
+    def _add_worker_record(self, name, record):
+        """Add a worker's record to the current ``Worker Threads``.
 
-    def _remove_worker_record(self, worker_threads, name):
+        :returns: the ``Worker Threads`` and the totals of the
+            statistics that the record joined
+        """
+        with self._stats_lock:
+            worker_threads = self.stats['Worker Threads']
+            worker_threads[name] = record
+            return worker_threads, self._removed_worker_totals
+
+    def _remove_worker_record(self, worker_threads, removed, name):
         """Remove a worker's record, keeping its counts in the totals."""
         with self._stats_lock:
             record = worker_threads.pop(name, None)
-            # A record that joined statistics cleared since then adds nothing
-            if (
-                record is not None
-                and worker_threads is self.stats['Worker Threads']
-            ):
+            if record is not None:
                 for total in _WORKER_TOTALS:
-                    self._removed_worker_totals[total] += record[total](record)
+                    removed[total] += record[total](record)
 
-    def _worker_total(self, stats, name):
+    def _worker_total(self, stats, removed, name):
         """Sum a statistic over the current and the removed worker records."""
         with self._stats_lock:
-            return self._removed_worker_totals[name] + sum(
+            return removed[name] + sum(
                 (
                     record[name](record)
                     for record in stats['Worker Threads'].values()
