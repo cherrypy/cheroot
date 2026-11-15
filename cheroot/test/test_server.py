@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import functools
 import gc
 import os
 import pathlib
@@ -1620,26 +1621,332 @@ def test_threadpool_overlapping_stops_end_every_thread(
     request: pytest.FixtureRequest,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Two stop() calls at once, each asking every thread, both finish."""
+    """A stop() that comes as another queues on a full queue, both finish."""
     pool = _pool_with_one_slot(request, minthreads=2)
     workers = list(pool._threads)
     put_shutdown = pool._queue.put_shutdown
-    together = threading.Barrier(2)
+    queueing = threading.Event()
+    resume = threading.Event()
 
-    def _put_together(obj: object) -> None:
-        # Each call has counted every thread before either queues
-        with contextlib.suppress(threading.BrokenBarrierError):
-            together.wait(timeout=5)
+    def _held_put(obj: object) -> None:
+        queueing.set()
+        assert resume.wait(10)
         put_shutdown(obj)
 
-    monkeypatch.setattr(pool._queue, 'put_shutdown', _put_together)
-    stoppers = [threading.Thread(target=pool.stop, daemon=True) for _ in '12']
-    for stopper in stoppers:
-        stopper.start()
-    for stopper in stoppers:
-        stopper.join(10)
-    assert not any(stopper.is_alive() for stopper in stoppers)
+    waiting = threading.Event()
+    with monkeypatch.context() as patch, contextlib.ExitStack() as cleanup:
+        patch.setattr(pool, '_stop_lock', _ObservedStopLock(pool, waiting))
+        patch.setattr(pool._queue, 'put_shutdown', _held_put)
+        cleanup.callback(_join_thread, _stop_in_daemon(pool))
+        assert queueing.wait(10)
+        cleanup.callback(_join_thread, _stop_in_daemon(pool))
+        cleanup.callback(_release_events, resume)
+        assert waiting.wait(10)
     assert not any(worker.is_alive() for worker in workers)
+
+
+def _pool_of_daemon_threads(
+    request: pytest.FixtureRequest,
+    *,
+    minthreads: int,
+) -> ThreadPool:
+    """Start a pool whose threads do not keep the tests from ending.
+
+    Threads inherit their daemon flag, so starting the pool from a daemon
+    thread makes a regression that leaves threads waiting fail the test
+    instead of hanging the run.
+    """
+    pool = ThreadPool(_make_server(), min=minthreads)
+    pool.server.requests = pool
+    starter = threading.Thread(target=pool.start, daemon=True)
+    starter.start()
+    _join_thread(starter)
+    request.addfinalizer(functools.partial(_stop_in_daemon, pool))
+    return pool
+
+
+def _stop_in_daemon(pool: ThreadPool) -> threading.Thread:
+    """Stop a pool in a thread that does not keep the tests from ending."""
+    stopper = threading.Thread(target=pool.stop, daemon=True)
+    stopper.start()
+    return stopper
+
+
+class _StoppingConnection(_HeldConnection):
+    """A connection whose handler stops the pool, then waits to be closed."""
+
+    def __init__(
+        self,
+        pool: ThreadPool,
+        together: threading.Barrier | None = None,
+        stop_kwargs: dict[str, float | None] | None = None,
+    ) -> None:
+        super().__init__()
+        self.stopped = threading.Event()
+        self._pool = pool
+        self._together = together
+        self._stop_kwargs = (
+            {'timeout': 0} if stop_kwargs is None else stop_kwargs
+        )
+
+    def communicate(self) -> bool:
+        """Stop the pool, then handle the connection until it is closed."""
+        if self._together is not None:
+            self._together.wait(10)
+        self._pool.stop(**self._stop_kwargs)
+        self.stopped.set()
+        return super().communicate()
+
+
+class _ObservedStopLock:
+    """Report a stop() call that has to wait for the one under way."""
+
+    def __init__(self, pool: ThreadPool, waiting: threading.Event) -> None:
+        self._lock = pool._stop_lock
+        self._waiting = waiting
+
+    def acquire(self, *, blocking: bool = True) -> bool:
+        """Take the lock, reporting a caller that waits for it."""
+        if self._lock.acquire(blocking=False):
+            return True
+        if blocking:
+            self._waiting.set()
+        return self._lock.acquire(blocking=blocking)
+
+    def release(self) -> None:
+        """Release the lock."""
+        self._lock.release()
+
+    def locked(self) -> bool:
+        """Tell whether a stop() call is under way."""
+        return self._lock.locked()
+
+
+@pytest.mark.parametrize('n_workers', (2, 3))
+@pytest.mark.parametrize(
+    'stop_kwargs',
+    (
+        pytest.param({}, id='default-timeout'),
+        pytest.param({'timeout': 0}, id='zero-timeout'),
+        pytest.param({'timeout': 60}, id='long-timeout'),
+        pytest.param({'timeout': None}, id='no-timeout'),
+    ),
+)
+def test_threadpool_workers_that_stop_their_pool_at_once(
+    request: pytest.FixtureRequest,
+    n_workers: int,
+    stop_kwargs: dict[str, float | None],
+) -> None:
+    """Workers that stop their pool at once do not wait for each other."""
+    pool = _pool_of_daemon_threads(request, minthreads=n_workers)
+    workers = tuple(pool._threads)
+    together = threading.Barrier(n_workers)
+    connections = [
+        _StoppingConnection(pool, together, stop_kwargs) for _ in workers
+    ]
+    for connection in connections:
+        connection.closed.set()
+        pool.put(connection)
+    # Well within the default timeout, which workers that wait for each
+    # other spend in full
+    assert all(connection.stopped.wait(3) for connection in connections)
+    assert _wait_until(
+        compute_condition=lambda: not any(t.is_alive() for t in workers),
+    )
+
+
+def test_threadpool_worker_stop_during_an_outside_stop(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A worker's stop() returns at once while another call ends the threads."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    workers = tuple(pool._threads)
+    stuck = _HeldConnection()
+    together = threading.Barrier(2)
+    stopping = _StoppingConnection(pool, together, stop_kwargs={})
+    stopping.closed.set()
+    pool.put(stuck)
+    pool.put(stopping)
+    assert _wait_until(
+        compute_condition=lambda: all(t.conn is not None for t in workers),
+    )
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_join_thread, _stop_in_daemon(pool))
+        cleanup.callback(_release_events, stuck.closed)
+        # That call has asked both threads, and waits for the stuck one
+        assert _wait_until(
+            compute_condition=lambda: pool.qsize == len(workers),
+        )
+        together.wait(10)
+        # Well within the default timeout, which that call spends waiting
+        assert stopping.stopped.wait(3)
+    # That call returns only once every thread has exited
+    assert not any(t.is_alive() for t in workers)
+
+
+def test_threadpool_outside_stop_during_a_worker_stop(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stop() that comes during a worker's waits for it, then for all."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    workers = tuple(pool._threads)
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(
+        compute_condition=lambda: any(t.conn is stuck for t in workers),
+    )
+    stopping = _StoppingConnection(pool, stop_kwargs={})
+    stopping.closed.set()
+    pool.put(stopping)
+    # The worker's stop() has asked both threads, and waits for the stuck one
+    assert _wait_until(compute_condition=lambda: pool.qsize == len(workers))
+    waiting = threading.Event()
+    with monkeypatch.context() as patch, contextlib.ExitStack() as cleanup:
+        patch.setattr(pool, '_stop_lock', _ObservedStopLock(pool, waiting))
+        cleanup.callback(_join_thread, _stop_in_daemon(pool))
+        cleanup.callback(_release_events, stuck.closed)
+        assert waiting.wait(10)
+    assert stopping.stopped.is_set()
+    # It returns only once every thread has exited, the worker included
+    assert not any(t.is_alive() for t in workers)
+
+
+def test_threadpool_worker_stop_without_a_timeout_does_not_wait(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A worker's stop() without a timeout only asks the threads to stop."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    workers = tuple(pool._threads)
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(
+        compute_condition=lambda: any(t.conn is stuck for t in workers),
+    )
+    stopping = _StoppingConnection(pool, stop_kwargs={'timeout': None})
+    stopping.closed.set()
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_release_events, stuck.closed)
+        pool.put(stopping)
+        assert stopping.stopped.wait(10)
+        assert not stuck.closed.is_set()
+    assert _wait_until(
+        compute_condition=lambda: not any(t.is_alive() for t in workers),
+    )
+
+
+def test_threadpool_stop_interrupted_while_waiting_can_be_repeated(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stop() interrupted as it waits leaves the next call to end the pool."""
+    pool = _pool_of_daemon_threads(request, minthreads=1)
+    worker = pool._threads[0]
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(compute_condition=lambda: worker.conn is stuck)
+
+    def _exiting_join(*_args: object) -> None:
+        sys.exit()
+
+    with monkeypatch.context() as patch:
+        patch.setattr(worker, 'join', _exiting_join)
+        with pytest.raises(SystemExit):
+            pool.stop()
+    stopper = threading.Thread(
+        target=functools.partial(pool.stop, timeout=0),
+        daemon=True,
+    )
+    stopper.start()
+    _join_thread(stopper)
+    assert stuck.closed.is_set()
+    assert _wait_until(compute_condition=lambda: not worker.is_alive())
+
+
+def test_threadpool_worker_that_stops_its_pool_closes_stuck_connections(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A worker that stops its pool still closes a stuck thread's connection."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(
+        compute_condition=lambda: any(t.conn is stuck for t in pool._threads),
+    )
+    stopping = _StoppingConnection(pool)
+    stopping.closed.set()
+    pool.put(stopping)
+    assert stopping.stopped.wait(10)
+    # Its stop() had a timeout of 0, after which it closes the connection
+    assert stuck.closed.is_set()
+    assert _wait_until(
+        compute_condition=lambda: not any(t.is_alive() for t in pool._threads),
+    )
+
+
+def test_threadpool_restart_waits_for_a_worker_that_stopped_it(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A pool that its worker stopped starts again once that worker exits."""
+    pool = _pool_of_daemon_threads(request, minthreads=1)
+    worker = pool._threads[0]
+    connection = _StoppingConnection(pool)
+    pool.put(connection)
+    assert connection.stopped.wait(10)
+    # A new thread could take the request that this one still needs
+    with pytest.raises(RuntimeError, match='can only be started once'):
+        pool.start()
+    connection.closed.set()
+    assert _wait_until(compute_condition=lambda: not worker.is_alive())
+    pool.start()
+    assert pool.idle == pool.min
+
+
+def test_threadpool_grow_is_refused_until_stop_returns(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A thread grown while stop() waits for old ones would outlive it."""
+    with _hold_retiring_workers(monkeypatch) as at_exit:
+        pool = _pool_of_daemon_threads(request, minthreads=1)
+        stopper = threading.Thread(target=pool.stop, daemon=True)
+        stopper.start()
+        # The old thread took its stop request, but has not exited yet
+        assert at_exit.get(timeout=10)
+        with pytest.raises(RuntimeError, match='while it stops'):
+            pool.grow(3)
+    _join_thread(stopper)
+    assert not any(t.is_alive() for t in pool._threads)
+
+
+def test_threadpool_start_is_refused_until_stop_returns(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A pool started again before stop() returns would outlive it."""
+    pool = single_thread_pool
+    worker = pool._threads[0]
+    exited = threading.Event()
+    resume = threading.Event()
+    original_join = worker.join
+
+    def _join_then_hold(timeout: float | None = None) -> None:
+        original_join(timeout)
+        exited.set()
+        assert resume.wait(10)
+
+    monkeypatch.setattr(worker, 'join', _join_then_hold)
+    stopper = threading.Thread(target=pool.stop, daemon=True)
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_join_thread, stopper)
+        cleanup.callback(resume.set)
+        stopper.start()
+        # The old thread has exited, but stop() has not returned
+        assert exited.wait(10)
+        with pytest.raises(RuntimeError, match='only be started once'):
+            pool.start()
+    pool.start()
+    assert len(pool._threads) == pool.min
 
 
 def test_threadpool_grow_while_stopping_is_refused(

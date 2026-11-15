@@ -39,6 +39,7 @@ class ThreadPool:
     _lock: threading.Lock
     _retirements_due: set[_RetirementRequest]
     _run: int
+    _stop_lock: threading.Lock
     def __init__(
         self,
         server,
@@ -62,5 +63,11 @@ class ThreadPool:
     ) -> bool: ...
     def _stops(self, worker: WorkerThread) -> bool: ...
     def stop(self, timeout: int = ...) -> None: ...
+    def _wait_for(
+        self,
+        threads: list[WorkerThread],
+        timeout: float | None,
+        endtime: float,
+    ) -> None: ...
     @property
     def qsize(self) -> int: ...

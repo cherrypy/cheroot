@@ -328,6 +328,8 @@ class ThreadPool:
         self._lock = threading.Lock()
         self._retirements_due = set()
         self._run = 0
+        # Held by the stop() call that ends the threads
+        self._stop_lock = threading.Lock()
 
     def start(self):
         """Start the pool of threads.
@@ -335,7 +337,9 @@ class ThreadPool:
         :raises RuntimeError: if the pool is already started
         """
         with self._lock:
-            if self._threads:
+            # Forget the threads that have exited since stop()
+            self._threads[:] = [t for t in self._threads if t.ready]
+            if self._threads or self._stop_lock.locked():
                 raise RuntimeError('Threadpools can only be started once.')
             self._grow(self.min)
 
@@ -379,9 +383,9 @@ class ThreadPool:
         :raises RuntimeError: while stop() ends the threads
         """
         with self._lock:
-            # A new thread could take the stop request that one of them
-            # still needs
-            if any(
+            # stop() would not know of a new thread, which could also take
+            # the stop request that one of the old ones still needs
+            if self._stop_lock.locked() or any(
                 t.ready and t._run != self._run and not t._retiring
                 for t in self._threads
             ):
@@ -485,8 +489,13 @@ class ThreadPool:
     def stop(self, timeout=5):
         """Terminate all worker threads.
 
+        One call at a time ends the threads. A call from a thread of the
+        pool returns at once while another call does. Any other call waits
+        for that one to finish, then ends the threads still running.
+
         Args:
-            timeout (int): time to wait for threads to stop gracefully
+            timeout (int): time to wait for threads to stop gracefully,
+                counted from the call, before closing their connections
         """
         # for compatability, negative timeouts are treated like None
         # TODO: treat negative timeouts like already expired timeouts
@@ -503,20 +512,40 @@ class ThreadPool:
         else:
             endtime = time.time() + timeout
 
+        # One call at a time ends the threads. A thread of the pool returns
+        # at once while another call does, as that call may be waiting for
+        # it to exit. Any other caller waits for that call, then ends what
+        # is left within what remains of its own timeout.
         with self._lock:
-            # End the run. The retirements that shrink() asked for are no
-            # longer due, and every thread that has not taken a request,
-            # of this run or of a stop() that was interrupted, needs one.
-            self._run += 1
-            self._retirements_due.clear()
-            threads = [t for t in self._threads if t.is_alive()]
-            n_running = len([t for t in threads if not t._retiring])
+            from_worker = threading.current_thread() in self._threads
+        if not self._stop_lock.acquire(blocking=not from_worker):
+            return
+        try:
+            with self._lock:
+                # End the run. The retirements that shrink() asked for are no
+                # longer due, and every thread that has not taken a request,
+                # of this run or of a stop() that was interrupted, needs one.
+                self._run += 1
+                self._retirements_due.clear()
+                threads = [t for t in self._threads if t.is_alive()]
+                n_running = len([t for t in threads if not t._retiring])
 
-        # Must shut down threads here so the code that calls
-        # this method can know when all threads are stopped.
-        for _ in range(n_running):
-            self._queue.put_shutdown(_SHUTDOWNREQUEST)
+            # Must shut down threads here so the code that calls
+            # this method can know when all threads are stopped.
+            for _ in range(n_running):
+                self._queue.put_shutdown(_SHUTDOWNREQUEST)
 
+            self._wait_for(threads, timeout, endtime)
+        finally:
+            with self._lock:
+                # A thread still running, even this one, keeps the pool
+                # from starting again: a new thread could take its stop
+                # request
+                self._threads[:] = [t for t in self._threads if t.ready]
+            self._stop_lock.release()
+
+    def _wait_for(self, threads, timeout, endtime):
+        """Wait for threads to exit, closing connections after the timeout."""
         ignored_errors = (
             # Raised when start_response called >1 time w/o exc_info or
             # wsgi write is called before start_response. See cheroot#261
@@ -525,28 +554,26 @@ class ThreadPool:
             KeyboardInterrupt,
         )
 
+        # A thread of the pool that stops it keeps the pool from stopping
+        # until it returns, so it waits no longer than the timeout, and not
+        # at all without one
         current_thread = threading.current_thread()
+        from_worker = current_thread in threads
+        if from_worker:
+            threads.remove(current_thread)
+            if timeout is None:
+                return
         for worker in threads:
-            if worker is current_thread:
-                continue
             remaining_time = timeout and endtime - time.time()
             try:
                 worker.join(remaining_time)
                 if worker.is_alive():
                     # Timeout exhausted; forcibly shut down the socket.
                     self._force_close(worker.conn)
-                    worker.join()
+                    if not from_worker:
+                        worker.join()
             except ignored_errors:
                 pass
-
-        with self._lock:
-            # A thread still running keeps the pool from starting again,
-            # unless it is this one, which exits after its connection
-            self._threads[:] = [
-                t
-                for t in self._threads
-                if t.is_alive() and t is not current_thread
-            ]
 
     @staticmethod
     @pass_none
