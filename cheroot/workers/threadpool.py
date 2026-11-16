@@ -399,9 +399,15 @@ class ThreadPool:
                 self._queue.put(request)
                 n_queued += 1
         finally:
-            # If shrink() was interrupted, remove the ones we added to
-            # _retirements_due that never made it onto the queue, or that got
-            # in as put() was interrupted: a thread that takes one skips it.
+            # As _retirements_due is updated before retirement
+            # requests are put on the queue, it is possible for the
+            # queue and _retirements_due to get out of sync if
+            # shrink() is interrupted. Here we remove any retirement
+            # requests from _retirements_due that 1) never made it
+            # into the queue, or 2) entered the queue but shrink()
+            # was interrupted right before n_queued was incremented.
+            # A worker that collects such a request will call
+            # _decide_retirement() which will in turn reject it.
             with self._lock:
                 self._retirements_due.difference_update(
                     retirement_requests[n_queued:],
