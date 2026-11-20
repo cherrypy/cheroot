@@ -33,7 +33,7 @@ cryptography==50.0.2
     #   trustme
 docopt==0.6.2
     # via pytest-watch
-exceptiongroup==1.3.1
+exceptiongroup==1.3.2
     # via pytest
 execnet==2.1.2
     # via pytest-xdist
@@ -82,9 +82,9 @@ pprintpp==0.4.0
     # via pytest-clarity
 pycparser==3.11
     # via cffi
-pydantic==2.14.3
+pydantic==2.14.4
     # via typer
-pydantic-core==2.50.4
+pydantic-core==2.50.5
     # via pydantic
 pygments==2.21.0
     # via
