@@ -4,7 +4,7 @@
 #
 #    tox run -qq -e pip-compile-tox-env-lock -- py pyproject.toml --upgrade
 #
-annotated-doc==0.0.6
+annotated-doc==0.0.7
     # via typer
 annotated-types==0.8.0
     # via pydantic
@@ -76,9 +76,9 @@ pprintpp==0.4.0
     # via pytest-clarity
 pycparser==3.12
     # via cffi
-pydantic==2.14.3
+pydantic==2.14.4
     # via typer
-pydantic-core==2.50.4
+pydantic-core==2.50.5
     # via pydantic
 pygments==2.21.0
     # via
@@ -135,7 +135,7 @@ termcolor==3.3.0
     # via pytest-sugar
 trustme==1.2.1
     # via -r dependencies/direct/py.in
-typer==0.29.1
+typer==0.29.2
     # via typer-slim
 typer-slim==0.24.0
     # via jaraco-text
