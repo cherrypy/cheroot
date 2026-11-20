@@ -1,0 +1,1 @@
+Preserved server proxy and strict mode settings when parsing requests on accepted connections.
