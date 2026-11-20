@@ -801,8 +801,11 @@ class HTTPRequest:
             return False
 
         try:
-            method, uri, req_protocol = request_line.strip().split(SPACE, 2)
-            if not req_protocol.startswith(b'HTTP/'):
+            method, uri, req_protocol = request_line[:-2].split(SPACE, 2)
+            if (
+                not req_protocol.startswith(b'HTTP/')
+                or req_protocol[-1:].isspace()
+            ):
                 self.simple_response(
                     '400 Bad Request',
                     'Malformed Request-Line: bad protocol',
