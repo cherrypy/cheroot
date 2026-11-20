@@ -235,6 +235,7 @@ class Gateway(server.Gateway):
 
         if rbo is not None:
             rbo -= chunklen
+            self.remaining_bytes_out = max(0, rbo)
             if rbo < 0:
                 raise ValueError(
                     'Response body exceeds the declared Content-Length.',
