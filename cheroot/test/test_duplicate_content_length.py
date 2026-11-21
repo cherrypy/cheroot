@@ -38,7 +38,7 @@ def test_duplicate_content_length(
     header_lines: bytes,
     expected_status: HTTPStatus,
 ) -> None:
-    """Reject duplicate lengths and close before any pipelined request.
+    """Reject duplicate lengths and close before any following request.
 
     :param native_server: live HTTP server
     :param http_request_timeout: socket timeout in seconds
