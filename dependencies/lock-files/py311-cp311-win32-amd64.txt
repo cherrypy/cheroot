@@ -10,7 +10,7 @@ annotated-types==0.8.0
     # via pydantic
 backports-tarfile==1.2.0
     # via jaraco-context
-certifi==2026.10.23
+certifi==2026.11.20
     # via requests
 cffi==2.1.1
     # via cryptography
@@ -23,7 +23,7 @@ colorama==0.4.6
     #   pytest
     #   pytest-watch
     #   typer
-coverage==7.17.3
+coverage==7.17.4
     # via
     #   -r dependencies/direct/py.in
     #   pytest-cov
