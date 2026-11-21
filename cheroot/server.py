@@ -253,9 +253,11 @@ class HeaderReader:
             if not self._allow_header(k):
                 continue
 
-            if k in comma_separated_headers:
-                existing = hdict.get(hname)
-                if existing:
+            existing = hdict.get(hname)
+            if existing:
+                if line[:1] in {SPACE, TAB}:
+                    v = SPACE.join((existing, v))
+                elif k in comma_separated_headers:
                     v = b', '.join((existing, v))
             hdict[hname] = v
 
