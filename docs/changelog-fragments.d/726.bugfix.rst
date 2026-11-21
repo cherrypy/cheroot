@@ -1,0 +1,3 @@
+Preserved all values in HTTP header continuation lines, joining them with
+spaces instead of discarding earlier values or treating continuation lines
+as separate comma-delimited fields (:issue:`726`).
