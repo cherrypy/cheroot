@@ -1,0 +1,5 @@
+Tests: close every HTTP connection opened by the test client, so that
+the ``ResourceWarning: unclosed <socket.socket ...>`` suppression
+could be dropped from the pytest configuration.
+
+-- by :user:`zheng-guannan577`.

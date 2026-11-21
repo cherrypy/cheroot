@@ -199,7 +199,12 @@ def testing_server(raw_testing_server, monkeypatch):
 @pytest.fixture
 def test_client(testing_server):
     """Get and return a test client out of the given server."""
-    return testing_server.server_client
+    client = testing_server.server_client
+    yield client
+    # Close every connection the client opened so that no socket is
+    # left unclosed once the test ends. Ref:
+    # https://github.com/cherrypy/cheroot/issues/768
+    client.close()
 
 
 def header_exists(header_name, headers):
