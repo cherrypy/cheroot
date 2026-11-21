@@ -22,6 +22,14 @@ exclude_also =
 
 [run]
 branch = true
+# NOTE: Coveragepy is incompatible with dynamic context that gets enabled via
+# NOTE: `pytest-cov` through a CLI arg to pytest. Refs:
+# * https://github.com/aio-libs/multidict/pull/1393
+# * https://github.com/pytest-dev/pytest-cov/issues/755
+# * https://coverage.rtfd.io/en/latest/changes.html#version-7-15-3-2026-08-02
+# * https://github.com/coveragepy/coveragepy/issues/2200
+# * https://github.com/coveragepy/coveragepy/pull/2234
+core = ${COVERAGE_CORE-ctrace}
 cover_pylib = false
 # NOTE: `disable_warnings` is needed when `pytest-cov` runs in tandem
 # NOTE: with `pytest-xdist`. These warnings are false negative in this
