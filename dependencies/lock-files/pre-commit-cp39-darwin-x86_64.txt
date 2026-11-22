@@ -28,5 +28,5 @@ pyyaml==6.0.3
     # via pre-commit
 typing-extensions==4.16.0
     # via virtualenv
-virtualenv==21.15.9
+virtualenv==21.15.12
     # via pre-commit
