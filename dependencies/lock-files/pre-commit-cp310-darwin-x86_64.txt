@@ -24,9 +24,9 @@ pre-commit==4.6.2
     # via -r dependencies/direct/pre-commit.in
 python-discovery==1.9.6
     # via virtualenv
-pyyaml==6.0.3
+pyyaml==6.0.4
     # via pre-commit
 typing-extensions==4.16.0
     # via virtualenv
-virtualenv==21.15.9
+virtualenv==21.15.12
     # via pre-commit
