@@ -12,7 +12,7 @@ annotated-doc==0.0.7
     # via typer
 annotated-types==0.8.0
     # via pydantic
-babel==2.18.0
+babel==2.19.0
     # via sphinx
 backports-tarfile==1.2.0
     # via jaraco-context
@@ -35,7 +35,7 @@ colorama==0.4.6
     #   pytest-watch
     #   sphinx
     #   typer
-coverage==7.17.4
+coverage==7.17.5
     # via
     #   -r dependencies/direct/py.in
     #   pytest-cov
@@ -57,7 +57,7 @@ domdf-python-tools==3.11.0
     # via jaraco-packaging
 execnet==2.1.2
     # via pytest-xdist
-filelock==4.3.0
+filelock==4.3.1
     # via
     #   python-discovery
     #   virtualenv
@@ -117,7 +117,7 @@ myst-parser==5.2.0
     # via -r dependencies/direct/build-docs.in
 natsort==8.4.0
     # via domdf-python-tools
-packaging==26.3
+packaging==26.4
     # via
     #   build
     #   pytest
@@ -180,7 +180,7 @@ pytest-xdist==3.8.0
     # via -r dependencies/direct/py.in
 python-dateutil==4.0.0
     # via tempora
-python-discovery==1.9.6
+python-discovery==1.9.7
     # via virtualenv
 pyyaml==6.0.4
     # via myst-parser
@@ -266,7 +266,7 @@ tzdata==2026.6
     # via python-dateutil
 urllib3==2.8.0
     # via requests
-virtualenv==21.15.12
+virtualenv==21.15.13
     # via build
 watchdog==7.1.1
     # via pytest-watch
