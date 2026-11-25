@@ -21,7 +21,7 @@ colorama==0.4.6
     #   pytest
     #   pytest-watch
     #   typer
-coverage==7.17.4
+coverage==7.17.5
     # via
     #   -r dependencies/direct/py.in
     #   pytest-cov
@@ -64,7 +64,7 @@ more-itertools==11.2.1
     #   cheroot (pyproject.toml)
     #   jaraco-functools
     #   jaraco-text
-packaging==26.3
+packaging==26.4
     # via
     #   pytest
     #   pytest-rerunfailures
