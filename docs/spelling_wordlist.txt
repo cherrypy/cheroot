@@ -7,6 +7,7 @@ bugfixes
 builtin
 changelog
 b'xb
+buf
 compat
 config
 conftest
@@ -33,6 +34,7 @@ hostname
 inclusivity
 initializer
 intersphinx
+io
 iterable
 linter
 linters
@@ -61,6 +63,7 @@ preconfigure
 py
 pytest
 pythonic
+RawIOBase
 readonly
 rebase
 Refactor
