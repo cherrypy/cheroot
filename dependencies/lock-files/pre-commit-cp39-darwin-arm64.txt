@@ -22,11 +22,11 @@ platformdirs==4.4.0
     # via virtualenv
 pre-commit==4.3.0
     # via -r dependencies/direct/pre-commit.in
-python-discovery==1.9.6
+python-discovery==1.9.7
     # via virtualenv
 pyyaml==6.0.3
     # via pre-commit
 typing-extensions==4.16.0
     # via virtualenv
-virtualenv==21.15.12
+virtualenv==21.15.13
     # via pre-commit
