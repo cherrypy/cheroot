@@ -8,7 +8,7 @@ build==1.2.2.post1
     # via -r dependencies/direct/build-dists.in
 colorama==0.4.6
     # via build
-packaging==26.3
+packaging==26.4
     # via build
 pyproject-hooks==1.3.3
     # via build
