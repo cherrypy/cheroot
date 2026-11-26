@@ -1,0 +1,2 @@
+Rejected whitespace between the HTTP version and the request-line CRLF
+terminator with ``400 Bad Request`` (:issue:`717`).
