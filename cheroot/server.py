@@ -248,6 +248,8 @@ class HeaderReader:
                     raise ValueError('Illegal header line.')
                 v = v.strip()
                 k = self._transform_key(k)
+                if k == b'Content-Length' and k in hdict:
+                    raise ValueError('Multiple Content-Length headers.')
                 hname = k
 
             if not self._allow_header(k):

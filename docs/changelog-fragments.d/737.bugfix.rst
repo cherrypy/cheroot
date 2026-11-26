@@ -1,0 +1,3 @@
+Rejected requests with multiple ``Content-Length`` fields with
+``400 Bad Request`` and closed the connection, preventing inconsistent
+request-body framing between HTTP recipients (:issue:`737`).
