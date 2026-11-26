@@ -1523,6 +1523,30 @@ class HTTPConnection:
                 raise
 
 
+# The worker statistics that a server adds up into its own
+_WORKER_TOTALS = (
+    'Requests',
+    'Bytes Read',
+    'Bytes Written',
+    'Work Time',
+    'Read Throughput',
+    'Write Throughput',
+)
+
+
+def _worker_share(record, name):
+    """Return a worker record's part in one of its server's statistics."""
+    # A throughput is a sum of the workers' rates, from their counts,
+    # whatever rates their records keep
+    if name == 'Read Throughput':
+        byte_count = 'Bytes Read'
+    elif name == 'Write Throughput':
+        byte_count = 'Bytes Written'
+    else:
+        return record[name](record)
+    return record[byte_count](record) / (record['Work Time'](record) or 1e-6)
+
+
 class HTTPServer:
     """An HTTP server."""
 
@@ -1659,6 +1683,12 @@ class HTTPServer:
             peercreds_resolve_enabled and peercreds_enabled
         )
         self.reuse_port = reuse_port
+        self._stats_key = f'Cheroot HTTPServer {id(self)}'
+        # Guards `ready` together with the server's entry in
+        # `logging.statistics`, so a stopped server is never registered,
+        # and the worker records together with their totals
+        self._stats_lock = threading.Lock()
+        self._removed_worker_totals = dict.fromkeys(_WORKER_TOTALS, 0)
         self.clear_stats()
 
         self._unservicable_conns = queue.Queue()
@@ -1667,7 +1697,9 @@ class HTTPServer:
         """Reset server stat counters.."""
         self._start_time = None
         self._run_time = 0
-        self.stats = {
+        # What the workers that leave these statistics have counted
+        removed = dict.fromkeys(_WORKER_TOTALS, 0)
+        stats = {
             'Enabled': False,
             'Bind Address': lambda s: repr(self.bind_addr),
             'Run time': lambda s: (
@@ -1681,58 +1713,74 @@ class HTTPServer:
             'Socket Errors': 0,
             'Requests': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Requests'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                or self._worker_total(s, removed, 'Requests')
             ),
             'Bytes Read': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Bytes Read'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                or self._worker_total(s, removed, 'Bytes Read')
             ),
             'Bytes Written': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Written'](w)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or self._worker_total(s, removed, 'Bytes Written')
             ),
             'Work Time': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (w['Work Time'](w) for w in s['Worker Threads'].values()),
-                    0,
-                )
+                or self._worker_total(s, removed, 'Work Time')
             ),
             'Read Throughput': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or self._worker_total(s, removed, 'Read Throughput')
             ),
             'Write Throughput': lambda s: (
                 ((not s['Enabled']) and -1)
-                or sum(
-                    (
-                        w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
-                        for w in s['Worker Threads'].values()
-                    ),
-                    0,
-                )
+                or self._worker_total(s, removed, 'Write Throughput')
             ),
             'Worker Threads': {},
         }
-        logging.statistics['Cheroot HTTPServer %d' % id(self)] = self.stats
+        with self._stats_lock:
+            # In one step, so that a worker joins either these statistics
+            # and their totals, or the old ones and theirs
+            self.stats = stats
+            self._removed_worker_totals = removed
+            if self.ready:
+                logging.statistics[self._stats_key] = self.stats
+
+    def _add_worker_record(self, name, record):
+        """Add a worker's record to the current ``Worker Threads``.
+
+        :returns: the ``Worker Threads`` and the totals of the
+            statistics that the record joined
+        """
+        with self._stats_lock:
+            worker_threads = self.stats['Worker Threads']
+            worker_threads[name] = record
+            return worker_threads, self._removed_worker_totals
+
+    def _remove_worker_record(self, worker_threads, removed, name):
+        """Remove a worker's record, keeping its counts in the totals."""
+        with self._stats_lock:
+            record = worker_threads.get(name)
+            if record is not None:
+                # Every count before any, so that a record that cannot give
+                # them all stays as it is
+                shares = {
+                    total: _worker_share(record, total)
+                    for total in _WORKER_TOTALS
+                }
+                del worker_threads[name]
+                for total, share in shares.items():
+                    removed[total] += share
+
+    def _worker_total(self, stats, removed, name):
+        """Sum a statistic over the current and the removed worker records."""
+        with self._stats_lock:
+            return removed[name] + sum(
+                (
+                    _worker_share(record, name)
+                    for record in stats['Worker Threads'].values()
+                ),
+                0,
+            )
 
     def runtime(self):
         """Return server uptime."""
@@ -1884,7 +1932,11 @@ class HTTPServer:
         # Create worker threads
         self.requests.start()
 
-        self.ready = True
+        with self._stats_lock:
+            self.ready = True
+            # Only while serving: the statistics' callbacks hold the server,
+            # which the process-wide registry would otherwise keep alive
+            logging.statistics[self._stats_key] = self.stats
         self._start_time = time.time()
 
     def _serve_unservicable(self):
@@ -2262,7 +2314,9 @@ class HTTPServer:
         if not self.ready:
             return  # already stopped
 
-        self.ready = False
+        with self._stats_lock:
+            self.ready = False
+            logging.statistics.pop(self._stats_key, None)
 
         # This tells the thread that handles unservicable connections to shut
         # down:

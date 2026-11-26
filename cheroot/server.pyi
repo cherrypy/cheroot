@@ -1,3 +1,4 @@
+import threading
 import typing as _t
 
 __all__ = (
@@ -164,7 +165,27 @@ class HTTPServer:
         reuse_port: bool = ...,
     ) -> None: ...
     stats: _t.Any
+    _stats_key: str
+    _stats_lock: threading.Lock
+    _removed_worker_totals: dict[str, float]
     def clear_stats(self): ...
+    def _add_worker_record(
+        self,
+        name: str,
+        record: dict[str, object],
+    ) -> tuple[dict[str, dict[str, object]], dict[str, float]]: ...
+    def _remove_worker_record(
+        self,
+        worker_threads: dict[str, dict[str, object]],
+        removed: dict[str, float],
+        name: str,
+    ) -> None: ...
+    def _worker_total(
+        self,
+        stats: dict[str, object],
+        removed: dict[str, float],
+        name: str,
+    ) -> float: ...
     def runtime(self): ...
     @property
     def bind_addr(self): ...
