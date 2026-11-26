@@ -1,3 +1,4 @@
+import threading
 import typing as _t
 
 __all__ = (
@@ -164,6 +165,8 @@ class HTTPServer:
         reuse_port: bool = ...,
     ) -> None: ...
     stats: _t.Any
+    _stats_key: str
+    _stats_lock: threading.Lock
     def clear_stats(self): ...
     def runtime(self): ...
     @property
