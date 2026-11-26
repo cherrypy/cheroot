@@ -233,6 +233,8 @@ class HeaderReader:
                 break
             if not line.endswith(CRLF):
                 raise ValueError('HTTP requires CRLF terminators')
+            if b'\x00' in line or b'\r' in line[:-2]:
+                raise ValueError('Invalid character in HTTP header.')
 
             if line[:1] in {SPACE, TAB}:
                 # NOTE: `type(line[0]) is int` and `type(line[:1]) is bytes`.

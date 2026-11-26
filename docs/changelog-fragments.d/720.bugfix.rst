@@ -1,0 +1,2 @@
+Rejected NUL and embedded CR characters in HTTP header values with
+``400 Bad Request``, including in continuation lines (:issue:`720`).
