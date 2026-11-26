@@ -1,5 +1,9 @@
 """Tests for the HTTP server."""
 
+from __future__ import annotations
+
+import contextlib
+import functools
 import gc
 import os
 import pathlib
@@ -9,9 +13,12 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import types
+import typing as _t
 import urllib.parse  # noqa: WPS301
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from http import HTTPStatus
 
 import pytest
@@ -19,6 +26,7 @@ import pytest
 import requests
 import requests_unixsocket
 
+from .. import wsgi
 from .._compat import IS_LINUX, IS_MACOS, IS_WINDOWS, SYS_PLATFORM, bton, ntob
 from ..server import IS_UID_GID_RESOLVABLE, Gateway, HTTPServer
 from ..testing import (
@@ -27,7 +35,8 @@ from ..testing import (
     EPHEMERAL_PORT,
     SUCCESSFUL_SUBPROCESS_EXIT,
 )
-from ..workers.threadpool import ThreadPool
+from ..workers.threadpool import ThreadPool, WorkerThread
+from . import webtest
 
 
 IS_SLOW_ENV = IS_MACOS or IS_WINDOWS
@@ -44,6 +53,18 @@ non_macos_sock_test = pytest.mark.skipif(
     IS_MACOS,
     reason='Peercreds lookup does not work under macOS/BSD currently.',
 )
+
+
+def _wait_until(
+    *,
+    compute_condition: _t.Callable[[], bool],
+    timeout: float = 10,
+) -> bool:
+    """Wait until the condition is true or the timeout expires."""
+    deadline = time.monotonic() + timeout
+    while not compute_condition() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return compute_condition()
 
 
 @pytest.fixture(params=('abstract', 'file'))
@@ -82,6 +103,19 @@ def unix_file_sock():
 
     os.close(tmp_sock_fh)
     os.unlink(tmp_sock_fname)
+
+
+def _make_server(
+    server_class: type[HTTPServer] = HTTPServer,
+    *,
+    minthreads: int = 10,
+) -> HTTPServer:
+    """Make a server on an ephemeral port, without starting it."""
+    return server_class(
+        bind_addr=(ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        gateway=Gateway,
+        minthreads=minthreads,
+    )
 
 
 def test_prepare_makes_server_ready():
@@ -478,6 +512,15 @@ def many_open_sockets(request, resource_limit):
             test_socket.close()
 
 
+def _make_wsgi_server(app: _t.Callable[..., object]) -> wsgi.Server:
+    """Make a WSGI server with one worker on an ephemeral port."""
+    return wsgi.Server(
+        (ANY_INTERFACE_IPV4, EPHEMERAL_PORT),
+        app,
+        numthreads=1,
+    )
+
+
 @pytest.mark.parametrize(
     ('minthreads', 'maxthreads', 'inited_maxthreads'),
     (
@@ -582,6 +625,1445 @@ def test_threadpool_multistart_validation(monkeypatch):
         match='Threadpools can only be started once.',
     ):
         tp.start()
+
+
+def _prepared_pool(
+    request: pytest.FixtureRequest,
+    *,
+    minthreads: int,
+) -> ThreadPool:
+    """Prepare a server with a set number of threads, and return its pool."""
+    httpserver = _make_server(minthreads=minthreads)
+    httpserver.prepare()
+    request.addfinalizer(httpserver.stop)
+    return httpserver.requests
+
+
+def _count_live_threads(pool: ThreadPool) -> int:
+    """Count the pool's threads that have not exited yet."""
+    return sum(thread.is_alive() for thread in pool._threads)
+
+
+def _wait_for_thread_count(pool: ThreadPool, count: int) -> bool:
+    """Wait for the pool to have the expected number of live workers."""
+    return _wait_until(
+        compute_condition=lambda: _count_live_threads(pool) == count,
+    )
+
+
+def _wait_for_empty_queue(pool: ThreadPool) -> bool:
+    """Wait for the workers to take every request in the queue."""
+    return _wait_until(compute_condition=lambda: pool.qsize == 0)
+
+
+@pytest.fixture
+def single_thread_pool(request: pytest.FixtureRequest) -> ThreadPool:
+    """Return the pool of a prepared server with a minimum of one thread."""
+    return _prepared_pool(request, minthreads=1)
+
+
+def test_threadpool_shrink_calls_are_additive(
+    single_thread_pool: ThreadPool,
+) -> None:
+    """Test two close-together shrink() calls retire the total requested."""
+    pool = single_thread_pool
+    pool.grow(20)
+    pool.shrink(10)
+    pool.shrink(10)
+    assert pool.idle == 1
+    assert _wait_for_thread_count(pool, pool.min)
+
+
+def test_threadpool_shrink_keeps_minimum(
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test that shrink() keeps the minimum number of threads."""
+    pool = _prepared_pool(request, minthreads=10)
+    pool.grow(40)
+    pool.shrink(40)
+    pool.shrink(80)
+    assert pool.idle == 10
+    assert _wait_for_thread_count(pool, 10)
+    assert pool.qsize == 0
+
+
+def _read_idle_while_retiring(pool: ThreadPool) -> list[int]:
+    """Return the idle counts that differ from 1 while threads retire."""
+    wrong = []
+    pool.grow(20)
+    pool.shrink(20)
+    deadline = time.monotonic() + 10
+    while len(pool._serving()) > 1 and time.monotonic() < deadline:
+        idle = pool.idle
+        if idle != 1:
+            wrong.append(idle)
+    return wrong
+
+
+def test_threadpool_idle_is_accurate_while_threads_retire(
+    single_thread_pool: ThreadPool,
+) -> None:
+    """pool.idle is accurate throughout concurrent retirements."""
+    pool = single_thread_pool
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(sys.setswitchinterval, sys.getswitchinterval())
+        # Switch threads often, as a PyPy run may
+        sys.setswitchinterval(1e-6)
+        wrong = [_read_idle_while_retiring(pool) for _ in range(10)]
+    assert not any(wrong)
+
+
+def test_threadpool_workers_do_not_check_other_threads(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A worker that takes a retirement request does not call is_alive()."""
+    pool = single_thread_pool
+    callers = []
+    original_is_alive = WorkerThread.is_alive
+
+    def _recorded_is_alive(thread: WorkerThread) -> bool:
+        if isinstance(threading.current_thread(), WorkerThread):
+            callers.append(threading.current_thread())
+        return original_is_alive(thread)
+
+    monkeypatch.setattr(WorkerThread, 'is_alive', _recorded_is_alive)
+    pool.grow(3)
+    pool.shrink(3)
+    # Once they have exited, the workers have handled their requests
+    assert _wait_for_thread_count(pool, pool.min)
+    assert not pool._retirements_due
+    assert not callers
+
+
+class _LockInterruptedOnRelease:
+    """The pool's lock, interrupted once as it is released."""
+
+    def __init__(self, pool: ThreadPool) -> None:
+        self._lock = pool._lock
+        self._interrupted = False
+
+    def __enter__(self) -> None:
+        self._lock.acquire()
+
+    def __exit__(self, *_exc: object) -> None:
+        self._lock.release()
+        if not self._interrupted:
+            self._interrupted = True
+            raise KeyboardInterrupt
+
+
+def test_threadpool_shrink_interrupted_after_its_reservation(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A shrink() interrupted before it queues gives its shutdown back."""
+    pool = single_thread_pool
+    pool.grow(3)
+    with monkeypatch.context() as patch:
+        # Right after it reserved the shutdowns
+        patch.setattr(pool, '_lock', _LockInterruptedOnRelease(pool))
+        with pytest.raises(KeyboardInterrupt):
+            pool.shrink(5)
+    # No retirement is due, so every thread counts as idle
+    assert pool.idle == 4
+    pool.shrink(5)
+    assert _wait_for_thread_count(pool, pool.min)
+
+
+@pytest.mark.parametrize('queued_before_error', (0, 1))
+def test_threadpool_interrupted_shrink_releases_unused_reservations(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+    queued_before_error: int,
+) -> None:
+    """An interrupted shrink keeps only successfully queued retirements."""
+    queued: list[object] = []
+    # Workers wait until the counts are checked
+    with _paused_workers(monkeypatch):
+        pool = _prepared_pool(request, minthreads=1)
+        pool.grow(2)
+        original_put = pool._queue.put
+
+        def _interrupted_put(obj: object) -> None:
+            if len(queued) == queued_before_error:
+                # Such as a KeyboardInterrupt while waiting for room
+                raise RuntimeError('interrupted')
+            original_put(obj)
+            queued.append(obj)
+
+        with monkeypatch.context() as patch:
+            patch.setattr(pool._queue, 'put', _interrupted_put)
+            with pytest.raises(RuntimeError, match='interrupted'):
+                pool.shrink(2)
+        assert len(pool._retirements_due) == queued_before_error
+        assert pool.idle == 3 - queued_before_error
+
+    pool.shrink(3)
+    assert _wait_for_thread_count(pool, pool.min)
+    assert pool.qsize == 0
+
+
+def _join_thread(thread: threading.Thread) -> None:
+    """Join a started test thread and fail if it does not finish."""
+    if thread.ident is None:
+        return
+    thread.join(10)
+    assert not thread.is_alive()
+
+
+def _release_events(*events: threading.Event) -> None:
+    """Unblock test workers during cleanup, including assertion failures."""
+    for event in events:
+        event.set()
+
+
+def _run_overlapping_shrinks(
+    first: threading.Thread,
+    second: threading.Thread,
+    first_enqueue: threading.Event,
+    second_progress: threading.Event,
+    release_enqueue: threading.Event,
+) -> None:
+    """Hold the first enqueue until the second call has made its decision."""
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_join_thread, first)
+        cleanup.callback(_join_thread, second)
+        cleanup.callback(_release_events, release_enqueue)
+        first.start()
+        assert first_enqueue.wait(10)
+        second.start()
+        # The second call either tries to enqueue another request or returns.
+        assert second_progress.wait(10)
+
+
+def test_threadpool_unrelated_exit_keeps_pending_shutdown(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unrelated worker exit must not consume a queued retirement."""
+    release_exit = threading.Event()
+    release_workers = threading.Event()
+    original_process = WorkerThread._process_connections_until_interrupted
+    failed_worker = None
+
+    def _controlled_process(worker: WorkerThread) -> None:
+        assert release_exit.wait(10)
+        if worker is failed_worker:
+            return
+        assert release_workers.wait(10)
+        original_process(worker)
+
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(_release_events, release_exit, release_workers)
+        patch.setattr(
+            WorkerThread,
+            '_process_connections_until_interrupted',
+            _controlled_process,
+        )
+        pool = _prepared_pool(request, minthreads=2)
+        pool.grow(2)
+        failed_worker = pool._threads[0]
+        pool.shrink(1)
+        release_exit.set()
+        _join_thread(failed_worker)
+
+        # Three workers remain, with one retirement already queued.
+        pool.shrink(1)
+        assert pool.qsize == 1
+
+    assert _wait_for_thread_count(pool, 2)
+
+
+def _shrink_and_notify(
+    pool: ThreadPool,
+    finished: threading.Event,
+    errors: list[BaseException],
+) -> None:
+    """Capture a shrink failure and signal that the caller has finished."""
+    try:
+        pool.shrink(2)
+    except BaseException as error:
+        errors.append(error)
+    finally:
+        finished.set()
+
+
+@pytest.mark.parametrize('queue_size', (0, 1))
+def test_threadpool_concurrent_shrink_keeps_minimum(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+    queue_size: int,
+) -> None:
+    """Concurrent calls must not spend the same retirement budget twice."""
+    pool = single_thread_pool
+    pool.grow(2)
+    first_enqueue = threading.Event()
+    second_progress = threading.Event()
+    release_enqueue = threading.Event()
+    errors: list[BaseException] = []
+    queued: list[object] = []
+    original_put = pool._queue.put
+
+    def _held_put(obj: object) -> None:
+        entered = (
+            first_enqueue
+            if threading.current_thread() is first
+            else second_progress
+        )
+        entered.set()
+        assert release_enqueue.wait(10)
+        original_put(obj)
+        queued.append(obj)
+
+    first = threading.Thread(
+        target=_shrink_and_notify,
+        args=(pool, first_enqueue, errors),
+    )
+    second = threading.Thread(
+        target=_shrink_and_notify,
+        args=(pool, second_progress, errors),
+    )
+    with monkeypatch.context() as patch:
+        patch.setattr(pool._queue, 'maxsize', queue_size)
+        patch.setattr(pool._queue, 'put', _held_put)
+        _run_overlapping_shrinks(
+            first,
+            second,
+            first_enqueue,
+            second_progress,
+            release_enqueue,
+        )
+
+    assert not errors
+    assert len(queued) == 2
+
+    assert _wait_for_thread_count(pool, pool.min)
+    assert pool.qsize == 0
+
+
+@contextlib.contextmanager
+def _paused_workers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> _t.Iterator[threading.Event]:
+    """Hold workers before they consume requests, and always release them."""
+    release = threading.Event()
+    original_process = WorkerThread._process_connections_until_interrupted
+
+    def _paused_process(worker: WorkerThread) -> None:
+        assert release.wait(10)
+        original_process(worker)
+
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(release.set)
+        patch.setattr(
+            WorkerThread,
+            '_process_connections_until_interrupted',
+            _paused_process,
+        )
+        yield release
+
+
+@pytest.mark.parametrize('worker_claimed', (False, True))
+def test_threadpool_interrupt_after_enqueue_keeps_minimum(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    worker_claimed: bool,
+) -> None:
+    """Retrying after an interrupted successful enqueue must keep the minimum."""
+    with _paused_workers(monkeypatch) as release:
+        pool = _prepared_pool(request, minthreads=1)
+        pool.grow(1)
+        original_put = pool._queue.put
+
+        def _put_then_interrupt(obj: object) -> None:
+            original_put(obj)
+            if worker_claimed:
+                release.set()
+                assert _wait_for_thread_count(pool, 1)
+            raise KeyboardInterrupt
+
+        with monkeypatch.context() as patch:
+            patch.setattr(pool._queue, 'put', _put_then_interrupt)
+            with pytest.raises(KeyboardInterrupt):
+                pool.shrink(1)
+        pool.shrink(1)
+
+    assert _wait_for_thread_count(pool, 1)
+    assert pool.qsize == 0
+
+
+def test_threadpool_reap_before_enqueue_returns_keeps_idle_count(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reaping before the enqueue returns must not leave a phantom shutdown."""
+    pool = _prepared_pool(request, minthreads=1)
+    pool.grow(2)
+    original_put = pool._queue.put
+
+    def _put_then_reap(obj: object) -> None:
+        original_put(obj)
+        assert _wait_for_thread_count(pool, 2)
+        reaper = threading.Thread(target=pool.shrink, args=(0,))
+        reaper.start()
+        _join_thread(reaper)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(pool._queue, 'put', _put_then_reap)
+        pool.shrink(1)
+    assert pool.idle == 2
+
+    pool.shrink(1)
+    assert _wait_for_thread_count(pool, 1)
+
+
+def test_threadpool_unneeded_shrink_request_keeps_threads(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A retirement request that its call canceled must not end a thread."""
+    # Workers wait until the interrupted call has canceled its request
+    with _paused_workers(monkeypatch):
+        pool = _prepared_pool(request, minthreads=1)
+        pool.grow(2)
+        original_put = pool._queue.put
+
+        def _put_then_interrupt(obj: object) -> None:
+            original_put(obj)
+            raise KeyboardInterrupt
+
+        with monkeypatch.context() as patch:
+            patch.setattr(pool._queue, 'put', _put_then_interrupt)
+            with pytest.raises(KeyboardInterrupt):
+                pool.shrink(2)
+        # It gave its shutdowns back, but its first request is queued
+        assert not pool._retirements_due
+        assert pool.qsize == 1
+    assert _wait_for_empty_queue(pool)
+    assert _count_live_threads(pool) == 3
+    assert pool.idle == 3
+
+
+def _interrupt_a_shrink_while_another_is_due(
+    pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Interrupt a call once another has reserved a shutdown."""
+    original_put = pool._queue.put
+    second_queuing = threading.Event()
+    first_done = threading.Event()
+    second = threading.Thread(target=pool.shrink, args=(1,))
+
+    def _controlled_put(obj: object) -> None:
+        if threading.current_thread() is second:
+            second_queuing.set()
+            assert first_done.wait(10)
+        original_put(obj)
+        if threading.current_thread() is second:
+            return
+        # A worker takes the request and exits
+        assert _wait_for_thread_count(pool, 2)
+        second.start()
+        assert second_queuing.wait(10)
+        # Interrupted after its request got into the queue
+        raise KeyboardInterrupt
+
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(_join_thread, second)
+        cleanup.callback(first_done.set)
+        patch.setattr(pool._queue, 'put', _controlled_put)
+        with pytest.raises(KeyboardInterrupt):
+            pool.shrink(amount=1)
+
+
+def test_threadpool_interrupted_shrink_keeps_other_calls_shutdowns(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An interrupted call gives back only shutdowns of its own requests."""
+    pool = single_thread_pool
+    pool.grow(2)
+    _interrupt_a_shrink_while_another_is_due(pool, monkeypatch)
+    # One thread retired for each call
+    assert _wait_for_thread_count(pool, 1)
+    assert not pool._retirements_due
+
+
+def test_threadpool_shrink_keeps_minimum_after_an_unrelated_exit(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A retirement due when another thread exits must keep the minimum."""
+    release_exit = threading.Event()
+    release_workers = threading.Event()
+    original_process = WorkerThread._process_connections_until_interrupted
+    failed_worker = None
+
+    def _controlled_process(worker: WorkerThread) -> None:
+        assert release_exit.wait(10)
+        if worker is failed_worker:
+            return
+        assert release_workers.wait(10)
+        original_process(worker)
+
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(_release_events, release_exit, release_workers)
+        patch.setattr(
+            WorkerThread,
+            '_process_connections_until_interrupted',
+            _controlled_process,
+        )
+        pool = _prepared_pool(request, minthreads=2)
+        pool.grow(1)
+        failed_worker = pool._threads[0]
+        # Retire every idle thread above the minimum: one
+        pool.shrink(pool.idle)
+        release_exit.set()
+        _join_thread(failed_worker)
+        release_workers.set()
+        assert _wait_for_empty_queue(pool)
+        # The request found the minimum left, and dropped its shutdown
+        assert _wait_until(compute_condition=lambda: not pool._retirements_due)
+        assert _count_live_threads(pool) == 2
+        assert pool.idle == 2
+
+
+@contextlib.contextmanager
+def _hold_retiring_workers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> _t.Iterator[queue.Queue[WorkerThread]]:
+    """Hold workers after their processing loop has consumed a retirement."""
+    release = threading.Event()
+    at_exit: queue.Queue[WorkerThread] = queue.Queue()
+    original_process = WorkerThread._process_connections_until_interrupted
+
+    def _held_exit(worker: WorkerThread) -> None:
+        original_process(worker)
+        at_exit.put(worker)
+        assert release.wait(10)
+
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(release.set)
+        patch.setattr(
+            WorkerThread,
+            '_process_connections_until_interrupted',
+            _held_exit,
+        )
+        yield at_exit
+
+
+def test_threadpool_shrink_skips_threads_shutting_down(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A thread that is shutting down is neither idle nor asked again."""
+    with _hold_retiring_workers(monkeypatch) as at_exit:
+        pool = _prepared_pool(request, minthreads=1)
+        pool.grow(2)
+        pool.shrink(1)
+        assert _wait_until(compute_condition=lambda: at_exit.qsize() == 1)
+        # The retiring thread is still alive, but it no longer serves
+        assert _count_live_threads(pool) == 3
+        assert pool.idle == 2
+        pool.shrink(5)
+        assert _wait_until(compute_condition=lambda: at_exit.qsize() == 2)
+        assert _wait_for_empty_queue(pool)
+        assert not pool._retirements_due
+        assert pool.idle == 1
+    assert _wait_for_thread_count(pool, 1)
+
+
+@pytest.mark.parametrize('shrinking', ('done', 'in progress'))
+def test_threadpool_restarts_after_stop(
+    request: pytest.FixtureRequest,
+    shrinking: str,
+) -> None:
+    """Test that a pool stopped after or during shrinking restarts."""
+    pool = _prepared_pool(request, minthreads=2)
+    pool.grow(5)
+    pool.shrink(5)
+    if shrinking == 'done':
+        assert _wait_until(
+            compute_condition=lambda: _count_live_threads(pool) == 2,
+        )
+    pool.stop()
+    # A leftover request would retire a restarted thread, and a leftover
+    # pending shutdown would hide the restarted threads from idle
+    assert not pool._retirements_due
+    pool.start()
+    assert pool.idle == 2
+
+
+def test_threadpool_stop_ends_threads_whatever_is_pending(
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test that stop() ends every thread even if a request went missing."""
+    pool = _prepared_pool(request, minthreads=2)
+    # A retirement due whose request never reached the queue
+    pool._retirements_due.add(object())
+    # Stop in a thread, so that a thread left waiting for a request fails
+    # the test instead of hanging the run
+    stopper = threading.Thread(target=pool.stop, daemon=True)
+    stopper.start()
+    stopper.join(10)
+    assert not stopper.is_alive()
+    assert pool.qsize == 0
+
+
+def test_threadpool_stopped_by_its_own_worker() -> None:
+    """Test that a worker that stops its own pool still exits."""
+
+    def app(
+        _environ: dict[str, object],
+        start_response: _t.Callable[..., object],
+    ) -> list[bytes]:
+        server.requests.stop()
+        start_response('200 OK', [('Content-Length', '2')])
+        return [b'ok']
+
+    server = _make_wsgi_server(app)
+    with server._run_in_thread():
+        workers = list(server.requests._threads)
+        host = webtest.interface(ANY_INTERFACE_IPV4)
+        response = requests.get(
+            f'http://{host}:{server.bind_addr[1]}/',
+            headers={'Connection': 'close'},
+            timeout=10,
+        )
+        assert response.status_code == HTTPStatus.OK
+        assert _wait_until(
+            compute_condition=lambda: (
+                not any(worker.is_alive() for worker in workers)
+            ),
+        )
+        assert server.requests.qsize == 0
+
+
+def test_threadpool_stopped_on_interrupt_by_its_own_worker() -> None:
+    """Test that a worker that interrupts its server leaves no request."""
+
+    def app(
+        _environ: dict[str, object],
+        _start_response: _t.Callable[..., object],
+    ) -> list[bytes]:
+        raise KeyboardInterrupt('simulated test handler keyboard interrupt')
+
+    server = _make_wsgi_server(app)
+    with server._run_in_thread() as serve_thread:
+        host = webtest.interface(ANY_INTERFACE_IPV4)
+        with pytest.raises(requests.ConnectionError):
+            requests.get(
+                f'http://{host}:{server.bind_addr[1]}/',
+                headers={'Connection': 'close'},
+                timeout=10,
+            )
+        serve_thread.join(10)
+        assert not serve_thread.is_alive()
+    # The worker exits without taking a request
+    _assert_restart_ignores_leftovers(server.requests)
+
+
+def test_threadpool_interrupted_stop_lets_running_threads_exit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that a thread still running after an interrupted stop() exits."""
+    release = threading.Event()
+
+    def app(
+        _environ: dict[str, object],
+        start_response: _t.Callable[..., object],
+    ) -> list[bytes]:
+        release.wait(10)
+        start_response('200 OK', [('Content-Length', '2')])
+        return [b'ok']
+
+    server = _make_wsgi_server(app)
+    with server._run_in_thread():
+        worker = server.requests._threads[0]
+        host = webtest.interface(ANY_INTERFACE_IPV4)
+        with ThreadPoolExecutor(max_workers=1) as client:
+            response = client.submit(
+                requests.get,
+                f'http://{host}:{server.bind_addr[1]}/',
+                headers={'Connection': 'close'},
+                timeout=10,
+            )
+            assert _wait_until(
+                compute_condition=lambda: worker.conn is not None,
+            )
+
+            def _interrupted_join(*_args: object) -> None:
+                # Such as a second Ctrl-C while stop() waits for the thread
+                raise KeyboardInterrupt
+
+            with monkeypatch.context() as patch:
+                patch.setattr(worker, 'join', _interrupted_join)
+                server.requests.stop()
+            release.set()
+            assert response.result().status_code == HTTPStatus.OK
+        assert _wait_until(compute_condition=lambda: not worker.is_alive())
+
+
+def _assert_empty_pool_queue(pool: ThreadPool) -> None:
+    """Check that no connection or retirement request remains queued."""
+    assert pool.qsize == 0
+
+
+def _assert_restart_ignores_leftovers(pool: ThreadPool) -> None:
+    """Check that a request left by a stop does not end a restarted thread."""
+    pool.start()
+    threads = list(pool._threads)
+    assert _wait_for_empty_queue(pool)
+    for thread in threads:
+        # A thread that took a leftover request as its own exits at once
+        thread.join(0.5)
+        assert thread.is_alive()
+    assert pool.idle == pool.min
+    pool.stop()
+
+
+def test_threadpool_stop_drops_requests_already_consumed(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An interrupted join must not retain requests for retiring workers."""
+    with contextlib.ExitStack() as cleanup:
+        with _hold_retiring_workers(monkeypatch) as at_exit:
+            pool = _prepared_pool(request, minthreads=1)
+            pool.grow(1)
+            for worker in pool._threads:
+                cleanup.callback(_join_thread, worker)
+            pool.shrink(2)
+            assert _wait_until(compute_condition=lambda: at_exit.qsize() == 1)
+
+            def _interrupted_join(*_args: object) -> None:
+                assert _wait_until(
+                    compute_condition=lambda: at_exit.qsize() == 2,
+                )
+                raise KeyboardInterrupt
+
+            with monkeypatch.context() as joins:
+                for worker in pool._threads:
+                    joins.setattr(worker, 'join', _interrupted_join)
+                pool.stop()
+            _assert_empty_pool_queue(pool)
+            with pytest.raises(RuntimeError, match='can only be started once'):
+                pool.start()
+
+
+def _stop_during_shrink_enqueue(
+    pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Stop the pool while a shrink caller has yet to insert its request."""
+    entered = threading.Event()
+    release = threading.Event()
+    original_put = pool._queue.put
+
+    def _held_put(obj: object) -> None:
+        if threading.current_thread() is shrinker:
+            entered.set()
+            assert release.wait(10)
+        original_put(obj)
+
+    shrinker = threading.Thread(target=pool.shrink, args=(1,))
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(_join_thread, shrinker)
+        cleanup.callback(release.set)
+        patch.setattr(pool._queue, 'put', _held_put)
+        shrinker.start()
+        assert entered.wait(10)
+        pool.stop()
+
+
+def test_threadpool_shrink_interrupted_after_a_stop(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A shrink() interrupted after a stop() leaves the next run's count."""
+    pool = single_thread_pool
+    pool.grow(1)
+    release = threading.Event()
+    queue_put = pool._queue.put
+
+    def _held_interrupted_put(obj: object) -> None:
+        # Only the shrink() call waits; stop() queues its requests
+        if threading.current_thread() is not shrinker:
+            return queue_put(obj)
+        assert release.wait(10)
+        raise KeyboardInterrupt
+
+    def _shrink() -> None:
+        with contextlib.suppress(KeyboardInterrupt):
+            pool.shrink(amount=1)
+
+    shrinker = threading.Thread(target=_shrink)
+    with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+        cleanup.callback(_join_thread, shrinker)
+        cleanup.callback(release.set)
+        patch.setattr(pool._queue, 'put', _held_interrupted_put)
+        shrinker.start()
+        # The call has reserved its shutdown
+        assert _wait_until(
+            compute_condition=lambda: len(pool._retirements_due) == 1,
+        )
+        pool.stop()
+        pool.start()
+    # stop() forgot the retirement, so the interrupted call gives none back
+    assert not pool._retirements_due
+    assert pool.idle == pool.min
+
+
+def test_threadpool_restarts_after_late_shrink_enqueue(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A retirement request arriving after stop must not retire a new worker."""
+
+    def app(
+        _environ: dict[str, object],
+        start_response: _t.Callable[..., object],
+    ) -> list[bytes]:
+        start_response('200 OK', [('Content-Length', '2')])
+        return [b'ok']
+
+    server = _make_wsgi_server(app)
+    with server._run_in_thread():
+        pool = server.requests
+        pool.grow(1)
+        _stop_during_shrink_enqueue(pool, monkeypatch)
+        # Hold new workers until start() has observed their ready flag.
+        # Otherwise the old bug hangs inside grow() before we can assert it.
+        # With a thread above the minimum, only a shutdown still due would
+        # retire one.
+        with _paused_workers(monkeypatch):
+            pool.start()
+            pool.grow(1)
+
+        host = webtest.interface(ANY_INTERFACE_IPV4)
+        response = requests.get(
+            f'http://{host}:{server.bind_addr[1]}/',
+            headers={'Connection': 'close'},
+            timeout=10,
+        )
+        assert response.status_code == HTTPStatus.OK
+        assert response.content == b'ok'
+        assert _wait_until(compute_condition=lambda: pool.idle == 2)
+        _assert_empty_pool_queue(pool)
+        assert _count_live_threads(pool) == 2
+
+
+@contextlib.contextmanager
+def _bounded_pool_put(
+    pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> _t.Iterator[None]:
+    """Bound the old enqueue deadlock so regressions fail without hanging."""
+    original_put = pool._queue.put
+
+    def _bounded_put(
+        obj: object,
+        *,
+        block: bool = True,
+        timeout: float | None = None,
+    ) -> None:
+        # Bound the old deadlock so a regression fails rather than hanging.
+        original_put(obj, block=block, timeout=timeout or 1)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(pool._queue, 'put', _bounded_put)
+        yield
+
+
+def test_threadpool_stop_with_a_bounded_queue(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Stop must finish even when dead workers outnumber queue slots."""
+    server = _make_server(minthreads=1)
+    server.requests = ThreadPool(
+        server,
+        min=1,
+        accepted_queue_size=1,
+    )
+    pool = server.requests
+    server.prepare()
+    request.addfinalizer(server.stop)
+    pool.grow(3)
+    pool.shrink(3)
+    assert _wait_for_thread_count(pool, 1)
+    workers = list(pool._threads)
+    with _bounded_pool_put(pool, monkeypatch):
+        pool.stop(timeout=0.1)
+    assert not any(worker.is_alive() for worker in workers)
+    _assert_empty_pool_queue(pool)
+
+
+def test_threadpool_stop_preserves_queued_connections(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Stop queues no request for a thread that does not run."""
+    server = _make_server(minthreads=1)
+    pool = ThreadPool(server, min=1, accepted_queue_size=2)
+    first, second = object(), object()
+    pool.put(first)
+    pool.put(second)
+    with pytest.raises(queue.Full):
+        pool._queue.put_nowait(object())
+    # A thread that never ran would leave a request behind a full queue
+    pool._threads.append(WorkerThread(server))
+    with _bounded_pool_put(pool, monkeypatch):
+        pool.stop()
+    assert pool.get(block=False) is first
+    assert pool.get(block=False) is second
+    _assert_empty_pool_queue(pool)
+
+
+def _interrupt_after(
+    put: _t.Callable[[object], None],
+) -> _t.Callable[[object], None]:
+    """Wrap a put() so that an interrupt follows the request it queues."""
+
+    def _put_then_interrupt(obj: object) -> None:
+        put(obj)
+        raise KeyboardInterrupt
+
+    return _put_then_interrupt
+
+
+def test_threadpool_stop_retries_an_interrupted_enqueue(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A second stop can complete an interrupted batch of stop requests."""
+    with _paused_workers(monkeypatch) as release:
+        pool = _prepared_pool(request, minthreads=2)
+        workers = list(pool._threads)
+        queue_put = pool._queue.put
+        queued: list[object] = []
+
+        def _put_then_release(obj: object) -> None:
+            queue_put(obj)
+            queued.append(obj)
+            # Both workers still need a request, so the first one is left
+            if len(queued) == len(workers):
+                release.set()
+
+        with monkeypatch.context() as patch:
+            patch.setattr(pool._queue, 'put', _interrupt_after(queue_put))
+            with pytest.raises(KeyboardInterrupt):
+                pool.stop()
+            patch.setattr(pool._queue, 'put', _put_then_release)
+            pool.stop()
+    assert not any(worker.is_alive() for worker in workers)
+    assert pool.qsize == 1
+    _assert_restart_ignores_leftovers(pool)
+
+
+class _HeldConnection:
+    """A connection that its worker handles until it is closed."""
+
+    def __init__(self) -> None:
+        self.closed = threading.Event()
+        self.rfile = types.SimpleNamespace(closed=False)
+        self.socket = types.SimpleNamespace(shutdown=self._shutdown)
+
+    def communicate(self) -> bool:
+        """Handle the connection until it is closed."""
+        self.closed.wait(30)
+        return False
+
+    def close(self) -> None:
+        """Close nothing: the worker closes the connection it handled."""
+
+    def _shutdown(self, *_args: object) -> None:
+        self.closed.set()
+
+
+def _pool_with_one_slot(
+    request: pytest.FixtureRequest,
+    *,
+    minthreads: int,
+) -> ThreadPool:
+    """Start a pool whose queue holds one item."""
+    pool = ThreadPool(_make_server(), min=minthreads, accepted_queue_size=1)
+    pool.server.requests = pool
+    pool.start()
+    request.addfinalizer(pool.stop)
+    return pool
+
+
+def test_threadpool_overlapping_stops_end_every_thread(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stop() that comes as another queues on a small queue, both finish."""
+    pool = _pool_with_one_slot(request, minthreads=2)
+    workers = list(pool._threads)
+    queue_put = pool._queue.put
+    queueing = threading.Event()
+    resume = threading.Event()
+
+    def _held_put(obj: object) -> None:
+        queueing.set()
+        assert resume.wait(10)
+        queue_put(obj)
+
+    waiting = threading.Event()
+    with monkeypatch.context() as patch, contextlib.ExitStack() as cleanup:
+        patch.setattr(pool, '_stop_lock', _ObservedStopLock(pool, waiting))
+        patch.setattr(pool._queue, 'put', _held_put)
+        cleanup.callback(_join_thread, _stop_in_daemon(pool))
+        assert queueing.wait(10)
+        cleanup.callback(_join_thread, _stop_in_daemon(pool))
+        cleanup.callback(_release_events, resume)
+        assert waiting.wait(10)
+    assert not any(worker.is_alive() for worker in workers)
+
+
+def _pool_of_daemon_threads(
+    request: pytest.FixtureRequest,
+    *,
+    minthreads: int,
+) -> ThreadPool:
+    """Start a pool whose threads do not keep the tests from ending.
+
+    Threads inherit their daemon flag, so starting the pool from a daemon
+    thread makes a regression that leaves threads waiting fail the test
+    instead of hanging the run.
+    """
+    pool = ThreadPool(_make_server(), min=minthreads)
+    pool.server.requests = pool
+    starter = threading.Thread(target=pool.start, daemon=True)
+    starter.start()
+    _join_thread(starter)
+    request.addfinalizer(functools.partial(_stop_in_daemon, pool))
+    return pool
+
+
+def _stop_in_daemon(pool: ThreadPool) -> threading.Thread:
+    """Stop a pool in a thread that does not keep the tests from ending."""
+    stopper = threading.Thread(target=pool.stop, daemon=True)
+    stopper.start()
+    return stopper
+
+
+class _StoppingConnection(_HeldConnection):
+    """A connection whose handler stops the pool, then waits to be closed."""
+
+    def __init__(
+        self,
+        pool: ThreadPool,
+        together: threading.Barrier | None = None,
+        stop_kwargs: dict[str, float | None] | None = None,
+    ) -> None:
+        super().__init__()
+        self.stopped = threading.Event()
+        self._pool = pool
+        self._together = together
+        self._stop_kwargs = (
+            {'timeout': 0} if stop_kwargs is None else stop_kwargs
+        )
+
+    def communicate(self) -> bool:
+        """Stop the pool, then handle the connection until it is closed."""
+        if self._together is not None:
+            self._together.wait(10)
+        self._pool.stop(**self._stop_kwargs)
+        self.stopped.set()
+        return super().communicate()
+
+
+class _ObservedStopLock:
+    """Report a stop() call that has to wait for the one under way."""
+
+    def __init__(self, pool: ThreadPool, waiting: threading.Event) -> None:
+        self._lock = pool._stop_lock
+        self._waiting = waiting
+
+    def acquire(self, *, blocking: bool = True) -> bool:
+        """Take the lock, reporting a caller that waits for it."""
+        if self._lock.acquire(blocking=False):
+            return True
+        if blocking:
+            self._waiting.set()
+        return self._lock.acquire(blocking=blocking)
+
+    def release(self) -> None:
+        """Release the lock."""
+        self._lock.release()
+
+    def locked(self) -> bool:
+        """Tell whether a stop() call is under way."""
+        return self._lock.locked()
+
+
+@pytest.mark.parametrize('n_workers', (2, 3))
+@pytest.mark.parametrize(
+    'stop_kwargs',
+    (
+        pytest.param({}, id='default-timeout'),
+        pytest.param({'timeout': 0}, id='zero-timeout'),
+        pytest.param({'timeout': 60}, id='long-timeout'),
+        pytest.param({'timeout': None}, id='no-timeout'),
+    ),
+)
+def test_threadpool_workers_that_stop_their_pool_at_once(
+    request: pytest.FixtureRequest,
+    n_workers: int,
+    stop_kwargs: dict[str, float | None],
+) -> None:
+    """Workers that stop their pool at once do not wait for each other."""
+    pool = _pool_of_daemon_threads(request, minthreads=n_workers)
+    workers = tuple(pool._threads)
+    together = threading.Barrier(n_workers)
+    connections = [
+        _StoppingConnection(pool, together, stop_kwargs) for _ in workers
+    ]
+    for connection in connections:
+        connection.closed.set()
+        pool.put(connection)
+    # Well within the default timeout, which workers that wait for each
+    # other spend in full
+    assert all(connection.stopped.wait(3) for connection in connections)
+    assert _wait_until(
+        compute_condition=lambda: not any(t.is_alive() for t in workers),
+    )
+
+
+def test_threadpool_worker_stop_during_an_outside_stop(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A worker's stop() returns at once while another call ends the threads."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    workers = tuple(pool._threads)
+    stuck = _HeldConnection()
+    together = threading.Barrier(2)
+    stopping = _StoppingConnection(pool, together, stop_kwargs={})
+    stopping.closed.set()
+    pool.put(stuck)
+    pool.put(stopping)
+    assert _wait_until(
+        compute_condition=lambda: all(t.conn is not None for t in workers),
+    )
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_join_thread, _stop_in_daemon(pool))
+        cleanup.callback(_release_events, stuck.closed)
+        # That call has asked both threads, and waits for the stuck one
+        assert _wait_until(
+            compute_condition=lambda: pool.qsize == len(workers),
+        )
+        together.wait(10)
+        # Well within the default timeout, which that call spends waiting
+        assert stopping.stopped.wait(3)
+    # That call returns only once every thread has exited
+    assert not any(t.is_alive() for t in workers)
+
+
+def test_threadpool_outside_stop_during_a_worker_stop(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stop() that comes during a worker's waits for it, then for all."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    workers = tuple(pool._threads)
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(
+        compute_condition=lambda: any(t.conn is stuck for t in workers),
+    )
+    stopping = _StoppingConnection(pool, stop_kwargs={})
+    stopping.closed.set()
+    pool.put(stopping)
+    # The worker's stop() has asked both threads, and waits for the stuck one
+    assert _wait_until(compute_condition=lambda: pool.qsize == len(workers))
+    waiting = threading.Event()
+    with monkeypatch.context() as patch, contextlib.ExitStack() as cleanup:
+        patch.setattr(pool, '_stop_lock', _ObservedStopLock(pool, waiting))
+        cleanup.callback(_join_thread, _stop_in_daemon(pool))
+        cleanup.callback(_release_events, stuck.closed)
+        assert waiting.wait(10)
+    assert stopping.stopped.is_set()
+    # It returns only once every thread has exited, the worker included
+    assert not any(t.is_alive() for t in workers)
+
+
+def test_threadpool_worker_stop_without_a_timeout_does_not_wait(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A worker's stop() without a timeout only asks the threads to stop."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    workers = tuple(pool._threads)
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(
+        compute_condition=lambda: any(t.conn is stuck for t in workers),
+    )
+    stopping = _StoppingConnection(pool, stop_kwargs={'timeout': None})
+    stopping.closed.set()
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_release_events, stuck.closed)
+        pool.put(stopping)
+        assert stopping.stopped.wait(10)
+        assert not stuck.closed.is_set()
+    assert _wait_until(
+        compute_condition=lambda: not any(t.is_alive() for t in workers),
+    )
+
+
+def test_threadpool_stop_interrupted_while_waiting_can_be_repeated(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stop() interrupted as it waits leaves the next call to end the pool."""
+    pool = _pool_of_daemon_threads(request, minthreads=1)
+    worker = pool._threads[0]
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(compute_condition=lambda: worker.conn is stuck)
+
+    def _exiting_join(*_args: object) -> None:
+        sys.exit()
+
+    with monkeypatch.context() as patch:
+        patch.setattr(worker, 'join', _exiting_join)
+        with pytest.raises(SystemExit):
+            pool.stop()
+    stopper = threading.Thread(
+        target=functools.partial(pool.stop, timeout=0),
+        daemon=True,
+    )
+    stopper.start()
+    _join_thread(stopper)
+    assert stuck.closed.is_set()
+    assert _wait_until(compute_condition=lambda: not worker.is_alive())
+
+
+class _LockInterruptedOnAcquire:
+    """The pool's lock, interrupted once before one thread acquires it."""
+
+    def __init__(self, pool: ThreadPool, thread: threading.Thread) -> None:
+        self.lock = pool._lock
+        self.interrupted = False
+        self._thread = thread
+
+    def __enter__(self) -> None:
+        if threading.current_thread() is self._thread and not self.interrupted:
+            self.interrupted = True
+            # Such as a second Ctrl-C while the thread waits for the lock
+            raise KeyboardInterrupt
+        self.lock.acquire()
+
+    def __exit__(self, *_exc: object) -> None:
+        self.lock.release()
+
+
+def test_threadpool_stop_interrupted_in_its_cleanup_can_be_repeated(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stop() interrupted as it tidies up lets the pool stop and start."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    workers = tuple(pool._threads)
+    original_wait_for = pool._wait_for
+    interrupted = _LockInterruptedOnAcquire(pool, threading.current_thread())
+    with monkeypatch.context() as patch:
+
+        def _wait_then_interrupt(*args: object) -> None:
+            original_wait_for(*args)
+            # The next time this thread takes the pool's lock is to tidy up
+            patch.setattr(pool, '_lock', interrupted)
+
+        patch.setattr(pool, '_wait_for', _wait_then_interrupt)
+        with pytest.raises(KeyboardInterrupt):
+            pool.stop()
+    assert interrupted.interrupted
+    # Checked first, as a later stop() would wait for it forever
+    assert not pool._stop_lock.locked()
+    assert not any(t.is_alive() for t in workers)
+    pool.stop()
+    _assert_restart_ignores_leftovers(pool)
+
+
+def test_threadpool_worker_that_stops_its_pool_closes_stuck_connections(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A worker that stops its pool still closes a stuck thread's connection."""
+    pool = _pool_of_daemon_threads(request, minthreads=2)
+    stuck = _HeldConnection()
+    pool.put(stuck)
+    assert _wait_until(
+        compute_condition=lambda: any(t.conn is stuck for t in pool._threads),
+    )
+    stopping = _StoppingConnection(pool)
+    stopping.closed.set()
+    pool.put(stopping)
+    assert stopping.stopped.wait(10)
+    # Its stop() had a timeout of 0, after which it closes the connection
+    assert stuck.closed.is_set()
+    assert _wait_until(
+        compute_condition=lambda: not any(t.is_alive() for t in pool._threads),
+    )
+
+
+def test_threadpool_restart_waits_for_a_worker_that_stopped_it(
+    request: pytest.FixtureRequest,
+) -> None:
+    """A pool that its worker stopped starts again once that worker exits."""
+    pool = _pool_of_daemon_threads(request, minthreads=1)
+    worker = pool._threads[0]
+    connection = _StoppingConnection(pool)
+    pool.put(connection)
+    assert connection.stopped.wait(10)
+    # A new thread could take the request that this one still needs
+    with pytest.raises(RuntimeError, match='can only be started once'):
+        pool.start()
+    connection.closed.set()
+    assert _wait_until(compute_condition=lambda: not worker.is_alive())
+    pool.start()
+    assert pool.idle == pool.min
+
+
+def test_threadpool_grow_is_refused_until_stop_returns(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A thread grown while stop() waits for old ones would outlive it."""
+    with _hold_retiring_workers(monkeypatch) as at_exit:
+        pool = _pool_of_daemon_threads(request, minthreads=1)
+        stopper = threading.Thread(target=pool.stop, daemon=True)
+        stopper.start()
+        # The old thread took its stop request, but has not exited yet
+        assert at_exit.get(timeout=10)
+        with pytest.raises(RuntimeError, match='while it stops'):
+            pool.grow(3)
+    _join_thread(stopper)
+    assert not any(t.is_alive() for t in pool._threads)
+
+
+def test_threadpool_start_is_refused_until_stop_returns(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A pool started again before stop() returns would outlive it."""
+    pool = single_thread_pool
+    worker = pool._threads[0]
+    exited = threading.Event()
+    resume = threading.Event()
+    original_join = worker.join
+
+    def _join_then_hold(timeout: float | None = None) -> None:
+        original_join(timeout)
+        exited.set()
+        assert resume.wait(10)
+
+    monkeypatch.setattr(worker, 'join', _join_then_hold)
+    stopper = threading.Thread(target=pool.stop, daemon=True)
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_join_thread, stopper)
+        cleanup.callback(resume.set)
+        stopper.start()
+        # The old thread has exited, but stop() has not returned
+        assert exited.wait(10)
+        with pytest.raises(RuntimeError, match='only be started once'):
+            pool.start()
+    pool.start()
+    assert len(pool._threads) == pool.min
+
+
+def test_threadpool_grow_while_stopping_is_refused(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A thread grown during stop() could take a busy thread's request."""
+    pool = single_thread_pool
+    worker = pool._threads[0]
+    busy = _HeldConnection()
+    pool.put(busy)
+    assert _wait_until(compute_condition=lambda: worker.conn is busy)
+    joining = threading.Event()
+    release = threading.Event()
+    original_join = worker.join
+
+    def _held_join(timeout: float | None = None) -> None:
+        joining.set()
+        assert release.wait(10)
+        original_join(timeout)
+
+    monkeypatch.setattr(worker, 'join', _held_join)
+    stopper = threading.Thread(target=pool.stop, daemon=True)
+    with contextlib.ExitStack() as cleanup:
+        cleanup.callback(_join_thread, stopper)
+        cleanup.callback(_release_events, busy.closed, release)
+        stopper.start()
+        # stop() has queued the busy thread's request
+        assert joining.wait(10)
+        with pytest.raises(RuntimeError, match='while it stops'):
+            pool.grow(1)
+    assert not worker.is_alive()
+
+
+class _ObservedLock:
+    """Report a caller that has to wait for the pool's lock."""
+
+    def __init__(self, pool: ThreadPool, waiting: threading.Event) -> None:
+        self._lock = pool._lock
+        self._waiting = waiting
+
+    def __enter__(self) -> None:
+        if not self._lock.acquire(blocking=False):
+            self._waiting.set()
+            self._lock.acquire()
+
+    def __exit__(self, *_exc: object) -> None:
+        self._lock.release()
+
+
+def _stop_during_growth(
+    pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Overlap growth and stop without using timing to order the calls."""
+    entered = threading.Event()
+    release = threading.Event()
+    stop_progress = threading.Event()
+    original_spawn = pool._spawn_worker
+
+    def _held_spawn() -> WorkerThread:
+        entered.set()
+        assert release.wait(10)
+        return original_spawn()
+
+    with ThreadPoolExecutor(max_workers=2) as callers:
+        with contextlib.ExitStack() as cleanup, monkeypatch.context() as patch:
+            cleanup.callback(release.set)
+            patch.setattr(pool, '_spawn_worker', _held_spawn)
+            patch.setattr(
+                pool,
+                '_lock',
+                _ObservedLock(pool, stop_progress),
+            )
+            growing = callers.submit(pool.grow, 1)
+            assert entered.wait(10)
+            stopping = callers.submit(pool.stop)
+            stopping.add_done_callback(lambda _future: stop_progress.set())
+            assert stop_progress.wait(10)
+            release.set()
+            # Propagate their failures
+            growing.result(timeout=10)
+            stopping.result(timeout=10)
+
+
+def test_threadpool_stop_includes_growing_workers(
+    single_thread_pool: ThreadPool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stop overlapping growth must leave no worker behind."""
+    pool = single_thread_pool
+    _stop_during_growth(pool, monkeypatch)
+    assert not _count_live_threads(pool)
+    pool.stop()
 
 
 def test_overload_results_in_suitable_http_error(request):
