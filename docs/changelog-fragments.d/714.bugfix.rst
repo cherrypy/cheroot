@@ -1,0 +1,3 @@
+Rejected empty or malformed HTTP header names with ``400 Bad Request``,
+including whitespace between the field name and colon
+(:issue:`714`, :issue:`721`).

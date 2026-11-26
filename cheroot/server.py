@@ -246,6 +246,8 @@ class HeaderReader:
                     k, v = line.split(COLON, 1)
                 except ValueError:
                     raise ValueError('Illegal header line.')
+                if not re.fullmatch(rb"[!#$%&'*+.^_`|~0-9A-Za-z-]+", k):
+                    raise ValueError('Invalid HTTP header name.')
                 v = v.strip()
                 k = self._transform_key(k)
                 hname = k
