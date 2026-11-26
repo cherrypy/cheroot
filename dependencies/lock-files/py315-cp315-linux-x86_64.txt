@@ -62,7 +62,7 @@ more-itertools==11.2.1
     #   cheroot (pyproject.toml)
     #   jaraco-functools
     #   jaraco-text
-packaging==26.3
+packaging==26.4
     # via
     #   pytest
     #   pytest-rerunfailures
